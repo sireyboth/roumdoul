@@ -7,7 +7,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('អំពីយើង / About Us — JingLong Security')]
+#[Title('អំពីយើង | ROUMDOUL')]
 class AboutPage extends Component
 {
     public function render()

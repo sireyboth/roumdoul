@@ -8,7 +8,39 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Kantumruy Pro', ui-sans-serif, sans-serif;
+    --font-sans: 'Outfit', 'Kantumruy Pro', ui-sans-serif, sans-serif;
+
+    /* Premium Pink — deep rosewood/magenta brand scale (not a bubblegum pink) */
+    --color-brand-50: #fdf3f7;
+    --color-brand-100: #fbe7f0;
+    --color-brand-200: #f6cee0;
+    --color-brand-300: #eda3c3;
+    --color-brand-400: #e0709f;
+    --color-brand-500: #cc3d78;
+    --color-brand-600: #b02361;
+    --color-brand-700: #8f1b4e;
+    --color-brand-800: #711641;
+    --color-brand-900: #5c1436;
+    --color-brand-950: #350a1e;
+
+    /* Champagne/gold accent — used sparingly for premium touches */
+    --color-gold-300: #ead9ae;
+    --color-gold-400: #d9b66a;
+    --color-gold-500: #c79a44;
+    --color-gold-600: #a97f34;
+
+    /* Warm plum-tinted neutral scale, replaces stock gray for a warmer premium feel */
+    --color-plum-50: #fbf7f9;
+    --color-plum-100: #f6eef2;
+    --color-plum-200: #ecdce4;
+    --color-plum-300: #d9bece;
+    --color-plum-400: #b98da8;
+    --color-plum-500: #935f7c;
+    --color-plum-600: #714861;
+    --color-plum-700: #55354a;
+    --color-plum-800: #3a2231;
+    --color-plum-900: #26141f;
+    --color-plum-950: #170b12;
 }
 
 html {
@@ -40,4 +72,75 @@ body {
 
 [x-persist="header"] {
   display: contents;
+}
+
+/* Scroll-reveal: elements start hidden/offset, JS (scrollReveal.js) flips [data-revealed] as they enter the viewport */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+[data-reveal][data-revealed] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@layer utilities {
+  .hover-lift {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee 28s linear infinite;
+  }
+
+  @keyframes float-slow {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-float-slow {
+    animation: float-slow 6s ease-in-out infinite;
+  }
 }

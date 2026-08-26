@@ -15,14 +15,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://translate.google.com" />
   <link rel="preconnect" href="https://translate.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&display=swap"
+  <link
+    href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Outfit:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <title>{{ $title ?? 'JingLong Security' }}</title>
+  <title>{{ $title ?? 'ROUMDOUL | Premium Digital Services' }}</title>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   @livewireStyles
 </head>
 
-<body class="bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100">
+<body class="bg-plum-50 text-plum-900 transition-colors dark:bg-plum-950 dark:text-plum-100">
   <div id="app" class="flex min-h-screen flex-col">
     @persist('header')
       <livewire:components.header-section />
@@ -34,6 +35,10 @@
 
     @persist('footer')
       <livewire:components.footer-section />
+    @endpersist
+
+    @persist('cart-drawer')
+      <livewire:components.cart-drawer />
     @endpersist
   </div>
 

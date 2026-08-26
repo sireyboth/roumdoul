@@ -31,11 +31,11 @@ class ContactPageForm extends Component
     public function services(): array
     {
         return [
-            'commercial' => 'សន្តិសុខអាជីវកម្ម និងរោងចក្រ',
-            'events' => 'សន្តិសុខព្រឹត្តិការណ៍ និងការគ្រប់គ្រងហ្វូងមនុស្ស',
-            'residential' => 'ការល្បាតលំនៅដ្ឋាន និងបុរី',
-            'executive' => 'ការការពារ VIP និងអ្នកគ្រប់គ្រង',
-            'cctv' => 'ការគាំទ្រប្រព័ន្ធឃ្លាំមើល CCTV',
+            'order' => 'ជំនួយអំពីការបញ្ជាទិញ',
+            'payment' => 'សំណួរអំពីការទូទាត់ប្រាក់',
+            'product' => 'សំណួរអំពីផលិតផល',
+            'partnership' => 'ភាពជាដៃគូ / ភ្នាក់ងារចែកចាយ',
+            'other' => 'ផ្សេងៗ',
         ];
     }
 

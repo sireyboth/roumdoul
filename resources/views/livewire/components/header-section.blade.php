@@ -1,182 +1,159 @@
 
   <div class="contents">
-    <div class="bg-green-950 text-gray-200 transition-colors dark:bg-black">
-      <div class="mx-auto flex max-w-6xl items-center justify-center gap-2 px-4 py-1.5 text-center text-xs sm:justify-between sm:px-6 lg:px-8">
-        <a href="tel:+855123456780" class="flex items-center gap-1.5 font-medium transition-colors hover:text-amber-400 hover:underline">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" class="h-3.5 w-3.5 shrink-0">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M2.25 6.75c0 8.284 6.716 15 15 15h1.5a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-          </svg>
-          <span>ខ្សែទូរស័ព្ទបន្ទាន់៖ +855 12 345 678</span>
+    <div class="bg-brand-950 text-brand-100 transition-colors dark:bg-plum-950">
+      <div class="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-1.5 text-center text-xs sm:justify-between sm:px-6 lg:px-8">
+        <a href="tel:+855123456780" class="flex items-center gap-1.5 font-medium transition-colors hover:text-gold-400 hover:underline">
+          <x-icon name="phone" class="h-3.5 w-3.5 shrink-0" />
+          <span>ជំនួយអតិថិជន៖ +855 12 345 678</span>
         </a>
-        <span class="hidden font-semibold uppercase tracking-wide text-amber-400 sm:inline">បម្រើសេវាកម្ម ២៤/៧</span>
+        <span class="hidden items-center gap-1.5 font-semibold uppercase tracking-wide text-gold-400 sm:flex">
+          <x-icon name="bolt" class="h-3.5 w-3.5" />
+          ដឹកជញ្ជូនភ្លាមៗ &middot; គាំទ្រ ២៤/៧
+        </span>
       </div>
     </div>
 
-    <header class="sticky top-0 z-50 bg-white shadow-md transition-colors dark:bg-gray-900">
-    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-      <a href="/" wire:navigate class="flex items-center gap-2">
-        <img src="/images/SJL Logo-01.png" alt="JingLong Security" class="h-9 w-9 object-contain sm:h-10 sm:w-10" />
-        <span class="text-lg font-bold uppercase text-green-800 dark:text-white sm:text-xl">JINGLONG SECURITY CO.,LTD</span>
-      </a>
-
-      <nav class="hidden items-center gap-6 md:flex">
-        <a href="/" wire:navigate data-nav-link data-nav-exact
-          class="font-medium transition-colors text-gray-600 hover:text-green-800 dark:text-gray-300 dark:hover:text-white">ទំព័រដើម</a>
-        <a href="/services" wire:navigate data-nav-link
-          class="font-medium transition-colors text-gray-600 hover:text-green-800 dark:text-gray-300 dark:hover:text-white">សេវាកម្ម</a>
-        <a href="/about" wire:navigate data-nav-link
-          class="font-medium transition-colors text-gray-600 hover:text-green-800 dark:text-gray-300 dark:hover:text-white">អំពីយើង</a>
-        <a href="/contact" wire:navigate data-nav-link
-          class="font-medium transition-colors text-gray-600 hover:text-green-800 dark:text-gray-300 dark:hover:text-white">ទំនាក់ទំនង</a>
-      </nav>
-
-      <div class="flex items-center gap-2">
-        <a href="/services#pricing" wire:navigate
-          class="hidden shrink-0 rounded-md bg-green-800 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 md:inline-block">
-          តម្លៃនៃសេវាកម្ម
+    <header class="sticky top-0 z-40 border-b border-brand-100/60 bg-white/95 shadow-sm backdrop-blur transition-colors dark:border-plum-800 dark:bg-plum-900/95">
+      <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <a href="/" wire:navigate class="flex shrink-0 items-center gap-2.5">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand-500 to-brand-800 text-lg font-bold text-white shadow-md shadow-brand-900/20">រ</span>
+          <span class="flex flex-col leading-tight">
+            <span class="text-lg font-extrabold tracking-tight text-brand-800 dark:text-white sm:text-xl">ROUMDOUL</span>
+            <span class="hidden text-[11px] font-medium text-plum-500 dark:text-plum-400 sm:block">រំដួល &middot; Premium Digital Services</span>
+          </span>
         </a>
 
-        {{-- Single-click theme toggle: no menu state needed, both this and the
-             mobile instance below read/write the same global Alpine store,
-             so they stay in sync for free. --}}
-        <button type="button" @click="$store.theme.set($store.theme.current === 'dark' ? 'light' : 'dark')"
-          role="switch" :aria-checked="($store.theme.current === 'dark').toString()"
-          aria-label="ប្តូររបៀបងងឹត/ភ្លឺ"
-          class="relative hidden h-7 w-14 shrink-0 items-center rounded-full p-1 transition-colors duration-300 ease-in-out md:inline-flex"
-          :class="$store.theme.current === 'dark' ? 'bg-indigo-950' : 'bg-amber-100'">
-          <span class="pointer-events-none flex h-5 w-5 items-center justify-center rounded-full shadow-sm transition-transform duration-300 ease-in-out"
-            :class="$store.theme.current === 'dark' ? 'translate-x-7 bg-gray-900' : 'translate-x-0 bg-white'">
-            <svg x-cloak x-show="$store.theme.current !== 'dark'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-              fill="currentColor" class="h-3.5 w-3.5 text-amber-400">
-              <path fill-rule="evenodd"
-                d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"
-                clip-rule="evenodd" />
-            </svg>
-            <svg x-cloak x-show="$store.theme.current === 'dark'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-              fill="currentColor" class="h-3.5 w-3.5 text-purple-400">
-              <path fill-rule="evenodd"
-                d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"
-                clip-rule="evenodd" />
-            </svg>
-          </span>
-        </button>
+        <form action="/shop" method="GET" class="hidden flex-1 items-center md:flex">
+          <div class="relative w-full max-w-lg">
+            <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
+            <input type="text" name="search" placeholder="ស្វែងរកសេវាកម្ម ឬផលិតផលឌីជីថល..."
+              class="w-full rounded-full border border-plum-200 bg-plum-50 py-2 pl-10 pr-4 text-sm text-plum-900 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:text-white dark:placeholder:text-plum-400 dark:focus:bg-plum-800" />
+          </div>
+        </form>
 
-        <div class="relative" data-lang-dropdown>
-          <button type="button" data-lang-toggle aria-haspopup="menu" aria-expanded="false" aria-label="ជ្រើសរើសភាសា"
-            class="flex h-9 items-center gap-1 rounded-full px-2.5 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-              <path d="M2 12h20"></path>
-            </svg>
-            <span data-lang-label class="text-xs font-semibold uppercase">ខ្មែរ</span>
+        <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <button type="button" @click="$store.cartDrawer.show()"
+            class="relative flex h-9 w-9 items-center justify-center rounded-full text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+            <x-icon name="cart" class="h-5.5 w-5.5" />
+            @if ($cartCount > 0)
+              <span class="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
+                {{ $cartCount }}
+              </span>
+            @endif
           </button>
 
-          <div data-lang-menu role="menu"
-            class="pointer-events-none absolute right-0 z-50 mt-2 w-32 origin-top-right scale-95 rounded-md border border-gray-200 bg-white py-1 opacity-0 shadow-lg transition-[opacity,transform] duration-150 ease-out dark:border-gray-700 dark:bg-gray-800">
-            <button type="button" role="menuitem" data-lang-option="km"
-              class="flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
-              ខ្មែរ
-              <svg data-lang-check-km xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" class="h-4 w-4 text-green-800 dark:text-amber-400">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          <x-theme-toggle class="hidden md:inline-flex" />
+
+          <div class="relative" data-lang-dropdown>
+            <button type="button" data-lang-toggle aria-haspopup="menu" aria-expanded="false" aria-label="ជ្រើសរើសភាសា"
+              class="flex h-9 items-center gap-1 rounded-full px-2.5 text-plum-600 transition-colors hover:bg-brand-50 dark:text-plum-300 dark:hover:bg-plum-800">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                <path d="M2 12h20"></path>
               </svg>
+              <span data-lang-label class="text-xs font-semibold uppercase">ខ្មែរ</span>
             </button>
-            <button type="button" role="menuitem" data-lang-option="en"
-              class="flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
-              English
-              <svg data-lang-check-en xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" class="hidden h-4 w-4 text-green-800 dark:text-amber-400">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            </button>
+
+            <div data-lang-menu role="menu"
+              class="pointer-events-none absolute right-0 z-50 mt-2 w-32 origin-top-right scale-95 rounded-md border border-plum-200 bg-white py-1 opacity-0 shadow-lg transition-[opacity,transform] duration-150 ease-out dark:border-plum-700 dark:bg-plum-800">
+              <button type="button" role="menuitem" data-lang-option="km"
+                class="flex w-full items-center justify-between px-3 py-2 text-sm text-plum-700 transition-colors hover:bg-brand-50 dark:text-plum-200 dark:hover:bg-plum-700">
+                ខ្មែរ
+                <x-icon name="check-circle" data-lang-check-km class="h-4 w-4 text-brand-700 dark:text-gold-400" />
+              </button>
+              <button type="button" role="menuitem" data-lang-option="en"
+                class="flex w-full items-center justify-between px-3 py-2 text-sm text-plum-700 transition-colors hover:bg-brand-50 dark:text-plum-200 dark:hover:bg-plum-700">
+                English
+                <x-icon name="check-circle" data-lang-check-en class="hidden h-4 w-4 text-brand-700 dark:text-gold-400" />
+              </button>
+            </div>
           </div>
+
+          <button type="button" id="menu-toggle" aria-label="បើកម៉ឺនុយ" aria-expanded="false" aria-controls="mobile-menu"
+            class="flex h-9 w-9 items-center justify-center rounded-full text-plum-600 transition-colors hover:bg-brand-50 dark:text-plum-300 dark:hover:bg-plum-800 md:hidden">
+            <x-icon id="menu-icon-open" name="bars" class="h-6 w-6" />
+            <x-icon id="menu-icon-close" name="x-mark" class="hidden h-6 w-6" />
+          </button>
         </div>
-
-        <button type="button" id="menu-toggle" aria-label="បើកម៉ឺនុយ" aria-expanded="false" aria-controls="mobile-menu"
-          class="flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 md:hidden">
-          <svg id="menu-icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" class="h-6 w-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
-          </svg>
-          <svg id="menu-icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" class="hidden h-6 w-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
-    </div>
 
-    <div id="mobile-menu-wrapper"
-      class="grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-300 ease-in-out md:hidden">
-      <div class="overflow-hidden">
-        <nav id="mobile-menu" class="flex flex-col gap-1 border-t border-gray-200 px-4 pb-3 pt-2 dark:border-gray-800">
-          <a href="/" wire:navigate data-nav-link data-nav-exact
-            class="rounded-md px-3 py-2 font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-green-800 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white">
-            ទំព័រដើម
+      {{-- Top category bar --}}
+      <nav class="hidden border-t border-brand-100/60 bg-brand-50/60 dark:border-plum-800 dark:bg-plum-800/40 md:block">
+        <div class="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
+          <a href="/shop" wire:navigate data-nav-link
+            class="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors text-plum-600 hover:text-brand-700 dark:text-plum-300 dark:hover:text-white">
+            <x-icon name="bars" class="h-4 w-4" />
+            គ្រប់ប្រភេទទាំងអស់
           </a>
-          <a href="/services" wire:navigate data-nav-link
-            class="rounded-md px-3 py-2 font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-green-800 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white">
-            សេវាកម្ម
-          </a>
-          <a href="/about" wire:navigate data-nav-link
-            class="rounded-md px-3 py-2 font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-green-800 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white">
-            អំពីយើង
-          </a>
-          <a href="/contact" wire:navigate data-nav-link
-            class="rounded-md px-3 py-2 font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-green-800 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white">
-            ទំនាក់ទំនង
-          </a>
+          @foreach ($categories as $category)
+            <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
+              class="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors text-plum-600 hover:text-brand-700 dark:text-plum-300 dark:hover:text-white">
+              <x-icon name="{{ $category->icon }}" class="h-4 w-4" />
+              {{ $category->name_km }}
+            </a>
+          @endforeach
+        </div>
+      </nav>
 
-          <a href="/contact" wire:navigate
-            class="mt-2 rounded-md bg-green-800 px-3 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-green-700">
-            ស្នើសុំសម្រង់តម្លៃ
-          </a>
+      <div id="mobile-menu-wrapper"
+        class="grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-300 ease-in-out md:hidden">
+        <div class="overflow-hidden">
+          <nav id="mobile-menu" class="flex flex-col gap-1 border-t border-plum-200 px-4 pb-3 pt-2 dark:border-plum-800">
+            <form action="/shop" method="GET" class="mb-1">
+              <div class="relative">
+                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
+                <input type="text" name="search" placeholder="ស្វែងរកសេវាកម្ម..."
+                  class="w-full rounded-full border border-plum-200 bg-plum-50 py-2 pl-10 pr-4 text-sm outline-none focus:border-brand-500 dark:border-plum-700 dark:bg-plum-800" />
+              </div>
+            </form>
 
-          <div class="mt-1 flex items-center justify-between border-t border-gray-200 px-3 pb-2 pt-3 dark:border-gray-800">
-            <span class="flex items-center gap-2.5 font-medium text-gray-600 dark:text-gray-300">
-              <svg x-cloak x-show="$store.theme.current !== 'dark'" xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-amber-400">
-                <path fill-rule="evenodd"
-                  d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"
-                  clip-rule="evenodd" />
-              </svg>
-              <svg x-cloak x-show="$store.theme.current === 'dark'" xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-purple-400">
-                <path fill-rule="evenodd"
-                  d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"
-                  clip-rule="evenodd" />
-              </svg>
-              <span x-text="$store.theme.current === 'dark' ? 'ងងឹត' : 'ភ្លឺ'"></span>
-            </span>
+            <a href="/" wire:navigate data-nav-link data-nav-exact
+              class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+              ទំព័រដើម
+            </a>
+            <a href="/shop" wire:navigate data-nav-link
+              class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+              ហាង
+            </a>
+            @foreach ($categories as $category)
+              <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
+                class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+                <x-icon name="{{ $category->icon }}" class="h-4 w-4" />
+                {{ $category->name_km }}
+              </a>
+            @endforeach
+            <a href="/about" wire:navigate data-nav-link
+              class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+              អំពីយើង
+            </a>
+            <a href="/contact" wire:navigate data-nav-link
+              class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+              ទំនាក់ទំនង
+            </a>
 
-            <button type="button" @click="$store.theme.set($store.theme.current === 'dark' ? 'light' : 'dark')"
-              role="switch" :aria-checked="($store.theme.current === 'dark').toString()"
-              aria-label="ប្តូររបៀបងងឹត/ភ្លឺ"
-              class="relative inline-flex h-7 w-14 shrink-0 items-center rounded-full p-1 transition-colors duration-300 ease-in-out"
-              :class="$store.theme.current === 'dark' ? 'bg-indigo-950' : 'bg-amber-100'">
-              <span class="pointer-events-none flex h-5 w-5 items-center justify-center rounded-full shadow-sm transition-transform duration-300 ease-in-out"
-                :class="$store.theme.current === 'dark' ? 'translate-x-7 bg-gray-900' : 'translate-x-0 bg-white'">
-                <svg x-cloak x-show="$store.theme.current !== 'dark'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                  fill="currentColor" class="h-3.5 w-3.5 text-amber-400">
+            <div class="mt-1 flex items-center justify-between border-t border-plum-200 px-3 pb-2 pt-3 dark:border-plum-800">
+              <span class="flex items-center gap-2.5 font-medium text-plum-600 dark:text-plum-300">
+                <svg x-cloak x-show="$store.theme.current !== 'dark'" xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-gold-500">
                   <path fill-rule="evenodd"
                     d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"
                     clip-rule="evenodd" />
                 </svg>
-                <svg x-cloak x-show="$store.theme.current === 'dark'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                  fill="currentColor" class="h-3.5 w-3.5 text-purple-400">
+                <svg x-cloak x-show="$store.theme.current === 'dark'" xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-brand-400">
                   <path fill-rule="evenodd"
                     d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"
                     clip-rule="evenodd" />
                 </svg>
+                <span x-text="$store.theme.current === 'dark' ? 'ងងឹត' : 'ភ្លឺ'"></span>
               </span>
-            </button>
-          </div>
-        </nav>
+
+              <x-theme-toggle />
+            </div>
+          </nav>
+        </div>
       </div>
-    </div>
     </header>
   </div>

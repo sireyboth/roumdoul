@@ -4,6 +4,7 @@ import { initMobileMenu } from './modules/menu.js'
 import { initLangToggle, restorePersistedLanguage, preloadTranslateWidget } from './modules/lang.js'
 import { initHeroSlider } from './modules/heroSlider.js'
 import { initFooter } from './modules/footer.js'
+import { initScrollReveal } from './modules/scrollReveal.js'
 
 document.addEventListener('alpine:init', () => {
   window.Alpine.store('theme', {
@@ -11,6 +12,16 @@ document.addEventListener('alpine:init', () => {
     set(mode) {
       this.current = mode
       setStoredTheme(mode)
+    },
+  })
+
+  window.Alpine.store('cartDrawer', {
+    open: false,
+    show() {
+      this.open = true
+    },
+    hide() {
+      this.open = false
     },
   })
 })
@@ -39,6 +50,7 @@ function mountApp() {
   initHeroSlider()
   initFooter()
   scrollToHash()
+  initScrollReveal()
 }
 
 mountApp()
