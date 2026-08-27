@@ -118,7 +118,7 @@
         <div class="flex flex-col items-center gap-6 border-t border-plum-200 pt-8 dark:border-plum-800">
           <div class="flex flex-col items-center gap-1.5">
             <img src="/images/Roumdoul_Logo.png" alt="Romdoul" loading="lazy" class="h-6 w-6 object-contain" />
-            <span class="text-[10px] font-semibold uppercase tracking-widest text-brand-800 dark:text-brand-300">Digital Design By</span>
+            {{-- <span class="text-[10px] font-semibold uppercase tracking-widest text-brand-800 dark:text-brand-300">Digital Design By</span> --}}
             <span class="text-sm font-bold text-brand-800 dark:text-brand-300">រំដួល</span>
             <span class="text-xs font-semibold uppercase tracking-wide text-brand-800 dark:text-brand-300">Roumdoul</span>
           </div>

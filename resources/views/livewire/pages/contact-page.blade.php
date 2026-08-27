@@ -24,7 +24,7 @@
               </div>
               <div>
                 <h3 class="text-sm font-semibold uppercase tracking-wide text-brand-800 dark:text-white">អ៊ីមែល</h3>
-                <p class="mt-1 text-sm text-plum-600 dark:text-plum-400">support@roumdoul.shop</p>
+                <p class="mt-1 text-sm text-plum-600 dark:text-plum-400">we don't have EMAIL yet</p>
               </div>
             </div>
 
@@ -34,7 +34,7 @@
               </div>
               <div>
                 <h3 class="text-sm font-semibold uppercase tracking-wide text-brand-800 dark:text-white">ទូរស័ព្ទ / Telegram</h3>
-                <p class="mt-1 text-sm text-plum-600 dark:text-plum-400">+855 12 345 678</p>
+                <p class="mt-1 text-sm text-plum-600 dark:text-plum-400">+855 15 57 87 07</p>
               </div>
             </div>
 

@@ -6,6 +6,17 @@ import { initHeroSlider } from './modules/heroSlider.js'
 import { initFooter } from './modules/footer.js'
 import { initScrollReveal } from './modules/scrollReveal.js'
 
+document.addEventListener('livewire:init', () => {
+  // Pagination, filters, etc. update a Livewire component in place without a
+  // full page navigation, so `livewire:navigated` never fires for them —
+  // newly-rendered [data-reveal] cards (e.g. after clicking "next page" in
+  // the shop) would otherwise sit at opacity:0 forever since nothing
+  // re-scans for them. `commit` fires after every such update.
+  Livewire.hook('commit', ({ succeed }) => {
+    succeed(() => initScrollReveal())
+  })
+})
+
 document.addEventListener('alpine:init', () => {
   window.Alpine.store('theme', {
     current: getStoredTheme(),
