@@ -9,7 +9,7 @@
 <div x-data="{ open: false }" class="lg:hidden">
   <button type="button" @click="open = true"
     class="flex items-center gap-2 rounded-full border border-plum-300 px-4 py-2 text-sm font-semibold text-plum-700 transition-colors hover:bg-brand-50 dark:border-plum-600 dark:text-plum-200 dark:hover:bg-plum-800">
-    <x-icon name="filter" class="h-4.5 w-4.5" />
+    <x-app-icon name="filter" class="h-4.5 w-4.5" />
     តម្រង & ប្រភេទ
   </button>
 
@@ -24,7 +24,7 @@
       <span class="text-base font-bold text-plum-900 dark:text-white">តម្រង & ប្រភេទ</span>
       <button type="button" @click="open = false"
         class="flex h-8 w-8 items-center justify-center rounded-full text-plum-500 hover:bg-plum-100 dark:hover:bg-plum-800">
-        <x-icon name="x-mark" class="h-5 w-5" />
+        <x-app-icon name="x-mark" class="h-5 w-5" />
       </button>
     </div>
     @include('components.shop.sidebar-content', ['categories' => $categories, 'active' => $active])

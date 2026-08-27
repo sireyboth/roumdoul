@@ -2,8 +2,8 @@
   <h1 class="text-2xl font-extrabold text-plum-900 dark:text-white sm:text-3xl">កន្ត្រករបស់អ្នក</h1>
 
   @if ($items->isEmpty())
-    <div class="mt-10 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-plum-300 py-20 text-center dark:border-plum-700">
-      <x-icon name="cart" class="h-14 w-14 text-plum-200 dark:text-plum-700" />
+    <div class="mt-10 flex flex-col items-center gap-4 rounded-lg border border-dashed border-plum-300 py-20 text-center dark:border-plum-700">
+      <x-app-icon name="cart" class="h-14 w-14 text-plum-200 dark:text-plum-700" />
       <p class="text-base font-medium text-plum-500 dark:text-plum-400">កន្ត្រករបស់អ្នកនៅទទេ</p>
       <a href="/shop" wire:navigate class="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
         ចាប់ផ្តើមទិញឥឡូវនេះ
@@ -14,9 +14,9 @@
       <div class="flex flex-col gap-4 lg:col-span-2">
         @foreach ($items as $item)
           <div wire:key="cart-item-{{ $item->key }}"
-            class="flex items-center gap-4 rounded-2xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
+            class="flex items-center gap-4 rounded-lg border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
             <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-              <x-icon name="{{ $item->service->category->icon }}" class="h-7 w-7" />
+              <x-app-icon name="{{ $item->service->category->icon }}" class="h-7 w-7" />
             </div>
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-bold text-plum-900 dark:text-white">{{ $item->service->name_en }}</p>
@@ -40,17 +40,17 @@
 
             <button type="button" wire:click="removeItem('{{ $item->key }}')"
               class="shrink-0 text-plum-400 transition-colors hover:text-red-600">
-              <x-icon name="trash" class="h-4.5 w-4.5" />
+              <x-app-icon name="trash" class="h-4.5 w-4.5" />
             </button>
           </div>
         @endforeach
 
         <a href="/shop" wire:navigate class="mt-2 flex w-fit items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300">
-          <x-icon name="chevron-left" class="h-4 w-4" /> បន្តទិញទំនិញ
+          <x-app-icon name="chevron-left" class="h-4 w-4" /> បន្តទិញទំនិញ
         </a>
       </div>
 
-      <div class="h-fit rounded-2xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
+      <div class="h-fit rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
         <h2 class="text-base font-bold text-plum-900 dark:text-white">សង្ខេបការបញ្ជាទិញ</h2>
         <div class="mt-4 flex items-center justify-between text-sm text-plum-600 dark:text-plum-300">
           <span>សរុបរង</span>

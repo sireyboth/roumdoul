@@ -1,19 +1,6 @@
 
   <div class="contents">
-    <div class="bg-brand-950 text-brand-100 transition-colors dark:bg-plum-950">
-      <div class="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-1.5 text-center text-xs sm:justify-between sm:px-6 lg:px-8">
-        <a href="tel:+855123456780" class="flex items-center gap-1.5 font-medium transition-colors hover:text-gold-400 hover:underline">
-          <x-icon name="phone" class="h-3.5 w-3.5 shrink-0" />
-          <span>ជំនួយអតិថិជន៖ +855 12 345 678</span>
-        </a>
-        <span class="hidden items-center gap-1.5 font-semibold uppercase tracking-wide text-gold-400 sm:flex">
-          <x-icon name="bolt" class="h-3.5 w-3.5" />
-          ដឹកជញ្ជូនភ្លាមៗ &middot; គាំទ្រ ២៤/៧
-        </span>
-      </div>
-    </div>
-
-    <header class="sticky top-0 z-40 border-b border-brand-100/60 bg-white/95 shadow-sm backdrop-blur transition-colors dark:border-plum-800 dark:bg-plum-900/95">
+    <header class="sticky top-0 z-40 border-b border-plum-200 bg-white/95 shadow-sm backdrop-blur transition-colors dark:border-plum-800 dark:bg-plum-900/95">
       <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <a href="/" wire:navigate class="flex shrink-0 items-center gap-2.5">
           <span class="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand-500 to-brand-800 text-lg font-bold text-white shadow-md shadow-brand-900/20">រ</span>
@@ -25,7 +12,7 @@
 
         <form action="/shop" method="GET" class="hidden flex-1 items-center md:flex">
           <div class="relative w-full max-w-lg">
-            <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
+            <x-app-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
             <input type="text" name="search" placeholder="ស្វែងរកសេវាកម្ម ឬផលិតផលឌីជីថល..."
               class="w-full rounded-full border border-plum-200 bg-plum-50 py-2 pl-10 pr-4 text-sm text-plum-900 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:text-white dark:placeholder:text-plum-400 dark:focus:bg-plum-800" />
           </div>
@@ -34,7 +21,7 @@
         <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
           <button type="button" @click="$store.cartDrawer.show()"
             class="relative flex h-9 w-9 items-center justify-center rounded-full text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-            <x-icon name="cart" class="h-5.5 w-5.5" />
+            <x-app-icon name="cart" class="h-5.5 w-5.5" />
             @if ($cartCount > 0)
               <span class="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
                 {{ $cartCount }}
@@ -61,36 +48,34 @@
               <button type="button" role="menuitem" data-lang-option="km"
                 class="flex w-full items-center justify-between px-3 py-2 text-sm text-plum-700 transition-colors hover:bg-brand-50 dark:text-plum-200 dark:hover:bg-plum-700">
                 ខ្មែរ
-                <x-icon name="check-circle" data-lang-check-km class="h-4 w-4 text-brand-700 dark:text-gold-400" />
+                <x-app-icon name="check-circle" data-lang-check-km class="h-4 w-4 text-brand-700 dark:text-gold-400" />
               </button>
               <button type="button" role="menuitem" data-lang-option="en"
                 class="flex w-full items-center justify-between px-3 py-2 text-sm text-plum-700 transition-colors hover:bg-brand-50 dark:text-plum-200 dark:hover:bg-plum-700">
                 English
-                <x-icon name="check-circle" data-lang-check-en class="hidden h-4 w-4 text-brand-700 dark:text-gold-400" />
+                <x-app-icon name="check-circle" data-lang-check-en class="hidden h-4 w-4 text-brand-700 dark:text-gold-400" />
               </button>
             </div>
           </div>
 
           <button type="button" id="menu-toggle" aria-label="បើកម៉ឺនុយ" aria-expanded="false" aria-controls="mobile-menu"
             class="flex h-9 w-9 items-center justify-center rounded-full text-plum-600 transition-colors hover:bg-brand-50 dark:text-plum-300 dark:hover:bg-plum-800 md:hidden">
-            <x-icon id="menu-icon-open" name="bars" class="h-6 w-6" />
-            <x-icon id="menu-icon-close" name="x-mark" class="hidden h-6 w-6" />
+            <x-app-icon id="menu-icon-open" name="bars" class="h-6 w-6" />
+            <x-app-icon id="menu-icon-close" name="x-mark" class="hidden h-6 w-6" />
           </button>
         </div>
       </div>
 
       {{-- Top category bar --}}
-      <nav class="hidden border-t border-brand-100/60 bg-brand-50/60 dark:border-plum-800 dark:bg-plum-800/40 md:block">
-        <div class="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
+      <nav class="hidden border-t border-plum-100 bg-plum-50 dark:border-plum-800 dark:bg-plum-900 md:block">
+        <div class="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto px-4 py-2.5 sm:px-6 lg:px-8">
           <a href="/shop" wire:navigate data-nav-link
-            class="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors text-plum-600 hover:text-brand-700 dark:text-plum-300 dark:hover:text-white">
-            <x-icon name="bars" class="h-4 w-4" />
+            class="shrink-0 text-sm font-semibold transition-colors text-plum-600 hover:text-brand-700 dark:text-plum-300 dark:hover:text-white">
             គ្រប់ប្រភេទទាំងអស់
           </a>
           @foreach ($categories as $category)
             <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
-              class="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors text-plum-600 hover:text-brand-700 dark:text-plum-300 dark:hover:text-white">
-              <x-icon name="{{ $category->icon }}" class="h-4 w-4" />
+              class="shrink-0 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
               {{ $category->name_km }}
             </a>
           @endforeach
@@ -103,7 +88,7 @@
           <nav id="mobile-menu" class="flex flex-col gap-1 border-t border-plum-200 px-4 pb-3 pt-2 dark:border-plum-800">
             <form action="/shop" method="GET" class="mb-1">
               <div class="relative">
-                <x-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
+                <x-app-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
                 <input type="text" name="search" placeholder="ស្វែងរកសេវាកម្ម..."
                   class="w-full rounded-full border border-plum-200 bg-plum-50 py-2 pl-10 pr-4 text-sm outline-none focus:border-brand-500 dark:border-plum-700 dark:bg-plum-800" />
               </div>
@@ -120,7 +105,7 @@
             @foreach ($categories as $category)
               <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
                 class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-                <x-icon name="{{ $category->icon }}" class="h-4 w-4" />
+                <x-app-icon name="{{ $category->icon }}" class="h-4 w-4" />
                 {{ $category->name_km }}
               </a>
             @endforeach

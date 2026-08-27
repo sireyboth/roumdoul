@@ -1,8 +1,8 @@
 <div>
-    <section class="relative overflow-hidden bg-linear-to-br from-brand-900 via-brand-950 to-plum-950 py-16 sm:py-24">
+    <section class="bg-brand-950 py-16 sm:py-24">
       <div class="mx-auto flex max-w-4xl flex-col items-center gap-5 px-4 text-center sm:gap-6 sm:px-6 lg:px-8">
-        <span class="flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300 backdrop-blur">
-          <x-icon name="chat" class="h-4 w-4" /> ទំនាក់ទំនងមកកាន់ ROUMDOUL
+        <span class="rounded-full border border-gold-400/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300">
+          ទំនាក់ទំនងមកកាន់ ROUMDOUL
         </span>
         <h1 class="text-2xl font-bold leading-tight text-white drop-shadow-sm sm:text-3xl md:text-4xl">
           មានសំណួរ? យើងនៅទីនេះដើម្បីជួយអ្នក
@@ -20,7 +20,7 @@
           <div class="flex flex-col gap-6 lg:col-span-1">
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-                <x-icon name="envelope" class="h-5 w-5" />
+                <x-app-icon name="envelope" class="h-5 w-5" />
               </div>
               <div>
                 <h3 class="text-sm font-semibold uppercase tracking-wide text-brand-800 dark:text-white">អ៊ីមែល</h3>
@@ -30,7 +30,7 @@
 
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-                <x-icon name="phone" class="h-5 w-5" />
+                <x-app-icon name="phone" class="h-5 w-5" />
               </div>
               <div>
                 <h3 class="text-sm font-semibold uppercase tracking-wide text-brand-800 dark:text-white">ទូរស័ព្ទ / Telegram</h3>
@@ -40,7 +40,7 @@
 
             <div class="flex items-start gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-                <x-icon name="clock" class="h-5 w-5" />
+                <x-app-icon name="clock" class="h-5 w-5" />
               </div>
               <div>
                 <h3 class="text-sm font-semibold uppercase tracking-wide text-brand-800 dark:text-white">ម៉ោងគាំទ្រ</h3>
@@ -48,13 +48,13 @@
               </div>
             </div>
 
-            <div class="mt-2 rounded-2xl border border-plum-200 bg-plum-50 p-5 dark:border-plum-800 dark:bg-plum-900">
+            <div class="mt-2 rounded-lg border border-plum-200 bg-plum-50 p-5 dark:border-plum-800 dark:bg-plum-900">
               <h3 class="mb-3 text-sm font-bold text-brand-800 dark:text-white">ស្នើសុំទូរស័ព្ទមកវិញ</h3>
               <livewire:components.contact-form />
             </div>
           </div>
 
-          <div class="rounded-2xl border border-plum-200 bg-white p-6 shadow-sm transition-colors dark:border-plum-800 dark:bg-plum-900 sm:p-8 lg:col-span-2">
+          <div class="rounded-lg border border-plum-200 bg-white p-6 shadow-sm transition-colors dark:border-plum-800 dark:bg-plum-900 sm:p-8 lg:col-span-2">
             <h2 class="mb-1 text-lg font-bold text-plum-900 dark:text-white">ផ្ញើសាររបស់អ្នក</h2>
             <p class="mb-6 text-sm text-plum-500 dark:text-plum-400">បំពេញទម្រង់ខាងក្រោម ហើយយើងនឹងឆ្លើយតបក្នុងរយៈពេលឆាប់ៗនេះ</p>
             <livewire:components.contact-page-form
@@ -83,7 +83,7 @@
               <button type="button" @click="open = !open" :aria-expanded="open.toString()"
                 class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left">
                 <span class="font-semibold text-plum-800 dark:text-white">{{ $faq['q'] }}</span>
-                <x-icon name="chevron-down" class="h-5 w-5 shrink-0 text-plum-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
+                <x-app-icon name="chevron-down" class="h-5 w-5 shrink-0 text-plum-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''" />
               </button>
               <div class="grid overflow-hidden transition-[grid-template-rows] duration-200 ease-in-out"
                 :class="open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'">

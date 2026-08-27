@@ -1,10 +1,9 @@
 <div>
     {{-- Hero + stats --}}
-    <section class="relative overflow-hidden bg-linear-to-br from-brand-900 via-brand-950 to-plum-950 py-16 sm:py-24">
-      <div class="pointer-events-none absolute -right-16 top-10 h-72 w-72 animate-float-slow rounded-full bg-gold-400/10 blur-3xl"></div>
+    <section class="bg-brand-950 py-16 sm:py-24">
       <div class="relative mx-auto flex max-w-4xl flex-col items-center gap-5 px-4 text-center sm:gap-6 sm:px-6 lg:px-8">
-        <span class="flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300 backdrop-blur">
-          <x-icon name="sparkles" class="h-4 w-4" /> រំដួល &mdash; ROUMDOUL
+        <span class="rounded-full border border-gold-400/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300">
+          រំដួល &mdash; ROUMDOUL
         </span>
         <h1 class="text-2xl font-bold leading-tight text-white drop-shadow-sm sm:text-3xl md:text-4xl">
           ស្វែងយល់អំពី ROUMDOUL
@@ -42,9 +41,9 @@
         </div>
 
         <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div class="flex flex-col gap-3 rounded-2xl border border-plum-200 p-6 transition-colors dark:border-plum-800">
+          <div class="flex flex-col gap-3 rounded-lg border border-plum-200 p-6 transition-colors dark:border-plum-800">
             <span class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-              <x-icon name="sparkles" class="h-6 w-6" />
+              <x-app-icon name="sparkles" class="h-6 w-6" />
             </span>
             <h3 class="text-lg font-bold text-brand-800 dark:text-white">បេសកកម្ម</h3>
             <p class="text-sm text-plum-600 dark:text-plum-400">
@@ -53,9 +52,9 @@
             </p>
           </div>
 
-          <div class="flex flex-col gap-3 rounded-2xl border border-plum-200 p-6 transition-colors dark:border-plum-800">
+          <div class="flex flex-col gap-3 rounded-lg border border-plum-200 p-6 transition-colors dark:border-plum-800">
             <span class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-              <x-icon name="star" class="h-6 w-6" />
+              <x-app-icon name="star" class="h-6 w-6" />
             </span>
             <h3 class="text-lg font-bold text-brand-800 dark:text-white">ចក្ខុវិស័យ</h3>
             <p class="text-sm text-plum-600 dark:text-plum-400">
@@ -74,7 +73,7 @@
           ] as $value)
             <div class="flex flex-col items-center gap-3 text-center">
               <div class="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-                <x-icon name="{{ $value['icon'] }}" class="h-6 w-6" />
+                <x-app-icon name="{{ $value['icon'] }}" class="h-6 w-6" />
               </div>
               <h4 class="text-sm font-bold text-brand-800 dark:text-white">{{ $value['label'] }}</h4>
             </div>
@@ -101,9 +100,9 @@
               ['icon' => 'chat', 'title' => 'គាំទ្រ ២៤/៧', 'desc' => 'ក្រុមការងាររបស់យើងរួចរាល់ឆ្លើយតបរាល់សំណួរ និងដោះស្រាយបញ្ហាបានគ្រប់ពេលវេលា។'],
               ['icon' => 'heart', 'title' => 'តម្លៃដ៏សមរម្យ', 'desc' => 'យើងធានាតម្លៃប្រកួតប្រជែងបំផុត ដោយមិនសម្របសម្រួលគុណភាពសេវាកម្មឡើយ។'],
           ] as $item)
-            <div class="flex flex-col gap-3 rounded-2xl bg-white p-6 shadow-sm transition-colors dark:bg-plum-950">
+            <div class="flex flex-col gap-3 rounded-lg bg-white p-6 shadow-sm transition-colors dark:bg-plum-950">
               <div class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-                <x-icon name="{{ $item['icon'] }}" class="h-6 w-6" />
+                <x-app-icon name="{{ $item['icon'] }}" class="h-6 w-6" />
               </div>
               <h3 class="text-base font-bold text-brand-800 dark:text-white">{{ $item['title'] }}</h3>
               <p class="text-sm text-plum-600 dark:text-plum-400">{{ $item['desc'] }}</p>
@@ -114,7 +113,7 @@
     </section>
 
     {{-- CTA banner --}}
-    <section class="bg-linear-to-br from-brand-800 to-brand-950 py-16 transition-colors sm:py-20">
+    <section class="bg-brand-900 py-16 transition-colors sm:py-20">
       <div class="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
         <h2 class="text-2xl font-bold text-white sm:text-3xl">ត្រៀមខ្លួនរួចរាល់ចាប់ផ្តើមទិញហើយឬនៅ?</h2>
         <p class="mt-3 text-sm text-brand-100 sm:text-base">

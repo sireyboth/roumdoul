@@ -12,7 +12,7 @@
     <li>
       <a href="/shop/{{ $category->slug }}" wire:navigate
         class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {{ $active && $active->id === $category->id ? 'bg-brand-600 text-white' : 'text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800' }}">
-        <x-icon name="{{ $category->icon }}" class="h-4.5 w-4.5 shrink-0" />
+        <x-app-icon name="{{ $category->icon }}" class="h-4.5 w-4.5 shrink-0" />
         {{ $category->name_km }}
       </a>
     </li>
@@ -30,8 +30,8 @@
   </select>
 </div>
 
-<div class="mt-6 overflow-hidden rounded-xl border border-gold-400/40 bg-linear-to-br from-brand-800 to-brand-950 p-4 text-center text-white">
-  <x-icon name="shield-check" class="mx-auto h-7 w-7 text-gold-400" />
+<div class="mt-6 rounded-lg border border-brand-900/20 bg-brand-950 p-4 text-center text-white">
+  <x-app-icon name="shield-check" class="mx-auto h-7 w-7 text-gold-400" />
   <p class="mt-2 text-sm font-semibold">ការទូទាត់ដោយសុវត្ថិភាព ១០០%</p>
   <p class="mt-1 text-xs text-brand-100">ដឹកជញ្ជូនភ្លាមៗក្រោយបញ្ជាទិញ</p>
 </div>

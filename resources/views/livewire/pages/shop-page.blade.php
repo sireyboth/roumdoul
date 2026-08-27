@@ -8,7 +8,7 @@
 
       <form action="{{ $category ? '/shop/'.$category->slug : '/shop' }}" method="GET" class="mt-5 max-w-xl">
         <div class="relative">
-          <x-icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
+          <x-app-icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
           <input type="text" name="search" value="{{ $search }}" placeholder="ស្វែងរកសេវាកម្ម..."
             class="w-full rounded-full border border-plum-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition-colors placeholder:text-plum-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-900" />
         </div>
@@ -28,8 +28,8 @@
         @endif
 
         @if ($services->isEmpty())
-          <div class="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-plum-300 py-20 text-center dark:border-plum-700">
-            <x-icon name="search" class="h-10 w-10 text-plum-300" />
+          <div class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-plum-300 py-20 text-center dark:border-plum-700">
+            <x-app-icon name="search" class="h-10 w-10 text-plum-300" />
             <p class="text-sm font-medium text-plum-500 dark:text-plum-400">រកមិនឃើញសេវាកម្មដែលត្រូវនឹងលក្ខខណ្ឌនេះទេ</p>
             <a href="/shop" wire:navigate class="text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300">សម្អាតតម្រង</a>
           </div>

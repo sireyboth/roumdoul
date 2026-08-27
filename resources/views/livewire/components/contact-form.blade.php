@@ -1,7 +1,7 @@
 <div>
     @if ($submitted)
         <div class="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-900/20 dark:text-emerald-300">
-            <x-icon name="check-circle" class="h-4 w-4 shrink-0" />
+            <x-app-icon name="check-circle" class="h-4 w-4 shrink-0" />
             អរគុណសម្រាប់សំណើរបស់អ្នក! យើងនឹងទាក់ទងអ្នកឆាប់ៗនេះ។
         </div>
     @else

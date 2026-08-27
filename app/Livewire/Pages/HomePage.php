@@ -14,20 +14,13 @@ class HomePage extends Component
 {
     public function render()
     {
-        $categories = Category::orderBy('sort_order')->get();
-
         return view('livewire.pages.home-page', [
-            'categories' => $categories,
+            'categories' => Category::orderBy('sort_order')->get(),
             'featuredServices' => Service::with(['category', 'plans'])
                 ->where('is_active', true)
                 ->where('is_featured', true)
                 ->orderBy('sort_order')
                 ->get(),
-            'servicesByCategory' => Service::with(['category', 'plans'])
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->get()
-                ->groupBy('category_id'),
         ]);
     }
 }

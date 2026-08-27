@@ -2,8 +2,8 @@
   <h1 class="text-2xl font-extrabold text-plum-900 dark:text-white sm:text-3xl">ទូទាត់ប្រាក់</h1>
 
   @if ($items->isEmpty())
-    <div class="mt-10 flex flex-col items-center gap-4 rounded-2xl border border-dashed border-plum-300 py-20 text-center dark:border-plum-700">
-      <x-icon name="cart" class="h-14 w-14 text-plum-200 dark:text-plum-700" />
+    <div class="mt-10 flex flex-col items-center gap-4 rounded-lg border border-dashed border-plum-300 py-20 text-center dark:border-plum-700">
+      <x-app-icon name="cart" class="h-14 w-14 text-plum-200 dark:text-plum-700" />
       <p class="text-base font-medium text-plum-500 dark:text-plum-400">កន្ត្រករបស់អ្នកនៅទទេ &mdash; សូមបន្ថែមផលិតផលមុននឹងទូទាត់</p>
       <a href="/shop" wire:navigate class="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
         ចាប់ផ្តើមទិញឥឡូវនេះ
@@ -12,9 +12,9 @@
   @else
     <form wire:submit="placeOrder" class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
       <div class="flex flex-col gap-5 lg:col-span-2">
-        <div class="rounded-2xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
+        <div class="rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
           <h2 class="mb-4 flex items-center gap-2 text-base font-bold text-plum-900 dark:text-white">
-            <x-icon name="user" class="h-5 w-5 text-brand-600" /> ព័ត៌មានទំនាក់ទំនង
+            <x-app-icon name="user" class="h-5 w-5 text-brand-600" /> ព័ត៌មានទំនាក់ទំនង
           </h2>
 
           <div class="flex flex-col gap-4">
@@ -48,15 +48,15 @@
           </div>
         </div>
 
-        <div class="flex items-start gap-3 rounded-2xl border border-gold-400/40 bg-gold-50 p-4 dark:border-gold-400/20 dark:bg-plum-800">
-          <x-icon name="shield-check" class="mt-0.5 h-5 w-5 shrink-0 text-gold-600 dark:text-gold-400" />
+        <div class="flex items-start gap-3 rounded-lg border border-gold-400/40 bg-gold-50 p-4 dark:border-gold-400/20 dark:bg-plum-800">
+          <x-app-icon name="shield-check" class="mt-0.5 h-5 w-5 shrink-0 text-gold-600 dark:text-gold-400" />
           <p class="text-xs leading-relaxed text-plum-700 dark:text-plum-300">
             បន្ទាប់ពីដាក់ការបញ្ជាទិញ ក្រុមការងាររបស់យើងនឹងទាក់ទងអ្នកភ្លាមៗ ដើម្បីបញ្ជាក់ការទូទាត់ប្រាក់ (ABA/Wing/QR)។ ការទូទាត់ស្វ័យប្រវត្តិនឹងមកដល់ឆាប់ៗនេះ។
           </p>
         </div>
       </div>
 
-      <div class="h-fit rounded-2xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
+      <div class="h-fit rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
         <h2 class="text-base font-bold text-plum-900 dark:text-white">សង្ខេបការបញ្ជាទិញ</h2>
         <ul class="mt-4 flex flex-col gap-3">
           @foreach ($items as $item)

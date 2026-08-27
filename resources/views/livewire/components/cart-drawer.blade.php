@@ -9,19 +9,19 @@
     class="fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col bg-white shadow-2xl dark:bg-plum-900">
     <div class="flex items-center justify-between border-b border-plum-200 px-5 py-4 dark:border-plum-800">
       <h2 class="flex items-center gap-2 text-lg font-bold text-plum-900 dark:text-white">
-        <x-icon name="cart" class="h-5 w-5 text-brand-600" />
+        <x-app-icon name="cart" class="h-5 w-5 text-brand-600" />
         កន្ត្រករបស់អ្នក
       </h2>
       <button type="button" @click="$store.cartDrawer.hide()"
         class="flex h-8 w-8 items-center justify-center rounded-full text-plum-500 transition-colors hover:bg-plum-100 dark:hover:bg-plum-800">
-        <x-icon name="x-mark" class="h-5 w-5" />
+        <x-app-icon name="x-mark" class="h-5 w-5" />
       </button>
     </div>
 
     <div class="flex-1 overflow-y-auto px-5 py-4">
       @if ($items->isEmpty())
         <div class="flex h-full flex-col items-center justify-center gap-3 text-center">
-          <x-icon name="cart" class="h-12 w-12 text-plum-200 dark:text-plum-700" />
+          <x-app-icon name="cart" class="h-12 w-12 text-plum-200 dark:text-plum-700" />
           <p class="text-sm font-medium text-plum-500 dark:text-plum-400">កន្ត្រករបស់អ្នកនៅទទេ</p>
           <a href="/shop" wire:navigate @click="$store.cartDrawer.hide()"
             class="mt-1 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
@@ -33,7 +33,7 @@
           @foreach ($items as $item)
             <li wire:key="cart-drawer-{{ $item->key }}" class="flex gap-3">
               <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-                <x-icon name="{{ $item->service->category->icon }}" class="h-6 w-6" />
+                <x-app-icon name="{{ $item->service->category->icon }}" class="h-6 w-6" />
               </div>
               <div class="flex-1">
                 <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $item->service->name_en }}</p>
@@ -46,7 +46,7 @@
                 <span class="text-sm font-bold text-brand-700 dark:text-brand-300">${{ number_format($item->line_total, 2) }}</span>
                 <button type="button" wire:click="removeItem('{{ $item->key }}')"
                   class="text-plum-400 transition-colors hover:text-red-600">
-                  <x-icon name="trash" class="h-4 w-4" />
+                  <x-app-icon name="trash" class="h-4 w-4" />
                 </button>
               </div>
             </li>

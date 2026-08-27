@@ -10,7 +10,9 @@
 @theme {
     --font-sans: 'Outfit', 'Kantumruy Pro', ui-sans-serif, sans-serif;
 
-    /* Premium Pink — deep rosewood/magenta brand scale (not a bubblegum pink) */
+    /* Premium Pink — our brand identity color: deep rosewood/magenta, not a bubblegum pink.
+       Kept to buttons, links, prices, badges and the logo — surfaces/backgrounds below stay
+       neutral slate so pink reads as an accent, not the whole UI. */
     --color-brand-50: #fdf3f7;
     --color-brand-100: #fbe7f0;
     --color-brand-200: #f6cee0;
@@ -29,18 +31,18 @@
     --color-gold-500: #c79a44;
     --color-gold-600: #a97f34;
 
-    /* Warm plum-tinted neutral scale, replaces stock gray for a warmer premium feel */
-    --color-plum-50: #fbf7f9;
-    --color-plum-100: #f6eef2;
-    --color-plum-200: #ecdce4;
-    --color-plum-300: #d9bece;
-    --color-plum-400: #b98da8;
-    --color-plum-500: #935f7c;
-    --color-plum-600: #714861;
-    --color-plum-700: #55354a;
-    --color-plum-800: #3a2231;
-    --color-plum-900: #26141f;
-    --color-plum-950: #170b12;
+    /* Neutral slate scale for surfaces/text/borders */
+    --color-plum-50: #f8fafc;
+    --color-plum-100: #f1f5f9;
+    --color-plum-200: #e2e8f0;
+    --color-plum-300: #cbd5e1;
+    --color-plum-400: #94a3b8;
+    --color-plum-500: #64748b;
+    --color-plum-600: #475569;
+    --color-plum-700: #334155;
+    --color-plum-800: #1e293b;
+    --color-plum-900: #0f172a;
+    --color-plum-950: #020617;
 }
 
 html {
@@ -74,6 +76,24 @@ body {
   display: contents;
 }
 
+/* Hides the app shell behind a loader while the persisted English translation is
+   being re-applied on load/navigation, instead of flashing the Khmer source text. */
+#app {
+  transition: opacity 0.2s ease;
+}
+
+html.translating #app {
+  opacity: 0;
+}
+
+.translate-loader {
+  display: none;
+}
+
+html.translating .translate-loader {
+  display: flex;
+}
+
 /* Scroll-reveal: elements start hidden/offset, JS (scrollReveal.js) flips [data-revealed] as they enter the viewport */
 [data-reveal] {
   opacity: 0;
@@ -94,53 +114,3 @@ body {
   }
 }
 
-@layer utilities {
-  .hover-lift {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-4px);
-  }
-
-  @keyframes shimmer {
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
-  .animate-shimmer::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
-    animation: shimmer 1.6s infinite;
-  }
-
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  .animate-marquee {
-    animation: marquee 28s linear infinite;
-  }
-
-  @keyframes float-slow {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  .animate-float-slow {
-    animation: float-slow 6s ease-in-out infinite;
-  }
-}

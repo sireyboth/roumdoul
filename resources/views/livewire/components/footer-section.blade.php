@@ -3,19 +3,19 @@
     <div class="border-b border-plum-100 bg-brand-50/60 dark:border-plum-800 dark:bg-plum-800/40">
       <div class="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-6 text-center sm:px-6 lg:grid-cols-4 lg:px-8">
         <div class="flex flex-col items-center gap-2">
-          <x-icon name="bolt" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
+          <x-app-icon name="bolt" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
           <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">ដឹកជញ្ជូនភ្លាមៗ</span>
         </div>
         <div class="flex flex-col items-center gap-2">
-          <x-icon name="shield-check" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
+          <x-app-icon name="shield-check" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
           <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">ការទូទាត់ដោយសុវត្ថិភាព</span>
         </div>
         <div class="flex flex-col items-center gap-2">
-          <x-icon name="chat" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
+          <x-app-icon name="chat" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
           <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">គាំទ្រអតិថិជន ២៤/៧</span>
         </div>
         <div class="flex flex-col items-center gap-2">
-          <x-icon name="heart" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
+          <x-app-icon name="heart" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
           <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">ទុកចិត្តដោយអតិថិជនរាប់ពាន់នាក់</span>
         </div>
       </div>
@@ -82,14 +82,14 @@
             <li><a href="/about" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">អំពីយើង</a></li>
             <li><a href="/contact" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">ទំនាក់ទំនង</a></li>
             <li class="flex items-start gap-2 pt-2">
-              <x-icon name="envelope" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
+              <x-app-icon name="envelope" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
               <a id="footer-email-link" href="#" target="_blank" rel="noopener noreferrer"
                 class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
                 <span id="footer-email-text"></span>
               </a>
             </li>
             <li class="flex items-start gap-2">
-              <x-icon name="phone" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
+              <x-app-icon name="phone" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
               <a id="footer-phone-link" href="#" target="_blank" rel="noopener noreferrer"
                 class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
                 <span id="footer-phone-text"></span>

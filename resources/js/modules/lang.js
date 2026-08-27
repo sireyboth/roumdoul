@@ -109,15 +109,29 @@ function restoreOriginal() {
   window.location.reload()
 }
 
-export function restorePersistedLanguage() {
-  if (isEnglish) return
-  if (localStorage.getItem(LANG_STORAGE_KEY) !== 'en') return
+function revealApp() {
+  document.documentElement.classList.remove('translating')
+}
 
-  activateEnglish().catch((err) => {
-    // eslint-disable-next-line no-console
-    console.error('Could not restore English after navigation, staying in Khmer.', err)
-    localStorage.setItem(LANG_STORAGE_KEY, 'km')
-  })
+export function restorePersistedLanguage() {
+  if (localStorage.getItem(LANG_STORAGE_KEY) !== 'en') {
+    revealApp()
+    return
+  }
+
+  if (isEnglish) {
+    revealApp()
+    return
+  }
+
+  activateEnglish()
+    .then(revealApp)
+    .catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('Could not restore English after navigation, staying in Khmer.', err)
+      localStorage.setItem(LANG_STORAGE_KEY, 'km')
+      revealApp()
+    })
 }
 
 function setMenuOpen(wrapper, isOpen) {
