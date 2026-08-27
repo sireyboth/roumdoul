@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages;
 
 use App\Models\Category;
+use App\Models\Review;
 use App\Models\Service;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -20,6 +21,11 @@ class HomePage extends Component
                 ->where('is_active', true)
                 ->where('is_featured', true)
                 ->orderBy('sort_order')
+                ->get(),
+            'reviews' => Review::whereNotNull('comment')
+                ->where('comment', '!=', '')
+                ->latest()
+                ->limit(20)
                 ->get(),
         ]);
     }

@@ -1,9 +1,12 @@
 <div>
   {{-- Hero promo carousel --}}
   <section id="hero-slider" class="relative h-96 overflow-hidden sm:h-104">
-    <div class="hero-slide absolute inset-0 opacity-100 transition-opacity duration-700 bg-brand-950"></div>
-    <div class="hero-slide absolute inset-0 opacity-0 transition-opacity duration-700 bg-brand-900"></div>
-    <div class="hero-slide absolute inset-0 opacity-0 transition-opacity duration-700 bg-plum-950"></div>
+    <div class="hero-slide absolute inset-0 bg-cover bg-center opacity-100 transition-opacity duration-700"
+      style="background-image: linear-gradient(to bottom right, rgb(53 10 30 / 0.85), rgb(12 22 34 / 0.85)), url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1600&q=80')"></div>
+    <div class="hero-slide absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-700"
+      style="background-image: linear-gradient(to bottom right, rgb(53 10 30 / 0.85), rgb(12 22 34 / 0.85)), url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1600&q=80')"></div>
+    <div class="hero-slide absolute inset-0 bg-cover bg-center opacity-0 transition-opacity duration-700"
+      style="background-image: linear-gradient(to bottom right, rgb(53 10 30 / 0.85), rgb(12 22 34 / 0.85)), url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1600&q=80')"></div>
 
     <div class="relative mx-auto flex h-full max-w-7xl flex-col items-center justify-center px-4 text-center sm:px-6 lg:px-8">
       <span class="mb-4 flex items-center gap-2 rounded-full border border-gold-400/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300">
@@ -105,33 +108,78 @@
   </section>
 
   {{-- Testimonials --}}
-  <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-    <div data-reveal class="mb-10 text-center">
-      <h2 class="text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">អតិថិជនរបស់យើងនិយាយអ្វី</h2>
+  <section class="py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div data-reveal class="mb-10 text-center">
+        <h2 class="text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">អតិថិជនរបស់យើងនិយាយអ្វី</h2>
+      </div>
     </div>
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      @foreach ([
-          ['name' => 'សុខា', 'text' => 'ទិញ Gemini Pro នៅទីនេះ ដឹកជញ្ជូនលឿនណាស់ ក្នុងរយៈពេលតែប៉ុន្មាននាទី!', 'role' => 'អតិថិជនទៀងទាត់'],
-          ['name' => 'ដារា', 'text' => 'តម្លៃសមរម្យ សេវាកម្មល្អ ខ្ញុំណែនាំមិត្តភក្តិទាំងអស់ឱ្យមកទិញនៅទីនេះ។', 'role' => 'Freelancer'],
-          ['name' => 'ចន្ទថា', 'text' => 'ក្រុមការងារឆ្លើយតបលឿន និងមានភាពរួសរាយ។ ជឿជាក់បាន ១០០%!', 'role' => 'Business Owner'],
-      ] as $t)
-        <div data-reveal class="rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
-          <div class="flex gap-0.5 text-gold-500">
-            @for ($i = 0; $i < 5; $i++)
-              <x-app-icon name="star" class="h-4 w-4 fill-current" />
-            @endfor
-          </div>
-          <p class="mt-3 text-sm leading-relaxed text-plum-600 dark:text-plum-300">&ldquo;{{ $t['text'] }}&rdquo;</p>
-          <div class="mt-4 flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-sm font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">{{ mb_substr($t['name'], 0, 1) }}</span>
-            <div>
-              <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $t['name'] }}</p>
-              <p class="text-xs text-plum-400">{{ $t['role'] }}</p>
+
+    @if ($reviews->isEmpty())
+      {{-- No real reviews yet — sample testimonials so the section isn't empty pre-launch --}}
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          @foreach ([
+              ['name' => 'សុខា', 'text' => 'ទិញ Gemini Pro នៅទីនេះ ដឹកជញ្ជូនលឿនណាស់ ក្នុងរយៈពេលតែប៉ុន្មាននាទី!'],
+              ['name' => 'ដារា', 'text' => 'តម្លៃសមរម្យ សេវាកម្មល្អ ខ្ញុំណែនាំមិត្តភក្តិទាំងអស់ឱ្យមកទិញនៅទីនេះ។'],
+              ['name' => 'ចន្ទថា', 'text' => 'ក្រុមការងារឆ្លើយតបលឿន និងមានភាពរួសរាយ។ ជឿជាក់បាន ១០០%!'],
+          ] as $t)
+            <div data-reveal class="rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
+              <div class="flex gap-0.5 text-gold-500">
+                @for ($i = 0; $i < 5; $i++)
+                  <x-app-icon name="star" class="h-4 w-4 fill-current" />
+                @endfor
+              </div>
+              <p class="mt-3 text-sm leading-relaxed text-plum-600 dark:text-plum-300">&ldquo;{{ $t['text'] }}&rdquo;</p>
+              <div class="mt-4 flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-sm font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">{{ mb_substr($t['name'], 0, 1) }}</span>
+                <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $t['name'] }}</p>
+              </div>
             </div>
-          </div>
+          @endforeach
         </div>
-      @endforeach
-    </div>
+      </div>
+    @elseif ($reviews->count() > 4)
+      {{-- Many real reviews — auto-scrolling marquee, duplicated once for a seamless loop --}}
+      <div class="overflow-hidden">
+        <div class="flex w-max animate-marquee gap-5">
+          @foreach ($reviews->concat($reviews) as $review)
+            <div wire:key="review-marquee-{{ $loop->index }}" class="w-80 shrink-0 rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
+              <div class="flex gap-0.5 text-gold-500">
+                @for ($i = 0; $i < 5; $i++)
+                  <x-app-icon name="star" class="h-4 w-4 {{ $i < $review->rating ? 'fill-current' : 'text-plum-200 dark:text-plum-700' }}" />
+                @endfor
+              </div>
+              <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-plum-600 dark:text-plum-300">&ldquo;{{ $review->comment }}&rdquo;</p>
+              <div class="mt-4 flex items-center gap-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-plum-100 text-sm font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">{{ mb_substr($review->customer_name, 0, 1) }}</span>
+                <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $review->customer_name }}</p>
+              </div>
+            </div>
+          @endforeach
+        </div>
+      </div>
+    @else
+      {{-- A handful of real reviews — static grid --}}
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          @foreach ($reviews as $review)
+            <div data-reveal wire:key="review-{{ $review->id }}" class="rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
+              <div class="flex gap-0.5 text-gold-500">
+                @for ($i = 0; $i < 5; $i++)
+                  <x-app-icon name="star" class="h-4 w-4 {{ $i < $review->rating ? 'fill-current' : 'text-plum-200 dark:text-plum-700' }}" />
+                @endfor
+              </div>
+              <p class="mt-3 text-sm leading-relaxed text-plum-600 dark:text-plum-300">&ldquo;{{ $review->comment }}&rdquo;</p>
+              <div class="mt-4 flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-sm font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">{{ mb_substr($review->customer_name, 0, 1) }}</span>
+                <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $review->customer_name }}</p>
+              </div>
+            </div>
+          @endforeach
+        </div>
+      </div>
+    @endif
   </section>
 
   {{-- CTA banner --}}

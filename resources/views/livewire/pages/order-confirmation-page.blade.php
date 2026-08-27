@@ -50,4 +50,58 @@
       ត្រឡប់ទៅទំព័រដើម
     </a>
   </div>
+
+  {{-- Post-order feedback modal --}}
+  <div x-data="{ open: @js(! $reviewSubmitted) }">
+    <div x-show="open" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-plum-950/60" @click="open = false"></div>
+
+    <div x-show="open" x-cloak x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="w-full max-w-sm rounded-lg bg-white p-6 dark:bg-plum-900">
+        @if ($reviewSubmitted)
+          <div class="flex flex-col items-center text-center">
+            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+              <x-app-icon name="check-circle" class="h-7 w-7" />
+            </span>
+            <p class="mt-3 text-base font-bold text-plum-900 dark:text-white">អរគុណសម្រាប់មតិយោបល់របស់អ្នក!</p>
+            <button type="button" @click="open = false"
+              class="mt-5 rounded-full bg-brand-600 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
+              បិទ
+            </button>
+          </div>
+        @else
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-plum-900 dark:text-white">វាយតម្លៃបទពិសោធន៍ទិញរបស់អ្នក</h2>
+            <button type="button" @click="open = false" class="text-plum-400 hover:text-plum-600">
+              <x-app-icon name="x-mark" class="h-5 w-5" />
+            </button>
+          </div>
+          <p class="mt-1 text-xs text-plum-500 dark:text-plum-400">មតិយោបល់របស់អ្នកជួយពួកយើងកែលម្អសេវាកម្ម</p>
+
+          <div class="mt-5 flex justify-center gap-1.5">
+            @for ($i = 1; $i <= 5; $i++)
+              <button type="button" wire:click="$set('rating', {{ $i }})" wire:key="rating-star-{{ $i }}">
+                <x-app-icon name="star" class="h-8 w-8 transition-colors {{ $i <= $rating ? 'fill-current text-gold-500' : 'text-plum-200 dark:text-plum-700' }}" />
+              </button>
+            @endfor
+          </div>
+
+          <textarea wire:model="comment" rows="3" placeholder="មតិយោបល់ (មិនចាំបាច់)..."
+            class="mt-4 w-full rounded-lg border border-plum-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800"></textarea>
+          @error('comment') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+
+          <div class="mt-5 flex gap-2">
+            <button type="button" @click="open = false"
+              class="flex-1 rounded-full border border-plum-300 px-4 py-2.5 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-50 dark:border-plum-600 dark:text-plum-300 dark:hover:bg-plum-800">
+              រំលង
+            </button>
+            <button type="button" wire:click="submitReview"
+              class="flex-1 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
+              <span wire:loading.remove wire:target="submitReview">ផ្ញើមតិយោបល់</span>
+              <span wire:loading wire:target="submitReview">កំពុងផ្ញើ...</span>
+            </button>
+          </div>
+        @endif
+      </div>
+    </div>
+  </div>
 </div>

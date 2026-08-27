@@ -3,7 +3,7 @@
     <header class="sticky top-0 z-40 border-b border-plum-200 bg-white/95 shadow-sm backdrop-blur transition-colors dark:border-plum-800 dark:bg-plum-900/95">
       <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <a href="/" wire:navigate class="flex shrink-0 items-center gap-2.5">
-          <span class="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand-500 to-brand-800 text-lg font-bold text-white shadow-md shadow-brand-900/20">រ</span>
+          <img src="/images/Roumdoul_Logo.png" alt="ROUMDOUL" class="h-10 w-10 shrink-0 rounded-full object-contain" />
           <span class="flex flex-col leading-tight">
             <span class="text-lg font-extrabold tracking-tight text-brand-800 dark:text-white sm:text-xl">ROUMDOUL</span>
             <span class="hidden text-[11px] font-medium text-plum-500 dark:text-plum-400 sm:block">រំដួល &middot; Premium Digital Services</span>

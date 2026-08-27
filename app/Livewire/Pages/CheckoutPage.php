@@ -4,6 +4,7 @@ namespace App\Livewire\Pages;
 
 use App\Models\Order;
 use App\Services\CartService;
+use App\Services\TelegramNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -32,7 +33,7 @@ class CheckoutPage extends Component
         ];
     }
 
-    public function placeOrder(CartService $cart)
+    public function placeOrder(CartService $cart, TelegramNotifier $telegram)
     {
         $items = $cart->items();
 
@@ -71,6 +72,8 @@ class CheckoutPage extends Component
 
             return $order;
         });
+
+        $telegram->sendNewOrder($order);
 
         $this->dispatch('cart-updated');
 

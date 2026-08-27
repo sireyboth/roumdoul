@@ -25,7 +25,7 @@
       <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div class="flex flex-col gap-4 sm:col-span-2 lg:col-span-1">
           <a href="/" wire:navigate class="flex items-center gap-2.5">
-            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-brand-500 to-brand-800 text-lg font-bold text-white">រ</span>
+            <img src="/images/Roumdoul_Logo.png" alt="ROUMDOUL" class="h-10 w-10 shrink-0 rounded-full object-contain" />
             <span class="text-lg font-extrabold tracking-tight text-brand-800 dark:text-white">ROUMDOUL</span>
           </a>
           <p class="text-sm leading-relaxed text-plum-600 dark:text-plum-400">
