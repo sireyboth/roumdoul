@@ -12,12 +12,19 @@ $fromPrice = $service->plans->min('price') ?? $service->base_price;
     </span>
   @endif
 
-  <div class="flex aspect-[4/3] items-center justify-center bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
+  <div class="relative flex aspect-4/3 items-center justify-center bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $service->in_stock ? '' : 'opacity-50 grayscale' }}">
     @if ($service->image_path)
       <img src="{{ \Illuminate\Support\Facades\Storage::url($service->image_path) }}" alt="{{ $service->name_en }}" class="h-full w-full object-cover" />
     @else
       <x-app-icon name="{{ $service->category->icon }}" class="h-12 w-12" />
     @endif
+    @unless ($service->in_stock)
+      <div class="absolute inset-0 flex items-center justify-center bg-plum-950/40">
+        <span class="rounded-full bg-plum-950/80 px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest text-white">
+          Out of Stock
+        </span>
+      </div>
+    @endunless
   </div>
 
   <div class="flex flex-1 flex-col gap-1.5 p-4">

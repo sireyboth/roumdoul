@@ -37,7 +37,7 @@ class CheckoutPage extends Component
     {
         $items = $cart->items();
 
-        if ($items->isEmpty()) {
+        if ($items->isEmpty() || $items->contains(fn ($item) => ! $item->service->in_stock)) {
             $this->redirect('/cart', navigate: true);
 
             return;
@@ -82,9 +82,12 @@ class CheckoutPage extends Component
 
     public function render(CartService $cart)
     {
+        $items = $cart->items();
+
         return view('livewire.pages.checkout-page', [
-            'items' => $cart->items(),
+            'items' => $items,
             'subtotal' => $cart->subtotal(),
+            'hasOutOfStock' => $items->contains(fn ($item) => ! $item->service->in_stock),
         ]);
     }
 }

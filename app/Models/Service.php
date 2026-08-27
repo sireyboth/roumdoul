@@ -22,6 +22,7 @@ class Service extends Model
         'base_price',
         'is_featured',
         'is_active',
+        'in_stock',
         'sort_order',
     ];
 
@@ -29,6 +30,7 @@ class Service extends Model
         'base_price' => 'decimal:2',
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
+        'in_stock' => 'boolean',
     ];
 
     public function category(): BelongsTo

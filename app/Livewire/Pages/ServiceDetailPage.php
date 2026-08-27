@@ -28,6 +28,10 @@ class ServiceDetailPage extends Component
 
     public function addToCart(CartService $cart): void
     {
+        if (! $this->service->in_stock) {
+            return;
+        }
+
         $cart->add($this->service->id, $this->selectedPlanId, $this->quantity);
         $this->added = true;
         $this->dispatch('cart-updated');

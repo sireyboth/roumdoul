@@ -74,6 +74,10 @@ class ServiceForm
                             ->label('Active')
                             ->helperText('Visible in the shop.')
                             ->default(true),
+                        Toggle::make('in_stock')
+                            ->label('In stock')
+                            ->helperText('Off shows "Out of Stock" and blocks purchases.')
+                            ->default(true),
                     ]),
 
                 Section::make('Pricing plans')

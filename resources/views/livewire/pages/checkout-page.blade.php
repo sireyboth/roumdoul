@@ -61,10 +61,13 @@
         <ul class="mt-4 flex flex-col gap-3">
           @foreach ($items as $item)
             <li class="flex justify-between gap-2 text-sm">
-              <span class="text-plum-600 dark:text-plum-300">
+              <span class="{{ $item->service->in_stock ? 'text-plum-600 dark:text-plum-300' : 'text-red-600 dark:text-red-400' }}">
                 {{ $item->service->name_en }}
                 @if ($item->plan) <span class="text-plum-400">({{ $item->plan->label }})</span> @endif
                 &times; {{ $item->quantity }}
+                @unless ($item->service->in_stock)
+                  <span class="font-bold uppercase">&mdash; Out of Stock</span>
+                @endunless
               </span>
               <span class="shrink-0 font-semibold text-plum-900 dark:text-white">${{ number_format($item->line_total, 2) }}</span>
             </li>
@@ -74,11 +77,22 @@
           <span>សរុប</span>
           <span class="text-brand-700 dark:text-brand-300">${{ number_format($subtotal, 2) }}</span>
         </div>
-        <button type="submit"
-          class="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700">
-          <span wire:loading.remove wire:target="placeOrder">ដាក់ការបញ្ជាទិញ</span>
-          <span wire:loading wire:target="placeOrder">កំពុងដំណើរការ...</span>
-        </button>
+        @if ($hasOutOfStock)
+          <p class="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-red-600 dark:text-red-400">
+            <x-app-icon name="x-circle" class="mt-0.5 h-4 w-4 shrink-0" />
+            សូមត្រឡប់ទៅកន្ត្រក ដើម្បីដកចេញនូវទំនិញដែលអស់ពីស្តុក។
+          </p>
+          <a href="/cart" wire:navigate
+            class="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-plum-200 px-6 py-3 text-sm font-bold text-plum-700 transition-colors hover:bg-plum-300 dark:bg-plum-800 dark:text-plum-200 dark:hover:bg-plum-700">
+            ត្រឡប់ទៅកន្ត្រក
+          </a>
+        @else
+          <button type="submit"
+            class="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700">
+            <span wire:loading.remove wire:target="placeOrder">ដាក់ការបញ្ជាទិញ</span>
+            <span wire:loading wire:target="placeOrder">កំពុងដំណើរការ...</span>
+          </button>
+        @endif
       </div>
     </form>
   @endif

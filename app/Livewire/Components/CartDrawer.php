@@ -22,9 +22,12 @@ class CartDrawer extends Component
 
     public function render(CartService $cart)
     {
+        $items = $cart->items();
+
         return view('livewire.components.cart-drawer', [
-            'items' => $cart->items(),
+            'items' => $items,
             'subtotal' => $cart->subtotal(),
+            'hasOutOfStock' => $items->contains(fn ($item) => ! $item->service->in_stock),
         ]);
     }
 }

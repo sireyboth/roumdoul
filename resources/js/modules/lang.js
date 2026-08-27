@@ -114,7 +114,9 @@ function revealApp() {
 }
 
 export function restorePersistedLanguage() {
-  if (localStorage.getItem(LANG_STORAGE_KEY) !== 'en') {
+  // English is the default for first-time visitors — only an explicit "km"
+  // choice (via the language switcher) keeps the site in Khmer.
+  if (localStorage.getItem(LANG_STORAGE_KEY) === 'km') {
     revealApp()
     return
   }

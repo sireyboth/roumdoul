@@ -25,9 +25,12 @@ class CartPage extends Component
 
     public function render(CartService $cart)
     {
+        $items = $cart->items();
+
         return view('livewire.pages.cart-page', [
-            'items' => $cart->items(),
+            'items' => $items,
             'subtotal' => $cart->subtotal(),
+            'hasOutOfStock' => $items->contains(fn ($item) => ! $item->service->in_stock),
         ]);
     }
 }

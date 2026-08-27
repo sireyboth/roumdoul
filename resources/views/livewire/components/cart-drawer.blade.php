@@ -32,7 +32,7 @@
         <ul class="flex flex-col gap-4">
           @foreach ($items as $item)
             <li wire:key="cart-drawer-{{ $item->key }}" class="flex gap-3">
-              <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
+              <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $item->service->in_stock ? '' : 'opacity-50 grayscale' }}">
                 <x-app-icon name="{{ $item->service->category->icon }}" class="h-6 w-6" />
               </div>
               <div class="flex-1">
@@ -40,7 +40,13 @@
                 @if ($item->plan)
                   <p class="text-xs text-plum-500 dark:text-plum-400">{{ $item->plan->label }}</p>
                 @endif
-                <p class="mt-1 text-xs text-plum-500 dark:text-plum-400">{{ $item->quantity }} &times; ${{ number_format($item->unit_price, 2) }}</p>
+                @if ($item->service->in_stock)
+                  <p class="mt-1 text-xs text-plum-500 dark:text-plum-400">{{ $item->quantity }} &times; ${{ number_format($item->unit_price, 2) }}</p>
+                @else
+                  <p class="mt-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
+                    <x-app-icon name="x-circle" class="h-3 w-3" /> Out of Stock
+                  </p>
+                @endif
               </div>
               <div class="flex flex-col items-end justify-between">
                 <span class="text-sm font-bold text-brand-700 dark:text-brand-300">${{ number_format($item->line_total, 2) }}</span>
@@ -61,11 +67,24 @@
           <span>សរុប</span>
           <span class="text-lg font-bold text-brand-700 dark:text-brand-300">${{ number_format($subtotal, 2) }}</span>
         </div>
+        @if ($hasOutOfStock)
+          <p class="mb-2 flex items-start gap-1.5 text-xs leading-relaxed text-red-600 dark:text-red-400">
+            <x-app-icon name="x-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            សូមដកចេញនូវទំនិញដែលអស់ពីស្តុក មុននឹងទូទាត់ប្រាក់។
+          </p>
+        @endif
         <div class="flex flex-col gap-2">
-          <a href="/checkout" wire:navigate @click="$store.cartDrawer.hide()"
-            class="block rounded-full bg-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-md shadow-brand-900/20 transition-colors hover:bg-brand-700">
-            ទូទាត់ប្រាក់
-          </a>
+          @if ($hasOutOfStock)
+            <button type="button" disabled
+              class="block w-full cursor-not-allowed rounded-full bg-plum-200 px-4 py-2.5 text-center text-sm font-semibold text-plum-500 dark:bg-plum-800 dark:text-plum-500">
+              ទូទាត់ប្រាក់
+            </button>
+          @else
+            <a href="/checkout" wire:navigate @click="$store.cartDrawer.hide()"
+              class="block rounded-full bg-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-md shadow-brand-900/20 transition-colors hover:bg-brand-700">
+              ទូទាត់ប្រាក់
+            </a>
+          @endif
           <a href="/cart" wire:navigate @click="$store.cartDrawer.hide()"
             class="block rounded-full border border-plum-300 px-4 py-2.5 text-center text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-50 dark:border-plum-600 dark:text-plum-200 dark:hover:bg-plum-800">
             មើលកន្ត្រក

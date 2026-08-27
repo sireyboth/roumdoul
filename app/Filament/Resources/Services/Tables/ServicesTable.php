@@ -45,6 +45,9 @@ class ServicesTable
                     ->boolean(),
                 IconColumn::make('is_active')
                     ->boolean(),
+                IconColumn::make('in_stock')
+                    ->label('In stock')
+                    ->boolean(),
                 TextColumn::make('sort_order')
                     ->numeric()
                     ->sortable()
@@ -58,6 +61,8 @@ class ServicesTable
                     ->label('Active'),
                 TernaryFilter::make('is_featured')
                     ->label('Featured'),
+                TernaryFilter::make('in_stock')
+                    ->label('In stock'),
             ])
             ->recordActions([
                 EditAction::make(),

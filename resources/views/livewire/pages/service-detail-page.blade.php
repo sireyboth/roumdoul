@@ -24,11 +24,22 @@
       </div>
 
       <div>
-        @if ($service->is_featured)
-          <span class="mb-3 inline-flex items-center gap-1 rounded-full bg-gold-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-950">
-            <x-app-icon name="star" class="h-3 w-3" /> Featured
-          </span>
-        @endif
+        <div class="mb-3 flex flex-wrap items-center gap-2">
+          @if ($service->is_featured)
+            <span class="inline-flex items-center gap-1 rounded-full bg-gold-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-950">
+              <x-app-icon name="star" class="h-3 w-3" /> Featured
+            </span>
+          @endif
+          @if ($service->in_stock)
+            <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-green-700 dark:bg-green-900/30 dark:text-green-400">
+              <x-app-icon name="check-circle" class="h-3 w-3" /> In Stock
+            </span>
+          @else
+            <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              <x-app-icon name="x-circle" class="h-3 w-3" /> Out of Stock
+            </span>
+          @endif
+        </div>
         <span class="block text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ $service->category->name_km }}</span>
         <h1 class="mt-1 text-2xl font-extrabold text-plum-900 dark:text-white sm:text-3xl">{{ $service->name_en }}</h1>
         <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">{{ $service->name_km }}</p>
@@ -59,20 +70,28 @@
           </div>
 
           <div class="flex items-center rounded-full border border-plum-200 dark:border-plum-700">
-            <button type="button" wire:click="$set('quantity', {{ max(1, $quantity - 1) }})"
-              class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700">&minus;</button>
+            <button type="button" wire:click="$set('quantity', {{ max(1, $quantity - 1) }})" @disabled(! $service->in_stock)
+              class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">&minus;</button>
             <span class="w-8 text-center text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $quantity }}</span>
-            <button type="button" wire:click="$set('quantity', {{ $quantity + 1 }})"
-              class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700">+</button>
+            <button type="button" wire:click="$set('quantity', {{ $quantity + 1 }})" @disabled(! $service->in_stock)
+              class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">+</button>
           </div>
         </div>
 
-        <button type="button" wire:click="addToCart"
-          class="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700 sm:w-auto sm:px-10">
-          <x-app-icon name="cart" class="h-5 w-5" />
-          <span wire:loading.remove wire:target="addToCart">បន្ថែមទៅកន្ត្រក</span>
-          <span wire:loading wire:target="addToCart">កំពុងបន្ថែម...</span>
-        </button>
+        @if ($service->in_stock)
+          <button type="button" wire:click="addToCart"
+            class="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700 sm:w-auto sm:px-10">
+            <x-app-icon name="cart" class="h-5 w-5" />
+            <span wire:loading.remove wire:target="addToCart">បន្ថែមទៅកន្ត្រក</span>
+            <span wire:loading wire:target="addToCart">កំពុងបន្ថែម...</span>
+          </button>
+        @else
+          <button type="button" disabled
+            class="mt-6 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-plum-200 px-6 py-3.5 text-sm font-bold text-plum-500 sm:w-auto sm:px-10 dark:bg-plum-800 dark:text-plum-500">
+            <x-app-icon name="x-circle" class="h-5 w-5" />
+            អស់ពីស្តុក
+          </button>
+        @endif
         @if ($added)
           <p class="mt-2 flex items-center gap-1.5 text-sm font-semibold text-green-600 dark:text-green-400">
             <x-app-icon name="check-circle" class="h-4 w-4" /> បានបន្ថែមទៅកន្ត្រកដោយជោគជ័យ!

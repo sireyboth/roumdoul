@@ -7,7 +7,7 @@
     (function () {
       var stored = localStorage.getItem('theme');
       document.documentElement.classList.toggle('dark', stored === 'dark');
-      if (localStorage.getItem('lang') === 'en') {
+      if (localStorage.getItem('lang') !== 'km') {
         document.documentElement.classList.add('translating');
       }
     })();

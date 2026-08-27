@@ -14,8 +14,8 @@
       <div class="flex flex-col gap-4 lg:col-span-2">
         @foreach ($items as $item)
           <div wire:key="cart-item-{{ $item->key }}"
-            class="flex items-center gap-4 rounded-lg border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
-            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
+            class="flex items-center gap-4 rounded-lg border p-4 {{ $item->service->in_stock ? 'border-plum-200 bg-white dark:border-plum-800 dark:bg-plum-900' : 'border-red-200 bg-red-50/50 dark:border-red-900/40 dark:bg-red-900/10' }}">
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $item->service->in_stock ? '' : 'opacity-50 grayscale' }}">
               <x-app-icon name="{{ $item->service->category->icon }}" class="h-7 w-7" />
             </div>
             <div class="min-w-0 flex-1">
@@ -23,15 +23,21 @@
               @if ($item->plan)
                 <p class="text-xs text-plum-500 dark:text-plum-400">{{ $item->plan->label }}</p>
               @endif
-              <p class="mt-1 text-sm font-semibold text-brand-700 dark:text-brand-300">${{ number_format($item->unit_price, 2) }}</p>
+              @if ($item->service->in_stock)
+                <p class="mt-1 text-sm font-semibold text-brand-700 dark:text-brand-300">${{ number_format($item->unit_price, 2) }}</p>
+              @else
+                <p class="mt-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
+                  <x-app-icon name="x-circle" class="h-3.5 w-3.5" /> អស់ពីស្តុក &mdash; Out of Stock
+                </p>
+              @endif
             </div>
 
             <div class="flex items-center rounded-full border border-plum-200 dark:border-plum-700">
-              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity - 1 }})"
-                class="flex h-8 w-8 items-center justify-center text-plum-500 hover:text-brand-700">&minus;</button>
+              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity - 1 }})" @disabled(! $item->service->in_stock)
+                class="flex h-8 w-8 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">&minus;</button>
               <span class="w-6 text-center text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $item->quantity }}</span>
-              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity + 1 }})"
-                class="flex h-8 w-8 items-center justify-center text-plum-500 hover:text-brand-700">+</button>
+              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity + 1 }})" @disabled(! $item->service->in_stock)
+                class="flex h-8 w-8 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">+</button>
             </div>
 
             <div class="w-20 shrink-0 text-right text-sm font-bold text-plum-900 dark:text-white">
@@ -60,10 +66,21 @@
           <span>សរុប</span>
           <span class="text-brand-700 dark:text-brand-300">${{ number_format($subtotal, 2) }}</span>
         </div>
-        <a href="/checkout" wire:navigate
-          class="mt-5 block rounded-full bg-brand-600 px-6 py-3 text-center text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700">
-          បន្តទៅការទូទាត់
-        </a>
+        @if ($hasOutOfStock)
+          <p class="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-red-600 dark:text-red-400">
+            <x-app-icon name="x-circle" class="mt-0.5 h-4 w-4 shrink-0" />
+            សូមដកចេញនូវទំនិញដែលអស់ពីស្តុក មុននឹងបន្តទៅការទូទាត់។
+          </p>
+          <button type="button" disabled
+            class="mt-3 block w-full cursor-not-allowed rounded-full bg-plum-200 px-6 py-3 text-center text-sm font-bold text-plum-500 dark:bg-plum-800 dark:text-plum-500">
+            បន្តទៅការទូទាត់
+          </button>
+        @else
+          <a href="/checkout" wire:navigate
+            class="mt-5 block rounded-full bg-brand-600 px-6 py-3 text-center text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700">
+            បន្តទៅការទូទាត់
+          </a>
+        @endif
       </div>
     </div>
   @endif

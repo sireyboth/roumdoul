@@ -29,7 +29,7 @@
             <span class="text-lg font-extrabold tracking-tight text-brand-800 dark:text-white">ROUMDOUL</span>
           </a>
           <p class="text-sm leading-relaxed text-plum-600 dark:text-plum-400">
-            រំដួល &mdash; ហាងសេវាកម្មឌីជីថលកម្រិតខ្ពស់ សម្រាប់ Gemini Pro, Envato, Netflix និងកម្មវិធីល្បីៗជាច្រើនទៀត ដោយសុវត្ថិភាព និងតម្លៃសមរម្យ។
+            រំដួល &mdash; ហាងសេវាកម្មឌីជីថលកម្រិតខ្ពស់ និងកម្មវិធីល្បីៗជាច្រើនទៀត ដោយសុវត្ថិភាព និងតម្លៃសមរម្យ។
           </p>
           <div class="flex items-center gap-3">
             <a data-social="facebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
