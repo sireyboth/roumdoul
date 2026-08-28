@@ -14,7 +14,7 @@ $fromPrice = $service->plans->min('price') ?? $service->base_price;
 
   <div class="relative flex aspect-4/3 items-center justify-center bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $service->in_stock ? '' : 'opacity-50 grayscale' }}">
     @if ($service->image_path)
-      <img src="{{ \Illuminate\Support\Facades\Storage::url($service->image_path) }}" alt="{{ $service->name_en }}" class="h-full w-full object-cover" />
+      <img src="{{ \Illuminate\Support\Facades\Storage::url($service->image_path) }}" alt="{{ $service->name_en }}" loading="lazy" decoding="async" class="h-full w-full object-cover" />
     @else
       <x-app-icon name="{{ $service->category->icon }}" class="h-12 w-12" />
     @endif

@@ -34,6 +34,9 @@ class TelegramNotifier
         }
 
         $lines[] = '';
+        if ($order->discount_amount > 0) {
+            $lines[] = "🏷️ Promo {$esc($order->promo_code)}: -\${$order->discount_amount}";
+        }
         $lines[] = "💰 Total: \${$order->total}";
         if ($order->notes) {
             $lines[] = '📝 Notes: '.$esc($order->notes);

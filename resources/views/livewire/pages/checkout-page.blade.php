@@ -73,9 +73,19 @@
             </li>
           @endforeach
         </ul>
-        <div class="mt-4 flex items-center justify-between border-t border-plum-100 pt-4 text-base font-bold text-plum-900 dark:border-plum-800 dark:text-white">
+        <div class="mt-4 flex items-center justify-between border-t border-plum-100 pt-4 text-sm text-plum-600 dark:border-plum-800 dark:text-plum-300">
+          <span>សរុបរង</span>
+          <span>${{ number_format($subtotal, 2) }}</span>
+        </div>
+        @if ($appliedPromoCode)
+          <div class="mt-1.5 flex items-center justify-between text-sm text-green-600 dark:text-green-400">
+            <span>លេខកូដ {{ $appliedPromoCode->code }}</span>
+            <span>&minus;${{ number_format($discount, 2) }}</span>
+          </div>
+        @endif
+        <div class="mt-2 flex items-center justify-between border-t border-plum-100 pt-4 text-base font-bold text-plum-900 dark:border-plum-800 dark:text-white">
           <span>សរុប</span>
-          <span class="text-brand-700 dark:text-brand-300">${{ number_format($subtotal, 2) }}</span>
+          <span class="text-brand-700 dark:text-brand-300">${{ number_format($total, 2) }}</span>
         </div>
         @if ($hasOutOfStock)
           <p class="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-red-600 dark:text-red-400">

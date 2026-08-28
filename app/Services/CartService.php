@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\PromoCode;
 use App\Models\Service;
 use App\Models\ServicePlan;
 use Illuminate\Support\Collection;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Session;
 class CartService
 {
     protected const SESSION_KEY = 'cart';
+
+    protected const PROMO_SESSION_KEY = 'cart_promo_code';
 
     public function add(int $serviceId, ?int $planId, int $quantity = 1): void
     {
@@ -56,6 +59,7 @@ class CartService
     public function clear(): void
     {
         Session::forget(self::SESSION_KEY);
+        Session::forget(self::PROMO_SESSION_KEY);
     }
 
     public function raw(): array
@@ -113,6 +117,60 @@ class CartService
     public function subtotal(): float
     {
         return (float) $this->items()->sum('line_total');
+    }
+
+    /**
+     * Attempt to apply a promo code to the cart. Returns a message to show the customer either way.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function applyPromoCode(string $code): array
+    {
+        $promoCode = PromoCode::where('code', strtoupper(trim($code)))->first();
+
+        if (! $promoCode || ! $promoCode->isValid()) {
+            return ['success' => false, 'message' => 'លេខកូដមិនត្រឹមត្រូវ ឬផុតកំណត់ហើយ។'];
+        }
+
+        Session::put(self::PROMO_SESSION_KEY, $promoCode->code);
+
+        return ['success' => true, 'message' => 'បានប្រើប្រាស់លេខកូដដោយជោគជ័យ! ('.$promoCode->label().')'];
+    }
+
+    public function removePromoCode(): void
+    {
+        Session::forget(self::PROMO_SESSION_KEY);
+    }
+
+    public function appliedPromoCode(): ?PromoCode
+    {
+        $code = Session::get(self::PROMO_SESSION_KEY);
+
+        if (! $code) {
+            return null;
+        }
+
+        $promoCode = PromoCode::where('code', $code)->first();
+
+        if (! $promoCode || ! $promoCode->isValid()) {
+            $this->removePromoCode();
+
+            return null;
+        }
+
+        return $promoCode;
+    }
+
+    public function discount(): float
+    {
+        $promoCode = $this->appliedPromoCode();
+
+        return $promoCode ? $promoCode->discountFor($this->subtotal()) : 0.0;
+    }
+
+    public function total(): float
+    {
+        return max(0, $this->subtotal() - $this->discount());
     }
 
     public function key(int $serviceId, ?int $planId): string

@@ -55,6 +55,12 @@ class ServiceForm
                             ->imageEditor()
                             ->disk('public')
                             ->directory('services')
+                            ->maxSize(3072)
+                            ->helperText('Max 3MB. Automatically resized to 1200×900 before saving, so large phone photos won\'t slow down the shop.')
+                            ->automaticallyResizeImagesMode('cover')
+                            ->automaticallyResizeImagesToWidth('1200')
+                            ->automaticallyResizeImagesToHeight('900')
+                            ->automaticallyUpscaleImagesWhenResizing(false)
                             ->columnSpanFull(),
                         TextInput::make('base_price')
                             ->label('Base price')
@@ -62,6 +68,12 @@ class ServiceForm
                             ->required()
                             ->numeric()
                             ->prefix('$'),
+                        TextInput::make('demo_url')
+                            ->label('Live demo URL')
+                            ->helperText('Optional — shows a "View Live Demo" button on the product page (e.g. for website templates).')
+                            ->url()
+                            ->placeholder('https://...')
+                            ->columnSpanFull(),
                         TextInput::make('sort_order')
                             ->label('Sort order')
                             ->required()
@@ -78,6 +90,24 @@ class ServiceForm
                             ->label('In stock')
                             ->helperText('Off shows "Out of Stock" and blocks purchases.')
                             ->default(true),
+                    ]),
+
+                Section::make('Gallery')
+                    ->description('Extra screenshots/photos shown on the product page (e.g. multiple pages of a website template, or scenes from a video). The image above is the cover shown in the shop grid.')
+                    ->components([
+                        FileUpload::make('gallery_images')
+                            ->label('')
+                            ->multiple()
+                            ->image()
+                            ->reorderable()
+                            ->disk('public')
+                            ->directory('services/gallery')
+                            ->maxSize(3072)
+                            ->automaticallyResizeImagesMode('cover')
+                            ->automaticallyResizeImagesToWidth('1600')
+                            ->automaticallyResizeImagesToHeight('1200')
+                            ->automaticallyUpscaleImagesWhenResizing(false)
+                            ->panelLayout('grid'),
                     ]),
 
                 Section::make('Pricing plans')

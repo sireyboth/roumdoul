@@ -46,12 +46,16 @@ class CheckoutPage extends Component
         $validated = $this->validate();
 
         $order = DB::transaction(function () use ($validated, $items, $cart) {
+            $promoCode = $cart->appliedPromoCode();
+
             $order = Order::create([
                 'order_number' => 'RD-'.strtoupper(Str::random(8)),
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => $validated['customer_email'],
                 'customer_phone' => $validated['customer_phone'],
-                'total' => $cart->subtotal(),
+                'total' => $cart->total(),
+                'promo_code' => $promoCode?->code,
+                'discount_amount' => $cart->discount(),
                 'status' => 'pending_payment',
                 'notes' => $validated['notes'] ?: null,
             ]);
@@ -67,6 +71,8 @@ class CheckoutPage extends Component
                     'line_total' => $item->line_total,
                 ]);
             }
+
+            $promoCode?->increment('times_used');
 
             $cart->clear();
 
@@ -87,6 +93,9 @@ class CheckoutPage extends Component
         return view('livewire.pages.checkout-page', [
             'items' => $items,
             'subtotal' => $cart->subtotal(),
+            'discount' => $cart->discount(),
+            'total' => $cart->total(),
+            'appliedPromoCode' => $cart->appliedPromoCode(),
             'hasOutOfStock' => $items->contains(fn ($item) => ! $item->service->in_stock),
         ]);
     }

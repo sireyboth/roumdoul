@@ -17,12 +17,15 @@ class Order extends Model
         'customer_email',
         'customer_phone',
         'total',
+        'promo_code',
+        'discount_amount',
         'status',
         'notes',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
     ];
 
     public function items(): HasMany

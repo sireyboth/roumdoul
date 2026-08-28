@@ -58,13 +58,43 @@
 
       <div class="h-fit rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
         <h2 class="text-base font-bold text-plum-900 dark:text-white">សង្ខេបការបញ្ជាទិញ</h2>
+
+        <div class="mt-4">
+          @if ($appliedPromoCode)
+            <div class="flex items-center justify-between gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm dark:border-green-900/40 dark:bg-green-900/10">
+              <span class="flex items-center gap-1.5 font-semibold text-green-700 dark:text-green-400">
+                <x-app-icon name="check-circle" class="h-4 w-4" /> {{ $appliedPromoCode->code }}
+              </span>
+              <button type="button" wire:click="removePromoCode" class="text-xs font-semibold text-plum-500 hover:text-red-600">ដកចេញ</button>
+            </div>
+          @else
+            <form wire:submit="applyPromoCode" class="flex gap-2">
+              <input type="text" wire:model="promoCodeInput" placeholder="លេខកូដបញ្ចុះតម្លៃ"
+                class="w-full rounded-lg border border-plum-200 px-3 py-2 text-sm uppercase outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800" />
+              <button type="submit"
+                class="shrink-0 rounded-lg border border-plum-300 px-4 py-2 text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-50 dark:border-plum-600 dark:text-plum-200 dark:hover:bg-plum-800">
+                ប្រើ
+              </button>
+            </form>
+          @endif
+          @if ($promoMessage)
+            <p class="mt-1.5 text-xs {{ $promoSuccess ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">{{ $promoMessage }}</p>
+          @endif
+        </div>
+
         <div class="mt-4 flex items-center justify-between text-sm text-plum-600 dark:text-plum-300">
           <span>សរុបរង</span>
           <span>${{ number_format($subtotal, 2) }}</span>
         </div>
+        @if ($discount > 0)
+          <div class="mt-1.5 flex items-center justify-between text-sm text-green-600 dark:text-green-400">
+            <span>បញ្ចុះតម្លៃ</span>
+            <span>&minus;${{ number_format($discount, 2) }}</span>
+          </div>
+        @endif
         <div class="mt-2 flex items-center justify-between border-t border-plum-100 pt-4 text-base font-bold text-plum-900 dark:border-plum-800 dark:text-white">
           <span>សរុប</span>
-          <span class="text-brand-700 dark:text-brand-300">${{ number_format($subtotal, 2) }}</span>
+          <span class="text-brand-700 dark:text-brand-300">${{ number_format($total, 2) }}</span>
         </div>
         @if ($hasOutOfStock)
           <p class="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-red-600 dark:text-red-400">

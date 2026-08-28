@@ -19,6 +19,8 @@ class Service extends Model
         'short_description',
         'description',
         'image_path',
+        'gallery_images',
+        'demo_url',
         'base_price',
         'is_featured',
         'is_active',
@@ -31,6 +33,7 @@ class Service extends Model
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
         'in_stock' => 'boolean',
+        'gallery_images' => 'array',
     ];
 
     public function category(): BelongsTo

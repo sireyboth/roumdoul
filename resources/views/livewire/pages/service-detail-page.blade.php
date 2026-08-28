@@ -13,14 +13,34 @@
 
   <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
-      <div>
+      @php
+        $galleryUrls = collect([$service->image_path, ...($service->gallery_images ?? [])])
+          ->filter()
+          ->map(fn ($path) => \Illuminate\Support\Facades\Storage::url($path))
+          ->values();
+      @endphp
+      <div x-data="{ active: 0 }">
         <div class="flex aspect-4/3 items-center justify-center overflow-hidden rounded-lg bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
-          @if ($service->image_path)
-            <img src="{{ \Illuminate\Support\Facades\Storage::url($service->image_path) }}" alt="{{ $service->name_en }}" class="h-full w-full object-cover" />
+          @if ($galleryUrls->isNotEmpty())
+            @foreach ($galleryUrls as $index => $url)
+              <img x-show="active === {{ $index }}" x-cloak src="{{ $url }}" alt="{{ $service->name_en }}" class="h-full w-full object-cover" />
+            @endforeach
           @else
             <x-app-icon name="{{ $service->category->icon }}" class="h-28 w-28" />
           @endif
         </div>
+
+        @if ($galleryUrls->count() > 1)
+          <div class="mt-3 flex gap-2 overflow-x-auto pb-1">
+            @foreach ($galleryUrls as $index => $url)
+              <button type="button" wire:key="gallery-thumb-{{ $index }}" @click="active = {{ $index }}"
+                class="aspect-square h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors"
+                :class="active === {{ $index }} ? 'border-brand-600' : 'border-transparent hover:border-plum-300'">
+                <img src="{{ $url }}" alt="" loading="lazy" class="h-full w-full object-cover" />
+              </button>
+            @endforeach
+          </div>
+        @endif
       </div>
 
       <div>
@@ -96,6 +116,14 @@
           <p class="mt-2 flex items-center gap-1.5 text-sm font-semibold text-green-600 dark:text-green-400">
             <x-app-icon name="check-circle" class="h-4 w-4" /> បានបន្ថែមទៅកន្ត្រកដោយជោគជ័យ!
           </p>
+        @endif
+
+        @if ($service->demo_url)
+          <a href="{{ $service->demo_url }}" target="_blank" rel="noopener noreferrer"
+            class="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-brand-300 px-6 py-3 text-sm font-bold text-brand-700 transition-colors hover:bg-brand-50 sm:w-auto sm:px-10 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-plum-800">
+            <x-app-icon name="bolt" class="h-5 w-5" />
+            មើលគេហទំព័រសាកល្បង &mdash; View Live Demo
+          </a>
         @endif
 
         <div class="mt-6 grid grid-cols-3 gap-2 rounded-xl border border-plum-200 p-3 text-center dark:border-plum-800">

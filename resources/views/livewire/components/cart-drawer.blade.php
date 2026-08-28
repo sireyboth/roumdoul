@@ -63,9 +63,15 @@
 
     @if ($items->isNotEmpty())
       <div class="border-t border-plum-200 px-5 py-4 dark:border-plum-800">
+        @if ($discount > 0)
+          <div class="mb-1 flex items-center justify-between text-xs text-green-600 dark:text-green-400">
+            <span>បញ្ចុះតម្លៃ</span>
+            <span>&minus;${{ number_format($discount, 2) }}</span>
+          </div>
+        @endif
         <div class="mb-4 flex items-center justify-between text-sm font-semibold text-plum-900 dark:text-white">
           <span>សរុប</span>
-          <span class="text-lg font-bold text-brand-700 dark:text-brand-300">${{ number_format($subtotal, 2) }}</span>
+          <span class="text-lg font-bold text-brand-700 dark:text-brand-300">${{ number_format($total, 2) }}</span>
         </div>
         @if ($hasOutOfStock)
           <p class="mb-2 flex items-start gap-1.5 text-xs leading-relaxed text-red-600 dark:text-red-400">

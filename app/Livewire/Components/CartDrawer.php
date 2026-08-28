@@ -27,6 +27,8 @@ class CartDrawer extends Component
         return view('livewire.components.cart-drawer', [
             'items' => $items,
             'subtotal' => $cart->subtotal(),
+            'discount' => $cart->discount(),
+            'total' => $cart->total(),
             'hasOutOfStock' => $items->contains(fn ($item) => ! $item->service->in_stock),
         ]);
     }
