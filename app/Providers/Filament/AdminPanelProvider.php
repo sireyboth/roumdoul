@@ -9,12 +9,14 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\FontProviders\GoogleFontProvider;
 use Filament\Support\Colors\Color;
 use App\Filament\Widgets\LatestOrders;
 use App\Filament\Widgets\OrderStatusChart;
 use App\Filament\Widgets\OrdersOverview;
 use App\Filament\Widgets\RevenueChart;
 use App\Filament\Widgets\TopServicesChart;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -31,10 +33,25 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('ROUMDOUL Admin')
+            ->brandLogo(asset('images/Roumdoul_Logo.png'))
+            ->brandLogoHeight('2.25rem')
             ->login()
             ->colors([
                 'primary' => Color::hex('#b02361'),
             ])
+            ->font(
+                family: 'Kantumruy Pro',
+                url: 'https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&display=swap',
+                provider: GoogleFontProvider::class,
+            )
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => view('filament.hooks.login-styles')->render(),
+            )
+            ->renderHook(
+                PanelsRenderHook::SIMPLE_LAYOUT_START,
+                fn (): string => view('filament.hooks.login-canvas')->render(),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
