@@ -128,6 +128,39 @@ class ServiceForm
                             ->orderColumn('sort_order')
                             ->defaultItems(0),
                     ]),
+
+                Section::make('How to use')
+                    ->description('Numbered steps shown in the "How to use" tab on the product page. Leave empty to hide the tab.')
+                    ->components([
+                        Repeater::make('how_to_use_steps')
+                            ->label('')
+                            ->simple(
+                                TextInput::make('step')->required(),
+                            )
+                            ->addActionLabel('Add step')
+                            ->reorderableWithButtons()
+                            ->defaultItems(0),
+                    ]),
+
+                Section::make('Frequently Asked Questions')
+                    ->description('Shown in the "FAQ" tab on the product page. Leave empty to hide the tab.')
+                    ->components([
+                        Repeater::make('faqs')
+                            ->label('')
+                            ->components([
+                                TextInput::make('question')
+                                    ->required()
+                                    ->columnSpanFull(),
+                                Textarea::make('answer')
+                                    ->required()
+                                    ->rows(2)
+                                    ->columnSpanFull(),
+                            ])
+                            ->addActionLabel('Add question')
+                            ->reorderableWithButtons()
+                            ->defaultItems(0)
+                            ->collapsible(),
+                    ]),
             ]);
     }
 }

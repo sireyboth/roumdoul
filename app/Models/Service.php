@@ -21,6 +21,8 @@ class Service extends Model
         'image_path',
         'gallery_images',
         'demo_url',
+        'how_to_use_steps',
+        'faqs',
         'base_price',
         'is_featured',
         'is_active',
@@ -34,6 +36,8 @@ class Service extends Model
         'is_active' => 'boolean',
         'in_stock' => 'boolean',
         'gallery_images' => 'array',
+        'how_to_use_steps' => 'array',
+        'faqs' => 'array',
     ];
 
     public function category(): BelongsTo

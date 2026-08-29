@@ -16,7 +16,7 @@
       @php
         $galleryUrls = collect([$service->image_path, ...($service->gallery_images ?? [])])
           ->filter()
-          ->map(fn ($path) => \Illuminate\Support\Facades\Storage::url($path))
+          ->map(fn ($path) => \Illuminate\Support\Facades\Storage::disk('s3')->url($path))
           ->values();
       @endphp
       <div x-data="{ active: 0 }">
@@ -144,9 +144,18 @@
     </div>
 
     {{-- Tabbed description --}}
+    @php
+      $howToUseSteps = collect($service->how_to_use_steps ?? [])->filter()->values();
+      $faqs = collect($service->faqs ?? [])
+        ->filter(fn ($faq) => filled($faq['question'] ?? null))
+        ->values();
+      $tabs = collect(['details' => 'ព័ត៌មានលម្អិត'])
+        ->when($howToUseSteps->isNotEmpty(), fn ($tabs) => $tabs->put('how', 'របៀបប្រើប្រាស់'))
+        ->when($faqs->isNotEmpty(), fn ($tabs) => $tabs->put('faq', 'សំណួរញឹកញាប់'));
+    @endphp
     <div class="mt-14" x-data="{ tab: 'details' }">
       <div class="flex gap-2 border-b border-plum-200 dark:border-plum-800">
-        @foreach (['details' => 'ព័ត៌មានលម្អិត', 'how' => 'របៀបប្រើប្រាស់', 'faq' => 'សំណួរញឹកញាប់'] as $key => $label)
+        @foreach ($tabs as $key => $label)
           <button type="button" @click="tab = '{{ $key }}'"
             :class="tab === '{{ $key }}' ? 'border-brand-600 text-brand-700 dark:text-brand-300' : 'border-transparent text-plum-500 hover:text-brand-700 dark:text-plum-400'"
             class="border-b-2 px-4 py-3 text-sm font-semibold transition-colors">
@@ -158,20 +167,23 @@
       <div x-show="tab === 'details'" class="max-w-3xl py-6 text-sm leading-relaxed text-plum-600 dark:text-plum-300">
         {{ $service->description }}
       </div>
-      <div x-show="tab === 'how'" x-cloak class="max-w-3xl py-6 text-sm leading-relaxed text-plum-600 dark:text-plum-300">
-        <ol class="flex flex-col gap-3">
-          <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">1</span> ជ្រើសរើសគម្រោងសមស្របនិងបន្ថែមទៅកន្ត្រក</li>
-          <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">2</span> បំពេញព័ត៌មានទំនាក់ទំនងហើយដាក់ការបញ្ជាទិញ</li>
-          <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">3</span> ក្រុមការងារយើងខ្ញុំនឹងទាក់ទងអ្នកដើម្បីបញ្ជាក់ការទូទាត់</li>
-          <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">4</span> ទទួលបានគណនី/លេខកូដភ្លាមៗ</li>
-        </ol>
-      </div>
-      <div x-show="tab === 'faq'" x-cloak class="max-w-3xl py-6 text-sm leading-relaxed text-plum-600 dark:text-plum-300">
-        <p class="font-semibold text-plum-800 dark:text-plum-100">តើត្រូវចំណាយពេលប៉ុន្មានដើម្បីទទួលបានទំនិញ?</p>
-        <p class="mt-1 mb-4">ជាធម្មតាក្នុងរយៈពេលពីរបីនាទីក្រោយបញ្ជាក់ការទូទាត់។</p>
-        <p class="font-semibold text-plum-800 dark:text-plum-100">តើមានការធានាឬទេ?</p>
-        <p class="mt-1">បាទ/ចាស មានការគាំទ្របន្ទាប់ពីការទិញរាល់ពេលដែលអ្នកត្រូវការ។</p>
-      </div>
+      @if ($howToUseSteps->isNotEmpty())
+        <div x-show="tab === 'how'" x-cloak class="max-w-3xl py-6 text-sm leading-relaxed text-plum-600 dark:text-plum-300">
+          <ol class="flex flex-col gap-3">
+            @foreach ($howToUseSteps as $index => $step)
+              <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700 dark:bg-plum-800 dark:text-brand-300">{{ $index + 1 }}</span> {{ $step }}</li>
+            @endforeach
+          </ol>
+        </div>
+      @endif
+      @if ($faqs->isNotEmpty())
+        <div x-show="tab === 'faq'" x-cloak class="max-w-3xl py-6 text-sm leading-relaxed text-plum-600 dark:text-plum-300">
+          @foreach ($faqs as $faq)
+            <p class="font-semibold text-plum-800 dark:text-plum-100">{{ $faq['question'] }}</p>
+            <p class="mt-1 mb-4 last:mb-0">{{ $faq['answer'] ?? '' }}</p>
+          @endforeach
+        </div>
+      @endif
     </div>
 
     {{-- Related services --}}
