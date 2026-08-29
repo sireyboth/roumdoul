@@ -94,7 +94,7 @@ class CartService
                 }
 
                 $plan = $line['plan_id'] ? $plans->get($line['plan_id']) : null;
-                $unitPrice = $plan ? (float) $plan->price : (float) $service->base_price;
+                $unitPrice = $service->discountedPrice($plan ? (float) $plan->price : (float) $service->base_price);
 
                 return (object) [
                     'key' => $key,

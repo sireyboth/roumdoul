@@ -6,7 +6,7 @@
           <img src="/images/Roumdoul_Logo.png" alt="ROUMDOUL" class="h-10 w-10 shrink-0 rounded-full object-contain" />
           <span class="flex flex-col leading-tight">
             <span class="text-lg font-extrabold tracking-tight text-brand-800 dark:text-white sm:text-xl">ROUMDOUL</span>
-            <span class="hidden text-[11px] font-medium text-plum-500 dark:text-plum-400 sm:block">រំដួល &middot; Premium Digital Services</span>
+            <span class="hidden text-[11px] font-medium text-plum-500 dark:text-plum-400 sm:block">រំដួល &middot; Premium Services</span>
           </span>
         </a>
 

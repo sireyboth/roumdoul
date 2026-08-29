@@ -24,6 +24,8 @@ class Service extends Model
         'how_to_use_steps',
         'faqs',
         'base_price',
+        'discount_type',
+        'discount_value',
         'is_featured',
         'is_active',
         'in_stock',
@@ -32,6 +34,7 @@ class Service extends Model
 
     protected $casts = [
         'base_price' => 'decimal:2',
+        'discount_value' => 'decimal:2',
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
         'in_stock' => 'boolean',
@@ -48,5 +51,23 @@ class Service extends Model
     public function plans(): HasMany
     {
         return $this->hasMany(ServicePlan::class)->orderBy('sort_order');
+    }
+
+    public function hasDiscount(): bool
+    {
+        return $this->discount_type !== null && (float) $this->discount_value > 0;
+    }
+
+    public function discountedPrice(float $price): float
+    {
+        if (! $this->hasDiscount()) {
+            return $price;
+        }
+
+        $discount = $this->discount_type === 'percentage'
+            ? $price * ((float) $this->discount_value / 100)
+            : (float) $this->discount_value;
+
+        return max(0, round($price - $discount, 2));
     }
 }

@@ -22,8 +22,9 @@ class ServicesTable
             ->columns([
                 ImageColumn::make('image_path')
                     ->label('')
-                    ->disk('public')
-                    ->square(),
+                    ->disk('s3')
+                    ->circular()
+                    ->imageSize(48),
                 TextColumn::make('name_en')
                     ->label('Name')
                     ->searchable()
@@ -37,10 +38,15 @@ class ServicesTable
                     ->label('Base price')
                     ->money()
                     ->sortable(),
-                ImageColumn::make('image_path')
-                    ->disk('s3')
-                    ->circular()
-                    ->imageSize(48),
+                TextColumn::make('discount_value')
+                    ->label('Discount')
+                    ->formatStateUsing(fn ($record) => $record->hasDiscount()
+                        ? ($record->discount_type === 'percentage'
+                            ? '-'.rtrim(rtrim(number_format($record->discount_value, 2), '0'), '.').'%'
+                            : '-$'.number_format($record->discount_value, 2))
+                        : '—')
+                    ->badge()
+                    ->color(fn ($record) => $record->hasDiscount() ? 'danger' : 'gray'),
                 TextColumn::make('plans_count')
                     ->label('Plans')
                     ->counts('plans')

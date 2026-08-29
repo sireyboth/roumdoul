@@ -74,19 +74,37 @@
                   class="flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 px-3 py-2.5 text-center transition-colors {{ $selectedPlanId === $plan->id ? 'border-brand-600 bg-brand-50 dark:bg-plum-800' : 'border-plum-200 hover:border-brand-300 dark:border-plum-700' }}">
                   <input type="radio" wire:model.live="selectedPlanId" value="{{ $plan->id }}" class="sr-only" />
                   <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ $plan->label }}</span>
-                  <span class="text-sm font-bold text-brand-700 dark:text-brand-300">${{ number_format($plan->price, 2) }}</span>
+                  @if ($service->hasDiscount())
+                    <span class="flex items-baseline gap-1">
+                      <span class="text-sm font-bold text-red-600 dark:text-red-400">${{ number_format($service->discountedPrice((float) $plan->price), 2) }}</span>
+                      <span class="text-[10px] text-plum-400 line-through">${{ number_format($plan->price, 2) }}</span>
+                    </span>
+                  @else
+                    <span class="text-sm font-bold text-brand-700 dark:text-brand-300">${{ number_format($plan->price, 2) }}</span>
+                  @endif
                 </label>
               @endforeach
             </div>
           </div>
         @endif
 
+        @php
+          $displayPrice = (float) ($selectedPlan?->price ?? $service->base_price);
+          $discountedDisplayPrice = $service->discountedPrice($displayPrice);
+        @endphp
         <div class="mt-6 flex items-end gap-4">
           <div>
             <span class="text-xs uppercase text-plum-400">តម្លៃ</span>
-            <p class="text-3xl font-extrabold text-brand-700 dark:text-brand-300">
-              ${{ number_format($selectedPlan?->price ?? $service->base_price, 2) }}
-            </p>
+            @if ($service->hasDiscount())
+              <div class="flex items-baseline gap-2">
+                <p class="text-3xl font-extrabold text-red-600 dark:text-red-400">${{ number_format($discountedDisplayPrice, 2) }}</p>
+                <p class="text-base text-plum-400 line-through">${{ number_format($displayPrice, 2) }}</p>
+              </div>
+            @else
+              <p class="text-3xl font-extrabold text-brand-700 dark:text-brand-300">
+                ${{ number_format($displayPrice, 2) }}
+              </p>
+            @endif
           </div>
 
           <div class="flex items-center rounded-full border border-plum-200 dark:border-plum-700">
