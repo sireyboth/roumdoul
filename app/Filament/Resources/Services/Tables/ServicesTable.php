@@ -28,7 +28,7 @@ class ServicesTable
                     ->label('Name')
                     ->searchable()
                     ->weight('bold')
-                    ->description(fn ($record) => $record->name_km),
+                    ->description(fn($record) => $record->name_km),
                 TextColumn::make('category.name_en')
                     ->label('Category')
                     ->badge()
@@ -37,6 +37,10 @@ class ServicesTable
                     ->label('Base price')
                     ->money()
                     ->sortable(),
+                ImageColumn::make('image_path')
+                    ->disk('s3')
+                    ->circular()
+                    ->imageSize(48),
                 TextColumn::make('plans_count')
                     ->label('Plans')
                     ->counts('plans')
