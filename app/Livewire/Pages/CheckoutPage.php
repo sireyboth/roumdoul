@@ -27,7 +27,7 @@ class CheckoutPage extends Component
     {
         return [
             'customer_name' => ['required', 'string', 'max:255'],
-            'customer_email' => ['required', 'email', 'max:255'],
+            'customer_email' => [ 'email', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
