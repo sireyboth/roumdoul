@@ -5,6 +5,7 @@ namespace App\Livewire\Pages;
 use App\Models\Order;
 use App\Services\CartService;
 use App\Services\TelegramNotifier;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -22,6 +23,14 @@ class CheckoutPage extends Component
     public string $customer_phone = '';
 
     public string $notes = '';
+
+    public function mount(): void
+    {
+        $customer = Auth::guard('customer')->user();
+
+        $this->customer_name = $customer->name;
+        $this->customer_email = $customer->email;
+    }
 
     protected function rules(): array
     {
@@ -49,6 +58,7 @@ class CheckoutPage extends Component
             $promoCode = $cart->appliedPromoCode();
 
             $order = Order::create([
+                'customer_id' => Auth::guard('customer')->id(),
                 'order_number' => 'RD-'.strtoupper(Str::random(8)),
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => $validated['customer_email'],

@@ -15,12 +15,15 @@ class ServicePlan extends Model
         'label',
         'price',
         'in_stock',
+        'retention_months',
+        'features',
         'sort_order',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'in_stock' => 'boolean',
+        'features' => 'array',
     ];
 
     public function service(): BelongsTo

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Pages\CheckoutPage;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\PromoCode;
 use App\Models\Service;
@@ -17,11 +18,16 @@ class CheckoutPageTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected Customer $customer;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Http::fake();
+
+        $this->customer = Customer::factory()->create();
+        $this->actingAs($this->customer, 'customer');
     }
 
     public function test_placing_an_order_creates_the_order_and_items_and_clears_the_cart(): void
@@ -40,6 +46,7 @@ class CheckoutPageTest extends TestCase
         $this->assertDatabaseCount('orders', 1);
 
         $order = Order::first();
+        $this->assertSame($this->customer->id, $order->customer_id);
         $this->assertSame('Sok Dara', $order->customer_name);
         $this->assertSame('pending_payment', $order->status);
         $this->assertSame(30.0, (float) $order->total);
@@ -52,6 +59,16 @@ class CheckoutPageTest extends TestCase
         $this->assertSame(30.0, (float) $item->line_total);
 
         $this->assertCount(0, app(CartService::class)->items());
+    }
+
+    public function test_customer_name_and_email_are_prefilled_from_the_account(): void
+    {
+        $customer = Customer::factory()->create(['name' => 'Sok Dara', 'email' => 'dara@example.com']);
+        $this->actingAs($customer, 'customer');
+
+        Livewire::test(CheckoutPage::class)
+            ->assertSet('customer_name', 'Sok Dara')
+            ->assertSet('customer_email', 'dara@example.com');
     }
 
     public function test_placing_an_order_applies_and_records_the_promo_code(): void
@@ -131,5 +148,29 @@ class CheckoutPageTest extends TestCase
             ->assertHasErrors(['customer_name', 'customer_email', 'customer_phone']);
 
         $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_guests_are_redirected_to_login_when_visiting_checkout(): void
+    {
+        auth('customer')->logout();
+
+        $this->get('/checkout')->assertRedirect('/login');
+    }
+
+    public function test_logging_in_from_a_checkout_redirect_returns_to_checkout(): void
+    {
+        auth('customer')->logout();
+
+        // Simulate the bounce: guest hits /checkout, gets sent to /login with the
+        // intended URL stored in session — then logs in and should land back on /checkout.
+        $this->get('/checkout');
+
+        $customer = Customer::factory()->create(['email' => 'dara@example.com']);
+
+        Livewire::test(\App\Livewire\Pages\Auth\LoginPage::class)
+            ->set('email', 'dara@example.com')
+            ->set('password', 'password')
+            ->call('login')
+            ->assertRedirect('/checkout');
     }
 }
