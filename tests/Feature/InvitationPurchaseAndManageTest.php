@@ -317,6 +317,44 @@ class InvitationPurchaseAndManageTest extends TestCase
         $this->assertNotNull($recipient->fresh()->viewed_at);
     }
 
+    public function test_public_invitation_page_has_open_graph_tags_for_link_previews(): void
+    {
+        $invitation = Invitation::factory()->create([
+            'field_values' => ['sender_name' => 'Alex', 'headline' => 'Hey there!', 'message' => 'You got a surprise'],
+        ]);
+        $invitation->template->update([
+            'view' => 'invitations.templates.date-asking',
+            'fields' => ['sender_name', 'headline', 'message'],
+        ]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id, 'recipient_name' => 'Bella']);
+
+        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+
+        $response->assertSee('<meta property="og:title" content="Hey there!" />', false);
+        $response->assertSee('<meta property="og:description" content="You got a surprise" />', false);
+        $response->assertSee('<meta property="og:image" content="'.asset('images/Roumdoul_Logo.png').'" />', false);
+        $response->assertSee('<meta name="twitter:card" content="summary_large_image" />', false);
+    }
+
+    public function test_public_invitation_page_uses_the_uploaded_cover_image_for_the_og_image(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('invitations/cover.jpg', 'fake-image-bytes');
+
+        $invitation = Invitation::factory()->create([
+            'field_values' => ['cover_image' => 'invitations/cover.jpg'],
+        ]);
+        $invitation->template->update([
+            'view' => 'invitations.templates.date-asking',
+            'fields' => ['cover_image'],
+        ]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+
+        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+
+        $response->assertSee(Storage::disk('s3')->url('invitations/cover.jpg'), false);
+    }
+
     public function test_public_invitation_page_404s_when_recipient_belongs_to_a_different_invitation(): void
     {
         $invitationA = Invitation::factory()->create();
