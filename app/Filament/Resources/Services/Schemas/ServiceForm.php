@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Services\Schemas;
 
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -106,7 +107,28 @@ class ServiceForm
                                                 ->prefix('$'),
                                             Toggle::make('in_stock')
                                                 ->label('In stock')
-                                                ->default(true)
+                                                ->default(true),
+                                            TextInput::make('max_recipients')
+                                                ->label('Max recipients')
+                                                ->numeric()
+                                                ->minValue(1)
+                                                ->helperText('Digital Invitations only — how many shareable recipient links this plan allows.'),
+                                            TextInput::make('retention_months')
+                                                ->label('Retention (months)')
+                                                ->numeric()
+                                                ->minValue(1)
+                                                ->helperText('Digital Invitations only — how long it stays active before expiring. Leave blank for no expiry.'),
+                                            CheckboxList::make('features')
+                                                ->label('Unlocked features')
+                                                ->helperText('Digital Invitations only — which optional template components this plan unlocks.')
+                                                ->options([
+                                                    'map' => 'Map',
+                                                    'countdown' => 'Countdown timer',
+                                                    'rsvp' => 'RSVP tracking',
+                                                    'gallery' => 'Photo gallery',
+                                                    'music' => 'Background music',
+                                                ])
+                                                ->columns(2)
                                                 ->columnSpanFull(),
                                         ])
                                         ->orderColumn('sort_order')

@@ -47,7 +47,19 @@ return [
             'report' => false,
         ],
 
-        's3' => [
+        // The 's3' name is used throughout the app (uploads, previews, templates) so that
+        // production always talks to real R2/S3. Locally, where real bucket credentials
+        // usually aren't configured, this same disk name quietly falls back to writing to
+        // the local 'public' disk instead — no code anywhere has to know which one it's
+        // actually using. Set AWS_BUCKET in .env to opt back into real S3/R2 locally.
+        's3' => empty(env('AWS_BUCKET')) ? [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ] : [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),

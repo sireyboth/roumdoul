@@ -7,10 +7,12 @@ use App\Livewire\Pages\CartPage;
 use App\Livewire\Pages\CheckoutPage;
 use App\Livewire\Pages\ContactPage;
 use App\Livewire\Pages\Dashboard\DashboardPage;
+use App\Livewire\Pages\Dashboard\InvitationManagePage;
 use App\Livewire\Pages\HomePage;
 use App\Livewire\Pages\OrderConfirmationPage;
 use App\Livewire\Pages\ServiceDetailPage;
 use App\Livewire\Pages\ShopPage;
+use App\Http\Controllers\InvitationShowController;
 use App\Http\Controllers\InvitationTemplateDemoController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +30,7 @@ Route::get('/about', AboutPage::class)->name('about');
 Route::get('/contact', ContactPage::class)->name('contact');
 
 Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
+Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
 
 Route::middleware('guest:customer')->group(function () {
     Route::get('/register', RegisterPage::class)->name('register');
@@ -36,6 +39,7 @@ Route::middleware('guest:customer')->group(function () {
 
 Route::middleware('auth:customer')->group(function () {
     Route::get('/dashboard', DashboardPage::class)->name('dashboard');
+    Route::get('/dashboard/invitations/{invitation}', InvitationManagePage::class)->name('dashboard.invitations.show');
     Route::get('/checkout', CheckoutPage::class)->name('checkout');
 
     Route::post('/logout', function () {

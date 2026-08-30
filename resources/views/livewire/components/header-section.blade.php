@@ -29,6 +29,12 @@
             @endif
           </button>
 
+          <a href="{{ $customer ? '/dashboard' : '/login' }}" wire:navigate
+            class="flex h-9 w-9 items-center justify-center rounded-full text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white"
+            aria-label="{{ $customer ? 'ផ្ទាំងគ្រប់គ្រង' : 'ចូលគណនី' }}" title="{{ $customer ? $customer->name : 'ចូលគណនី' }}">
+            <x-app-icon name="user" class="h-5.5 w-5.5" />
+          </a>
+
           <x-theme-toggle class="hidden md:inline-flex" />
 
           <div class="relative" data-lang-dropdown>
@@ -116,6 +122,11 @@
             <a href="/contact" wire:navigate data-nav-link
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
               ទំនាក់ទំនង
+            </a>
+            <a href="{{ $customer ? '/dashboard' : '/login' }}" wire:navigate data-nav-link
+              class="flex items-center gap-2 rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+              <x-app-icon name="user" class="h-4 w-4" />
+              {{ $customer ? 'ផ្ទាំងគ្រប់គ្រង' : 'ចូលគណនី' }}
             </a>
 
             <div class="mt-1 flex items-center justify-between border-t border-plum-200 px-3 pb-2 pt-3 dark:border-plum-800">

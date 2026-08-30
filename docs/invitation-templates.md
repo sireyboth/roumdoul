@@ -56,30 +56,46 @@ In a template's Blade file, gate optional components with:
 
 ```blade
 @if ($invitation->hasFeature('map'))
-  <x-invitations.map :address="$fields['venue_address']" />
+  {{-- render the map here --}}
 @endif
 ```
 
-Tier 1 fields are never gated — they're always available regardless of plan.
+Tier 1 fields are never gated — they're always available regardless of plan. Shared components
+like a reusable map/countdown/RSVP block (`<x-invitations.map>` etc.) don't exist yet — the one
+real template so far (date-asking) hasn't needed them. Build the first one when a template
+actually needs it, not preemptively.
 
 ## Steps to add a new template
 
-1. **In admin:** create a `Service` (name, price) with its `ServicePlan`s (recipient limits via
-   `max_recipients`-equivalent plan tiers, `retention_months`, `features`) — same as any product
-   today.
-2. **Create the `InvitationTemplate` row:** name, category, slug, `is_premium`, `fields` (the
-   catalog keys this design uses), `view` (the Blade view path).
-3. **Build one Blade file** for the design at `resources/views/invitations/templates/{slug}.blade.php`.
+Step 1 is code (needs a developer). Step 2 is fully self-serve in Filament admin
+(**Catalog → Invitation Templates**), no code or deploy, and no separate trip to "Services"
+needed — that screen is only for real subscription products (Gemini, ChatGPT, etc.); it never
+shows invitation products at all.
+
+1. **Build the Blade file first** — `resources/views/invitations/templates/{name}.blade.php`.
    It always receives:
    - `$recipientName` — the personalized name for this specific link
-   - `$fields` — an array keyed by whatever this template's schema declared
-   - `$invitation` — for feature-gate checks (`$invitation->hasFeature(...)`)
+   - `$fields` — an array keyed by whatever this template's schema declares
+   - `$invitation` — for feature-gate checks (`$invitation->hasFeature('map')`, etc.)
 
-   Beyond that contract, the file is fully custom — any layout, colors, animation, fonts.
-4. Reuse shared components where they fit: `<x-invitations.map>`, `<x-invitations.countdown>`,
-   `<x-invitations.rsvp-buttons>` (build these once, share across every template that needs them).
-5. Done — it shows up in the dashboard's template picker and at `/templates/{slug}/demo`
-   automatically, with placeholder data for preview. No routing or dashboard code changes needed.
+   Beyond that contract, the file is fully custom — any layout, colors, animation, fonts. The
+   admin "Design (Blade view)" dropdown (step 2) only lists files that already exist here, so
+   this has to happen first — you can't pick a file that isn't on disk yet.
+2. **In admin**: Catalog → Invitation Templates → Create — one screen, everything on it:
+   product name, category label, the design (from step 1), which catalog fields it uses (tick
+   the checkboxes), and its pricing plans (label, price, **Max recipients**, **Retention
+   (months)**, **Unlocked features** per plan — this is the actual "Plan 2 unlocks the map"
+   decision). Saving this auto-creates the underlying `Service` + `ServicePlan` rows for you
+   (in an internal "Digital Invitations" category) — you never touch Services directly.
+3. Done — it's immediately live: buying it now creates a real `Invitation`, its demo page works
+   at `/templates/{slug}/demo`, and the dashboard's field-filling form is generated
+   automatically from whichever fields you ticked.
+
+**Changing prices/plans later**: the Invitation Templates *edit* screen doesn't show the plans
+repeater (editing plans on an already-selling product risks orphaning existing customers'
+invitations if not handled carefully) — instead it has a **"Manage pricing & plans"** button
+that takes you straight to that product's normal Service edit screen, where pricing plans work
+exactly like they do for every other product in the shop.
 
 ## Things that are NOT per-template concerns
 

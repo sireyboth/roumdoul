@@ -53,6 +53,11 @@ class Service extends Model
         return $this->hasMany(ServicePlan::class)->orderBy('sort_order');
     }
 
+    public function invitationTemplates(): HasMany
+    {
+        return $this->hasMany(InvitationTemplate::class);
+    }
+
     public function hasDiscount(): bool
     {
         return $this->discount_type !== null && (float) $this->discount_value > 0;

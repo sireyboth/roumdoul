@@ -25,7 +25,7 @@ class InvitationTemplateFactory extends Factory
             'is_premium' => false,
             'is_active' => true,
             'fields' => ['sender_name', 'headline', 'message', 'cover_image'],
-            'view' => 'invitations.templates.demo',
+            'view' => 'invitations.templates.date-asking',
         ];
     }
 }

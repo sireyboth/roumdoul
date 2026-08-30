@@ -4,6 +4,7 @@ namespace App\Livewire\Components;
 
 use App\Models\Category;
 use App\Services\CartService;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -26,6 +27,7 @@ class HeaderSection extends Component
     {
         return view('livewire.components.header-section', [
             'categories' => Category::orderBy('sort_order')->get(),
+            'customer' => Auth::guard('customer')->user(),
         ]);
     }
 }

@@ -59,6 +59,16 @@ class Invitation extends Model
     }
 
     /**
+     * Whether the order this invitation was created from has actually been paid for. Checked
+     * on every access, not just at creation time — an order can be reverted to pending (refund,
+     * mistake, chargeback) after its invitation already exists, and access should follow that.
+     */
+    public function isPaid(): bool
+    {
+        return $this->order !== null && in_array($this->order->status, Order::PAID_STATUSES, true);
+    }
+
+    /**
      * Whether the plan this invitation was purchased under unlocks a given feature key
      * (e.g. 'map', 'countdown', 'rsvp'). Templates check this before rendering optional components.
      */

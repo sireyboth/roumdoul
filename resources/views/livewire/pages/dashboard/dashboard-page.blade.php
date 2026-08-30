@@ -58,8 +58,8 @@
   @else
     <div class="flex flex-col gap-3">
       @foreach ($invitations as $invitation)
-        <div wire:key="invitation-{{ $invitation->id }}"
-          class="flex items-center justify-between rounded-lg border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
+        <a href="/dashboard/invitations/{{ $invitation->id }}" wire:navigate wire:key="invitation-{{ $invitation->id }}"
+          class="flex items-center justify-between rounded-lg border border-plum-200 bg-white p-4 transition-colors hover:border-brand-400 dark:border-plum-800 dark:bg-plum-900">
           <div>
             <p class="text-sm font-bold text-plum-900 dark:text-white">{{ $invitation->template->name }}</p>
             <p class="text-xs text-plum-500 dark:text-plum-400">
@@ -69,7 +69,8 @@
               @endif
             </p>
           </div>
-        </div>
+          <x-app-icon name="chevron-right" class="h-4.5 w-4.5 text-plum-300" />
+        </a>
       @endforeach
     </div>
   @endif

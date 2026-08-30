@@ -16,6 +16,7 @@ class ServicePlan extends Model
         'price',
         'in_stock',
         'retention_months',
+        'max_recipients',
         'features',
         'sort_order',
     ];
