@@ -41,7 +41,7 @@ class InvitationTemplateSeeder extends Seeder
 
         ServicePlan::updateOrCreate(
             ['service_id' => $service->id, 'label' => 'Premium — 20 recipients, 1 year'],
-            ['price' => 5.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['map', 'countdown', 'rsvp'], 'sort_order' => 1]
+            ['price' => 5.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['map', 'countdown', 'rsvp', 'music'], 'sort_order' => 1]
         );
 
         InvitationTemplate::updateOrCreate(
@@ -52,7 +52,11 @@ class InvitationTemplateSeeder extends Seeder
                 'category' => 'date-asking',
                 'is_premium' => false,
                 'is_active' => true,
-                'fields' => ['sender_name', 'headline', 'message', 'cover_image', 'accent_color'],
+                'fields' => [
+                    'sender_name', 'headline', 'message', 'cover_image', 'event_date',
+                    'venue_name', 'venue_address', 'rsvp_enabled', 'countdown_enabled',
+                    'music_url', 'cta_label', 'cta_url', 'accent_color',
+                ],
                 'view' => 'invitations.templates.date-asking',
             ]
         );

@@ -12,6 +12,7 @@ use App\Livewire\Pages\HomePage;
 use App\Livewire\Pages\OrderConfirmationPage;
 use App\Livewire\Pages\ServiceDetailPage;
 use App\Livewire\Pages\ShopPage;
+use App\Http\Controllers\InvitationRsvpController;
 use App\Http\Controllers\InvitationShowController;
 use App\Http\Controllers\InvitationTemplateDemoController;
 use Illuminate\Support\Facades\Auth;
@@ -31,6 +32,7 @@ Route::get('/contact', ContactPage::class)->name('contact');
 
 Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
 Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
+Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpController::class)->name('invitation.rsvp');
 
 Route::middleware('guest:customer')->group(function () {
     Route::get('/register', RegisterPage::class)->name('register');

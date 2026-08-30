@@ -22,6 +22,7 @@ class InvitationShowController extends Controller
         return view('invitations.show', [
             'view' => $invitation->template->view,
             'recipientName' => $recipient->recipient_name,
+            'recipient' => $recipient,
             'fields' => $invitation->field_values ?? [],
             'invitation' => $invitation,
         ]);

@@ -186,12 +186,76 @@ html.translating .translate-loader {
     animation: invite-gradient 8s ease-in-out infinite;
   }
 
+  @keyframes invite-glow {
+    0%, 100% { box-shadow: 0 0 20px 2px color-mix(in srgb, var(--accent, #e0709f) 35%, transparent); }
+    50% { box-shadow: 0 0 40px 8px color-mix(in srgb, var(--accent, #e0709f) 55%, transparent); }
+  }
+
+  .animate-invite-glow {
+    animation: invite-glow 2.6s ease-in-out infinite;
+  }
+
+  @keyframes invite-shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  .animate-invite-shimmer {
+    background-size: 200% auto;
+    animation: invite-shimmer 3.5s linear infinite;
+  }
+
+  @keyframes invite-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.015); }
+  }
+
+  .animate-invite-breathe {
+    animation: invite-breathe 4s ease-in-out infinite;
+  }
+
+  @keyframes invite-spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-invite-spin-slow {
+    animation: invite-spin-slow 12s linear infinite;
+  }
+
+  @keyframes invite-ring-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.35); opacity: 0; }
+  }
+
+  .animate-invite-ring-pulse {
+    animation: invite-ring-pulse 1.6s ease-out infinite;
+  }
+
+  /* Pulsing colored glow for headline text — text-shadow only, never touches text-fill-color,
+     so emoji glyphs keep rendering correctly (unlike a bg-clip-text gradient, which forces
+     emoji to inherit the transparent/gradient fill and turns them into blank shapes). */
+  @keyframes invite-text-glow {
+    0%, 100% { text-shadow: 0 0 0 transparent; }
+    50% { text-shadow: 0 2px 18px color-mix(in srgb, var(--accent, #e0709f) 55%, transparent); }
+  }
+
+  .animate-invite-text-glow {
+    animation: invite-text-glow 2.6s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-invite-float,
     .animate-invite-pop-in,
     .animate-invite-wiggle,
     .animate-invite-burst,
-    .animate-invite-gradient {
+    .animate-invite-gradient,
+    .animate-invite-glow,
+    .animate-invite-shimmer,
+    .animate-invite-breathe,
+    .animate-invite-spin-slow,
+    .animate-invite-ring-pulse,
+    .animate-invite-text-glow {
       animation: none;
     }
   }
