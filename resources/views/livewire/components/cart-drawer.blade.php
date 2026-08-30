@@ -32,7 +32,7 @@
         <ul class="flex flex-col gap-4">
           @foreach ($items as $item)
             <li wire:key="cart-drawer-{{ $item->key }}" class="flex gap-3">
-              <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $item->service->in_stock ? '' : 'opacity-50 grayscale' }}">
+              <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $item->in_stock ? '' : 'opacity-50 grayscale' }}">
                 <x-app-icon name="{{ $item->service->category->icon }}" class="h-6 w-6" />
               </div>
               <div class="flex-1">
@@ -40,7 +40,7 @@
                 @if ($item->plan)
                   <p class="text-xs text-plum-500 dark:text-plum-400">{{ $item->plan->label }}</p>
                 @endif
-                @if ($item->service->in_stock)
+                @if ($item->in_stock)
                   <p class="mt-1 text-xs text-plum-500 dark:text-plum-400">{{ $item->quantity }} &times; ${{ number_format($item->unit_price, 2) }}</p>
                 @else
                   <p class="mt-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400">

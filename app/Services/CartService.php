@@ -103,6 +103,7 @@ class CartService
                     'quantity' => $line['quantity'],
                     'unit_price' => $unitPrice,
                     'line_total' => $unitPrice * $line['quantity'],
+                    'in_stock' => $service->in_stock && ($plan === null || $plan->in_stock),
                 ];
             })
             ->filter()

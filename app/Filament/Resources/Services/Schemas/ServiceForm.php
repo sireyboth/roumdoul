@@ -94,7 +94,7 @@ class ServiceForm
                                         ->helperText('e.g. "1 Month", "12 Months". Leave empty to sell at the base price only.')
                                         ->addActionLabel('Add plan')
                                         ->reorderableWithButtons()
-                                        ->itemLabel(fn (array $state) => $state['label'] ?? 'New plan')
+                                        ->itemLabel(fn (array $state) => ($state['label'] ?? 'New plan').(($state['in_stock'] ?? true) ? '' : ' (out of stock)'))
                                         ->collapsed()
                                         ->columns(2)
                                         ->components([
@@ -104,6 +104,10 @@ class ServiceForm
                                                 ->required()
                                                 ->numeric()
                                                 ->prefix('$'),
+                                            Toggle::make('in_stock')
+                                                ->label('In stock')
+                                                ->default(true)
+                                                ->columnSpanFull(),
                                         ])
                                         ->orderColumn('sort_order')
                                         ->defaultItems(0)

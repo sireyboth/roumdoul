@@ -14,11 +14,13 @@ class ServicePlan extends Model
         'service_id',
         'label',
         'price',
+        'in_stock',
         'sort_order',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'in_stock' => 'boolean',
     ];
 
     public function service(): BelongsTo

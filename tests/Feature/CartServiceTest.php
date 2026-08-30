@@ -233,4 +233,39 @@ class CartServiceTest extends TestCase
         $this->assertSame(10.0, $this->cart->discount());
         $this->assertSame(40.0, $this->cart->total());
     }
+
+    public function test_item_is_in_stock_when_service_and_plan_are_both_in_stock(): void
+    {
+        $service = Service::factory()->create();
+        $plan = ServicePlan::factory()->create(['service_id' => $service->id]);
+        $this->cart->add($service->id, $plan->id, 1);
+
+        $this->assertTrue($this->cart->items()->first()->in_stock);
+    }
+
+    public function test_item_is_out_of_stock_when_only_the_selected_plan_is_out_of_stock(): void
+    {
+        $service = Service::factory()->create();
+        $plan = ServicePlan::factory()->outOfStock()->create(['service_id' => $service->id]);
+        $this->cart->add($service->id, $plan->id, 1);
+
+        $this->assertFalse($this->cart->items()->first()->in_stock);
+    }
+
+    public function test_item_is_out_of_stock_when_the_service_itself_is_out_of_stock(): void
+    {
+        $service = Service::factory()->outOfStock()->create();
+        $this->cart->add($service->id, null, 1);
+
+        $this->assertFalse($this->cart->items()->first()->in_stock);
+    }
+
+    public function test_item_with_no_plan_selected_is_in_stock_based_on_service_only(): void
+    {
+        $service = Service::factory()->create();
+        ServicePlan::factory()->outOfStock()->create(['service_id' => $service->id]);
+        $this->cart->add($service->id, null, 1);
+
+        $this->assertTrue($this->cart->items()->first()->in_stock);
+    }
 }

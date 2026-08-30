@@ -29,7 +29,7 @@ class CartDrawer extends Component
             'subtotal' => $cart->subtotal(),
             'discount' => $cart->discount(),
             'total' => $cart->total(),
-            'hasOutOfStock' => $items->contains(fn ($item) => ! $item->service->in_stock),
+            'hasOutOfStock' => $items->contains(fn ($item) => ! $item->in_stock),
         ]);
     }
 }

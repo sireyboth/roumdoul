@@ -61,11 +61,11 @@
         <ul class="mt-4 flex flex-col gap-3">
           @foreach ($items as $item)
             <li class="flex justify-between gap-2 text-sm">
-              <span class="{{ $item->service->in_stock ? 'text-plum-600 dark:text-plum-300' : 'text-red-600 dark:text-red-400' }}">
+              <span class="{{ $item->in_stock ? 'text-plum-600 dark:text-plum-300' : 'text-red-600 dark:text-red-400' }}">
                 {{ $item->service->name_en }}
                 @if ($item->plan) <span class="text-plum-400">({{ $item->plan->label }})</span> @endif
                 &times; {{ $item->quantity }}
-                @unless ($item->service->in_stock)
+                @unless ($item->in_stock)
                   <span class="font-bold uppercase">&mdash; Out of Stock</span>
                 @endunless
               </span>

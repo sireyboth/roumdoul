@@ -1,6 +1,10 @@
 <div>
   <div class="border-b border-plum-100 bg-brand-50/40 dark:border-plum-800 dark:bg-plum-800/20">
-    <div class="mx-auto max-w-7xl px-4 py-4 text-sm sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 text-sm sm:px-6 lg:px-8">
+      <button type="button" onclick="window.history.length > 1 ? window.history.back() : (window.location = '/shop')"
+        class="flex shrink-0 items-center gap-1 font-semibold text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
+        <x-app-icon name="chevron-left" class="h-4 w-4" /> ត្រឡប់ក្រោយ
+      </button>
       <nav class="flex items-center gap-1.5 text-plum-500 dark:text-plum-400">
         <a href="/shop" wire:navigate class="hover:text-brand-700 dark:hover:text-white">ហាង</a>
         <x-app-icon name="chevron-right" class="h-3.5 w-3.5" />
@@ -71,10 +75,12 @@
             <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               @foreach ($service->plans as $plan)
                 <label wire:key="plan-{{ $plan->id }}"
-                  class="flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 px-3 py-2.5 text-center transition-colors {{ $selectedPlanId === $plan->id ? 'border-brand-600 bg-brand-50 dark:bg-plum-800' : 'border-plum-200 hover:border-brand-300 dark:border-plum-700' }}">
-                  <input type="radio" wire:model.live="selectedPlanId" value="{{ $plan->id }}" class="sr-only" />
+                  class="flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-2.5 text-center transition-colors {{ ! $plan->in_stock ? 'cursor-not-allowed opacity-50 grayscale border-plum-200 dark:border-plum-700' : ($selectedPlanId === $plan->id ? 'cursor-pointer border-brand-600 bg-brand-50 dark:bg-plum-800' : 'cursor-pointer border-plum-200 hover:border-brand-300 dark:border-plum-700') }}">
+                  <input type="radio" wire:model.live="selectedPlanId" value="{{ $plan->id }}" class="sr-only" @disabled(! $plan->in_stock) />
                   <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ $plan->label }}</span>
-                  @if ($service->hasDiscount())
+                  @if (! $plan->in_stock)
+                    <span class="text-[11px] font-bold uppercase tracking-wide text-red-600 dark:text-red-400">អស់ស្តុក</span>
+                  @elseif ($service->hasDiscount())
                     <span class="flex items-baseline gap-1">
                       <span class="text-sm font-bold text-red-600 dark:text-red-400">${{ number_format($service->discountedPrice((float) $plan->price), 2) }}</span>
                       <span class="text-[10px] text-plum-400 line-through">${{ number_format($plan->price, 2) }}</span>
@@ -91,6 +97,7 @@
         @php
           $displayPrice = (float) ($selectedPlan?->price ?? $service->base_price);
           $discountedDisplayPrice = $service->discountedPrice($displayPrice);
+          $canPurchase = $service->in_stock && (! $selectedPlan || $selectedPlan->in_stock);
         @endphp
         <div class="mt-6 flex items-end gap-4">
           <div>
@@ -108,15 +115,15 @@
           </div>
 
           <div class="flex items-center rounded-full border border-plum-200 dark:border-plum-700">
-            <button type="button" wire:click="$set('quantity', {{ max(1, $quantity - 1) }})" @disabled(! $service->in_stock)
+            <button type="button" wire:click="$set('quantity', {{ max(1, $quantity - 1) }})" @disabled(! $canPurchase)
               class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">&minus;</button>
             <span class="w-8 text-center text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $quantity }}</span>
-            <button type="button" wire:click="$set('quantity', {{ $quantity + 1 }})" @disabled(! $service->in_stock)
+            <button type="button" wire:click="$set('quantity', {{ $quantity + 1 }})" @disabled(! $canPurchase)
               class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">+</button>
           </div>
         </div>
 
-        @if ($service->in_stock)
+        @if ($canPurchase)
           <button type="button" wire:click="addToCart"
             class="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700 sm:w-auto sm:px-10">
             <x-app-icon name="cart" class="h-5 w-5" />

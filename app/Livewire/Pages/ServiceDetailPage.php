@@ -23,12 +23,14 @@ class ServiceDetailPage extends Component
     {
         $service->load(['category', 'plans']);
         $this->service = $service;
-        $this->selectedPlanId = $service->plans->first()?->id;
+        $this->selectedPlanId = $service->plans->firstWhere('in_stock', true)?->id ?? $service->plans->first()?->id;
     }
 
     public function addToCart(CartService $cart): void
     {
-        if (! $this->service->in_stock) {
+        $selectedPlan = $this->service->plans->firstWhere('id', $this->selectedPlanId);
+
+        if (! $this->service->in_stock || ($selectedPlan && ! $selectedPlan->in_stock)) {
             return;
         }
 

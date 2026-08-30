@@ -60,7 +60,7 @@ class CartPage extends Component
             'discount' => $cart->discount(),
             'total' => $cart->total(),
             'appliedPromoCode' => $cart->appliedPromoCode(),
-            'hasOutOfStock' => $items->contains(fn ($item) => ! $item->service->in_stock),
+            'hasOutOfStock' => $items->contains(fn ($item) => ! $item->in_stock),
         ]);
     }
 }

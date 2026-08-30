@@ -43,25 +43,6 @@
     </div>
   </section>
 
-  {{-- Category quick links --}}
-  <section id="categories" class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-    <div data-reveal class="mb-8">
-      <h2 class="text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">ស្វែងរកតាមប្រភេទ</h2>
-      <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">ជ្រើសរើសប្រភេទសេវាកម្មដែលអ្នកត្រូវការ</p>
-    </div>
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-      @foreach ($categories as $category)
-        <a href="/shop/{{ $category->slug }}" wire:navigate data-reveal
-          class="group flex flex-col items-center gap-3 rounded-lg border border-plum-200 bg-white p-6 text-center transition-colors hover:border-brand-400 dark:border-plum-800 dark:bg-plum-900">
-          <span class="flex h-12 w-12 items-center justify-center rounded-full bg-plum-100 text-brand-700 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:bg-plum-800 dark:text-brand-300">
-            <x-app-icon name="{{ $category->icon }}" class="h-6 w-6" />
-          </span>
-          <span class="text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $category->name_km }}</span>
-        </a>
-      @endforeach
-    </div>
-  </section>
-
   {{-- Featured services --}}
   @if ($featuredServices->isNotEmpty())
     <section class="border-y border-plum-100 bg-plum-50 py-14 dark:border-plum-800 dark:bg-plum-900/40">
@@ -81,6 +62,25 @@
       </div>
     </section>
   @endif
+
+  {{-- Category quick links --}}
+  <section id="categories" class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <div data-reveal class="mb-8">
+      <h2 class="text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">ស្វែងរកតាមប្រភេទ</h2>
+      <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">ជ្រើសរើសប្រភេទសេវាកម្មដែលអ្នកត្រូវការ</p>
+    </div>
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      @foreach ($categories as $category)
+        <a href="/shop/{{ $category->slug }}" wire:navigate data-reveal
+          class="group flex flex-col items-center gap-3 rounded-lg border border-plum-200 bg-white p-6 text-center transition-colors hover:border-brand-400 dark:border-plum-800 dark:bg-plum-900">
+          <span class="flex h-12 w-12 items-center justify-center rounded-full bg-plum-100 text-brand-700 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:bg-plum-800 dark:text-brand-300">
+            <x-app-icon name="{{ $category->icon }}" class="h-6 w-6" />
+          </span>
+          <span class="text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $category->name_km }}</span>
+        </a>
+      @endforeach
+    </div>
+  </section>
 
   {{-- Why choose us --}}
   <section class="bg-brand-950 py-16">

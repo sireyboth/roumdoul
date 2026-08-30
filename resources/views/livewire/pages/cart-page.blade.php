@@ -14,8 +14,8 @@
       <div class="flex flex-col gap-4 lg:col-span-2">
         @foreach ($items as $item)
           <div wire:key="cart-item-{{ $item->key }}"
-            class="flex items-center gap-4 rounded-lg border p-4 {{ $item->service->in_stock ? 'border-plum-200 bg-white dark:border-plum-800 dark:bg-plum-900' : 'border-red-200 bg-red-50/50 dark:border-red-900/40 dark:bg-red-900/10' }}">
-            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $item->service->in_stock ? '' : 'opacity-50 grayscale' }}">
+            class="flex items-center gap-4 rounded-lg border p-4 {{ $item->in_stock ? 'border-plum-200 bg-white dark:border-plum-800 dark:bg-plum-900' : 'border-red-200 bg-red-50/50 dark:border-red-900/40 dark:bg-red-900/10' }}">
+            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300 {{ $item->in_stock ? '' : 'opacity-50 grayscale' }}">
               <x-app-icon name="{{ $item->service->category->icon }}" class="h-7 w-7" />
             </div>
             <div class="min-w-0 flex-1">
@@ -23,7 +23,7 @@
               @if ($item->plan)
                 <p class="text-xs text-plum-500 dark:text-plum-400">{{ $item->plan->label }}</p>
               @endif
-              @if ($item->service->in_stock)
+              @if ($item->in_stock)
                 <p class="mt-1 text-sm font-semibold text-brand-700 dark:text-brand-300">${{ number_format($item->unit_price, 2) }}</p>
               @else
                 <p class="mt-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
@@ -33,10 +33,10 @@
             </div>
 
             <div class="flex items-center rounded-full border border-plum-200 dark:border-plum-700">
-              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity - 1 }})" @disabled(! $item->service->in_stock)
+              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity - 1 }})" @disabled(! $item->in_stock)
                 class="flex h-8 w-8 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">&minus;</button>
               <span class="w-6 text-center text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $item->quantity }}</span>
-              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity + 1 }})" @disabled(! $item->service->in_stock)
+              <button type="button" wire:click="updateQuantity('{{ $item->key }}', {{ $item->quantity + 1 }})" @disabled(! $item->in_stock)
                 class="flex h-8 w-8 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">+</button>
             </div>
 

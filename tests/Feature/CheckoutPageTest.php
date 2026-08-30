@@ -102,6 +102,22 @@ class CheckoutPageTest extends TestCase
         $this->assertDatabaseCount('orders', 0);
     }
 
+    public function test_placing_an_order_with_an_out_of_stock_plan_redirects_to_cart_without_creating_an_order(): void
+    {
+        $service = Service::factory()->create();
+        $plan = ServicePlan::factory()->outOfStock()->create(['service_id' => $service->id]);
+        app(CartService::class)->add($service->id, $plan->id, 1);
+
+        Livewire::test(CheckoutPage::class)
+            ->set('customer_name', 'Sok Dara')
+            ->set('customer_email', 'dara@example.com')
+            ->set('customer_phone', '012345678')
+            ->call('placeOrder')
+            ->assertRedirect('/cart');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
     public function test_placing_an_order_without_required_fields_fails_validation(): void
     {
         $service = Service::factory()->create();
