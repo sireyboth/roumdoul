@@ -55,12 +55,12 @@ class ServiceFormTest extends TestCase
 
         Livewire::test(EditService::class, ['record' => $service->getRouteKey()])
             ->set("data.plans.record-{$plan->id}.retention_months", 6)
-            ->set("data.plans.record-{$plan->id}.features", ['map', 'countdown'])
+            ->set("data.plans.record-{$plan->id}.features", ['venue_address', 'countdown_enabled'])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $plan->refresh();
         $this->assertSame(6, $plan->retention_months);
-        $this->assertSame(['map', 'countdown'], $plan->features);
+        $this->assertSame(['venue_address', 'countdown_enabled'], $plan->features);
     }
 }

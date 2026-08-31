@@ -47,7 +47,7 @@ class InvitationTemplateFormTest extends TestCase
                 'is_active' => true,
                 'plans' => [
                     ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => []],
-                    ['label' => 'Premium', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['map', 'countdown']],
+                    ['label' => 'Premium', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['venue_address', 'countdown_enabled']],
                 ],
             ])
             ->call('create')
@@ -62,7 +62,7 @@ class InvitationTemplateFormTest extends TestCase
 
         $plans = $service->plans->keyBy('label');
         $this->assertSame(10, $plans['Basic']->max_recipients);
-        $this->assertSame(['map', 'countdown'], $plans['Premium']->features);
+        $this->assertSame(['venue_address', 'countdown_enabled'], $plans['Premium']->features);
     }
 
     public function test_editing_a_templates_fields_does_not_require_touching_plans(): void

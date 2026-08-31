@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Services\Schemas;
 
+use App\Models\InvitationTemplate;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -119,15 +120,9 @@ class ServiceForm
                                                 ->minValue(1)
                                                 ->helperText('Digital Invitations only — how long it stays active before expiring. Leave blank for no expiry.'),
                                             CheckboxList::make('features')
-                                                ->label('Unlocked features')
-                                                ->helperText('Digital Invitations only — which optional template components this plan unlocks.')
-                                                ->options([
-                                                    'map' => 'Map',
-                                                    'countdown' => 'Countdown timer',
-                                                    'rsvp' => 'RSVP tracking',
-                                                    'gallery' => 'Photo gallery',
-                                                    'music' => 'Background music',
-                                                ])
+                                                ->label('Unlocked fields (premium extras)')
+                                                ->helperText('Digital Invitations only — the essentials are always included on every plan; tick which extra fields this plan also unlocks.')
+                                                ->options(InvitationTemplate::premiumFieldOptions())
                                                 ->columns(2)
                                                 ->columnSpanFull(),
                                         ])

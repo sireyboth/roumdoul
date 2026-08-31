@@ -83,14 +83,9 @@ class InvitationTemplateForm
                                     ->minValue(1)
                                     ->helperText('Leave blank for no expiry.'),
                                 CheckboxList::make('features')
-                                    ->label('Unlocked features')
-                                    ->options([
-                                        'map' => 'Map',
-                                        'countdown' => 'Countdown timer',
-                                        'rsvp' => 'RSVP tracking',
-                                        'gallery' => 'Photo gallery',
-                                        'music' => 'Background music',
-                                    ])
+                                    ->label('Unlocked fields (premium extras)')
+                                    ->helperText('The essentials (name, headline, message, date, venue name, music, photo, color) are always included on every plan. Tick which of these extras this plan also unlocks — a template can still include an extra field even if no plan unlocks it yet.')
+                                    ->options(InvitationTemplate::premiumFieldOptions())
                                     ->columns(2)
                                     ->columnSpanFull(),
                             ])

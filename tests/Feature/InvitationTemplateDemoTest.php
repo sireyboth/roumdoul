@@ -25,6 +25,21 @@ class InvitationTemplateDemoTest extends TestCase
         $response->assertSee('Yes!', false);
     }
 
+    public function test_the_admire_gallery_demo_renders(): void
+    {
+        $template = InvitationTemplate::factory()->create([
+            'slug' => 'admire-gallery',
+            'view' => 'invitations.templates.admire',
+            'is_active' => true,
+        ]);
+
+        $response = $this->get("/templates/{$template->slug}/demo");
+
+        $response->assertStatus(200);
+        $response->assertSee('Bella');
+        $response->assertSee("let&#039;s play a game", false);
+    }
+
     public function test_an_inactive_template_demo_404s(): void
     {
         $template = InvitationTemplate::factory()->create([

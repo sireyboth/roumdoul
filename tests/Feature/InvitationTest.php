@@ -40,20 +40,42 @@ class InvitationTest extends TestCase
         $service = Service::factory()->create();
         $plan = ServicePlan::factory()->create([
             'service_id' => $service->id,
-            'features' => ['map', 'countdown'],
+            'features' => ['venue_address', 'countdown_enabled'],
         ]);
         $invitation = Invitation::factory()->create(['service_plan_id' => $plan->id]);
 
-        $this->assertTrue($invitation->hasFeature('map'));
-        $this->assertTrue($invitation->hasFeature('countdown'));
-        $this->assertFalse($invitation->hasFeature('rsvp'));
+        $this->assertTrue($invitation->hasFeature('venue_address'));
+        $this->assertTrue($invitation->hasFeature('countdown_enabled'));
+        $this->assertFalse($invitation->hasFeature('rsvp_enabled'));
     }
 
     public function test_has_feature_is_false_when_no_plan_is_attached(): void
     {
         $invitation = Invitation::factory()->create(['service_plan_id' => null]);
 
-        $this->assertFalse($invitation->hasFeature('map'));
+        $this->assertFalse($invitation->hasFeature('venue_address'));
+    }
+
+    public function test_field_unlocked_is_always_true_for_free_fields_regardless_of_plan(): void
+    {
+        $invitation = Invitation::factory()->create(['service_plan_id' => null]);
+
+        $this->assertTrue($invitation->fieldUnlocked('sender_name'));
+        $this->assertTrue($invitation->fieldUnlocked('music_url'));
+        $this->assertFalse($invitation->fieldUnlocked('venue_address'));
+    }
+
+    public function test_field_unlocked_checks_the_plans_features_for_premium_fields(): void
+    {
+        $service = Service::factory()->create();
+        $plan = ServicePlan::factory()->create([
+            'service_id' => $service->id,
+            'features' => ['photo_gallery'],
+        ]);
+        $invitation = Invitation::factory()->create(['service_plan_id' => $plan->id]);
+
+        $this->assertTrue($invitation->fieldUnlocked('photo_gallery'));
+        $this->assertFalse($invitation->fieldUnlocked('event_schedule'));
     }
 
     public function test_template_uses_field_checks_its_field_catalog(): void

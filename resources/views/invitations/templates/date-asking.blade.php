@@ -15,14 +15,17 @@
     $ctaUrl = $fields['cta_url'] ?? null;
     $wantsRsvpNote = ! empty($fields['rsvp_enabled']);
     $wantsCountdown = ! empty($fields['countdown_enabled']) && $eventDate;
+    $wantsCta = $ctaLabel && $ctaUrl;
 
-    // Optional extras are gated by which plan the invitation was bought under — the same
-    // catalog keys ('map', 'countdown', 'rsvp', 'music') set in Pricing plan > Unlocked features.
-    // On the unpurchased demo page $invitation is null, so every extra previews unlocked.
-    $showMap = $venueAddress && ($invitation ? $invitation->hasFeature('map') : true);
-    $showCountdown = $wantsCountdown && ($invitation ? $invitation->hasFeature('countdown') : true);
-    $showMusic = $musicUrl && ($invitation ? $invitation->hasFeature('music') : true);
-    $trackRsvp = $invitation ? $invitation->hasFeature('rsvp') : true;
+    // Premium extras are gated per FIELD_CATALOG key by the purchased plan's `features` list
+    // (see InvitationTemplate::FREE_FIELDS / Invitation::fieldUnlocked()) — on the unpurchased
+    // demo page $invitation is null, so every extra previews unlocked.
+    $isUnlocked = fn (string $key) => $invitation ? $invitation->fieldUnlocked($key) : true;
+    $showMap = $venueAddress && $isUnlocked('venue_address');
+    $showCountdown = $wantsCountdown && $isUnlocked('countdown_enabled');
+    $showMusic = (bool) $musicUrl; // background music is a free-tier essential, never gated
+    $trackRsvp = $isUnlocked('rsvp_enabled');
+    $showCta = $wantsCta && $isUnlocked('cta_label');
 
     $youtubeId = null;
     if ($musicUrl && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/', $musicUrl, $m)) {
@@ -249,7 +252,7 @@
       </p>
     </div>
 
-    @if ($ctaLabel && $ctaUrl)
+    @if ($showCta)
       <a href="{{ $ctaUrl }}" target="_blank" rel="noopener noreferrer"
         class="mt-4 inline-flex items-center gap-1.5 rounded-full border-2 border-[color:var(--accent)] px-5 py-2 text-xs font-bold text-[color:var(--accent)] transition-colors hover:bg-[color:var(--accent)] hover:text-white">
         {{ $ctaLabel }} ↗

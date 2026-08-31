@@ -20,7 +20,11 @@ class InvitationManagePage extends Component
 
     public array $fieldValues = [];
 
-    public $coverImageUpload = null;
+    /** Pending single-image uploads, keyed by field key (e.g. 'cover_image', 'qr_code'). */
+    public array $imageUploads = [];
+
+    /** Pending multi-image uploads, keyed by gallery field key (e.g. 'photo_gallery'). */
+    public array $galleryUploads = [];
 
     public string $newRecipientName = '';
 
@@ -39,13 +43,42 @@ class InvitationManagePage extends Component
     {
         abort_unless($this->invitation->isPaid(), 403);
 
-        if ($this->coverImageUpload) {
-            $this->fieldValues['cover_image'] = $this->coverImageUpload->store('invitations/'.$this->invitation->id, 's3');
-            $this->coverImageUpload = null;
+        foreach ($this->imageUploads as $key => $file) {
+            if ($file) {
+                $this->fieldValues[$key] = $file->store('invitations/'.$this->invitation->id, 's3');
+            }
         }
+        $this->imageUploads = [];
+
+        foreach ($this->galleryUploads as $key => $files) {
+            if (! empty($files)) {
+                $stored = collect($files)->map(fn ($file) => $file->store('invitations/'.$this->invitation->id, 's3'));
+                $this->fieldValues[$key] = collect($this->fieldValues[$key] ?? [])->merge($stored)->values()->all();
+            }
+        }
+        $this->galleryUploads = [];
 
         $this->invitation->update(['field_values' => $this->fieldValues]);
         $this->saved = true;
+    }
+
+    public function removeGalleryImage(string $key, int $index): void
+    {
+        $images = $this->fieldValues[$key] ?? [];
+        unset($images[$index]);
+        $this->fieldValues[$key] = array_values($images);
+    }
+
+    public function addScheduleItem(string $key): void
+    {
+        $this->fieldValues[$key][] = ['time' => '', 'label' => ''];
+    }
+
+    public function removeScheduleItem(string $key, int $index): void
+    {
+        $items = $this->fieldValues[$key] ?? [];
+        unset($items[$index]);
+        $this->fieldValues[$key] = array_values($items);
     }
 
     public function addRecipient(): void

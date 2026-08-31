@@ -16,7 +16,6 @@ class InvitationTemplateDemoController extends Controller
             'invitation' => null,
             'fields' => [
                 'sender_name' => 'Alex',
-                'headline' => 'Will you go out with me? 🥹💌',
                 'message' => "I've been wanting to ask you this for a while... no pressure, just vibes ✨",
                 'cover_image' => null,
                 'event_date' => now()->addDays(9)->setTime(19, 0),
@@ -28,6 +27,9 @@ class InvitationTemplateDemoController extends Controller
                 'cta_label' => 'See my playlist',
                 'cta_url' => 'https://open.spotify.com',
                 'accent_color' => '#e0709f',
+                'photo_gallery' => collect(range(1, 8))
+                    ->map(fn ($i) => "https://picsum.photos/seed/roumdoul{$i}/600/800")
+                    ->all(),
             ],
         ]);
     }

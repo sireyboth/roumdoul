@@ -41,7 +41,7 @@ class InvitationTemplateSeeder extends Seeder
 
         ServicePlan::updateOrCreate(
             ['service_id' => $service->id, 'label' => 'Premium — 20 recipients, 1 year'],
-            ['price' => 5.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['map', 'countdown', 'rsvp', 'music'], 'sort_order' => 1]
+            ['price' => 5.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['venue_address', 'countdown_enabled', 'rsvp_enabled', 'cta_label', 'cta_url'], 'sort_order' => 1]
         );
 
         InvitationTemplate::updateOrCreate(
@@ -58,6 +58,25 @@ class InvitationTemplateSeeder extends Seeder
                     'music_url', 'cta_label', 'cta_url', 'accent_color',
                 ],
                 'view' => 'invitations.templates.date-asking',
+            ]
+        );
+
+        // Demo-only for now — no Service/plans yet, so it's previewable at
+        // /templates/admire-gallery/demo but not purchasable until priced in admin
+        // (Catalog > Invitation Templates > this row > "Manage pricing & plans").
+        InvitationTemplate::updateOrCreate(
+            ['slug' => 'admire-gallery'],
+            [
+                'service_id' => null,
+                'name' => 'Admire',
+                'category' => 'romantic-surprise',
+                'is_premium' => true,
+                'is_active' => true,
+                'fields' => [
+                    'sender_name', 'headline', 'message', 'cover_image',
+                    'photo_gallery', 'music_url', 'cta_label', 'cta_url', 'accent_color',
+                ],
+                'view' => 'invitations.templates.admire',
             ]
         );
     }

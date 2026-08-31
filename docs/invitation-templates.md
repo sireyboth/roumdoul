@@ -15,55 +15,78 @@ date-asking, birthday, etc.) to the system. Read this before building a new one.
 
 ## The standard field catalog
 
-Templates should compose from this catalog instead of inventing new field keys. Most new
-templates need zero new fields — they just declare which of these they use.
+Templates should compose from this catalog instead of inventing new field keys. Every field
+lives in one flat list, `InvitationTemplate::FIELD_CATALOG` — there's no separate per-event-type
+catalog. A template just ticks which of these it uses; unrelated templates are unaffected by
+adding more entries, so the catalog is meant to keep growing as new event types show up.
 
-**Tier 1 — every template uses these:**
+**Field types the dashboard form renderer understands:** `text`, `textarea`, `image` (single
+upload), `gallery` (multiple images, add/remove), `schedule` (repeatable time + label rows,
+add/remove), `boolean`, `datetime`, `color`.
+
+**Free fields — always available on every plan, once a template ticks them:**
 
 | Field | Type | Purpose |
 |---|---|---|
-| `sender_name` | text | Who it's from |
+| `sender_name` | text | Generic "who it's from" (date-asking, breakup, etc.) |
+| `groom_name` / `bride_name` | text | Wedding-specific names |
+| `celebrant_name` | text | Birthday-specific name |
+| `turning_age` | text | Birthday-specific "turning ___" |
 | `headline` | text | Big title text |
-| `message` | long text | The main personalized paragraph |
-| `cover_image` | image | Background/hero photo |
+| `message` | long text | The main personalized paragraph / wish |
+| `cover_image` | image | Hero photo |
+| `event_date` | datetime | The date being announced/proposed |
+| `venue_name` | text | Location name (plain text, not a map link) |
+| `music_url` | text | Background music — a YouTube/TikTok link, not an upload |
+| `accent_color` | color | Theme color |
 
-**Tier 2 — event-based templates opt into these:**
+**Premium fields — the pricing upsell lever.** A template can still tick these into its schema,
+but they only actually render for a customer whose plan has that exact key in
+`service_plans.features`:
 
 | Field | Type | Purpose |
 |---|---|---|
-| `event_date` | datetime | The date being announced/proposed |
-| `venue_name` | text | Location name |
-| `venue_address` | location | Feeds the `<x-invitations.map>` component |
-| `rsvp_enabled` | boolean | Shows/hides the RSVP yes/no buttons |
-| `countdown_enabled` | boolean | Shows/hides a countdown timer |
+| `venue_address` | text | Feeds a "Get directions" Google Maps link |
+| `khmer_date` | text | Lunar/Khmer calendar date, written as free text |
+| `rsvp_enabled` | boolean | Shows the RSVP yes/no buttons and persists responses |
+| `countdown_enabled` | boolean | Shows a live countdown timer |
+| `photo_gallery` | gallery | Multi-image gallery |
+| `event_schedule` | schedule | Repeatable time + item rows (e.g. "5:00 PM — Ceremony") |
+| `qr_code` | image | A QR code image upload |
+| `cta_label` + `cta_url` | text | Custom call-to-action button |
 
-**Tier 3 — optional extras:**
-
-`gallery_images`, `music_url` (external link, not an upload — see note below),
-`cta_label` + `cta_url`, `accent_color`.
-
-If a genuinely new field is needed, add it to this catalog (one time), not just to one
-template — so the next template that needs something similar can reuse it too.
+If a genuinely new field is needed, add it to `InvitationTemplate::FIELD_CATALOG` (one time,
+plus `FREE_FIELDS` if it should never be gated) — not just to one template — so the next
+template that needs something similar can reuse it too. Adding a new field TYPE (beyond the
+ones above) additionally needs a new `@case()` branch in
+`invitation-manage-page.blade.php`'s dynamic form renderer.
 
 ## Feature gating by plan
 
-Optional Tier 2/3 features (map, countdown, RSVP, ...) are gated by which `ServicePlan` the
-customer bought, via `service_plans.features` (JSON array, e.g. `['map', 'countdown']`). This
-is set in admin exactly like price — it's how a template earns you an upsell ("Plan 2 unlocks
+Premium fields (see table above) are gated by which `ServicePlan` the customer bought, via
+`service_plans.features` — a JSON array of **field keys straight from the catalog**
+(e.g. `['venue_address', 'countdown_enabled']`), not a separate feature-naming scheme. This is
+set in admin exactly like price (the "Unlocked fields" checkbox list on a plan, generated
+automatically from the catalog) — it's how a template earns you an upsell ("Premium unlocks
 the map") without any code change per feature.
 
-In a template's Blade file, gate optional components with:
+In a template's Blade file, gate optional content with `$invitation->fieldUnlocked($key)`
+(handles the free/premium split for you — free fields always pass, premium ones check the
+plan):
 
 ```blade
-@if ($invitation->hasFeature('map'))
-  {{-- render the map here --}}
+@if ($invitation->fieldUnlocked('venue_address'))
+  {{-- render the map link here --}}
 @endif
 ```
 
-Tier 1 fields are never gated — they're always available regardless of plan. Shared components
-like a reusable map/countdown/RSVP block (`<x-invitations.map>` etc.) don't exist yet — the one
-real template so far (date-asking) hasn't needed them. Build the first one when a template
-actually needs it, not preemptively.
+Free fields are never gated — they're always available regardless of plan. On the unpurchased
+`/templates/{slug}/demo` preview page `$invitation` is `null`, so templates should treat a null
+invitation as "everything unlocked" (e.g. `$invitation ? $invitation->fieldUnlocked($key) : true`)
+so the demo actually shows off premium content. Shared components like a reusable
+map/countdown/RSVP block (`<x-invitations.map>` etc.) don't exist yet — the one real template so
+far (date-asking) inlines this logic itself. Build a shared component once a second template
+needs the same behavior, not preemptively.
 
 ## Steps to add a new template
 
@@ -76,7 +99,7 @@ shows invitation products at all.
    It always receives:
    - `$recipientName` — the personalized name for this specific link
    - `$fields` — an array keyed by whatever this template's schema declares
-   - `$invitation` — for feature-gate checks (`$invitation->hasFeature('map')`, etc.)
+   - `$invitation` — for feature-gate checks (`$invitation->fieldUnlocked('venue_address')`, etc.)
 
    Beyond that contract, the file is fully custom — any layout, colors, animation, fonts. The
    admin "Design (Blade view)" dropdown (step 2) only lists files that already exist here, so
@@ -84,9 +107,9 @@ shows invitation products at all.
 2. **In admin**: Catalog → Invitation Templates → Create — one screen, everything on it:
    product name, category label, the design (from step 1), which catalog fields it uses (tick
    the checkboxes), and its pricing plans (label, price, **Max recipients**, **Retention
-   (months)**, **Unlocked features** per plan — this is the actual "Plan 2 unlocks the map"
-   decision). Saving this auto-creates the underlying `Service` + `ServicePlan` rows for you
-   (in an internal "Digital Invitations" category) — you never touch Services directly.
+   (months)**, **Unlocked fields (premium extras)** per plan — this is the actual "Premium
+   unlocks the map" decision). Saving this auto-creates the underlying `Service` + `ServicePlan`
+   rows for you (in an internal "Digital Invitations" category) — you never touch Services directly.
 3. Done — it's immediately live: buying it now creates a real `Invitation`, its demo page works
    at `/templates/{slug}/demo`, and the dashboard's field-filling form is generated
    automatically from whichever fields you ticked.

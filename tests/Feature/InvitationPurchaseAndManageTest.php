@@ -246,7 +246,7 @@ class InvitationPurchaseAndManageTest extends TestCase
 
         Livewire::actingAs($customer, 'customer')
             ->test(InvitationManagePage::class, ['invitation' => $invitation])
-            ->set('coverImageUpload', UploadedFile::fake()->image('cover.jpg'))
+            ->set('imageUploads.cover_image', UploadedFile::fake()->image('cover.jpg'))
             ->call('save');
 
         $path = $invitation->fresh()->field_values['cover_image'];

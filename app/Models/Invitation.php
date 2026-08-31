@@ -69,11 +69,24 @@ class Invitation extends Model
     }
 
     /**
-     * Whether the plan this invitation was purchased under unlocks a given feature key
-     * (e.g. 'map', 'countdown', 'rsvp'). Templates check this before rendering optional components.
+     * Whether the plan this invitation was purchased under has unlocked a given key in its
+     * `features` list. `features` now stores InvitationTemplate::FIELD_CATALOG keys directly
+     * (e.g. 'venue_address', 'countdown_enabled', 'photo_gallery') rather than separate
+     * feature names, so this doubles as the low-level check behind fieldUnlocked() below.
      */
     public function hasFeature(string $key): bool
     {
         return in_array($key, $this->plan?->features ?? [], true);
+    }
+
+    /**
+     * Whether a given FIELD_CATALOG key should actually render for this invitation's
+     * recipients. FREE_FIELDS are always unlocked; everything else needs the purchased
+     * plan's `features` to include that exact field key — this is the pricing upsell lever
+     * (e.g. Basic doesn't include 'venue_address', so no map link; Premium does).
+     */
+    public function fieldUnlocked(string $key): bool
+    {
+        return in_array($key, InvitationTemplate::FREE_FIELDS, true) || $this->hasFeature($key);
     }
 }
