@@ -24,7 +24,7 @@
           ->values();
       @endphp
       <div x-data="{ active: 0 }">
-        <div class="flex aspect-4/3 items-center justify-center overflow-hidden rounded-lg bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
+        <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
           @if ($galleryUrls->isNotEmpty())
             @foreach ($galleryUrls as $index => $url)
               <img x-show="active === {{ $index }}" x-cloak src="{{ $url }}" alt="{{ $service->name_en }}" class="h-full w-full object-cover" />

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InvitationTemplates\Pages;
 
 use App\Filament\Resources\InvitationTemplates\InvitationTemplateResource;
 use App\Models\Category;
+use App\Models\InvitationTemplate;
 use App\Models\Service;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,8 @@ class CreateInvitationTemplate extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         return DB::transaction(function () use ($data) {
+            $data = InvitationTemplate::mergeFieldSections($data);
+
             $plans = $data['plans'] ?? [];
             unset($data['plans']);
 

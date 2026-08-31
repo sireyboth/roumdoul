@@ -20,6 +20,14 @@ lives in one flat list, `InvitationTemplate::FIELD_CATALOG` — there's no separ
 catalog. A template just ticks which of these it uses; unrelated templates are unaffected by
 adding more entries, so the catalog is meant to keep growing as new event types show up.
 
+For readability, `InvitationTemplate::FIELD_SECTIONS` additionally groups every catalog key into
+`universal` (reusable by any template), `wedding`, or `birthday` — purely cosmetic, driving the
+three separate checkbox lists on the admin "Fields this design uses" screen (Filament's
+`CheckboxList` has no native option-group support, so it's three components, not one). This has
+zero effect on gating or rendering — only `FREE_FIELDS` (below) and a template's own `fields`
+selection actually matter at runtime. Add a new section here when a new event type brings fields
+that genuinely don't belong anywhere else; most new fields turn out to be `universal`.
+
 **Field types the dashboard form renderer understands:** `text`, `textarea`, `image` (single
 upload), `gallery` (multiple images, add/remove), `schedule` (repeatable time + label rows,
 add/remove), `boolean`, `datetime`, `color`.

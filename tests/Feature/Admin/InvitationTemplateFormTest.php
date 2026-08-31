@@ -43,7 +43,7 @@ class InvitationTemplateFormTest extends TestCase
                 'slug' => 'birthday-bash',
                 'category' => 'birthday',
                 'view' => 'invitations.templates.date-asking',
-                'fields' => ['sender_name', 'headline'],
+                'fields_universal' => ['sender_name', 'headline'],
                 'is_active' => true,
                 'plans' => [
                     ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => []],
@@ -55,6 +55,7 @@ class InvitationTemplateFormTest extends TestCase
 
         $template = InvitationTemplate::where('slug', 'birthday-bash')->firstOrFail();
         $this->assertNotNull($template->service_id);
+        $this->assertSame(['sender_name', 'headline'], $template->fields);
 
         $service = $template->service;
         $this->assertSame('Birthday Bash', $service->name_en);
@@ -71,11 +72,46 @@ class InvitationTemplateFormTest extends TestCase
         $template = InvitationTemplate::factory()->create(['fields' => ['sender_name']]);
 
         Livewire::test(EditInvitationTemplate::class, ['record' => $template->getRouteKey()])
-            ->fillForm(['fields' => ['sender_name', 'headline', 'message']])
+            ->fillForm(['fields_universal' => ['sender_name', 'headline', 'message']])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $this->assertSame(['sender_name', 'headline', 'message'], $template->fresh()->fields);
+    }
+
+    public function test_editing_form_loads_existing_fields_split_into_their_sections(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $template = InvitationTemplate::factory()->create([
+            'fields' => ['sender_name', 'groom_name', 'bride_name', 'celebrant_name'],
+        ]);
+
+        Livewire::test(EditInvitationTemplate::class, ['record' => $template->getRouteKey()])
+            ->assertFormSet([
+                'fields_universal' => ['sender_name'],
+                'fields_wedding' => ['groom_name', 'bride_name'],
+                'fields_birthday' => ['celebrant_name'],
+            ]);
+    }
+
+    public function test_editing_a_templates_wedding_and_birthday_fields_saves_correctly(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $template = InvitationTemplate::factory()->create(['fields' => []]);
+
+        Livewire::test(EditInvitationTemplate::class, ['record' => $template->getRouteKey()])
+            ->fillForm([
+                'fields_universal' => ['sender_name'],
+                'fields_wedding' => ['groom_name', 'bride_name', 'khmer_date'],
+                'fields_birthday' => [],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertEqualsCanonicalizing(
+            ['sender_name', 'groom_name', 'bride_name', 'khmer_date'],
+            $template->fresh()->fields,
+        );
     }
 
     public function test_editing_a_templates_name_syncs_to_its_linked_service(): void

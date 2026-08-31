@@ -9,6 +9,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\File;
@@ -20,7 +21,20 @@ class InvitationTemplateForm
     {
         return $schema
             ->components([
-                Section::make('Template')
+                Grid::make(2)
+                    ->columnSpanFull()
+                    ->components([
+                        self::templateSection(),
+                        self::pricingPlansSection(),
+                    ]),
+
+                self::fieldsSection(),
+            ]);
+    }
+
+    protected static function templateSection(): Section
+    {
+        return Section::make('Template')
                     ->columns(2)
                     ->components([
                         TextInput::make('name')
@@ -52,9 +66,12 @@ class InvitationTemplateForm
                             ->label('Active')
                             ->default(true)
                             ->helperText('Off hides it from the template picker and demo page.'),
-                    ]),
+                    ]);
+    }
 
-                Section::make('Pricing plans')
+    protected static function pricingPlansSection(): Section
+    {
+        return Section::make('Pricing plans')
                     ->description('What customers actually buy. Each plan sets how many recipient links they get, how long it stays active, and which extra features it unlocks.')
                     ->visible(fn (string $operation) => $operation === 'create')
                     ->components([
@@ -92,17 +109,31 @@ class InvitationTemplateForm
                             ->defaultItems(1)
                             ->minItems(1)
                             ->required(),
-                    ]),
+                    ]);
+    }
 
-                Section::make('Fields this design uses')
-                    ->description('Which of the standard fields this template asks the customer to fill in. Adding a genuinely new field means adding it to InvitationTemplate::FIELD_CATALOG in code first.')
+    protected static function fieldsSection(): Section
+    {
+        return Section::make('Fields this design uses')
+                    ->description('Which of the standard fields this template asks the customer to fill in, grouped by which event type they apply to. Adding a genuinely new field means adding it to InvitationTemplate::FIELD_CATALOG (and FIELD_SECTIONS) in code first.')
+                    ->columnSpanFull()
                     ->components([
-                        CheckboxList::make('fields')
-                            ->label('')
-                            ->options(collect(InvitationTemplate::FIELD_CATALOG)->map(fn ($field) => $field['label'])->toArray())
-                            ->columns(2),
-                    ]),
-            ]);
+                        CheckboxList::make('fields_universal')
+                            ->label('Universal — works for any event')
+                            ->options(InvitationTemplate::sectionFieldOptions('universal'))
+                            ->columns(3)
+                            ->columnSpanFull(),
+                        CheckboxList::make('fields_wedding')
+                            ->label('Wedding-specific')
+                            ->options(InvitationTemplate::sectionFieldOptions('wedding'))
+                            ->columns(3)
+                            ->columnSpanFull(),
+                        CheckboxList::make('fields_birthday')
+                            ->label('Birthday-specific')
+                            ->options(InvitationTemplate::sectionFieldOptions('birthday'))
+                            ->columns(3)
+                            ->columnSpanFull(),
+                    ]);
     }
 
     /**

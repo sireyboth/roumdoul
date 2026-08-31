@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InvitationTemplates\Pages;
 
 use App\Filament\Resources\InvitationTemplates\InvitationTemplateResource;
 use App\Filament\Resources\Services\ServiceResource;
+use App\Models\InvitationTemplate;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -11,6 +12,23 @@ use Filament\Resources\Pages\EditRecord;
 class EditInvitationTemplate extends EditRecord
 {
     protected static string $resource = InvitationTemplateResource::class;
+
+    /**
+     * The stored `fields` array is flat; the form splits it into one checkbox list per
+     * FIELD_SECTIONS group for readability, so it needs re-splitting on load...
+     */
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        return array_merge($data, InvitationTemplate::splitFieldsBySection($data['fields'] ?? []));
+    }
+
+    /**
+     * ...and re-merged back into one flat `fields` array before it's actually saved.
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return InvitationTemplate::mergeFieldSections($data);
+    }
 
     protected function getHeaderActions(): array
     {

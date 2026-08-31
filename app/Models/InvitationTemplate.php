@@ -61,6 +61,24 @@ class InvitationTemplate extends Model
         'music_url', 'accent_color',
     ];
 
+    /**
+     * Every FIELD_CATALOG key grouped by which event type it's actually relevant to — purely
+     * for organizing the admin "Fields this design uses" checklist into readable sections as
+     * the catalog grows. Has no effect on gating or rendering (that's FREE_FIELDS/hasFeature).
+     * Most fields are 'universal' (reusable across any template); only fields specific to one
+     * kind of event (e.g. a couple's names) get their own section. Add new sections here as
+     * new event types bring genuinely dedicated fields.
+     */
+    public const FIELD_SECTIONS = [
+        'universal' => [
+            'sender_name', 'headline', 'message', 'cover_image', 'event_date', 'venue_name',
+            'music_url', 'accent_color', 'venue_address', 'rsvp_enabled', 'countdown_enabled',
+            'photo_gallery', 'event_schedule', 'qr_code', 'cta_label', 'cta_url',
+        ],
+        'wedding' => ['groom_name', 'bride_name', 'khmer_date'],
+        'birthday' => ['celebrant_name', 'turning_age'],
+    ];
+
     protected $fillable = [
         'service_id',
         'name',
@@ -107,5 +125,51 @@ class InvitationTemplate extends Model
             ->except(self::FREE_FIELDS)
             ->map(fn (array $field) => $field['label'])
             ->all();
+    }
+
+    /**
+     * Labeled options for one FIELD_SECTIONS group, for the admin "Fields this design uses"
+     * checklist (one CheckboxList per section, since Filament's CheckboxList has no native
+     * option-group support like Select does).
+     */
+    public static function sectionFieldOptions(string $section): array
+    {
+        return collect(self::FIELD_CATALOG)
+            ->only(self::FIELD_SECTIONS[$section] ?? [])
+            ->map(fn (array $field) => $field['label'])
+            ->all();
+    }
+
+    /**
+     * Splits a flat `fields` array (as stored on the model) into one sub-array per
+     * FIELD_SECTIONS group, keyed 'fields_universal', 'fields_wedding', etc. — used to
+     * populate the admin form's per-section checkbox lists when editing an existing template.
+     */
+    public static function splitFieldsBySection(array $fields): array
+    {
+        return collect(self::FIELD_SECTIONS)
+            ->mapWithKeys(fn (array $keys, string $section) => [
+                "fields_{$section}" => array_values(array_intersect($fields, $keys)),
+            ])
+            ->all();
+    }
+
+    /**
+     * The inverse of splitFieldsBySection() — merges the admin form's per-section checkbox
+     * values ('fields_universal', 'fields_wedding', ...) back into one flat `fields` array
+     * to actually persist on the model.
+     */
+    public static function mergeFieldSections(array $data): array
+    {
+        $fields = [];
+
+        foreach (array_keys(self::FIELD_SECTIONS) as $section) {
+            $fields = array_merge($fields, $data["fields_{$section}"] ?? []);
+            unset($data["fields_{$section}"]);
+        }
+
+        $data['fields'] = array_values(array_unique($fields));
+
+        return $data;
     }
 }
