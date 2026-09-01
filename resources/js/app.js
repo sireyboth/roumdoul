@@ -5,6 +5,9 @@ import { initLangToggle, restorePersistedLanguage, preloadTranslateWidget } from
 import { initHeroSlider } from './modules/heroSlider.js'
 import { initFooter } from './modules/footer.js'
 import { initScrollReveal } from './modules/scrollReveal.js'
+import { initCounters } from './modules/counters.js'
+import { initHeroParticles } from './modules/heroParticles.js'
+import { initTilt } from './modules/tilt.js'
 
 document.addEventListener('livewire:init', () => {
   // Pagination, filters, etc. update a Livewire component in place without a
@@ -13,7 +16,11 @@ document.addEventListener('livewire:init', () => {
   // the shop) would otherwise sit at opacity:0 forever since nothing
   // re-scans for them. `commit` fires after every such update.
   Livewire.hook('commit', ({ succeed }) => {
-    succeed(() => initScrollReveal())
+    succeed(() => {
+      initScrollReveal()
+      initCounters()
+      initTilt()
+    })
   })
 })
 
@@ -62,6 +69,9 @@ function mountApp() {
   initFooter()
   scrollToHash()
   initScrollReveal()
+  initCounters()
+  initHeroParticles()
+  initTilt()
 }
 
 mountApp()

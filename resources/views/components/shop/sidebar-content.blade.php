@@ -11,7 +11,7 @@
   @foreach ($categories as $category)
     <li>
       <a href="/shop/{{ $category->slug }}" wire:navigate
-        class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors {{ $active && $active->id === $category->id ? 'bg-brand-600 text-white' : 'text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800' }}">
+        class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all {{ $active && $active->id === $category->id ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/30' : 'text-plum-600 hover:translate-x-0.5 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800' }}">
         <x-app-icon name="{{ $category->icon }}" class="h-4.5 w-4.5 shrink-0" />
         {{ $category->name_km }}
       </a>

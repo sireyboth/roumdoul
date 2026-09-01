@@ -259,5 +259,55 @@ html.translating .translate-loader {
       animation: none;
     }
   }
+
+  /* Hero carousel — per-slide Ken Burns pan/zoom, staggered text entrance, and
+     cursor-driven depth parallax. heroSlider.js drives all the class toggles;
+     see resources/js/modules/heroSlider.js for the render()/pointermove logic. */
+  @keyframes hero-kenburns {
+    0% { transform: scale(1.06) translate(0, 0); }
+    100% { transform: scale(1.16) translate(var(--kb-tx, -2%), var(--kb-ty, -1%)); }
+  }
+
+  .hero-slide-bg {
+    transform: scale(1.06);
+    /* Cursor parallax — a separate `translate` property so it composes with
+       the `transform`-based Ken Burns animation above instead of fighting it. */
+    translate: calc(var(--hero-px, 0) * -16px) calc(var(--hero-py, 0) * -10px);
+    transition: translate 0.3s ease-out;
+  }
+
+  .hero-slide-bg.is-active {
+    animation: hero-kenburns var(--kb-duration, 9s) ease-out forwards;
+  }
+
+  .hero-slide-content {
+    opacity: 0;
+    transform: translateY(1rem);
+    translate: calc(var(--hero-px, 0) * 22px) calc(var(--hero-py, 0) * 14px);
+    transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      translate 0.3s ease-out;
+    transition-delay: 0.15s, 0.15s, 0s;
+  }
+
+  .hero-slide-content.is-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-slide-bg,
+    .hero-slide-bg.is-active {
+      animation: none;
+      translate: none;
+      transform: scale(1.06);
+    }
+
+    .hero-slide-content {
+      translate: none;
+      transition: opacity 0.4s ease;
+      transform: none;
+    }
+  }
 }
 

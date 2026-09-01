@@ -27,6 +27,7 @@ class HomePage extends Component
                 ->latest()
                 ->limit(20)
                 ->get(),
+            'totalActiveServices' => Service::where('is_active', true)->count(),
         ]);
     }
 }
