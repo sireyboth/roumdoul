@@ -79,5 +79,25 @@ class InvitationTemplateSeeder extends Seeder
                 'view' => 'invitations.templates.admire',
             ]
         );
+
+        // Demo-only for now — no Service/plans yet, so it's previewable at
+        // /templates/private-screening/demo but not purchasable until priced in admin
+        // (Catalog > Invitation Templates > this row > "Manage pricing & plans").
+        InvitationTemplate::updateOrCreate(
+            ['slug' => 'private-screening'],
+            [
+                'service_id' => null,
+                'name' => 'Private Screening',
+                'category' => 'wedding',
+                'is_premium' => true,
+                'is_active' => true,
+                'fields' => [
+                    'sender_name', 'groom_name', 'bride_name', 'message', 'cover_image',
+                    'event_date', 'venue_name', 'venue_address', 'photo_gallery',
+                    'event_schedule', 'rsvp_enabled',
+                ],
+                'view' => 'invitations.templates.private-screening',
+            ]
+        );
     }
 }
