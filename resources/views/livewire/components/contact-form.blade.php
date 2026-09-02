@@ -7,7 +7,7 @@
     @else
         <form wire:submit="submit" class="flex flex-col gap-3">
             <div>
-                <input type="email" wire:model="email" placeholder="អីមែលរបស់អ្នក"
+                <input type="email" wire:model="email" placeholder="អីមែលរបស់អ្នក (មិនចាំបាច់)"
                     class="w-full rounded-lg border border-plum-200 bg-white px-3 py-2 text-sm text-plum-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:text-white" />
                 @error('email')
                     <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>

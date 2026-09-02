@@ -2,12 +2,59 @@
 
 namespace App\Services;
 
+use App\Models\ContactInquiry;
+use App\Models\ContactSubmission;
 use App\Models\Order;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TelegramNotifier
 {
+    /**
+     * The main "ផ្ញើសារ / Send message" contact form on /contact.
+     */
+    public function sendContactInquiry(ContactInquiry $inquiry): void
+    {
+        $esc = fn (?string $value) => htmlspecialchars((string) $value, ENT_QUOTES);
+
+        $lines = [
+            '📩 <b>New contact message</b>',
+            '',
+            "👤 {$esc($inquiry->full_name)}",
+            "📞 {$esc($inquiry->phone)}",
+            "✉️ {$esc($inquiry->email)}",
+            "📋 {$esc($inquiry->service_needed)}",
+        ];
+
+        if ($inquiry->message) {
+            $lines[] = '';
+            $lines[] = '💬 '.$esc($inquiry->message);
+        }
+
+        $this->send(implode("\n", $lines));
+    }
+
+    /**
+     * The smaller "ស្នើសុំទូរស័ព្ទមកវិញ / Request a callback" widget on /contact.
+     */
+    public function sendContactSubmission(ContactSubmission $submission): void
+    {
+        $esc = fn (?string $value) => htmlspecialchars((string) $value, ENT_QUOTES);
+
+        $lines = [
+            '📞 <b>New callback request</b>',
+            '',
+        ];
+
+        if ($submission->email) {
+            $lines[] = "✉️ {$esc($submission->email)}";
+        }
+        $lines[] = "📞 {$esc($submission->phone)}";
+        $lines[] = "📍 {$esc($submission->address)}";
+
+        $this->send(implode("\n", $lines));
+    }
+
     public function sendNewOrder(Order $order): void
     {
         $botToken = config('services.telegram.bot_token');

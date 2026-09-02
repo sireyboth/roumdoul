@@ -3,6 +3,7 @@
 namespace App\Livewire\Components;
 
 use App\Models\ContactInquiry;
+use App\Services\TelegramNotifier;
 use Livewire\Component;
 
 class ContactPageForm extends Component
@@ -50,11 +51,13 @@ class ContactPageForm extends Component
         ];
     }
 
-    public function submit(): void
+    public function submit(TelegramNotifier $telegram): void
     {
         $validated = $this->validate();
 
-        ContactInquiry::create($validated);
+        $inquiry = ContactInquiry::create($validated);
+
+        $telegram->sendContactInquiry($inquiry);
 
         $this->reset(['full_name', 'phone', 'email', 'service_needed', 'message']);
         $this->submitted = true;
