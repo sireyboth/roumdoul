@@ -273,11 +273,17 @@
     if (!canvas) return;
 
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const PARTICLE_COUNT = 1400;
+    // Fewer points on a narrow viewport — this canvas is full-bleed behind
+    // everything, so its cost scales with screen area as much as point count.
+    const PARTICLE_COUNT = window.innerWidth < 768 ? 650 : 1000;
     const BOUND = 9;
 
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // antialias is for hard geometry edges; these are soft round point-sprites,
+    // so it buys nothing here but still costs real GPU time on every frame,
+    // full-screen. Pixel ratio capped lower too — a 3x/2x-DPR phone doesn't need
+    // native-resolution rendering for a soft ambient background effect.
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     const scene = new THREE.Scene();
@@ -367,6 +373,22 @@
       rafId = requestAnimationFrame(animate);
     }
 
+    // Pause the render loop while the browser tab itself isn't visible (switched
+    // away, minimized, phone screen off) — this and the bloom canvas are the two
+    // heaviest things on the page (two separate WebGL contexts, each animating
+    // every frame indefinitely), so not burning GPU/battery on a backgrounded
+    // tab matters more here than on a typical page.
+    function onVisibilityChange() {
+      if (motionQuery.matches) return;
+      if (document.hidden) {
+        if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+      } else if (rafId === null) {
+        lastTime = 0;
+        rafId = requestAnimationFrame(animate);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     if (motionQuery.matches) {
       renderStaticFrame();
     } else {
@@ -377,6 +399,7 @@
       if (rafId !== null) cancelAnimationFrame(rafId);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       [pink, gold].forEach((points) => { points.geometry.dispose(); points.material.dispose(); });
       glowTexture.dispose();
       renderer.dispose();
@@ -418,7 +441,7 @@
     }
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 20);
@@ -541,11 +564,37 @@
       rafId = requestAnimationFrame(render);
     }
 
+    // This canvas is small but it's a second full WebGL context and render loop
+    // running alongside the hero particle field — without this, it keeps
+    // rendering every frame for as long as the page is open, including all the
+    // way through the manifesto/story/process/values/stats/closing sections
+    // further down, long after it has scrolled out of view. Pause it whenever
+    // it isn't actually on screen, or the tab itself isn't visible, and resume
+    // exactly where it left off (bloomProgress isn't reset, just not advanced).
+    let inViewport = false;
+
+    function syncRenderLoop() {
+      if (reduceMotion) return;
+      const shouldRun = inViewport && !document.hidden;
+      if (shouldRun && rafId === null) {
+        lastTime = 0;
+        rafId = requestAnimationFrame(render);
+      } else if (!shouldRun && rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    const visibilityObserver = new IntersectionObserver((entries) => {
+      inViewport = entries[0].isIntersecting;
+      syncRenderLoop();
+    }, { threshold: 0.01 });
+    visibilityObserver.observe(stage);
+    document.addEventListener('visibilitychange', syncRenderLoop);
+
     if (reduceMotion) {
       applyBloom();
       renderer.render(scene, camera);
-    } else {
-      rafId = requestAnimationFrame(render);
     }
 
     let bloomTrigger = null;
@@ -568,6 +617,8 @@
       if (rafId !== null) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', resize);
       stage.removeEventListener('pointermove', onStageMove);
+      document.removeEventListener('visibilitychange', syncRenderLoop);
+      visibilityObserver.disconnect();
       themeObserver.disconnect();
       if (bloomTrigger) bloomTrigger.kill();
       petals.forEach(({ mat }) => mat.dispose());
