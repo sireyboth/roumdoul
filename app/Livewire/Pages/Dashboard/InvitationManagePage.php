@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages\Dashboard;
 
 use App\Models\Invitation;
+use App\Models\InvitationTemplate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -43,6 +44,8 @@ class InvitationManagePage extends Component
     {
         abort_unless($this->invitation->isPaid(), 403);
 
+        $this->validate($this->saveRules());
+
         foreach ($this->imageUploads as $key => $file) {
             if ($file) {
                 $this->fieldValues[$key] = $file->store('invitations/'.$this->invitation->id, 's3');
@@ -60,6 +63,61 @@ class InvitationManagePage extends Component
 
         $this->invitation->update(['field_values' => $this->fieldValues]);
         $this->saved = true;
+    }
+
+    /**
+     * Validation rules built dynamically from this invitation's template fields, so every
+     * field a customer can actually fill in is checked server-side — not just whatever the
+     * dashboard form happens to render client-side (client-side constraints like the file
+     * input's accept="image/*" are trivially bypassed). URL-typed fields (music_url,
+     * cta_url) are restricted to http/https so a recipient clicking the button/link on their
+     * invitation can never be sent to a javascript:/data: URI — that's stored XSS against
+     * the recipient, not the customer, since these render as real anchor hrefs on the
+     * public invitation page. Image uploads are restricted to real image mime types (no
+     * svg — inline <img> won't execute embedded script, but a directly-opened svg URL
+     * would) so a customer can't use "cover image"/"gallery" to store an executable/script
+     * file on the invitation's storage path.
+     */
+    protected function saveRules(): array
+    {
+        $catalog = InvitationTemplate::FIELD_CATALOG;
+        $urlFields = ['music_url', 'cta_url'];
+        $rules = [];
+
+        foreach ($this->invitation->template->fields ?? [] as $key) {
+            $type = $catalog[$key]['type'] ?? null;
+
+            $rules["fieldValues.{$key}"] = match (true) {
+                in_array($key, $urlFields, true) => ['nullable', 'url', 'starts_with:https://,http://', 'max:2048'],
+                $type === 'textarea' => ['nullable', 'string', 'max:2000'],
+                $type === 'text' => ['nullable', 'string', 'max:255'],
+                $type === 'boolean' => ['nullable', 'boolean'],
+                $type === 'datetime' => ['nullable', 'date'],
+                $type === 'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
+                $type === 'schedule' => ['nullable', 'array', 'max:20'],
+                $type === 'gallery' => ['nullable', 'array', 'max:20'],
+                default => null,
+            };
+
+            if ($type === 'schedule') {
+                $rules["fieldValues.{$key}.*.time"] = ['nullable', 'string', 'max:50'];
+                $rules["fieldValues.{$key}.*.label"] = ['nullable', 'string', 'max:200'];
+            }
+        }
+
+        foreach ($this->imageUploads as $key => $file) {
+            if ($file) {
+                $rules["imageUploads.{$key}"] = ['image', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'];
+            }
+        }
+
+        foreach ($this->galleryUploads as $key => $files) {
+            if (! empty($files)) {
+                $rules["galleryUploads.{$key}.*"] = ['image', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'];
+            }
+        }
+
+        return array_filter($rules);
     }
 
     public function removeGalleryImage(string $key, int $index): void

@@ -7,6 +7,7 @@ use App\Services\CartService;
 use App\Services\TelegramNotifier;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -44,6 +45,18 @@ class CheckoutPage extends Component
 
     public function placeOrder(CartService $cart, TelegramNotifier $telegram)
     {
+        // Authenticated customer, so keyed by customer_id rather than IP — mainly guards
+        // against scripted order-spam/promo-code abuse, not price tampering (prices are
+        // always recomputed server-side from CartService, never trusted from the client).
+        $throttleKey = 'place-order|'.Auth::guard('customer')->id();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            $this->addError('notes', 'អ្នកបានព្យាយាមបញ្ជាទិញច្រើនដងពេក។ សូមរង់ចាំបន្តិច។');
+
+            return;
+        }
+        RateLimiter::hit($throttleKey, 60);
+
         $items = $cart->items();
 
         if ($items->isEmpty() || $items->contains(fn ($item) => ! $item->in_stock)) {

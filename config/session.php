@@ -169,7 +169,12 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Defaults to true in production so the session cookie is HTTPS-only even if
+    // SESSION_SECURE_COOKIE never gets explicitly set in the deploy environment's vars —
+    // still overridable via the env var either way. Config files load very early in the
+    // framework's bootstrap, before the container can safely resolve app()->environment(),
+    // so this checks APP_ENV directly via env() rather than the app() helper.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------

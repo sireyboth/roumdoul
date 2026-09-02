@@ -25,14 +25,15 @@ Route::get('/shop/{category:slug}', ShopPage::class)->name('shop.category');
 Route::get('/service/{service:slug}', ServiceDetailPage::class)->name('service.show');
 
 Route::get('/cart', CartPage::class)->name('cart');
-Route::get('/order/{order}/confirmation', OrderConfirmationPage::class)->name('order.confirmation');
 
 Route::get('/about', AboutPage::class)->name('about');
 Route::get('/contact', ContactPage::class)->name('contact');
 
 Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
 Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
-Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpController::class)->name('invitation.rsvp');
+Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpController::class)
+    ->middleware('throttle:20,1')
+    ->name('invitation.rsvp');
 
 Route::middleware('guest:customer')->group(function () {
     Route::get('/register', RegisterPage::class)->name('register');
@@ -43,6 +44,7 @@ Route::middleware('auth:customer')->group(function () {
     Route::get('/dashboard', DashboardPage::class)->name('dashboard');
     Route::get('/dashboard/invitations/{invitation}', InvitationManagePage::class)->name('dashboard.invitations.show');
     Route::get('/checkout', CheckoutPage::class)->name('checkout');
+    Route::get('/order/{order}/confirmation', OrderConfirmationPage::class)->name('order.confirmation');
 
     Route::post('/logout', function () {
         Auth::guard('customer')->logout();

@@ -44,7 +44,7 @@
                 for="upload-{{ $key }}"
                 class="group relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-xl border-2 border-dashed border-plum-300 bg-plum-50 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5"
               >
-                @if ($tempImage)
+                @if ($tempImage && $tempImage->isPreviewable())
                   <img src="{{ $tempImage->temporaryUrl() }}" alt="" class="absolute inset-0 h-full w-full object-cover" />
                 @elseif (! empty($fieldValues[$key]))
                   <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($fieldValues[$key]) }}" alt="" class="absolute inset-0 h-full w-full object-cover" />
@@ -81,6 +81,7 @@
                 @endforeach
 
                 @foreach ((($galleryUploads[$key] ?? [])) as $i => $tempFile)
+                  @continue(! $tempFile->isPreviewable())
                   <div wire:key="gallery-pending-{{ $key }}-{{ $i }}" class="relative">
                     <img src="{{ $tempFile->temporaryUrl() }}" alt="" class="h-20 w-20 rounded-lg object-cover opacity-60" />
                   </div>

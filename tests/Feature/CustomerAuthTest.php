@@ -75,6 +75,31 @@ class CustomerAuthTest extends TestCase
         $this->assertFalse(Auth::guard('customer')->check());
     }
 
+    public function test_login_is_throttled_after_repeated_wrong_passwords(): void
+    {
+        Customer::factory()->create([
+            'email' => 'dara@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            Livewire::test(LoginPage::class)
+                ->set('email', 'dara@example.com')
+                ->set('password', 'wrong-password')
+                ->call('login');
+        }
+
+        // The 6th attempt should be blocked by the throttle itself, even with the
+        // correct password this time — proves the limiter engaged, not just validation.
+        Livewire::test(LoginPage::class)
+            ->set('email', 'dara@example.com')
+            ->set('password', 'password123')
+            ->call('login')
+            ->assertHasErrors(['email']);
+
+        $this->assertFalse(Auth::guard('customer')->check());
+    }
+
     public function test_guests_are_redirected_away_from_the_dashboard(): void
     {
         $this->get('/dashboard')->assertRedirect('/login');

