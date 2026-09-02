@@ -389,13 +389,21 @@
     document.addEventListener('livewire:navigate', dispose, { once: true });
   })();
 
-  // Procedural 3D bloom — a stylized flower built from extruded "petal" shapes,
+  // Procedural 3D bloom — a stylized flower built from elongated "petal" blobs,
   // not an image. Doubles as a nod to Roumdoul the flower and to the hand-gesture
   // logo (a hand opening the way a flower does). Petals start folded (a bud) and
   // open as the "The Name" section scrolls through view; idles with a slow spin
   // and a light pointer-tilt the rest of the time. Colors track the site's
   // light/dark theme via a MutationObserver on <html class="dark">, since the
   // Alpine theme store can flip mid-visit without a page reload.
+  //
+  // Each petal is a squashed sphere (never goes edge-on/invisible from any
+  // viewing angle, unlike a flat extruded plane) hinged through TWO nested
+  // groups: an outer "facing" group fixes its position around the flower, and
+  // an inner "hinge" group — a child of facing, so its own rotation composes
+  // on top of facing's — tilts it outward for bloom. Putting both rotations on
+  // one object doesn't reliably tip each petal in its own radial direction;
+  // nesting them does, unambiguously.
   (function () {
     if (typeof THREE === 'undefined') return;
 
@@ -414,8 +422,8 @@
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 20);
-    camera.position.set(0, 1.05, 5.2);
-    camera.lookAt(0, 0.55, 0);
+    camera.position.set(0, 0.95, 5.4);
+    camera.lookAt(0, 0.6, 0);
 
     const ambient = new THREE.AmbientLight(0xffffff, 0.55);
     const key = new THREE.DirectionalLight(0xffffff, 0.75);
@@ -424,22 +432,9 @@
     glowLight.position.set(0, 0.8, 1.6);
     scene.add(ambient, key, glowLight);
 
-    function petalShape() {
-      const s = new THREE.Shape();
-      s.moveTo(0, 0);
-      s.bezierCurveTo(0.32, 0.22, 0.28, 0.95, 0, 1.35);
-      s.bezierCurveTo(-0.28, 0.95, -0.32, 0.22, 0, 0);
-      return s;
-    }
-
-    const petalGeo = new THREE.ExtrudeGeometry(petalShape(), {
-      depth: 0.05,
-      bevelEnabled: true,
-      bevelThickness: 0.02,
-      bevelSize: 0.02,
-      bevelSegments: 2,
-    });
-    petalGeo.translate(0, 0, -0.025);
+    const petalGeo = new THREE.SphereGeometry(1, 16, 12);
+    petalGeo.scale(0.22, 0.9, 0.14);
+    petalGeo.translate(0, 0.82, 0); // base sits at the hinge's origin, tip extends outward
 
     function petalColor() {
       return isDark() ? 0xe0709f : 0xcc3d78;
@@ -449,30 +444,35 @@
     const flower = new THREE.Group();
     scene.add(flower);
 
-    function buildRing(count, scale, raised, openAngle, delayOffset) {
+    function buildRing(count, scale, radiusOffset, raised, openAngle, delayOffset) {
       for (let i = 0; i < count; i++) {
-        const pivot = new THREE.Group();
+        const facing = new THREE.Group();
+        facing.rotation.y = (i / count) * Math.PI * 2 + (raised ? Math.PI / count : 0);
+        facing.position.y = raised ? 0.05 : 0;
+        flower.add(facing);
+
+        const hinge = new THREE.Group();
+        hinge.position.set(0, 0, radiusOffset);
+        facing.add(hinge);
+
         const mat = new THREE.MeshStandardMaterial({
           color: petalColor(),
-          roughness: 0.45,
-          metalness: 0.15,
+          roughness: 0.42,
+          metalness: 0.12,
           side: THREE.DoubleSide,
           emissive: 0x3a0f26,
-          emissiveIntensity: 0.35,
+          emissiveIntensity: 0.3,
         });
         const mesh = new THREE.Mesh(petalGeo, mat);
         mesh.scale.setScalar(scale);
-        pivot.add(mesh);
-        pivot.rotation.y = (i / count) * Math.PI * 2 + (raised ? 0.35 : 0);
-        pivot.rotation.z = (Math.random() - 0.5) * 0.06;
-        pivot.position.y = raised ? 0.06 : 0;
-        flower.add(pivot);
-        petals.push({ pivot, mat, openAngle, delay: (i / count) * 0.18 + delayOffset });
+        hinge.add(mesh);
+
+        petals.push({ pivot: hinge, mat, openAngle, delay: (i / count) * 0.18 + delayOffset });
       }
     }
 
-    buildRing(6, 1, false, Math.PI * 0.42, 0);
-    buildRing(5, 0.6, true, Math.PI * 0.3, 0.1);
+    buildRing(6, 1, 0.05, false, Math.PI * 0.44, 0);
+    buildRing(5, 0.62, 0.03, true, Math.PI * 0.34, 0.12);
 
     const coreGeo = new THREE.SphereGeometry(0.2, 24, 24);
     const coreMat = new THREE.MeshStandardMaterial({
@@ -551,9 +551,14 @@
     let bloomTrigger = null;
     if (!reduceMotion && typeof gsap !== 'undefined' && window.ScrollTrigger) {
       bloomTrigger = ScrollTrigger.create({
+        // Viewport-relative, not tied to the section's full scroll distance —
+        // the bloom finishes shortly after the section enters view (while its
+        // top travels from 80% down the viewport to 25%) and then just stays
+        // open for the rest of the (much longer, text-driven) scroll through
+        // the section, instead of finishing right as you scroll past it.
         trigger: '.about-name',
-        start: 'top 75%',
-        end: 'bottom 55%',
+        start: 'top 80%',
+        end: 'top 25%',
         scrub: 0.6,
         onUpdate: (self) => { bloomProgress = self.progress; },
       });
