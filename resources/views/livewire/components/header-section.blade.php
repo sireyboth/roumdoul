@@ -72,19 +72,44 @@
         </div>
       </div>
 
-      {{-- Top category bar --}}
+      {{-- Top nav bar — categories live inside a "Services" dropdown instead of a long
+           horizontal scroll strip, so it stays tidy regardless of how many categories exist. --}}
       <nav class="hidden border-t border-plum-100 bg-plum-50 dark:border-plum-800 dark:bg-plum-900 md:block">
-        <div class="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto px-4 py-2.5 sm:px-6 lg:px-8">
+        <div class="mx-auto flex max-w-7xl items-center gap-5 px-4 py-2.5 sm:px-6 lg:px-8">
           <a href="/shop" wire:navigate data-nav-link data-nav-exact
             class="shrink-0 text-sm font-semibold transition-colors text-plum-600 hover:text-brand-700 dark:text-plum-300 dark:hover:text-white">
             គ្រប់ប្រភេទទាំងអស់
           </a>
-          @foreach ($categories as $category)
-            <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
-              class="shrink-0 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
-              {{ $category->name_km }}
-            </a>
-          @endforeach
+
+          <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+            <button type="button" @click="open = !open" :aria-expanded="open.toString()"
+              class="flex items-center gap-1 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
+              សេវាកម្ម
+              <x-app-icon name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="open ? 'rotate-180' : ''" />
+            </button>
+
+            <div x-show="open" x-cloak x-transition.origin.top.duration.150ms
+              class="absolute left-0 top-full z-50 mt-2 grid w-64 gap-0.5 rounded-lg border border-plum-200 bg-white p-2 shadow-xl dark:border-plum-700 dark:bg-plum-800">
+              @forelse ($categories as $category)
+                <a href="/shop/{{ $category->slug }}" wire:navigate @click="open = false"
+                  class="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-700 dark:hover:text-white">
+                  <x-app-icon name="{{ $category->icon }}" class="h-4 w-4 shrink-0" />
+                  {{ $category->name_km }}
+                </a>
+              @empty
+                <p class="px-3 py-2 text-sm text-plum-400">No categories yet.</p>
+              @endforelse
+            </div>
+          </div>
+
+          <a href="/about" wire:navigate data-nav-link
+            class="shrink-0 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
+            អំពីយើង
+          </a>
+          <a href="/contact" wire:navigate data-nav-link
+            class="shrink-0 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
+            ទំនាក់ទំនង
+          </a>
         </div>
       </nav>
 
