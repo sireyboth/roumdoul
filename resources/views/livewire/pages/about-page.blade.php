@@ -84,7 +84,7 @@
     <p class="about-manifesto-line text-[9vw] font-black uppercase leading-[1.05] tracking-tight sm:text-[6vw] lg:text-[5vw]">
       We don't just sell software.
     </p>
-    <p class="about-manifesto-line about-glow text-[9vw] font-black uppercase leading-[1.05] tracking-tight sm:text-[6vw] lg:text-[5vw]">
+    <p class="about-manifesto-line about-glow text-[9vw] font-black uppercase leading-[1.05] tracking-tight text-transparent sm:text-[6vw] lg:text-[5vw]">
       We engineer trust.
     </p>
     <p class="about-manifesto-line text-[9vw] font-black uppercase leading-[1.05] tracking-tight sm:text-[6vw] lg:text-[5vw]">
@@ -250,6 +250,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script>
+  // Clear any ScrollTriggers left over from a previous visit to this page within
+  // the same SPA session (wire:navigate swaps this markup back in fresh each
+  // time, but GSAP's global registry persists across navigations). This must run
+  // before ANY ScrollTrigger.create() below — including the bloom flower's —
+  // otherwise a trigger created earlier in this same script gets wiped out by a
+  // cleanup call meant for the *previous* page instance, and the flower never
+  // receives another onUpdate after its very first (frozen-closed) one.
+  if (window.ScrollTrigger) {
+    ScrollTrigger.getAll().forEach((t) => t.kill());
+  }
+
   // Fullscreen fixed 3D particle field — brand-colored points drifting slowly in
   // space, with a subtle camera shift toward the cursor. Independent of the
   // homepage hero's particle field (resources/js/modules/heroParticles.js,
@@ -568,12 +579,9 @@
   (function () {
     if (typeof gsap === 'undefined') return;
 
-    // Kill any ScrollTriggers left over from a previous visit to this page within
-    // the same SPA session (wire:navigate swaps this markup back in fresh each
-    // time, but GSAP's global registry persists across navigations).
-    if (window.ScrollTrigger) {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
-    }
+    // Leftover-trigger cleanup for SPA re-navigation now happens once at the very
+    // top of this script block (see comment there) — before this IIFE, before the
+    // particle field, and before the bloom flower's own ScrollTrigger.
     gsap.registerPlugin(ScrollTrigger);
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -724,21 +732,18 @@
       radial-gradient(ellipse 50% 60% at 80% 70%, color-mix(in srgb, var(--color-gold-500, #c79a44) 25%, transparent), transparent 60%);
   }
 
-  /* A "neon glow" only actually reads as glowing against a dark background — on
-     light backgrounds a transparent gradient-fill just loses contrast (the gold
-     end especially disappears against a pale page). So light mode gets a solid,
-     bold, high-contrast brand color instead of the gradient fill; the full
-     glowing gradient treatment is reserved for dark mode, where it's the whole
-     point. */
+  /* Brand-color neon glow — rosewood pink into champagne gold. Lighter/more
+     saturated in light mode so it reads against a pale background; brighter and
+     glowier once .dark is present, matching the rest of the page's dark palette. */
   .about-glow {
-    color: var(--color-brand-700, #8f1b4e);
+    background-image: linear-gradient(90deg, var(--color-brand-500, #cc3d78), var(--color-gold-500, #c79a44));
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-brand-500, #cc3d78) 35%, transparent));
   }
 
   .dark .about-glow {
-    color: transparent;
     background-image: linear-gradient(90deg, var(--color-brand-400, #e0709f), var(--color-gold-400, #d9b66a));
-    -webkit-background-clip: text;
-    background-clip: text;
     filter: drop-shadow(0 0 25px color-mix(in srgb, var(--color-brand-500, #cc3d78) 55%, transparent))
       drop-shadow(0 0 45px color-mix(in srgb, var(--color-gold-500, #c79a44) 35%, transparent));
   }

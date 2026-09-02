@@ -114,21 +114,6 @@
 
       <div class="mt-12 flex flex-col items-center gap-8 border-t border-plum-200 pt-8 text-center dark:border-plum-800">
         <p class="text-xs text-plum-500 dark:text-plum-400">&copy; <span id="footer-year"></span> ROUMDOUL. រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
-
-        <div class="flex flex-col items-center gap-6 border-t border-plum-200 pt-8 dark:border-plum-800">
-          <div class="flex flex-col items-center gap-1.5">
-            <img src="/images/Roumdoul_Logo.png" alt="Romdoul" loading="lazy" class="h-6 w-6 object-contain" />
-            {{-- <span class="text-[10px] font-semibold uppercase tracking-widest text-brand-800 dark:text-brand-300">Digital Design By</span> --}}
-            <span class="text-sm font-bold text-brand-800 dark:text-brand-300">រំដួល</span>
-            <span class="text-xs font-semibold uppercase tracking-wide text-brand-800 dark:text-brand-300">Roumdoul</span>
-          </div>
-
-          <div class="flex flex-col items-center gap-2 text-sm text-plum-600 dark:text-plum-400">
-            <a data-footer-phone href="#" class="transition-colors hover:text-brand-700 dark:hover:text-gold-400"></a>
-            <a data-footer-phone href="#" class="transition-colors hover:text-brand-700 dark:hover:text-gold-400"></a>
-            <a data-footer-phone href="#" class="transition-colors hover:text-brand-700 dark:hover:text-gold-400"></a>
-          </div>
-        </div>
       </div>
     </div>
   </footer>
