@@ -12,7 +12,7 @@ $isLarge = $size === 'large';
 <a href="/service/{{ $service->slug }}" wire:navigate data-reveal data-tilt
   @class([
     'group relative flex flex-col overflow-hidden rounded-xl border border-plum-200 bg-white transition-colors duration-300 hover:border-brand-400 hover:shadow-xl hover:shadow-brand-500/10 dark:border-plum-800 dark:bg-plum-900',
-    'sm:col-span-2 sm:row-span-2' => $isLarge,
+    'sm:col-span-2' => $isLarge,
   ])>
   @if ($service->is_featured)
     <span class="absolute left-3 top-3 z-10 rounded bg-gold-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-950">
@@ -26,7 +26,12 @@ $isLarge = $size === 'large';
   @endif
 
   <div @class([
-    'relative flex aspect-[4/3] items-center justify-center bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300',
+    'relative flex items-center justify-center bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300',
+    'aspect-[4/3]' => ! $isLarge,
+    // Wider/shorter than the normal 4:3 ratio — the large card is double-width
+    // (sm:col-span-2), so keeping 4:3 would double its image height too and
+    // blow the whole row out tall. A wide banner ratio keeps it to one row.
+    'aspect-[16/5]' => $isLarge,
     'opacity-50 grayscale' => ! $service->in_stock,
   ])>
     @if ($service->image_path)

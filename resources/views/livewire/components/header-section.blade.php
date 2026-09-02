@@ -73,17 +73,22 @@
       </div>
 
       {{-- Top nav bar — categories live inside a "Services" dropdown instead of a long
-           horizontal scroll strip, so it stays tidy regardless of how many categories exist. --}}
-      <nav class="hidden border-t border-plum-100 bg-plum-50 dark:border-plum-800 dark:bg-plum-900 md:block">
-        <div class="mx-auto flex max-w-7xl items-center gap-5 px-4 py-2.5 sm:px-6 lg:px-8">
-          <a href="/shop" wire:navigate data-nav-link data-nav-exact
-            class="shrink-0 text-sm font-semibold transition-colors text-plum-600 hover:text-brand-700 dark:text-plum-300 dark:hover:text-white">
+           horizontal scroll strip, so it stays tidy regardless of how many categories exist.
+           Deliberately bolder/heavier than a typical secondary bar (solid brand background,
+           bigger type, pill hover states) so it reads as a real navigation bar, not a quiet
+           afterthought under the header. --}}
+      <nav class="hidden bg-gradient-to-r from-brand-700 via-brand-600 to-brand-700 shadow-md dark:from-brand-900 dark:via-brand-800 dark:to-brand-900 md:block">
+        <div class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-1.5 sm:px-6 lg:px-8">
+          <a href="/shop" wire:navigate
+            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
             គ្រប់ប្រភេទទាំងអស់
           </a>
 
+          <span class="h-4 w-px shrink-0 bg-white/20"></span>
+
           <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
             <button type="button" @click="open = !open" :aria-expanded="open.toString()"
-              class="flex items-center gap-1 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
+              class="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
               សេវាកម្ម
               <x-app-icon name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="open ? 'rotate-180' : ''" />
             </button>
@@ -102,13 +107,21 @@
             </div>
           </div>
 
-          <a href="/about" wire:navigate data-nav-link
-            class="shrink-0 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
+          <span class="h-4 w-px shrink-0 bg-white/20"></span>
+
+          <a href="/about" wire:navigate
+            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
             អំពីយើង
           </a>
-          <a href="/contact" wire:navigate data-nav-link
-            class="shrink-0 text-sm font-medium transition-colors text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
+          <a href="/contact" wire:navigate
+            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
             ទំនាក់ទំនង
+          </a>
+
+          <a href="/shop" wire:navigate
+            class="ml-auto hidden shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-sm font-bold text-brand-950 shadow-sm transition-colors hover:bg-gold-400 lg:flex">
+            <x-app-icon name="bolt" class="h-4 w-4" />
+            ទិញឥឡូវនេះ
           </a>
         </div>
       </nav>
@@ -133,13 +146,28 @@
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
               ហាង
             </a>
-            @foreach ($categories as $category)
-              <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
-                class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-                <x-app-icon name="{{ $category->icon }}" class="h-4 w-4" />
-                {{ $category->name_km }}
-              </a>
-            @endforeach
+
+            {{-- Categories collapse into their own "Service" toggle here too, matching
+                 the desktop dropdown, instead of dumping every category inline. --}}
+            <div x-data="{ open: false }">
+              <button type="button" @click="open = !open" :aria-expanded="open.toString()"
+                class="flex w-full items-center justify-between rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+                សេវាកម្ម
+                <x-app-icon name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="open ? 'rotate-180' : ''" />
+              </button>
+              <div x-show="open" x-collapse x-cloak class="ml-2 flex flex-col gap-1 border-l border-plum-200 pl-2 dark:border-plum-700">
+                @forelse ($categories as $category)
+                  <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
+                    class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+                    <x-app-icon name="{{ $category->icon }}" class="h-4 w-4" />
+                    {{ $category->name_km }}
+                  </a>
+                @empty
+                  <p class="px-3 py-2 text-sm text-plum-400">No categories yet.</p>
+                @endforelse
+              </div>
+            </div>
+
             <a href="/about" wire:navigate data-nav-link
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
               អំពីយើង

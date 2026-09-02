@@ -157,7 +157,7 @@
         {{-- Bento grid: first featured product runs large (2x2), the rest fill in around it --}}
         <div class="grid grid-cols-2 gap-5 sm:auto-rows-[1fr] sm:grid-cols-3 lg:grid-cols-4">
           @foreach ($featuredServices as $service)
-            <x-shop.product-card :service="$service" :size="$loop->first ? 'large' : 'normal'" />
+            <x-shop.product-card :service="$service" />
           @endforeach
         </div>
       </div>
