@@ -5,11 +5,13 @@ export function initFooter() {
   const emailText = document.getElementById('footer-email-text')
   const phoneLink = document.getElementById('footer-phone-link')
   const phoneText = document.getElementById('footer-phone-text')
+  const telegramChatLink = document.getElementById('footer-telegram-chat-link')
 
   emailLink.href = gmailLink
   emailText.textContent = companyEmail
   phoneLink.href = telegramLink
   phoneText.textContent = companyPhone
+  if (telegramChatLink) telegramChatLink.href = telegramLink
 
   document.getElementById('footer-year').textContent = new Date().getFullYear()
 

@@ -99,16 +99,17 @@
         </div>
 
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">ព័ត៌មានថ្មីៗ</h3>
-          <p class="text-sm text-plum-600 dark:text-plum-400">ចុះឈ្មោះដើម្បីទទួលបានការបញ្ចុះតម្លៃពិសេស</p>
-          <form class="flex flex-col gap-2" onsubmit="return false">
-            <input type="email" placeholder="អ៊ីមែលរបស់អ្នក"
-              class="w-full rounded-full border border-plum-200 bg-plum-50 px-4 py-2 text-sm outline-none transition-colors placeholder:text-plum-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:placeholder:text-plum-500" />
-            <button type="submit"
-              class="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
-              ចុះឈ្មោះ
-            </button>
-          </form>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">ជំនួយរហ័ស</h3>
+          <div class="flex items-start gap-2">
+            <x-app-icon name="clock" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
+            <p class="text-sm text-plum-600 dark:text-plum-400">គាំទ្រអតិថិជន ២៤ម៉ោង / ៧ថ្ងៃ</p>
+          </div>
+          <p class="text-sm text-plum-600 dark:text-plum-400">មានសំណួរ? ជជែកជាមួយយើងភ្លាមៗតាម Telegram។</p>
+          <a id="footer-telegram-chat-link" href="#" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
+            <x-app-icon name="chat" class="h-4 w-4 shrink-0" />
+            ជជែកតាម Telegram
+          </a>
         </div>
       </div>
 
