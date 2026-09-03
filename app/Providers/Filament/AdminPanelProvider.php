@@ -54,6 +54,14 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => view('filament.hooks.login-canvas')->render(),
             )
 
+            // Filament's default behavior on ANY failed request (validation aside — that
+            // still renders inline as usual) is to swallow the real response and show a
+            // generic "Error while loading page" toast, regardless of APP_DEBUG. Outside
+            // production we'd rather see what actually broke: disabling this here lets
+            // Livewire fall back to its own default, which shows the real Laravel error
+            // page (full exception + stack trace when APP_DEBUG=true) in an overlay.
+            ->errorNotifications(fn () => app()->environment('production'))
+
             ->spa(hasPrefetching: true)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
