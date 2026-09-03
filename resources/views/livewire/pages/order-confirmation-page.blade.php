@@ -52,8 +52,8 @@
     <a href="/shop" wire:navigate class="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
       បន្តទិញទំនិញ
     </a>
-    <a href="/" wire:navigate class="rounded-full border border-plum-300 px-6 py-2.5 text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-50 dark:border-plum-600 dark:text-plum-200 dark:hover:bg-plum-800">
-      ត្រឡប់ទៅទំព័រដើម
+    <a href="/dashboard" wire:navigate class="rounded-full border border-plum-300 px-6 py-2.5 text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-50 dark:border-plum-600 dark:text-plum-200 dark:hover:bg-plum-800">
+      ពិនិត្យមើលការបញ្ជាទិញ
     </a>
   </div>
 
