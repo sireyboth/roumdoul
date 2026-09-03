@@ -35,7 +35,7 @@ $isLarge = $size === 'large';
     'opacity-50 grayscale' => ! $service->in_stock,
   ])>
     @if ($service->image_path)
-      <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($service->image_path) }}" alt="{{ $service->name_en }}" loading="lazy" decoding="async" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($service->image_path) }}" alt="{{ $service->name_en }}" loading="lazy" decoding="async" class="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105" />
     @else
       <x-app-icon name="{{ $service->category->icon }}" class="{{ $isLarge ? 'h-16 w-16' : 'h-12 w-12' }}" />
     @endif
