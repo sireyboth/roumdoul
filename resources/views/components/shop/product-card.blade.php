@@ -26,7 +26,14 @@ $isLarge = $size === 'large';
   @endif
 
   <div @class([
-    'relative flex items-center justify-center bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300',
+    // overflow-hidden here isn't decorative — as a flex item, this box's default
+    // min-height:auto lets a tall/square source image's own natural aspect ratio
+    // override the aspect-[4/3] below and grow the box taller than every sibling
+    // (e.g. a 500x500 upload rendered at a full 1:1 box instead of being cropped
+    // to 4:3 like the rest). overflow-hidden makes the browser treat this box's
+    // automatic minimum size as 0 instead of the image's intrinsic size, so every
+    // card's image box stays locked to the same ratio no matter what gets uploaded.
+    'relative flex items-center justify-center overflow-hidden bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300',
     'aspect-[4/3]' => ! $isLarge,
     // Wider/shorter than the normal 4:3 ratio — the large card is double-width
     // (sm:col-span-2), so keeping 4:3 would double its image height too and
@@ -35,7 +42,7 @@ $isLarge = $size === 'large';
     'opacity-50 grayscale' => ! $service->in_stock,
   ])>
     @if ($service->image_path)
-      <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($service->image_path) }}" alt="{{ $service->name_en }}" loading="lazy" decoding="async" class="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105" />
+      <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($service->image_path) }}" alt="{{ $service->name_en }}" loading="lazy" decoding="async" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
     @else
       <x-app-icon name="{{ $service->category->icon }}" class="{{ $isLarge ? 'h-16 w-16' : 'h-12 w-12' }}" />
     @endif
