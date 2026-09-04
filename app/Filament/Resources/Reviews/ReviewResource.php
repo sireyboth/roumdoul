@@ -33,9 +33,12 @@ class ReviewResource extends Resource
     {
         return $schema->components([
             TextEntry::make('customer_name')->label('Customer'),
-            TextEntry::make('order.order_number')->label('Order #'),
+            TextEntry::make('email')->placeholder('—'),
+            TextEntry::make('order.order_number')->label('Order #')->placeholder('—'),
+            TextEntry::make('source')->formatStateUsing(fn (string $state) => $state === 'public_form' ? 'Feedback link' : 'Order'),
             TextEntry::make('rating')
                 ->formatStateUsing(fn (int $state) => str_repeat('★', $state).str_repeat('☆', 5 - $state)),
+            TextEntry::make('is_approved')->label('Public on homepage')->formatStateUsing(fn (bool $state) => $state ? 'Yes' : 'No'),
             TextEntry::make('comment')->placeholder('—')->columnSpanFull(),
             TextEntry::make('created_at')->dateTime(),
         ]);
@@ -50,6 +53,13 @@ class ReviewResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getModel()::count() ?: null;
+        $pending = static::getModel()::where('is_approved', false)->count();
+
+        return $pending ? (string) $pending : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
     }
 }

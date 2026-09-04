@@ -13,12 +13,16 @@ class Review extends Model
     protected $fillable = [
         'order_id',
         'customer_name',
+        'email',
         'rating',
+        'source',
+        'is_approved',
         'comment',
     ];
 
     protected $casts = [
         'rating' => 'integer',
+        'is_approved' => 'boolean',
     ];
 
     public function order(): BelongsTo

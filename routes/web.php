@@ -6,6 +6,7 @@ use App\Livewire\Pages\Auth\RegisterPage;
 use App\Livewire\Pages\CartPage;
 use App\Livewire\Pages\CheckoutPage;
 use App\Livewire\Pages\ContactPage;
+use App\Livewire\Pages\FeedbackPage;
 use App\Livewire\Pages\Dashboard\DashboardPage;
 use App\Livewire\Pages\Dashboard\InvitationManagePage;
 use App\Livewire\Pages\HomePage;
@@ -28,6 +29,7 @@ Route::get('/cart', CartPage::class)->name('cart');
 
 Route::get('/about', AboutPage::class)->name('about');
 Route::get('/contact', ContactPage::class)->name('contact');
+Route::get('/feedback', FeedbackPage::class)->middleware('throttle:20,1')->name('feedback');
 
 Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
 Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');

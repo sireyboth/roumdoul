@@ -22,7 +22,8 @@ class HomePage extends Component
                 ->where('is_featured', true)
                 ->orderBy('sort_order')
                 ->get(),
-            'reviews' => Review::whereNotNull('comment')
+            'reviews' => Review::where('is_approved', true)
+                ->whereNotNull('comment')
                 ->where('comment', '!=', '')
                 ->latest()
                 ->limit(20)
