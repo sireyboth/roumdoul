@@ -9,17 +9,22 @@ use App\Livewire\Pages\ContactPage;
 use App\Livewire\Pages\FeedbackPage;
 use App\Livewire\Pages\Dashboard\DashboardPage;
 use App\Livewire\Pages\Dashboard\InvitationManagePage;
+use App\Livewire\Pages\Dashboard\OrderDetailPage;
 use App\Livewire\Pages\HomePage;
 use App\Livewire\Pages\OrderConfirmationPage;
+use App\Livewire\Pages\PrivacyPolicyPage;
 use App\Livewire\Pages\ServiceDetailPage;
 use App\Livewire\Pages\ShopPage;
+use App\Livewire\Pages\TermsPage;
 use App\Http\Controllers\InvitationRsvpController;
 use App\Http\Controllers\InvitationShowController;
 use App\Http\Controllers\InvitationTemplateDemoController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomePage::class)->name('home');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/shop', ShopPage::class)->name('shop');
 Route::get('/shop/{category:slug}', ShopPage::class)->name('shop.category');
@@ -30,6 +35,8 @@ Route::get('/cart', CartPage::class)->name('cart');
 Route::get('/about', AboutPage::class)->name('about');
 Route::get('/contact', ContactPage::class)->name('contact');
 Route::get('/feedback', FeedbackPage::class)->middleware('throttle:20,1')->name('feedback');
+Route::get('/privacy', PrivacyPolicyPage::class)->name('privacy');
+Route::get('/terms', TermsPage::class)->name('terms');
 
 Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
 Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
@@ -45,6 +52,7 @@ Route::middleware('guest:customer')->group(function () {
 Route::middleware('auth:customer')->group(function () {
     Route::get('/dashboard', DashboardPage::class)->name('dashboard');
     Route::get('/dashboard/invitations/{invitation}', InvitationManagePage::class)->name('dashboard.invitations.show');
+    Route::get('/dashboard/orders/{order}', OrderDetailPage::class)->name('dashboard.orders.show');
     Route::get('/checkout', CheckoutPage::class)->name('checkout');
     Route::get('/order/{order}/confirmation', OrderConfirmationPage::class)->name('order.confirmation');
 

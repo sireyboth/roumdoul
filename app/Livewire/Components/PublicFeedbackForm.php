@@ -8,8 +8,6 @@ use Livewire\Component;
 
 class PublicFeedbackForm extends Component
 {
-    public string $customer_name = '';
-
     public string $email = '';
 
     public int $rating = 5;
@@ -25,7 +23,6 @@ class PublicFeedbackForm extends Component
     protected function rules(): array
     {
         return [
-            'customer_name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['required', 'string', 'max:1000', new NoProfanity],
@@ -36,7 +33,7 @@ class PublicFeedbackForm extends Component
     {
         if (filled($this->website)) {
             // Silently pretend it worked so bots don't retry.
-            $this->reset(['customer_name', 'email', 'rating', 'comment', 'website']);
+            $this->reset(['email', 'rating', 'comment', 'website']);
             $this->rating = 5;
             $this->submitted = true;
 
@@ -44,7 +41,6 @@ class PublicFeedbackForm extends Component
         }
 
         $validated = $this->validate();
-        unset($validated['website']);
 
         Review::create([
             ...$validated,
@@ -52,7 +48,7 @@ class PublicFeedbackForm extends Component
             'is_approved' => false,
         ]);
 
-        $this->reset(['customer_name', 'email', 'comment']);
+        $this->reset(['email', 'comment']);
         $this->rating = 5;
         $this->submitted = true;
     }

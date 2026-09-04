@@ -281,8 +281,10 @@
               </div>
               <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-plum-600 dark:text-plum-300">&ldquo;{{ $review->comment }}&rdquo;</p>
               <div class="mt-4 flex items-center gap-3">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-plum-100 text-sm font-bold text-brand-700 ring-2 ring-plum-100 dark:bg-plum-800 dark:text-brand-300 dark:ring-plum-800">{{ mb_substr($review->customer_name, 0, 1) }}</span>
-                <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $review->customer_name }}</p>
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-plum-100 text-brand-700 ring-2 ring-plum-100 dark:bg-plum-800 dark:text-brand-300 dark:ring-plum-800">
+                  <x-app-icon name="check-circle" class="h-4.5 w-4.5" />
+                </span>
+                <p class="text-sm font-semibold text-plum-900 dark:text-white">អតិថិជនដែលបានផ្ទៀងផ្ទាត់</p>
               </div>
             </div>
           @endforeach
@@ -302,8 +304,10 @@
                 </div>
                 <p class="mt-3 text-sm leading-relaxed text-plum-600 dark:text-plum-300">&ldquo;{{ $review->comment }}&rdquo;</p>
                 <div class="mt-4 flex items-center gap-3">
-                  <span class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-sm font-bold text-brand-700 ring-2 ring-plum-100 dark:bg-plum-800 dark:text-brand-300 dark:ring-plum-800">{{ mb_substr($review->customer_name, 0, 1) }}</span>
-                  <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $review->customer_name }}</p>
+                  <span class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-brand-700 ring-2 ring-plum-100 dark:bg-plum-800 dark:text-brand-300 dark:ring-plum-800">
+                    <x-app-icon name="check-circle" class="h-4.5 w-4.5" />
+                  </span>
+                  <p class="text-sm font-semibold text-plum-900 dark:text-white">អតិថិជនដែលបានផ្ទៀងផ្ទាត់</p>
                 </div>
               </div>
             </div>

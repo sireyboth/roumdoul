@@ -27,8 +27,8 @@
     @endphp
     <div class="mb-10 flex flex-col gap-3">
       @foreach ($orders as $order)
-        <div wire:key="order-{{ $order->id }}"
-          class="flex items-center justify-between rounded-lg border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
+        <a href="/dashboard/orders/{{ $order->id }}" wire:navigate wire:key="order-{{ $order->id }}"
+          class="flex items-center justify-between rounded-lg border border-plum-200 bg-white p-4 transition-colors hover:border-brand-400 dark:border-plum-800 dark:bg-plum-900">
           <div>
             <p class="text-sm font-bold text-plum-900 dark:text-white">{{ $order->order_number }}</p>
             <p class="text-xs text-plum-500 dark:text-plum-400">
@@ -40,8 +40,9 @@
             <span class="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide {{ $orderStatusStyles[$order->status] ?? 'bg-plum-100 text-plum-600' }}">
               {{ $orderStatusLabels[$order->status] ?? $order->status }}
             </span>
+            <x-app-icon name="chevron-right" class="h-4.5 w-4.5 text-plum-300" />
           </div>
-        </div>
+        </a>
       @endforeach
     </div>
   @endif

@@ -44,7 +44,6 @@ class OrderConfirmationPage extends Component
 
         Review::create([
             'order_id' => $this->order->id,
-            'customer_name' => $this->order->customer_name,
             'rating' => $this->rating,
             'comment' => $this->comment ?: null,
         ]);

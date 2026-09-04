@@ -13,18 +13,7 @@
 
             <div>
                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-plum-500 dark:text-plum-400">
-                    ឈ្មោះរបស់អ្នក
-                </label>
-                <input type="text" wire:model="customer_name" placeholder="ឈ្មោះរបស់អ្នក"
-                    class="w-full rounded-lg border border-plum-200 bg-white px-3 py-2 text-sm text-plum-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:text-white" />
-                @error('customer_name')
-                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-plum-500 dark:text-plum-400">
-                    អ៊ីមែល <span class="normal-case text-plum-400">(មិនបង្ហាញជាសាធារណៈទេ)</span>
+                    អ៊ីមែល <span class="normal-case text-plum-400">(ស្រេចចិត្ត &middot; មិនបង្ហាញជាសាធារណៈទេ)</span>
                 </label>
                 <input type="email" wire:model="email" placeholder="អីមែលរបស់អ្នក (ស្រេចចិត្ត)"
                     class="w-full rounded-lg border border-plum-200 bg-white px-3 py-2 text-sm text-plum-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:text-white" />

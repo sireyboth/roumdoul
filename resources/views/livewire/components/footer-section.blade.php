@@ -113,7 +113,12 @@
         </div>
       </div>
 
-      <div class="mt-12 flex flex-col items-center gap-8 border-t border-plum-200 pt-8 text-center dark:border-plum-800">
+      <div class="mt-12 flex flex-col items-center gap-4 border-t border-plum-200 pt-8 text-center dark:border-plum-800">
+        <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
+          <a href="/privacy" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">គោលការណ៍ភាពឯកជន</a>
+          <a href="/terms" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">លក្ខខណ្ឌប្រើប្រាស់</a>
+          <a href="/feedback" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">ផ្ញើមតិយោបល់</a>
+        </div>
         <p class="text-xs text-plum-500 dark:text-plum-400">&copy; <span id="footer-year"></span> ROUMDOUL. រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
       </div>
     </div>

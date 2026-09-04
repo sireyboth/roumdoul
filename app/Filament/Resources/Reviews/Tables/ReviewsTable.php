@@ -23,9 +23,6 @@ class ReviewsTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('customer_name')
-                    ->label('Customer')
-                    ->searchable(),
                 TextColumn::make('source')
                     ->badge()
                     ->formatStateUsing(fn (string $state) => $state === 'public_form' ? 'Feedback link' : 'Order')
@@ -71,12 +68,14 @@ class ReviewsTable
                     ->icon(Heroicon::OutlinedCheckCircle)
                     ->color('success')
                     ->visible(fn ($record) => ! $record->is_approved)
-                    ->action(fn ($record) => $record->update(['is_approved' => true])),
+                    ->action(fn ($record) => $record->update(['is_approved' => true]))
+                    ->successNotificationTitle('Review approved — now visible on the homepage'),
                 Action::make('unapprove')
                     ->icon(Heroicon::OutlinedXCircle)
                     ->color('gray')
                     ->visible(fn ($record) => $record->is_approved)
-                    ->action(fn ($record) => $record->update(['is_approved' => false])),
+                    ->action(fn ($record) => $record->update(['is_approved' => false]))
+                    ->successNotificationTitle('Review hidden from the homepage'),
                 ViewAction::make(),
                 DeleteAction::make(),
             ])
@@ -85,7 +84,8 @@ class ReviewsTable
                     BulkAction::make('approve')
                         ->icon(Heroicon::OutlinedCheckCircle)
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each->update(['is_approved' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_approved' => true]))
+                        ->successNotificationTitle('Reviews approved'),
                     DeleteBulkAction::make(),
                 ]),
             ]);
