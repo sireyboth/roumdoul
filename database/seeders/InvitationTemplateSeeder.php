@@ -99,5 +99,50 @@ class InvitationTemplateSeeder extends Seeder
                 'view' => 'invitations.templates.private-screening',
             ]
         );
+
+        // Khmer Traditional Wedding — purchasable (Service + plans), previewable at
+        // /templates/khmer-traditional-wedding/demo. Plans unlock the premium extras
+        // (map, countdown, RSVP, gallery, schedule, story) via `features`.
+        $khmerService = Service::updateOrCreate(
+            ['slug' => 'khmer-traditional-wedding'],
+            [
+                'category_id' => $category->id,
+                'name_en' => 'Khmer Traditional Wedding',
+                'name_km' => 'លិខិតអញ្ជើញមង្គលការបែបប្រពៃណីខ្មែរ',
+                'short_description' => 'A premium Cambodian wedding invitation with Khmer ceremony schedule, story, gallery, map and RSVP.',
+                'description' => 'Fill in your names, photos, ceremony program and venue, then send a personal link to each guest. Includes countdown, map, RSVP and background music.',
+                'base_price' => 9.99,
+                'demo_url' => '/templates/khmer-traditional-wedding/demo',
+                'is_active' => true,
+            ]
+        );
+
+        ServicePlan::updateOrCreate(
+            ['service_id' => $khmerService->id, 'label' => 'Essential — 50 recipients, 6 months'],
+            ['price' => 9.99, 'max_recipients' => 50, 'retention_months' => 6, 'features' => ['venue_address', 'event_schedule'], 'sort_order' => 0]
+        );
+
+        ServicePlan::updateOrCreate(
+            ['service_id' => $khmerService->id, 'label' => 'Premium — 200 recipients, 1 year'],
+            ['price' => 19.99, 'max_recipients' => 200, 'retention_months' => 12, 'features' => ['venue_address', 'event_schedule', 'story_chapters', 'photo_gallery', 'countdown_enabled', 'rsvp_enabled', 'khmer_date'], 'sort_order' => 1]
+        );
+
+        InvitationTemplate::updateOrCreate(
+            ['slug' => 'khmer-traditional-wedding'],
+            [
+                'service_id' => $khmerService->id,
+                'name' => 'Khmer Traditional Wedding',
+                'category' => 'wedding',
+                'is_premium' => true,
+                'is_active' => true,
+                'fields' => [
+                    'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'cover_image',
+                    'message', 'event_date', 'khmer_date', 'venue_name', 'venue_address',
+                    'story_chapters', 'event_schedule', 'photo_gallery', 'rsvp_enabled',
+                    'countdown_enabled', 'music_url', 'groom_phone', 'bride_phone',
+                ],
+                'view' => 'invitations.templates.khmer-traditional-wedding',
+            ]
+        );
     }
 }

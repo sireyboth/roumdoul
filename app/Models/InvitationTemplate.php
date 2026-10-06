@@ -16,7 +16,8 @@ class InvitationTemplate extends Model
      * with the input type the dashboard form should render for it. Adding a genuinely new
      * field means adding one entry here, not touching the dashboard or any template file.
      * Field types the dashboard form renderer understands: text, textarea, image, gallery
-     * (multiple images), schedule (repeatable time+label rows), boolean, datetime, color.
+     * (multiple images), schedule (repeatable time+label rows), story (repeatable title+text
+     * rows), boolean, datetime, color.
      */
     public const FIELD_CATALOG = [
         // Identity / basics — always available on every plan once a template selects them,
@@ -33,6 +34,10 @@ class InvitationTemplate extends Model
         'venue_name' => ['label' => 'Venue name', 'type' => 'text'],
         'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text'],
         'accent_color' => ['label' => 'Accent color', 'type' => 'color'],
+        'groom_photo' => ['label' => "Groom's photo", 'type' => 'image'],
+        'bride_photo' => ['label' => "Bride's photo", 'type' => 'image'],
+        'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text'],
+        'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text'],
 
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
         // shows these to the recipient if the plan's `features` list includes the key.
@@ -42,6 +47,7 @@ class InvitationTemplate extends Model
         'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean'],
         'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery'],
         'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule'],
+        'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story'],
         'qr_code' => ['label' => 'QR code image', 'type' => 'image'],
         'cta_label' => ['label' => 'Button label', 'type' => 'text'],
         'cta_url' => ['label' => 'Button link', 'type' => 'text'],
@@ -58,7 +64,7 @@ class InvitationTemplate extends Model
     public const FREE_FIELDS = [
         'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age',
         'headline', 'message', 'cover_image', 'event_date', 'venue_name',
-        'music_url', 'accent_color',
+        'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
     ];
 
     /**
@@ -75,7 +81,10 @@ class InvitationTemplate extends Model
             'music_url', 'accent_color', 'venue_address', 'rsvp_enabled', 'countdown_enabled',
             'photo_gallery', 'event_schedule', 'qr_code', 'cta_label', 'cta_url',
         ],
-        'wedding' => ['groom_name', 'bride_name', 'khmer_date'],
+        'wedding' => [
+            'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
+            'khmer_date', 'story_chapters',
+        ],
         'birthday' => ['celebrant_name', 'turning_age'],
     ];
 

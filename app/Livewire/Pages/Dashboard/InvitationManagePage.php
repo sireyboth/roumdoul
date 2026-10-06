@@ -95,6 +95,7 @@ class InvitationManagePage extends Component
                 $type === 'datetime' => ['nullable', 'date'],
                 $type === 'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
                 $type === 'schedule' => ['nullable', 'array', 'max:20'],
+                $type === 'story' => ['nullable', 'array', 'max:8'],
                 $type === 'gallery' => ['nullable', 'array', 'max:20'],
                 default => null,
             };
@@ -102,6 +103,11 @@ class InvitationManagePage extends Component
             if ($type === 'schedule') {
                 $rules["fieldValues.{$key}.*.time"] = ['nullable', 'string', 'max:50'];
                 $rules["fieldValues.{$key}.*.label"] = ['nullable', 'string', 'max:200'];
+            }
+
+            if ($type === 'story') {
+                $rules["fieldValues.{$key}.*.title"] = ['nullable', 'string', 'max:120'];
+                $rules["fieldValues.{$key}.*.text"] = ['nullable', 'string', 'max:600'];
             }
         }
 
@@ -133,6 +139,18 @@ class InvitationManagePage extends Component
     }
 
     public function removeScheduleItem(string $key, int $index): void
+    {
+        $items = $this->fieldValues[$key] ?? [];
+        unset($items[$index]);
+        $this->fieldValues[$key] = array_values($items);
+    }
+
+    public function addStoryItem(string $key): void
+    {
+        $this->fieldValues[$key][] = ['title' => '', 'text' => ''];
+    }
+
+    public function removeStoryItem(string $key, int $index): void
     {
         $items = $this->fieldValues[$key] ?? [];
         unset($items[$index]);
