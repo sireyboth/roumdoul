@@ -195,21 +195,34 @@
   .kw :focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
 
   /* the invitation is a phone-width column; on larger screens it floats on a night backdrop */
-  .kw-page{ position:relative; max-width:520px; margin:0 auto; background:var(--ivory); overflow:hidden;
+  .kw-page{ position:relative; z-index:1; max-width:520px; margin:0 auto; background:transparent; overflow:hidden;
     box-shadow:0 0 0 1px rgba(201,162,77,.25), 0 30px 90px rgba(0,0,0,.6); }
+
+  /* rendered (Blender) animation layers, shown once the invitation opens: the background loop sits
+     behind the page, the hanging-flower overlay floats above the text and lets taps pass through */
+  .kw-stage{ position:fixed; top:0; bottom:0; left:50%; width:min(100%,520px); transform:translateX(-50%); pointer-events:none;
+    opacity:0; visibility:hidden; transition:opacity 1.6s ease .6s, visibility 0s linear 2.2s; }
+  .kw-stage img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .kw-stage.bg{ z-index:0; background:var(--ivory); }
+  .kw-stage.fg{ z-index:35; }
+  .kw-staged .kw-stage{ opacity:1; visibility:visible; transition-delay:.6s, 0s; }
   .kw-sec{ position:relative; padding:76px 26px; text-align:center; overflow:hidden; }
   .kw-sec > :not(.kw-deco):not(.kw-frame):not(.kw-corner){ position:relative; z-index:1; }
   .kw-deco{ position:absolute; pointer-events:none; }
   .kw-pattern{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M22 3 41 22 22 41 3 22Z' fill='none' stroke='%23C9A24D' stroke-opacity='.14'/%3E%3Ccircle cx='22' cy='22' r='1.6' fill='%23C9A24D' fill-opacity='.2'/%3E%3C/svg%3E"); }
-  .kw-red{ background:radial-gradient(120% 80% at 50% 0%, #932020 0%, var(--red) 42%, var(--maroon) 100%); color:var(--ivory); }
-  .kw-maroon{ background:radial-gradient(100% 70% at 50% 100%, #5e1414 0%, var(--maroon) 50%, #2a0707 100%); color:var(--ivory); }
-  .kw-beige{ background:var(--beige); }
+  /* the "red" and "maroon" sections sit directly on the rendered floral background, so they are
+     see-through and remap their light-on-dark palette to deep ink on the cream backdrop */
+  .kw-red,.kw-maroon{ background:transparent; --ivory:#4A0D0D; --beige:#6b3a2e; --gold:#9a6f22; --gold-hi:#8a1c1c; --gold-soft:rgba(154,111,34,.4); color:var(--ivory); }
+  .kw-red .kw-shimmer,.kw-maroon .kw-shimmer{ background-image:linear-gradient(100deg,#7a1515 0%,#b0822f 22%,#8a1c1c 44%,#c9973f 62%,#6e1212 82%,#a87a2e 100%); }
+  .kw-red .kw-btn.gold{ background:linear-gradient(180deg,#8f1c1c,#7A1515); color:#F8F1E3; }
+  .kw-maroon .kw-count > div{ background:rgba(255,250,240,.45); }
+  .kw-beige{ background:rgba(232,216,189,.55); }
 
   /* scenery colour roles: dusk silhouettes on the opener, gold leaf on the red/maroon sections */
   .kw-gate{ --br-stem:#1c0404; --br-leaf:#2a0808; --br-leaf-edge:rgba(240,176,96,.35); --br-flower:#F6E6BC; --br-flower-edge:#d9a752;
     --br-bird:#120303; --br-bird-wing:#2c0909; --br-bird-eye:#F6E6BC; --gull:#1a0404; --tp-fill:#1a0404; --tp-rim:rgba(240,170,90,.6); }
   .kw-red,.kw-maroon{ --br-stem:#C9A24D; --br-leaf:rgba(201,162,77,.22); --br-leaf-edge:#C9A24D; --br-flower:#FBF4E4; --br-flower-edge:#C9A24D;
-    --br-bird:#C9A24D; --br-bird-wing:#E9CD85; --br-bird-eye:#4A0D0D; --gull:rgba(243,221,160,.85); --tp-fill:rgba(20,4,4,.55); --tp-rim:rgba(201,162,77,.75); }
+    --br-bird:#C9A24D; --br-bird-wing:#E9CD85; --br-bird-eye:#4A0D0D; --gull:rgba(110,40,30,.7); --tp-fill:rgba(74,13,13,.35); --tp-rim:rgba(201,162,77,.75); }
 
   /* type */
   .kw-eyebrow{ font-family:var(--f-moul); font-size:.95rem; letter-spacing:.02em; color:var(--gold); line-height:2; }
@@ -480,7 +493,7 @@
     html{ scroll-behavior:auto; }
     .kw *,.kw *::before,.kw *::after{ animation:none !important; transition:none !important; }
     .kw-js .kw-rev{ opacity:1; transform:none; filter:none; }
-    .kw-fly,.kw-dust,.kw-petals{ display:none; }
+    .kw-fly,.kw-dust,.kw-petals,.kw-stage.fg{ display:none; }
   }
   @media (min-width:768px){
     .kw-sec{ padding:92px 40px; }
@@ -569,6 +582,8 @@
 
     <div class="kw-bar top"></div><div class="kw-bar bottom"></div>
   </div>
+
+  <div class="kw-stage bg" aria-hidden="true"><img src="{{ asset('images/invitations/khmer-traditional/background.webp') }}" alt="" decoding="async" fetchpriority="low"></div>
 
   <main class="kw-page">
 
@@ -774,6 +789,8 @@
     </footer>
   </main>
 
+  <div class="kw-stage fg" aria-hidden="true"><img src="{{ asset('images/invitations/khmer-traditional/overlay.webp') }}" alt="" decoding="async" fetchpriority="low"></div>
+
   {{-- ============ MUSIC ============ --}}
   @if ($youtubeId)
     <iframe id="kw-yt" title="Background music" aria-hidden="true" tabindex="-1" style="position:absolute;width:0;height:0;border:0"
@@ -876,6 +893,7 @@
   document.getElementById('kw-open').addEventListener('click', function () {
     gate.classList.add('open');
     body.classList.remove('kw-locked');
+    body.classList.add('kw-staged');
     window.scrollTo(0, 0);
     if (yt) { ytCmd('unMute'); ytCmd('playVideo'); setPlaying(true); }
     setTimeout(startReveal, reduced ? 0 : 1300);
