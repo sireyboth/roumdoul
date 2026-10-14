@@ -46,6 +46,7 @@
     $coverUrl = ! empty($fields['cover_image']) ? $resolveUrl($fields['cover_image']) : null;
     $groomPhoto = ! empty($fields['groom_photo']) ? $resolveUrl($fields['groom_photo']) : null;
     $bridePhoto = ! empty($fields['bride_photo']) ? $resolveUrl($fields['bride_photo']) : null;
+    $couplePhoto = $coverUrl ?: ($bridePhoto ?: $groomPhoto);
 
     $story = collect($isUnlocked('story_chapters') ? ($fields['story_chapters'] ?? []) : [])
         ->filter(fn ($row) => ! empty($row['title']) || ! empty($row['text']))
@@ -72,6 +73,15 @@
     }
 
     $initial = fn (string $n) => $n !== '' ? mb_strtoupper(mb_substr($n, 0, 1)) : '♡';
+    $monogram = collect([$groomName, $brideName])->filter()->map($initial)->implode('&') ?: '♡';
+
+    // wax seal for the closing: a slightly irregular disc, like pressed wax
+    $sealEdge = 'M'.collect(range(0, 71))->map(function ($i) {
+        $a = $i / 72 * 2 * M_PI;
+        $r = 52 + 2.2 * sin($a * 9) + 1.3 * sin($a * 23 + 1.3);
+
+        return round(cos($a) * $r, 2).' '.round(sin($a) * $r, 2);
+    })->implode('L').'Z';
 
     // ------------------------------------------------------------------------------------
     // Scenery (pure decoration, no customer data). Built once here and echoed wherever a
@@ -171,7 +181,7 @@
 <title>{{ $coupleTitle ?: 'សិរីមង្គលអាពាហ៍ពិពាហ៍' }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Moul&family=Noto+Sans+Khmer:wght@400;500;600&family=Noto+Serif+Khmer:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Moul&family=Noto+Sans+Khmer:wght@400;500;600&family=Noto+Serif+Khmer:wght@400;600;700&display=swap">
 <style>
   @property --kw-ang{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
   :root{
@@ -183,6 +193,7 @@
     --f-kh-sans:'Noto Sans Khmer','Khmer OS Battambang','Battambang',sans-serif;
     --f-caps:'Cinzel','Cormorant Garamond','Times New Roman',serif;
     --f-en:'Cormorant Garamond','Playfair Display','Times New Roman',serif;
+    --f-love:'Great Vibes','Cormorant Garamond',cursive;
     --ease:cubic-bezier(.22,.8,.3,1);
     --cine:cubic-bezier(.7,0,.3,1);
   }
@@ -246,6 +257,12 @@
   .kw-script{ font-family:var(--f-en); font-style:italic; color:var(--gold); }
   .kw-shimmer{ background:linear-gradient(100deg,#a87a2e 0%,#f7e2a8 22%,#c9a24d 44%,#fff3cf 62%,#b8893a 82%,#e9cd85 100%); background-size:260% 100%;
     -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; animation:kw-sheen 9s ease-in-out infinite; }
+  /* handwritten English line under each Khmer heading */
+  .kw-sub{ font-family:var(--f-love); font-size:1.75rem; line-height:1.25; color:var(--gold); margin-top:2px; }
+  .kw-red .kw-sub,.kw-maroon .kw-sub{ color:var(--gold-hi); }
+
+  /* GSAP-driven moments start hidden only once GSAP is running (no GSAP / reduced motion: shown as-is) */
+  .kw-gsap .kw-gs{ opacity:0; }
 
   /* ornaments */
   .kw-divider{ display:flex; align-items:center; justify-content:center; gap:12px; margin:18px auto 30px; max-width:280px; color:var(--gold); }
@@ -357,18 +374,43 @@
   .kw-guest{ font-family:var(--f-moul); font-size:1.25rem; color:var(--gold-hi); line-height:2.1; margin:6px 0; overflow-wrap:anywhere; }
   .kw-date-block{ margin-top:32px; padding:24px 14px; border-top:1px solid var(--gold-soft); border-bottom:1px solid var(--gold-soft); }
   .kw-date-num{ font-family:var(--f-caps); font-size:2rem; letter-spacing:.2em; color:var(--gold); }
+  .kw-hero-names{ display:flex; flex-direction:column; align-items:center; }
+  .kw-amp{ font-family:var(--f-love); font-size:clamp(2.6rem,12vw,3.6rem); line-height:1.1; color:var(--gold); }
+  .kw-tagline{ margin-top:16px; }
+  .kw-tagline .en{ font-family:var(--f-love); font-size:1.75rem; line-height:1.3; color:var(--gold-hi); }
+  .kw-tagline .kh{ font-family:var(--f-kh-serif); font-size:.95rem; line-height:1.9; color:var(--beige); letter-spacing:.02em; }
+  /* the couple's own words, set like a handwritten note */
+  .kw-note{ position:relative; max-width:360px; margin:28px auto 0; padding:22px 18px 14px; border-top:1px solid var(--gold-soft); border-bottom:1px solid var(--gold-soft);
+    font-family:'Cormorant Garamond','Noto Serif Khmer',serif; font-style:italic; font-size:1.15rem; line-height:1.9; color:var(--beige); overflow-wrap:break-word; }
+  .kw-note::before{ content:"\201C"; position:absolute; left:50%; top:-.62em; transform:translateX(-50%); padding:0 10px; font-family:var(--f-en); font-style:normal; font-size:3rem; line-height:1; color:var(--gold); }
+
+  /* love verse: a heartbeat line that draws itself into a heart */
+  .kw-heartline{ width:min(100%,330px); height:auto; margin:4px auto 22px; overflow:visible; }
+  .kw-heartline .ln{ fill:none; stroke:var(--red); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .kw-heartline .gl{ fill:none; stroke:var(--gold); stroke-width:5; stroke-linecap:round; stroke-linejoin:round; opacity:.22; }
+  .kw-heartline use{ fill:#fffaf0; stroke:var(--gold); stroke-width:.8; }
+  .kw-verse-kh p{ font-family:var(--f-kh-serif); font-size:1.08rem; line-height:2.15; color:var(--maroon); }
+  .kw-verse-en{ max-width:340px; margin:22px auto 0; font-family:var(--f-en); font-style:italic; font-size:1.22rem; line-height:1.7; color:#7a4a32; }
 
   /* couple */
-  .kw-couple-grid{ display:grid; gap:12px; justify-items:center; }
-  .kw-portrait{ width:min(62%,230px); aspect-ratio:4/5; border-radius:999px 999px 8px 8px; padding:6px; border:1px solid var(--gold); background:var(--ivory); box-shadow:0 16px 36px rgba(74,13,13,.16); }
-  .kw-portrait-in{ width:100%; height:100%; overflow:hidden; border-radius:999px 999px 4px 4px; }
-  .kw-portrait img,.kw-portrait .ph{ width:100%; height:100%; object-fit:cover; display:flex; align-items:center; justify-content:center; transition:transform 1.6s var(--ease); }
-  .kw-portrait:hover img{ transform:scale(1.06); }
-  .kw-portrait .ph{ background:linear-gradient(160deg,var(--beige),#d9c39b); color:var(--red); font-family:var(--f-caps); font-size:4rem; }
   .kw-role{ font-family:var(--f-kh-serif); color:var(--gold); font-size:.95rem; letter-spacing:.06em; margin-top:18px; }
-  .kw-couple-grid .kw-names{ font-size:clamp(1.4rem,7vw,1.9rem); color:var(--red); }
-  .kw-heart{ width:46px; height:46px; color:var(--gold); padding:4px 0; }
-  .kw-heart svg{ width:100%; height:100%; fill:var(--ivory); stroke:var(--gold); stroke-width:.8; animation:kw-spin-slow 24s linear infinite; }
+  /* the couple: one full-bleed photo, names over a soft dusk gradient */
+  .kw-duo{ position:relative; margin:4px -26px 0; overflow:hidden; aspect-ratio:4/5; background:var(--maroon);
+    border-top:1px solid var(--gold); border-bottom:1px solid var(--gold); box-shadow:0 24px 50px rgba(74,13,13,.22); }
+  .kw-duo-img{ position:absolute; inset:0; }
+  .kw-duo-img img,.kw-duo-img .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+  .kw-duo-img .ph{ display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#7A1515,#3a0909); color:var(--gold-hi); font-family:var(--f-caps); font-size:4.5rem; letter-spacing:.06em; }
+  .kw-duo::after{ content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg,rgba(20,4,4,0) 38%,rgba(20,4,4,.45) 64%,rgba(20,4,4,.88)); }
+  .kw-duo::before{ content:""; position:absolute; inset:12px; z-index:1; border:1px solid rgba(243,221,160,.45); pointer-events:none; }
+  .kw-duo-cap{ position:absolute; left:0; right:0; bottom:0; z-index:2; display:flex; align-items:flex-end; justify-content:center; gap:10px; padding:0 26px 34px; }
+  .kw-duo-person{ flex:1; min-width:0; }
+  .kw-duo .kw-role{ margin:0 0 4px; font-size:.78rem; color:var(--gold-hi); }
+  .kw-duo .kw-names{ font-size:clamp(1.05rem,5.4vw,1.5rem); color:#fffaf0; text-shadow:0 2px 12px rgba(0,0,0,.45); }
+  .kw-duo-heart{ flex:none; width:38px; height:38px; margin-bottom:2px; }
+  .kw-duo-heart svg{ width:100%; height:100%; fill:#fffaf0; stroke:var(--gold); stroke-width:.8; animation:kw-spin-slow 24s linear infinite; }
+  .kw-destiny{ margin-top:34px; }
+  .kw-destiny .kh{ font-family:var(--f-kh-serif); font-size:1rem; line-height:2; color:var(--maroon); }
 
   /* story timeline */
   .kw-tl{ position:relative; text-align:left; margin-top:8px; padding-left:34px; }
@@ -379,6 +421,11 @@
   .kw-tl-item h3{ font-family:var(--f-kh-serif); font-weight:700; color:var(--red); font-size:1.15rem; line-height:1.8; }
   .kw-tl-item p{ font-size:.95rem; line-height:2; color:#5a3a30; }
   .kw-tl-num{ font-family:var(--f-caps); color:var(--gold); font-size:.8rem; letter-spacing:.3em; }
+  /* a red thread runs down the timeline as you read; each chapter lights up when it reaches it */
+  .kw-tl-fill{ display:none; position:absolute; left:8px; top:6px; bottom:6px; width:3px; border-radius:3px; background:linear-gradient(var(--red),#b0822f); transform-origin:top; }
+  .kw-gsap .kw-tl-fill{ display:block; }
+  .kw-tl-item::before{ transition:background .5s, border-color .5s, box-shadow .5s; }
+  .kw-tl-item.lit::before{ background:var(--red); border-color:var(--red); box-shadow:0 0 0 5px rgba(122,21,21,.12); }
 
   /* countdown */
   .kw-count{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px; }
@@ -400,6 +447,8 @@
   .kw-gal figure{ margin:0 0 12px; break-inside:avoid; padding:7px; background:var(--ivory); border:1px solid var(--gold); position:relative; box-shadow:0 8px 20px rgba(74,13,13,.12); overflow:hidden; }
   .kw-gal img{ width:100%; display:block; transition:transform 1.4s var(--ease); }
   .kw-gal figure:hover img{ transform:scale(1.05); }
+  /* laid out like keepsake prints, each at its own slight angle */
+  .kw-gal figure:nth-child(odd){ rotate:-1.2deg; } .kw-gal figure:nth-child(even){ rotate:1.4deg; }
 
   /* venue + footer horizons */
   .kw-sec-horizon{ left:50%; bottom:0; width:150%; transform:translateX(-50%); z-index:0; opacity:.95; }
@@ -425,10 +474,35 @@
   .kw-contact .r{ font-family:var(--f-kh-serif); font-size:.85rem; color:var(--gold); }
   .kw-contact .p{ font-family:var(--f-en); font-size:1.15rem; letter-spacing:.06em; color:var(--maroon); margin-top:4px; }
 
-  /* footer */
-  .kw-foot{ padding-top:110px; padding-bottom:170px; }
-  .kw-foot .kw-names{ font-size:clamp(1.3rem,6.4vw,2rem); letter-spacing:.1em; margin-top:26px; }
-  .kw-brand{ margin-top:34px; font-family:var(--f-caps); font-size:.68rem; letter-spacing:.34em; color:rgba(232,216,189,.55); }
+  /* closing: a wax seal presses onto the letter */
+  .kw-finale{ padding-top:96px; padding-bottom:180px; }
+  .kw-finale .kw-names{ font-size:clamp(1.3rem,6.4vw,2rem); letter-spacing:.1em; margin-top:4px; }
+  .kw-seal-wrap{ position:relative; width:124px; height:124px; margin:0 auto 26px; }
+  .kw-seal{ width:100%; height:100%; overflow:visible; filter:drop-shadow(0 10px 16px rgba(74,13,13,.35)); }
+  .kw-seal text{ font-family:var(--f-caps); font-weight:600; fill:#F3DDA0; letter-spacing:.06em; }
+  .kw-seal-ring{ position:absolute; inset:0; border-radius:50%; border:1.5px solid #b0822f; opacity:0; pointer-events:none; }
+  .kw-finale-text{ max-width:360px; margin:18px auto 0; }
+  .kw-sign{ margin-top:30px; font-family:var(--f-love); font-size:2rem; line-height:1.2; color:var(--gold-hi); }
+  .kw-finale-date{ margin-top:10px; font-family:var(--f-caps); font-size:.85rem; letter-spacing:.32em; color:var(--gold); }
+
+  /* footer band */
+  .kw-footer{ position:relative; z-index:2; padding:56px 24px calc(30px + env(safe-area-inset-bottom)); text-align:center; color:var(--beige);
+    background:linear-gradient(180deg,#5a1010,#2a0606); border-top:1px solid rgba(201,162,77,.55); }
+  .kw-footer .kw-divider{ margin:0 auto 18px; max-width:220px; }
+  .kw-footer .kw-divider svg{ width:52px; height:26px; }
+  .kw-top{ position:absolute; left:50%; top:-25px; width:50px; height:50px; margin-left:-25px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:#5a1010; border:1px solid var(--gold); color:var(--gold-hi); box-shadow:0 8px 20px rgba(42,6,6,.4); transition:transform .4s var(--ease); }
+  .kw-top:hover{ transform:translateY(-3px); }
+  .kw-top svg{ width:20px; height:20px; }
+  .kw-footer-names{ font-family:var(--f-caps); font-size:1rem; letter-spacing:.24em; color:var(--gold-hi); overflow-wrap:anywhere; }
+  .kw-footer-date{ margin-top:6px; font-family:var(--f-caps); font-size:.72rem; letter-spacing:.3em; color:rgba(232,216,189,.7); }
+  .kw-footer-love{ margin-top:22px; font-family:var(--f-kh-serif); font-size:.85rem; line-height:1.9; color:rgba(232,216,189,.85); }
+  .kw-footer-love .hb{ display:inline-block; color:#e0575b; animation:kw-beat 1.6s ease-in-out infinite; }
+  .kw-brand{ margin-top:14px; font-family:var(--f-caps); font-size:.66rem; letter-spacing:.34em; color:rgba(232,216,189,.5); }
+  .kw-brand b{ font-weight:600; color:var(--gold); }
+
+  /* hearts that burst from the RSVP button */
+  .kw-burst{ position:fixed; z-index:60; pointer-events:none; margin:-.5em 0 0 -.4em; font-family:'Times New Roman',serif; font-size:18px; line-height:1; }
 
   /* music */
   .kw-music{ position:fixed; right:16px; bottom:16px; z-index:40; width:48px; height:48px; border-radius:50%; background:var(--gold); color:var(--maroon);
@@ -466,6 +540,7 @@
   @keyframes kw-kenburns{ from{ transform:scale(1.02) translate(0,0) } to{ transform:scale(1.14) translate(-2%,-3%) } }
   @keyframes kw-pulse{ from{ opacity:.7; transform:scale(1) } to{ opacity:0; transform:scale(1.5) } }
   @keyframes kw-cover-in{ from{ opacity:0; transform:translateY(2cqw); filter:blur(6px) } to{ opacity:1; transform:none; filter:none } }
+  @keyframes kw-beat{ 0%,40%,100%{ transform:scale(1) } 15%{ transform:scale(1.28) } 28%{ transform:scale(1.1) } }
   @keyframes kw-cover-call{ 0%{ box-shadow:0 0 0 0 rgba(110,17,17,.45) } 70%,100%{ box-shadow:0 0 0 3cqw rgba(110,17,17,0) } }
 
   @media (prefers-reduced-motion: reduce){
@@ -477,8 +552,9 @@
   @media (min-width:768px){
     .kw-sec{ padding:92px 40px; }
     .kw-title{ font-size:1.5rem; }
+    .kw-duo{ margin-inline:-40px; }
     .kw-venue{ padding-bottom:170px; }
-    .kw-foot{ padding-bottom:190px; }
+    .kw-finale{ padding-bottom:200px; }
   }
 </style>
 
@@ -518,6 +594,9 @@
         <circle r="2.4" fill="#C9A24D" stroke="none"/>
       </g>
       <path id="kw-leaf" d="M0 0C8-8 24-9 38 0 24 8 8 7 0 0ZM3 0H34" />
+      <radialGradient id="kw-wax" cx="40%" cy="35%" r="70%">
+        <stop offset="0" stop-color="#b02a2a"/><stop offset=".55" stop-color="#7A1515"/><stop offset="1" stop-color="#4a0b0b"/>
+      </radialGradient>
     </defs>
   </svg>
 
@@ -564,7 +643,17 @@
       <p class="kw-eyebrow kw-rev">សិរីមង្គលអាពាហ៍ពិពាហ៍</p>
       <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
 
-      <h2 class="kw-names kw-shimmer kw-rev d1">{{ $coupleTitle }}</h2>
+      @if ($coupleTitle)
+        <h2 class="kw-hero-names kw-gs" aria-label="{{ $coupleTitle }}">
+          @if ($groomUpper)<span class="kw-names kw-shimmer">{{ $groomUpper }}</span>@endif
+          @if ($groomUpper && $brideUpper)<span class="kw-amp" aria-hidden="true">&amp;</span>@endif
+          @if ($brideUpper)<span class="kw-names kw-shimmer">{{ $brideUpper }}</span>@endif
+        </h2>
+        <div class="kw-tagline">
+          <p class="en kw-gs">Two hearts, one forever</p>
+          <p class="kh kw-gs">ពីរបេះដូង រួមដំណើរតែមួយ ជារៀងរហូត</p>
+        </div>
+      @endif
 
       <div class="kw-body-text kw-rev d2" style="margin-top:26px">
         <p>សូមគោរពអញ្ជើញ</p>
@@ -578,7 +667,7 @@
       </div>
 
       @if ($personalNote)
-        <p class="kw-body-text kw-script kw-rev" style="margin-top:20px; color:var(--beige); font-style:normal">{{ $personalNote }}</p>
+        <p class="kw-note kw-rev">{{ $personalNote }}</p>
       @endif
 
       @if ($eventDate)
@@ -591,30 +680,52 @@
       @endif
     </section>
 
+    {{-- ============ 2b · LOVE VERSE (a heartbeat line draws itself into a heart) ============ --}}
+    <section class="kw-sec" id="kw-verse">
+      <p class="kw-eyebrow kw-rev">ពាក្យពីបេះដូង</p>
+      <svg class="kw-heartline" viewBox="0 0 300 80" aria-hidden="true" focusable="false">
+        <path class="gl" d="M0 50H96l6-12 6 22 6-10h14c6 0 12 6 22 16-12-14-26-24-26-36 0-10 8-16 16-16 6 0 10 4 10 10 0-6 4-10 10-10 8 0 16 6 16 16 0 12-14 22-26 36 10-10 16-16 22-16h128"/>
+        <path class="ln" d="M0 50H96l6-12 6 22 6-10h14c6 0 12 6 22 16-12-14-26-24-26-36 0-10 8-16 16-16 6 0 10 4 10 10 0-6 4-10 10-10 8 0 16 6 16 16 0 12-14 22-26 36 10-10 16-16 22-16h128"/>
+        <g transform="translate(150 37) scale(.62)"><g class="bl"><use href="#kw-roumdul"/></g></g>
+      </svg>
+      <div class="kw-verse-kh">
+        <p class="kw-gs">ក្នុងចំណោមមនុស្សរាប់លាននាក់លើលោកនេះ</p>
+        <p class="kw-gs">បេះដូងខ្ញុំបានជ្រើសរើសតែអ្នកម្នាក់</p>
+        <p class="kw-gs">ហើយចាប់ពីថ្ងៃនេះតទៅ</p>
+        <p class="kw-gs">រាល់ព្រឹក និងរាល់ល្ងាច គឺជារបស់យើងទាំងពីរ។</p>
+      </div>
+      <p class="kw-verse-en kw-gs">“Among millions of souls, my heart chose only you — and from this day on, every sunrise and every sunset belongs to us.”</p>
+    </section>
+
     {{-- ============ 3 · COUPLE ============ --}}
     @if ($groomName || $brideName)
       <section class="kw-sec kw-pattern kw-live" id="kw-couple">
         <p class="kw-eyebrow kw-rev">គូស្វាមីភរិយា</p>
+        <p class="kw-sub kw-rev">The two of us</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
-        <div class="kw-couple-grid">
-          @if ($brideName)
-            <div class="kw-rev">
-              <div class="kw-portrait"><div class="kw-portrait-in">@if ($bridePhoto)<img src="{{ $bridePhoto }}" alt="{{ $brideName }}" loading="lazy">@else<div class="ph">{{ $initial($brideName) }}</div>@endif</div></div>
-              <p class="kw-role">កូនក្រមុំ · THE BRIDE</p>
-              <h3 class="kw-names">{{ $brideUpper }}</h3>
-            </div>
-          @endif
-          @if ($brideName && $groomName)
-            <div class="kw-heart kw-rev" aria-hidden="true"><svg viewBox="-17 -17 34 34"><use href="#kw-roumdul"/></svg></div>
-          @endif
-          @if ($groomName)
-            <div class="kw-rev">
-              <div class="kw-portrait"><div class="kw-portrait-in">@if ($groomPhoto)<img src="{{ $groomPhoto }}" alt="{{ $groomName }}" loading="lazy">@else<div class="ph">{{ $initial($groomName) }}</div>@endif</div></div>
-              <p class="kw-role">កូនកំលោះ · THE GROOM</p>
-              <h3 class="kw-names">{{ $groomUpper }}</h3>
-            </div>
-          @endif
-        </div>
+        {{-- one full photo of the two of them, names set over it --}}
+        <figure class="kw-duo kw-gs">
+          <div class="kw-duo-img">
+            @if ($couplePhoto)<img src="{{ $couplePhoto }}" alt="{{ $coupleTitle }}" loading="lazy">@else<div class="ph">{{ $monogram }}</div>@endif
+          </div>
+          <figcaption class="kw-duo-cap">
+            @if ($brideName)
+              <div class="kw-duo-person"><p class="kw-role">កូនក្រមុំ · THE BRIDE</p><h3 class="kw-names">{{ $brideUpper }}</h3></div>
+            @endif
+            @if ($brideName && $groomName)
+              <div class="kw-duo-heart" aria-hidden="true"><svg viewBox="-17 -17 34 34"><use href="#kw-roumdul"/></svg></div>
+            @endif
+            @if ($groomName)
+              <div class="kw-duo-person"><p class="kw-role">កូនកំលោះ · THE GROOM</p><h3 class="kw-names">{{ $groomUpper }}</h3></div>
+            @endif
+          </figcaption>
+        </figure>
+        @if ($brideName && $groomName)
+          <div class="kw-destiny kw-rev">
+            <p class="kw-sub">Destined to be</p>
+            <p class="kh">ព្រហ្មលិខិតបាននាំយើងមកជួបគ្នា<br>ហើយក្តីស្រឡាញ់បានចងយើងជាប់ជាមួយគ្នា</p>
+          </div>
+        @endif
       </section>
     @endif
 
@@ -622,11 +733,13 @@
     @if ($story->isNotEmpty())
       <section class="kw-sec kw-beige" id="kw-story">
         <h2 class="kw-title kw-rev">ដំណើរជីវិតរបស់យើង</h2>
+        <p class="kw-sub kw-rev">Our love story</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         <div class="kw-tl">
+          <span class="kw-tl-fill" aria-hidden="true"></span>
           @foreach ($story as $i => $chapter)
             <div class="kw-tl-item kw-rev">
-              <span class="kw-tl-num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
+              <span class="kw-tl-num">CHAPTER {{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
               @if (! empty($chapter['title']))<h3>{{ $chapter['title'] }}</h3>@endif
               @if (! empty($chapter['text']))<p>{{ $chapter['text'] }}</p>@endif
             </div>
@@ -641,6 +754,7 @@
         {!! $flock([[12, 28, -8, 16, .8, .55, true], [16, 28, -7.4, 12, .7, .45, true]]) !!}
         <div class="kw-dustfield kw-deco" data-dust="10" data-rise="-220px"></div>
         <h2 class="kw-title kw-rev">ថ្ងៃដ៏វិសេសរបស់យើង</h2>
+        <p class="kw-sub kw-rev">Counting down to forever</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         <div class="kw-count kw-rev" data-target="{{ $eventDate->toIso8601String() }}" role="timer" aria-live="off">
           <div><b data-u="d">00</b><span>DAYS</span></div>
@@ -648,6 +762,7 @@
           <div><b data-u="m">00</b><span>MINUTES</span></div>
           <div><b data-u="s">00</b><span>SECONDS</span></div>
         </div>
+        <p class="kw-body-text kw-rev" style="margin-top:22px">រាប់ថ្ងៃរង់ចាំ ថ្ងៃដែលយើងទាំងពីរ<br>នឹងក្លាយជាគ្រួសារតែមួយ</p>
       </section>
     @endif
 
@@ -655,6 +770,7 @@
     @if ($schedule->isNotEmpty())
       <section class="kw-sec" id="kw-program">
         <h2 class="kw-title kw-rev">កម្មវិធីពិធីមង្គលការ</h2>
+        <p class="kw-sub kw-rev">The celebration</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         <div class="kw-sched">
           @foreach ($schedule as $row)
@@ -671,10 +787,11 @@
     @if ($gallery->isNotEmpty())
       <section class="kw-sec kw-beige kw-pattern" id="kw-gallery">
         <h2 class="kw-title kw-rev">កម្រងរូបភាព</h2>
+        <p class="kw-sub kw-rev">Moments of us</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         <div class="kw-gal">
           @foreach ($gallery as $i => $url)
-            <figure class="kw-rev"><img src="{{ $url }}" alt="{{ $coupleTitle }} {{ $i + 1 }}" loading="lazy"></figure>
+            <figure class="kw-gs"><img src="{{ $url }}" alt="{{ $coupleTitle }} {{ $i + 1 }}" loading="lazy"></figure>
           @endforeach
         </div>
       </section>
@@ -689,6 +806,7 @@
         <svg class="kw-corner tl" aria-hidden="true"><use href="#kw-corner"/></svg>
         <svg class="kw-corner tr" aria-hidden="true"><use href="#kw-corner"/></svg>
         <h2 class="kw-title kw-rev">ទីតាំងប្រារព្ធពិធី</h2>
+        <p class="kw-sub kw-rev">Where forever begins</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         @if ($venueName)<p class="kw-venue-name kw-shimmer kw-rev">{{ mb_strtoupper($venueName) }}</p>@endif
         @if ($venueAddress)<p class="kw-body-text kw-rev" style="color:var(--beige); margin-top:10px">{{ $venueAddress }}</p>@endif
@@ -702,8 +820,9 @@
     @if ($showRsvp)
       <section class="kw-sec kw-pattern" id="kw-rsvp">
         <h2 class="kw-title kw-rev">សូមអញ្ជើញបញ្ជាក់ការចូលរួម</h2>
+        <p class="kw-sub kw-rev">Will you celebrate with us?</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
-        <p class="kw-body-text kw-rev">តើលោកអ្នកនឹងអញ្ជើញចូលរួមដែរឬទេ?</p>
+        <p class="kw-body-text kw-rev">វត្តមានរបស់លោកអ្នក នឹងធ្វើឲ្យថ្ងៃរបស់យើងកាន់តែពេញលេញ។<br>តើលោកអ្នកនឹងអញ្ជើញចូលរួមដែរឬទេ?</p>
         <div class="kw-rsvp-opts kw-rev" id="kw-rsvp-opts">
           <button type="button" class="kw-opt" data-status="yes">ចូលរួម</button>
           <button type="button" class="kw-opt" data-status="no">មិនអាចចូលរួម</button>
@@ -720,6 +839,7 @@
     @if ($contacts->isNotEmpty())
       <section class="kw-sec kw-beige" id="kw-contact">
         <h2 class="kw-title kw-rev">ទំនាក់ទំនង</h2>
+        <p class="kw-sub kw-rev">Get in touch</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         <div class="kw-contact">
           @foreach ($contacts as $c)
@@ -733,16 +853,45 @@
       </section>
     @endif
 
-    {{-- ============ 11 · FOOTER ============ --}}
-    <footer class="kw-sec kw-maroon kw-foot kw-live">
+    {{-- ============ 11 · CLOSING (a wax seal presses the letter shut) ============ --}}
+    <section class="kw-sec kw-maroon kw-finale kw-live" id="kw-finale">
       {!! $flock([[30, 26, -5, 18, .8, .7, false], [34, 26, -4.4, 14, .7, .6, false], [27, 26, -4, 11, .75, .5, false]]) !!}
       <div class="kw-dustfield kw-deco" data-dust="14" data-rise="-260px"></div>
       <div class="kw-deco kw-branch-wrap tr">{!! $branch(true) !!}</div>
       <div class="kw-deco kw-sec-horizon">{!! $templeSvg !!}</div>
-      <div class="kw-divider kw-rev" style="margin-top:0"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
-      <p class="kw-body-text kw-rev" style="color:var(--ivory)">សូមអរគុណសម្រាប់ក្តីស្រឡាញ់<br>និងការចូលរួមក្នុងថ្ងៃដ៏មានអត្ថន័យរបស់យើងខ្ញុំ។</p>
-      @if ($coupleTitle)<p class="kw-names kw-shimmer kw-rev d1">{{ $coupleTitle }}</p>@endif
-      <p class="kw-brand">ROUMDOUL</p>
+
+      <div class="kw-seal-wrap">
+        <svg class="kw-seal kw-gs" viewBox="-60 -60 120 120" aria-hidden="true" focusable="false">
+          <path d="{{ $sealEdge }}" fill="url(#kw-wax)"/>
+          <circle r="41" fill="none" stroke="#E9CD85" stroke-width="1.1" stroke-opacity=".8"/>
+          <circle r="36" fill="none" stroke="#E9CD85" stroke-width=".6" stroke-opacity=".55" stroke-dasharray="1.5 3"/>
+          <ellipse cx="-14" cy="-26" rx="17" ry="7" transform="rotate(-28)" fill="#fff" fill-opacity=".1"/>
+          <text y="9" text-anchor="middle" font-size="{{ mb_strlen($monogram) > 2 ? 24 : 30 }}">{{ $monogram }}</text>
+        </svg>
+        <span class="kw-seal-ring" aria-hidden="true"></span>
+      </div>
+
+      <h2 class="kw-title kw-gs">សូមអរគុណ</h2>
+      <p class="kw-sub kw-gs">Thank you, with all our hearts</p>
+      <div class="kw-finale-text">
+        <p class="kw-body-text kw-gs">វត្តមានរបស់លោកអ្នក គឺជាកាដូដ៏មានតម្លៃបំផុត<br>សម្រាប់ថ្ងៃដ៏មានអត្ថន័យរបស់យើងខ្ញុំ។</p>
+        <p class="kw-body-text kw-gs" style="margin-top:10px">សូមអរគុណសម្រាប់ក្តីស្រឡាញ់ និងពរជ័យ<br>ដែលលោកអ្នកបានផ្តល់ជូនយើងទាំងពីរ។</p>
+      </div>
+      <p class="kw-sign kw-gs">With love,</p>
+      @if ($coupleTitle)<p class="kw-names kw-shimmer kw-gs">{{ $coupleTitle }}</p>@endif
+      @if ($dateNumeric)<p class="kw-finale-date kw-gs">{{ $dateNumeric }}</p>@endif
+    </section>
+
+    {{-- ============ 12 · FOOTER ============ --}}
+    <footer class="kw-footer kw-pattern">
+      <button type="button" class="kw-top" id="kw-totop" aria-label="ត្រឡប់ទៅដើម · Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+      <div class="kw-divider"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
+      @if ($coupleTitle)<p class="kw-footer-names">{{ $coupleTitle }}</p>@endif
+      @if ($dateNumeric)<p class="kw-footer-date">{{ $dateNumeric }}</p>@endif
+      <p class="kw-footer-love">រៀបចំឡើងដោយក្តីស្រឡាញ់ <span class="hb" aria-hidden="true">♥</span></p>
+      <p class="kw-brand">CRAFTED BY <b>ROUMDOUL</b> · {{ now()->year }}</p>
     </footer>
   </main>
 
@@ -765,6 +914,8 @@
   @endif
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script>
 (function () {
   var root = document.documentElement, body = document.body;
@@ -853,6 +1004,116 @@
   // performance test switches, e.g. ?kwtest=nofx,nofly  (nofx: freeze the template's CSS/SVG animations, nofly: no butterflies)
   var kwTest = (new URLSearchParams(location.search).get('kwtest') || '').split(',');
   if (kwTest.indexOf('nofx') > -1) body.classList.add('kw-nofx');
+
+  /* --- GSAP: a handful of moments, each plays once (transforms + opacity only, so it stays light
+         next to the videos). Without GSAP or with reduced motion everything is simply shown. --- */
+  var G = window.gsap, ST = window.ScrollTrigger;
+  var useGsap = !!(G && ST) && !reduced && kwTest.indexOf('nofx') < 0;
+  if (useGsap) { G.registerPlugin(ST); root.classList.add('kw-gsap'); }
+
+  function startMoments() {
+    if (!useGsap) return;
+    var once = function (el, start) { return { trigger: el, start: start || 'top 80%', once: true }; };
+    var q = function (sel, ctx) { return (ctx || document).querySelector(sel); };
+    var qa = function (sel, ctx) { return G.utils.toArray((ctx || document).querySelectorAll(sel)); };
+
+    // hero: each name is written in, the ampersand blooms between them
+    var names = q('.kw-hero-names');
+    if (names) {
+      G.set(names, { opacity: 1 });
+      var lines = qa('.kw-names', names), amp = q('.kw-amp', names);
+      var hero = G.timeline({ delay: .45 });
+      lines.forEach(function (ln, i) {
+        hero.fromTo(ln, { clipPath: 'inset(-20% 100% -20% -10%)' },
+          { clipPath: 'inset(-20% -10% -20% -10%)', duration: 1.3, ease: 'power2.inOut', clearProps: 'clipPath' }, i ? '-=.35' : 0);
+        if (!i && amp) hero.fromTo(amp, { opacity: 0, scale: .3, rotation: -35 }, { opacity: 1, scale: 1, rotation: 0, duration: .9, ease: 'back.out(2.2)' }, '-=.35');
+      });
+      hero.fromTo(qa('.kw-tagline > *'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1, stagger: .22, ease: 'power3.out' }, '-=.4');
+    }
+
+    // love verse: the heartbeat line draws itself into a heart, a roumdul opens inside it
+    var verse = q('#kw-verse');
+    if (verse) {
+      var strokes = qa('.kw-heartline path', verse), bl = q('.kw-heartline .bl', verse), len = strokes[0].getTotalLength();
+      G.set(strokes, { strokeDasharray: len, strokeDashoffset: len });
+      G.set(bl, { scale: 0, transformOrigin: '50% 50%' });
+      G.timeline({ scrollTrigger: once(verse, 'top 72%') })
+        .to(strokes, { strokeDashoffset: 0, duration: 2.6, ease: 'power1.inOut' })
+        .to(bl, { scale: 1, rotation: 120, duration: 1, ease: 'back.out(2)' }, '-=1.1')
+        .fromTo(qa('.kw-gs', verse), { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 1.1, stagger: .32, ease: 'power2.out' }, '-=1.9');
+    }
+
+    // couple: the photo opens like a curtain lifting, settles, then their names rise in
+    // with the roumdul blooming between them
+    var duo = q('#kw-couple .kw-duo');
+    if (duo) {
+      var people = qa('.kw-duo-person', duo), heart = q('.kw-duo-heart', duo);
+      G.set(duo, { opacity: 1 });
+      var lift = G.timeline({ scrollTrigger: once(duo, 'top 82%') })
+        .fromTo(duo, { clipPath: 'inset(50% 0% 50% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'power3.inOut', clearProps: 'clipPath' })
+        .fromTo(q('.kw-duo-img', duo), { scale: 1.25 }, { scale: 1, duration: 2.4, ease: 'power2.out' }, 0)
+        .fromTo(people, { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 1, stagger: .25, ease: 'power3.out' }, '-=1.3');
+      if (heart) lift.fromTo(heart, { opacity: 0, scale: 0, rotation: -140 }, { opacity: 1, scale: 1, rotation: 0, duration: 1, ease: 'back.out(1.8)' }, '-=.9');
+    }
+
+    // story: a red thread follows the reader down the timeline, lighting each chapter
+    var tl = q('.kw-tl');
+    if (tl) {
+      G.fromTo(q('.kw-tl-fill', tl), { scaleY: 0 }, { scaleY: 1, ease: 'none', scrollTrigger: { trigger: tl, start: 'top 65%', end: 'bottom 65%', scrub: .6 } });
+      qa('.kw-tl-item', tl).forEach(function (it) {
+        ST.create({ trigger: it, start: 'top 65%', onEnter: function () { it.classList.add('lit'); }, onLeaveBack: function () { it.classList.remove('lit'); } });
+      });
+    }
+
+    // gallery: prints are dealt onto the table
+    var figs = qa('.kw-gal figure');
+    if (figs.length) {
+      G.set(figs, { y: 50, rotation: function (i) { return i % 2 ? 8 : -8; } });
+      ST.batch(figs, { start: 'top 90%', once: true, onEnter: function (batch) {
+        G.to(batch, { opacity: 1, y: 0, rotation: 0, duration: 1.1, stagger: .14, ease: 'power3.out' });
+      } });
+    }
+
+    // closing: the wax seal presses down, a ripple runs out, then the thank-you is written
+    var fin = q('#kw-finale');
+    if (fin) {
+      var seal = q('.kw-seal', fin), ring = q('.kw-seal-ring', fin);
+      G.timeline({ scrollTrigger: once(fin, 'top 70%') })
+        .fromTo(seal, { opacity: 0, scale: 2.3, rotation: -28 }, { opacity: 1, scale: 1, rotation: 0, duration: .6, ease: 'power4.in' })
+        .to(seal, { scaleX: 1.08, scaleY: .92, duration: .09, yoyo: true, repeat: 1, ease: 'power1.out' })
+        .fromTo(ring, { opacity: .8, scale: .95 }, { opacity: 0, scale: 1.9, duration: 1.2, ease: 'power2.out' }, '<')
+        .fromTo(qa('.kw-gs:not(.kw-seal)', fin), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1, stagger: .18, ease: 'power3.out' }, '-=.9');
+    }
+
+    // lazy images change the page height; keep the trigger points honest
+    var refreshT;
+    qa('.kw-page img').forEach(function (img) {
+      if (!img.complete) img.addEventListener('load', function () { clearTimeout(refreshT); refreshT = setTimeout(function () { ST.refresh(); }, 200); });
+    });
+    ST.refresh();
+  }
+
+  // a little burst of hearts and roumdul when a guest says yes
+  function heartBurst(from) {
+    if (!useGsap || !from) return;
+    var r = from.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var i = 0; i < 16; i++) {
+      var h = document.createElement('span');
+      h.className = 'kw-burst';
+      h.setAttribute('aria-hidden', 'true');
+      h.textContent = i % 3 ? '♥' : '✿';
+      h.style.cssText = 'left:' + cx + 'px;top:' + cy + 'px;color:' + (i % 3 ? (i % 2 ? '#b3262a' : '#d9535a') : '#C9A24D');
+      document.body.appendChild(h);
+      G.fromTo(h, { x: 0, y: 0, scale: .4, opacity: 1 }, {
+        x: rand(-150, 150), y: rand(-260, -70), scale: rand(.8, 1.7), rotation: rand(-70, 70), opacity: 0,
+        duration: rand(1.4, 2.3), ease: 'power2.out', onComplete: h.remove.bind(h)
+      });
+    }
+  }
+
+  var toTop = document.getElementById('kw-totop');
+  if (toTop) toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); });
+
   var dropFly = function () { flyCanvas.parentNode.remove(); flyVideo.remove(); flyVideo = null; };
 
   // butterflies: left half of each frame is colour, right half the alpha mask; a WebGL quad joins them
@@ -940,6 +1201,7 @@
     body.classList.remove('kw-locked');
     window.scrollTo(0, 0);
     setTimeout(startReveal, reduced ? 0 : 500);
+    setTimeout(startMoments, reduced ? 0 : 400);
     setTimeout(spawnPetals, 900);
     setTimeout(function () { gate.style.display = 'none'; coverVideo.pause(); body.classList.remove('kw-covering'); }, reduced ? 0 : 1000);
   }
@@ -969,12 +1231,19 @@
     var els = {};
     cd.querySelectorAll('[data-u]').forEach(function (b) { els[b.getAttribute('data-u')] = b; });
     var pad = function (n) { return String(n).padStart(2, '0'); };
+    // each number drops softly into place when it changes
+    var set = function (u, v) {
+      var el = els[u], txt = pad(v);
+      if (el.textContent === txt) return;
+      el.textContent = txt;
+      if (useGsap && !document.hidden) G.fromTo(el, { yPercent: -35, opacity: .2 }, { yPercent: 0, opacity: 1, duration: .45, ease: 'power2.out', overwrite: true });
+    };
     var tick = function () {
       var diff = Math.max(0, target - Date.now());
-      els.d.textContent = pad(Math.floor(diff / 86400000));
-      els.h.textContent = pad(Math.floor(diff / 3600000) % 24);
-      els.m.textContent = pad(Math.floor(diff / 60000) % 60);
-      els.s.textContent = pad(Math.floor(diff / 1000) % 60);
+      set('d', Math.floor(diff / 86400000));
+      set('h', Math.floor(diff / 3600000) % 24);
+      set('m', Math.floor(diff / 60000) % 60);
+      set('s', Math.floor(diff / 1000) % 60);
     };
     tick(); setInterval(tick, 1000);
   }
@@ -994,7 +1263,9 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault(); if (!chosen) return;
       var done = function (ok) {
-        thanks.textContent = !ok ? 'សូមព្យាយាមម្ដងទៀត' : (chosen === 'yes' ? 'សូមអរគុណ! យើងខ្ញុំរង់ចាំស្វាគមន៍លោកអ្នក។' : 'សូមអរគុណដែលបានជូនដំណឹង។');
+        thanks.textContent = !ok ? 'សូមព្យាយាមម្ដងទៀត'
+          : (chosen === 'yes' ? 'សូមអរគុណ! យើងខ្ញុំរង់ចាំស្វាគមន៍លោកអ្នកដោយក្តីរីករាយ ♥' : 'សូមអរគុណដែលបានជូនដំណឹង។ ក្តីនឹករលឹក និងពរជ័យរបស់លោកអ្នក គឺមានន័យណាស់សម្រាប់យើង។');
+        if (ok && chosen === 'yes') heartBurst(form.querySelector('button'));
         thanks.classList.add('show'); if (ok) form.classList.remove('show');
       };
       if (!rsvpUrl) { done(true); return; }   // demo preview: no recipient, nothing to save
