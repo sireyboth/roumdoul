@@ -25,7 +25,7 @@
       @else
         <x-app-icon name="upload" class="h-6 w-6 text-plum-400 group-hover:text-brand-500" />
         <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">Click to upload photo</span>
-        <span class="text-[11px] text-plum-400">PNG or JPG</span>
+        <span class="text-[11px] text-plum-400">JPG, PNG or WebP &middot; up to 20 MB</span>
       @endif
 
       <div wire:loading wire:target="imageUploads.{{ $key }}" class="absolute inset-0 flex items-center justify-center bg-white/85 dark:bg-plum-900/85">
@@ -64,7 +64,11 @@
       </label>
     </div>
     <div wire:loading wire:target="galleryUploads.{{ $key }}" class="mt-1.5 text-xs font-semibold text-plum-500 dark:text-plum-400">Uploading&hellip;</div>
-    @error('galleryUploads.'.$key) <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+    <p class="mt-1.5 text-[11px] text-plum-400">Up to {{ \App\Livewire\Pages\Dashboard\InvitationManagePage::MAX_GALLERY_PHOTOS }} photos &middot; JPG, PNG or WebP &middot; up to 20 MB each</p>
+    {{-- per-file errors land on galleryUploads.{key}.{n}; show each distinct message once --}}
+    @foreach (collect([...$errors->get('galleryUploads.'.$key), ...\Illuminate\Support\Arr::flatten($errors->get('galleryUploads.'.$key.'.*'))])->unique() as $message)
+      <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+    @endforeach
     @break
 
   @case('schedule')

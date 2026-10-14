@@ -32,7 +32,7 @@
         ? 'ម៉ោង '.$khDigits($eventDate->format('g:i')).' '.($eventDate->hour < 12 ? 'ព្រឹក' : ($eventDate->hour < 18 ? 'រសៀល' : 'ល្ងាច'))
         : null;
     $dateEnglish = $eventDate ? mb_strtoupper($eventDate->format('j F Y')).' | '.$eventDate->format('g:iA') : null;
-    $khmerLunarDate =$isUnlocked('khmer_date') && ! empty($fields['khmer_date']) ? $fields['khmer_date'] : null;
+    $khmerLunarDate = $isUnlocked('khmer_date') && ! empty($fields['khmer_date']) ? $fields['khmer_date'] : null;
 
     $venueName = $fields['venue_name'] ?? null;
     $venueAddress = ($isUnlocked('venue_address') && ! empty($fields['venue_address'])) ? $fields['venue_address'] : null;
@@ -203,7 +203,8 @@
      the page, the butterflies fly over the text and let taps pass through. Both are H.264 (hardware-decoded
      on phones); the butterfly MP4 carries colour on its left half and the alpha mask on its right half,
      recombined into a transparent canvas with WebGL. */
-  .kw-stage{ position:fixed; top:0; bottom:0; left:50%; width:min(100%,520px); transform:translate3d(-50%,0,0); will-change:transform; pointer-events:none;
+  /* sized to the largest viewport (address bar hidden), so the video never rescales when the bar slides away on scroll */
+  .kw-stage{ position:fixed; top:0; height:100vh; height:100lvh; left:50%; width:min(100%,520px); transform:translate3d(-50%,0,0); will-change:transform; pointer-events:none;
     opacity:0; visibility:hidden; transition:opacity .4s ease, visibility 0s linear .4s; }
   .kw-stage video,.kw-stage canvas{ width:100%; height:100%; object-fit:cover; display:block; }
   .kw-stage.bg{ z-index:0; background:var(--ivory); }
@@ -523,7 +524,7 @@
   {{-- ============ 1 · COVER (video: card -> roumdul bloom -> the page's background; plays on the open tap) ============ --}}
   <div class="kw-gate" id="kw-gate" role="dialog" aria-label="{{ trim('លិខិតអញ្ជើញ '.$coupleTitle) }}">
     <div class="kw-cover">
-      <video id="kw-cover-video" src="{{ asset('images/invitations/khmer-traditional/cover/cover.mov') }}" poster="{{ asset('images/invitations/khmer-traditional/cover/poster.jpg') }}" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
+      <video id="kw-cover-video" src="{{ asset('images/invitations/khmer-traditional/cover/cover.mp4') }}" poster="{{ asset('images/invitations/khmer-traditional/cover/poster.jpg') }}" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
       <div class="kw-cover-ui">
         <img class="kw-cover-title" src="{{ asset('images/invitations/khmer-traditional/cover/title.png') }}" alt="សិរីមង្គលអាពាហ៍ពិពាហ៍ · The Wedding Invitation">
         <p class="kw-cover-guest">{{ ! empty($recipientName) ? $recipientName : 'លោក លោកស្រី អ្នកនាង កញ្ញា' }}</p>

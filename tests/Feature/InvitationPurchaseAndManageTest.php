@@ -271,6 +271,58 @@ class InvitationPurchaseAndManageTest extends TestCase
         $this->assertNull($invitation->fresh()->field_values['cover_image'] ?? null);
     }
 
+    public function test_a_large_phone_photo_is_accepted_and_shrunk_before_storing(): void
+    {
+        Storage::fake('s3');
+
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['cover_image']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('imageUploads.cover_image', UploadedFile::fake()->image('phone.jpg', 4000, 3000)->size(8000))
+            ->assertHasNoErrors()
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $stored = imagecreatefromstring(Storage::disk('s3')->get($invitation->fresh()->field_values['cover_image']));
+        $this->assertSame(1600, imagesx($stored));
+        $this->assertSame(1200, imagesy($stored));
+    }
+
+    public function test_a_photo_over_the_size_limit_is_rejected_as_soon_as_it_is_picked(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['cover_image']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('imageUploads.cover_image', UploadedFile::fake()->image('huge.jpg')->size(InvitationManagePage::MAX_UPLOAD_KB + 1))
+            ->assertHasErrors(['imageUploads.cover_image' => "This photo couldn't be uploaded. Photos can be at most 20 MB each."]);
+    }
+
+    public function test_gallery_uploads_cannot_push_the_gallery_past_its_photo_limit(): void
+    {
+        Storage::fake('s3');
+
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create([
+            'customer_id' => $customer->id,
+            'field_values' => ['photo_gallery' => array_fill(0, InvitationManagePage::MAX_GALLERY_PHOTOS - 1, 'invitations/x.jpg')],
+        ]);
+        $invitation->template->update(['fields' => ['photo_gallery']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('galleryUploads.photo_gallery', [UploadedFile::fake()->image('a.jpg'), UploadedFile::fake()->image('b.jpg')])
+            ->assertHasErrors(['galleryUploads.photo_gallery' => 'max'])
+            ->call('save');
+
+        $this->assertCount(InvitationManagePage::MAX_GALLERY_PHOTOS - 1, $invitation->fresh()->field_values['photo_gallery']);
+    }
+
     public function test_a_javascript_uri_in_a_url_field_is_rejected(): void
     {
         $customer = Customer::factory()->create();

@@ -4,8 +4,10 @@ namespace App\Livewire\Pages\Dashboard;
 
 use App\Models\Invitation;
 use App\Models\InvitationTemplate;
+use App\Services\ImageOptimizer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -16,7 +18,9 @@ use Livewire\WithFileUploads;
 #[Title('គ្រប់គ្រងកម្មវត្ថុអញ្ជើញ | ROUMDOUL')]
 class InvitationManagePage extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads {
+        _uploadErrored as livewireUploadErrored;
+    }
 
     /**
      * Which FIELD_CATALOG field types are edited under which sidebar section. A section only
@@ -27,6 +31,13 @@ class InvitationManagePage extends Component
         'media' => ['image', 'gallery'],
         'program' => ['schedule', 'story'],
     ];
+
+    /** Per-photo upload cap (KB); keep in step with livewire.temporary_file_upload.rules. */
+    public const MAX_UPLOAD_KB = 20480;
+
+    public const MAX_GIF_KB = 5120;
+
+    public const MAX_GALLERY_PHOTOS = 20;
 
     #[Url(as: 'tab')]
     public string $section = 'overview';
@@ -102,18 +113,23 @@ class InvitationManagePage extends Component
     {
         abort_unless($this->invitation->isPaid(), 403);
 
-        $this->validate($this->saveRules());
+        if ($rules = $this->saveRules()) {
+            $this->validate($rules);
+        }
+
+        $optimizer = app(ImageOptimizer::class);
+        $directory = 'invitations/'.$this->invitation->id;
 
         foreach ($this->imageUploads as $key => $file) {
             if ($file) {
-                $this->fieldValues[$key] = $file->store('invitations/'.$this->invitation->id, 's3');
+                $this->fieldValues[$key] = $optimizer->store($file, $directory);
             }
         }
         $this->imageUploads = [];
 
         foreach ($this->galleryUploads as $key => $files) {
             if (! empty($files)) {
-                $stored = collect($files)->map(fn ($file) => $file->store('invitations/'.$this->invitation->id, 's3'));
+                $stored = collect($files)->map(fn ($file) => $optimizer->store($file, $directory));
                 $this->fieldValues[$key] = collect($this->fieldValues[$key] ?? [])->merge($stored)->values()->all();
             }
         }
@@ -154,7 +170,7 @@ class InvitationManagePage extends Component
                 $type === 'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
                 $type === 'schedule' => ['nullable', 'array', 'max:20'],
                 $type === 'story' => ['nullable', 'array', 'max:8'],
-                $type === 'gallery' => ['nullable', 'array', 'max:20'],
+                $type === 'gallery' => ['nullable', 'array', 'max:'.self::MAX_GALLERY_PHOTOS],
                 default => null,
             };
 
@@ -169,19 +185,85 @@ class InvitationManagePage extends Component
             }
         }
 
+        return array_filter([...$rules, ...$this->uploadRules()]);
+    }
+
+    /**
+     * Rules for pending photo uploads. Photos may be up to MAX_UPLOAD_KB (a full-resolution
+     * phone photo) because ImageOptimizer shrinks them before storing; GIFs are stored as-is
+     * to keep their animation, so they keep a tighter cap. A gallery's saved photos plus the
+     * new ones may not exceed MAX_GALLERY_PHOTOS.
+     */
+    protected function uploadRules(): array
+    {
+        $photo = ['image', 'mimes:jpeg,jpg,png,webp,gif', 'max:'.self::MAX_UPLOAD_KB, 'dimensions:max_width=8000,max_height=8000',
+            function (string $attribute, $file, \Closure $fail) {
+                if ($file->getMimeType() === 'image/gif' && $file->getSize() > self::MAX_GIF_KB * 1024) {
+                    $fail('GIFs can be at most '.(self::MAX_GIF_KB / 1024).' MB.');
+                }
+            }];
+        $rules = [];
+
         foreach ($this->imageUploads as $key => $file) {
             if ($file) {
-                $rules["imageUploads.{$key}"] = ['image', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'];
+                $rules["imageUploads.{$key}"] = $photo;
             }
         }
 
         foreach ($this->galleryUploads as $key => $files) {
             if (! empty($files)) {
-                $rules["galleryUploads.{$key}.*"] = ['image', 'mimes:jpeg,jpg,png,webp,gif', 'max:5120'];
+                $room = max(0, self::MAX_GALLERY_PHOTOS - count($this->fieldValues[$key] ?? []));
+                $rules["galleryUploads.{$key}"] = ['array', 'max:'.$room];
+                $rules["galleryUploads.{$key}.*"] = $photo;
             }
         }
 
-        return array_filter($rules);
+        return $rules;
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'imageUploads.*.max' => 'Each photo can be at most '.(self::MAX_UPLOAD_KB / 1024).' MB.',
+            'galleryUploads.*.*.max' => 'Each photo can be at most '.(self::MAX_UPLOAD_KB / 1024).' MB.',
+            'galleryUploads.*.max' => 'The gallery holds up to '.self::MAX_GALLERY_PHOTOS.' photos — remove some first.',
+            '*.dimensions' => 'This photo is too large (max 8000 × 8000 pixels).',
+        ];
+    }
+
+    /**
+     * Livewire rejects files over livewire.temporary_file_upload's cap (or a dropped
+     * connection) before updated() ever runs, with a raw "The imageUploads.cover_image field
+     * must not be greater than 20480 kilobytes." — swap that for a message a customer can read.
+     */
+    public function _uploadErrored($name, $errorsInJson, $isMultiple)
+    {
+        try {
+            $this->livewireUploadErrored($name, $errorsInJson, $isMultiple);
+        } catch (ValidationException) {
+            throw ValidationException::withMessages([
+                $name => "This photo couldn't be uploaded. Photos can be at most ".(self::MAX_UPLOAD_KB / 1024).' MB each.',
+            ]);
+        }
+    }
+
+    /**
+     * Check photos as soon as they're picked, so the customer sees a problem before pressing
+     * Save; a rejected pick is dropped so it doesn't linger as a preview.
+     */
+    public function updated(string $property): void
+    {
+        if (! preg_match('/^(imageUploads|galleryUploads)\.([^.]+)/', $property, $m)) {
+            return;
+        }
+
+        try {
+            $this->validate($this->uploadRules());
+        } catch (ValidationException $e) {
+            unset($this->{$m[1]}[$m[2]]);
+
+            throw $e;
+        }
     }
 
     public function removeGalleryImage(string $key, int $index): void

@@ -130,7 +130,7 @@ return [
 
     'temporary_file_upload' => [
         'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'), // Example: 'local', 's3'             | Default: 'default'
-        'rules' => ['required', 'file', 'max:40960'],         // 40MB per file — covers full-res phone photos for cover/gallery/QR uploads
+        'rules' => ['required', 'file', 'max:20480'],         // 20MB per file — matches InvitationManagePage::MAX_UPLOAD_KB (photos are shrunk on save)
         'directory' => null,                                  // Example: 'tmp'                     | Default: 'livewire-tmp'
         'middleware' => null,                                 // Example: 'throttle:5,1'            | Default: 'throttle:60,1'
         'preview_mimes' => [                                  // Supported file types for temporary pre-signed file URLs...
