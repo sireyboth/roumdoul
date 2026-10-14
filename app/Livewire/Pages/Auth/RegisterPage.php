@@ -22,13 +22,21 @@ class RegisterPage extends Component
 
     public string $password_confirmation = '';
 
+    public bool $terms = false;
+
     protected function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:customers,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'terms' => ['accepted'],
         ];
+    }
+
+    protected function messages(): array
+    {
+        return ['terms.accepted' => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់ ដើម្បីបន្ត។'];
     }
 
     public function register(): void
@@ -51,6 +59,7 @@ class RegisterPage extends Component
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'terms_accepted_at' => now(),
         ]);
 
         Auth::guard('customer')->login($customer);

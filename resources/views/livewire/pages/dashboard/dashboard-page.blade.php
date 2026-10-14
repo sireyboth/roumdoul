@@ -59,8 +59,9 @@
   @else
     <div class="flex flex-col gap-3">
       @foreach ($invitations as $invitation)
-        <a href="/dashboard/invitations/{{ $invitation->id }}" wire:navigate wire:key="invitation-{{ $invitation->id }}"
-          class="flex items-center justify-between rounded-lg border border-plum-200 bg-white p-4 transition-colors hover:border-brand-400 dark:border-plum-800 dark:bg-plum-900">
+        {{-- Opens the invitation's own sidebar workspace in a new tab, so this overview stays put. --}}
+        <a href="/dashboard/invitations/{{ $invitation->id }}" target="_blank" wire:key="invitation-{{ $invitation->id }}"
+          class="group flex items-center justify-between rounded-lg border border-plum-200 bg-white p-4 transition-colors hover:border-brand-400 dark:border-plum-800 dark:bg-plum-900">
           <div>
             <p class="text-sm font-bold text-plum-900 dark:text-white">{{ $invitation->template->name }}</p>
             <p class="text-xs text-plum-500 dark:text-plum-400">
@@ -70,7 +71,9 @@
               @endif
             </p>
           </div>
-          <x-app-icon name="chevron-right" class="h-4.5 w-4.5 text-plum-300" />
+          <span class="flex items-center gap-1.5 text-xs font-semibold text-plum-400 group-hover:text-brand-600 dark:group-hover:text-brand-400">
+            គ្រប់គ្រង <x-app-icon name="external" class="h-4 w-4" />
+          </span>
         </a>
       @endforeach
     </div>

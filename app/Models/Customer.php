@@ -17,6 +17,7 @@ class Customer extends Authenticatable
         'name',
         'email',
         'password',
+        'terms_accepted_at',
     ];
 
     protected $hidden = [
@@ -28,6 +29,7 @@ class Customer extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

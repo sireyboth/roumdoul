@@ -19,12 +19,20 @@ class LoginPage extends Component
 
     public bool $remember = false;
 
+    public bool $terms = false;
+
     protected function rules(): array
     {
         return [
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'terms' => ['accepted'],
         ];
+    }
+
+    protected function messages(): array
+    {
+        return ['terms.accepted' => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់ ដើម្បីបន្ត។'];
     }
 
     /**
@@ -40,7 +48,7 @@ class LoginPage extends Component
 
     public function login(): void
     {
-        $credentials = $this->validate();
+        $credentials = collect($this->validate())->only(['email', 'password'])->all();
 
         if (RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             $seconds = RateLimiter::availableIn($this->throttleKey());
@@ -58,6 +66,9 @@ class LoginPage extends Component
 
         RateLimiter::clear($this->throttleKey());
         session()->regenerate();
+
+        // Record the latest acceptance, so there's a timestamp to point to if the terms change.
+        Auth::guard('customer')->user()->update(['terms_accepted_at' => now()]);
 
         $this->redirect(session()->pull('url.intended', '/dashboard'), navigate: true);
     }

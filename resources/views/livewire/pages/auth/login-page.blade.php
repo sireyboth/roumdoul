@@ -28,6 +28,19 @@
         ចងចាំខ្ញុំ
       </label>
 
+      <div>
+        <label class="flex items-start gap-2 text-sm text-plum-600 dark:text-plum-300">
+          <input type="checkbox" wire:model="terms" class="mt-0.5 rounded border-plum-300" />
+          <span>
+            ខ្ញុំយល់ព្រមតាម
+            <a href="/terms" target="_blank" class="font-semibold text-brand-700 hover:underline dark:text-brand-300">លក្ខខណ្ឌប្រើប្រាស់</a>
+            និង
+            <a href="/privacy" target="_blank" class="font-semibold text-brand-700 hover:underline dark:text-brand-300">គោលការណ៍ភាពឯកជន</a>
+          </span>
+        </label>
+        @error('terms') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+      </div>
+
       <button type="submit"
         class="mt-2 flex items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-700">
         <span wire:loading.remove wire:target="login">ចូលគណនី</span>

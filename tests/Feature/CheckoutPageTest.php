@@ -170,6 +170,7 @@ class CheckoutPageTest extends TestCase
         Livewire::test(\App\Livewire\Pages\Auth\LoginPage::class)
             ->set('email', 'dara@example.com')
             ->set('password', 'password')
+            ->set('terms', true)
             ->call('login')
             ->assertRedirect('/checkout');
     }

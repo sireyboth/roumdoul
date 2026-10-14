@@ -16,6 +16,7 @@ use App\Livewire\Pages\PrivacyPolicyPage;
 use App\Livewire\Pages\ServiceDetailPage;
 use App\Livewire\Pages\ShopPage;
 use App\Livewire\Pages\TermsPage;
+use App\Http\Controllers\InvitationPreviewController;
 use App\Http\Controllers\InvitationRsvpController;
 use App\Http\Controllers\InvitationShowController;
 use App\Http\Controllers\InvitationTemplateDemoController;
@@ -52,6 +53,7 @@ Route::middleware('guest:customer')->group(function () {
 Route::middleware('auth:customer')->group(function () {
     Route::get('/dashboard', DashboardPage::class)->name('dashboard');
     Route::get('/dashboard/invitations/{invitation}', InvitationManagePage::class)->name('dashboard.invitations.show');
+    Route::get('/dashboard/invitations/{invitation}/preview', InvitationPreviewController::class)->name('dashboard.invitations.preview');
     Route::get('/dashboard/orders/{order}', OrderDetailPage::class)->name('dashboard.orders.show');
     Route::get('/checkout', CheckoutPage::class)->name('checkout');
     Route::get('/order/{order}/confirmation', OrderConfirmationPage::class)->name('order.confirmation');

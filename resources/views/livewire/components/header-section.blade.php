@@ -117,6 +117,10 @@
             class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
             ទំនាក់ទំនង
           </a>
+          <a href="/terms" wire:navigate
+            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
+            លក្ខខណ្ឌប្រើប្រាស់
+          </a>
 
           <a href="/shop" wire:navigate
             class="ml-auto hidden shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-sm font-bold text-brand-950 shadow-sm transition-colors hover:bg-gold-400 lg:flex">
@@ -175,6 +179,10 @@
             <a href="/contact" wire:navigate data-nav-link
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
               ទំនាក់ទំនង
+            </a>
+            <a href="/terms" wire:navigate data-nav-link
+              class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
+              លក្ខខណ្ឌប្រើប្រាស់
             </a>
             <a href="{{ $customer ? '/dashboard' : '/login' }}" wire:navigate data-nav-link
               class="flex items-center gap-2 rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">

@@ -8,14 +8,28 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.workspace')]
 #[Title('គ្រប់គ្រងកម្មវត្ថុអញ្ជើញ | ROUMDOUL')]
 class InvitationManagePage extends Component
 {
     use WithFileUploads;
+
+    /**
+     * Which FIELD_CATALOG field types are edited under which sidebar section. A section only
+     * appears in the sidebar if this invitation's template actually uses one of its types.
+     */
+    public const SECTION_FIELD_TYPES = [
+        'details' => ['text', 'textarea', 'datetime', 'color', 'boolean'],
+        'media' => ['image', 'gallery'],
+        'program' => ['schedule', 'story'],
+    ];
+
+    #[Url(as: 'tab')]
+    public string $section = 'overview';
 
     public Invitation $invitation;
 
@@ -35,9 +49,53 @@ class InvitationManagePage extends Component
     {
         abort_unless($invitation->customer_id === Auth::guard('customer')->id(), 403);
 
-        $invitation->load(['template', 'recipients', 'order']);
+        $invitation->load(['template', 'recipients', 'order', 'plan']);
         $this->invitation = $invitation;
         $this->fieldValues = $invitation->field_values ?? [];
+
+        if (! in_array($this->section, $this->availableSections(), true)) {
+            $this->section = 'overview';
+        }
+    }
+
+    public function showSection(string $section): void
+    {
+        if (in_array($section, $this->availableSections(), true)) {
+            $this->section = $section;
+            $this->saved = false;
+        }
+    }
+
+    /** Sidebar sections in display order, skipping field sections this template has nothing for. */
+    public function availableSections(): array
+    {
+        $usedTypes = collect($this->invitation->template->fields ?? [])
+            ->map(fn (string $key) => InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null)
+            ->filter();
+
+        $fieldSections = collect(self::SECTION_FIELD_TYPES)
+            ->filter(fn (array $types) => $usedTypes->intersect($types)->isNotEmpty())
+            ->keys()
+            ->all();
+
+        $sections = ['overview', ...$fieldSections, 'guests'];
+
+        if (in_array('rsvp_enabled', $this->invitation->template->fields ?? [], true)) {
+            $sections[] = 'responses';
+        }
+
+        return $sections;
+    }
+
+    /** This template's field keys that are edited under the given sidebar section. */
+    public function sectionFields(string $section): array
+    {
+        $types = self::SECTION_FIELD_TYPES[$section] ?? [];
+
+        return collect($this->invitation->template->fields ?? [])
+            ->filter(fn (string $key) => in_array(InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null, $types, true))
+            ->values()
+            ->all();
     }
 
     public function save(): void
@@ -196,8 +254,22 @@ class InvitationManagePage extends Component
 
     public function render()
     {
+        $recipients = $this->invitation->recipients;
+        $templateFields = $this->invitation->template->fields ?? [];
+
         return view('livewire.pages.dashboard.invitation-manage-page', [
-            'fieldCatalog' => \App\Models\InvitationTemplate::FIELD_CATALOG,
+            'fieldCatalog' => InvitationTemplate::FIELD_CATALOG,
+            'sections' => $this->availableSections(),
+            'stats' => [
+                'recipients' => $recipients->count(),
+                'viewed' => $recipients->whereNotNull('viewed_at')->count(),
+                'attending' => $recipients->where('rsvp_status', 'yes')->count(),
+                'declined' => $recipients->where('rsvp_status', 'no')->count(),
+                'fields' => count($templateFields),
+                'filled' => collect($templateFields)
+                    ->filter(fn (string $key) => filled($this->invitation->field_values[$key] ?? null))
+                    ->count(),
+            ],
         ]);
     }
 }
