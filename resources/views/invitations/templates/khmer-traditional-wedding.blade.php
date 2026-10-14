@@ -198,12 +198,18 @@
   .kw-page{ position:relative; z-index:1; max-width:520px; margin:0 auto; background:transparent; overflow:hidden;
     box-shadow:0 0 0 1px rgba(201,162,77,.25), 0 30px 90px rgba(0,0,0,.6); }
 
-  /* rendered (Blender) animation, shown behind the page once the invitation opens. A single H.264
-     video, so phones decode it in hardware. */
+  /* rendered (Blender) animation, shown once the invitation opens: the card + flowers video sits behind
+     the page, the butterflies fly over the text and let taps pass through. Both are H.264 (hardware-decoded
+     on phones); the butterfly MP4 carries colour on its left half and the alpha mask on its right half,
+     recombined into a transparent canvas with WebGL. */
   .kw-stage{ position:fixed; top:0; bottom:0; left:50%; width:min(100%,520px); transform:translate3d(-50%,0,0); will-change:transform; pointer-events:none;
-    z-index:0; background:var(--ivory); opacity:0; visibility:hidden; transition:opacity 1.6s ease .6s, visibility 0s linear 2.2s; }
-  .kw-stage video{ width:100%; height:100%; object-fit:cover; display:block; }
+    opacity:0; visibility:hidden; transition:opacity 1.6s ease .6s, visibility 0s linear 2.2s; }
+  .kw-stage video,.kw-stage canvas{ width:100%; height:100%; object-fit:cover; display:block; }
+  .kw-stage.bg{ z-index:0; background:var(--ivory); }
+  .kw-stage.fg{ z-index:35; }
   .kw-staged .kw-stage{ opacity:1; visibility:visible; transition-delay:.6s, 0s; }
+  /* the butterfly source video must stay "on screen": iOS throttles decoding of display:none videos */
+  .kw-stage-src{ position:fixed; left:0; top:0; width:2px; height:2px; opacity:.01; pointer-events:none; z-index:-1; }
   /* once the video runs, drop the effects that make phones repaint every frame */
   .kw-staged .kw-dustfield{ display:none; }
   .kw-staged .kw-branch{ filter:none; }
@@ -497,7 +503,7 @@
     html{ scroll-behavior:auto; }
     .kw *,.kw *::before,.kw *::after{ animation:none !important; transition:none !important; }
     .kw-js .kw-rev{ opacity:1; transform:none; filter:none; }
-    .kw-fly,.kw-dust,.kw-petals{ display:none; }
+    .kw-fly,.kw-dust,.kw-petals,.kw-stage.fg{ display:none; }
   }
   @media (min-width:768px){
     .kw-sec{ padding:92px 40px; }
@@ -587,8 +593,8 @@
     <div class="kw-bar top"></div><div class="kw-bar bottom"></div>
   </div>
 
-  <div class="kw-stage" aria-hidden="true">
-    <video id="kw-bg-video" src="{{ asset('images/invitations/khmer-traditional/invitation.mp4') }}" poster="{{ asset('images/invitations/khmer-traditional/poster.jpg') }}" muted loop playsinline preload="auto"></video>
+  <div class="kw-stage bg" aria-hidden="true">
+    <video id="kw-bg-video" src="{{ asset('images/invitations/khmer-traditional/background.mp4') }}" poster="{{ asset('images/invitations/khmer-traditional/poster.jpg') }}" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback></video>
   </div>
 
   <main class="kw-page">
@@ -795,6 +801,9 @@
     </footer>
   </main>
 
+  <video class="kw-stage-src" id="kw-fly-video" src="{{ asset('images/invitations/khmer-traditional/butterflies.mp4') }}" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
+  <div class="kw-stage fg" aria-hidden="true"><canvas id="kw-fly-canvas"></canvas></div>
+
 
   {{-- ============ MUSIC ============ --}}
   @if ($youtubeId)
@@ -893,22 +902,78 @@
     });
   }
 
-  /* --- rendered background video (started by the open tap, which also satisfies autoplay rules) --- */
-  var bgVideo = document.getElementById('kw-bg-video'), stageOn = false;
+  /* --- rendered background + butterfly videos (started by the open tap, which also satisfies autoplay rules) --- */
+  var bgVideo = document.getElementById('kw-bg-video'), flyVideo = document.getElementById('kw-fly-video'), flyCanvas = document.getElementById('kw-fly-canvas');
+  var stageOn = false, scheduleFly = function () {};
 
-  // performance test switch: ?kwtest=nofx freezes the template's own CSS/SVG animations
-  if ((new URLSearchParams(location.search).get('kwtest') || '').split(',').indexOf('nofx') > -1) body.classList.add('kw-nofx');
+  // performance test switches, e.g. ?kwtest=nofx,nofly  (nofx: freeze the template's CSS/SVG animations, nofly: no butterflies)
+  var kwTest = (new URLSearchParams(location.search).get('kwtest') || '').split(',');
+  if (kwTest.indexOf('nofx') > -1) body.classList.add('kw-nofx');
+  var dropFly = function () { flyCanvas.parentNode.remove(); flyVideo.remove(); flyVideo = null; };
 
-  var playStage = function () { if (!reduced) bgVideo.play().catch(function () {}); };
+  // butterflies: left half of each frame is colour, right half the alpha mask; a WebGL quad joins them
+  (function initFly() {
+    var gl = !reduced && kwTest.indexOf('nofly') < 0 && flyCanvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false });
+    if (!gl) { dropFly(); return; }
+    var sh = function (type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    var prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 p; varying vec2 uv; void main(){ uv = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0.,1.); }'));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, 'precision mediump float; varying vec2 uv; uniform sampler2D t;'
+      + 'void main(){ vec3 c = texture2D(t, vec2(uv.x*.5, uv.y)).rgb; float a = texture2D(t, vec2(.5+uv.x*.5, uv.y)).r; gl_FragColor = vec4(c*a, a); }'));
+    gl.linkProgram(prog); gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(function (k) { gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE); });
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.clearColor(0, 0, 0, 0);
+
+    var hasVfc = 'requestVideoFrameCallback' in HTMLVideoElement.prototype, texReady = false;
+    var draw = function () {
+      if (flyVideo.readyState >= 2) {
+        var w = flyVideo.videoWidth / 2, h = flyVideo.videoHeight;
+        if (flyCanvas.width !== w || flyCanvas.height !== h) { flyCanvas.width = w; flyCanvas.height = h; gl.viewport(0, 0, w, h); texReady = false; }
+        // allocate the texture once, then only upload new pixels
+        if (!texReady) { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, flyVideo); texReady = true; }
+        else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, flyVideo);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
+      scheduleFly();
+    };
+    // redraw only when the video has a new frame (30/s), not on every screen refresh
+    scheduleFly = function () {
+      if (!stageOn || document.hidden) return;
+      if (hasVfc) flyVideo.requestVideoFrameCallback(draw); else requestAnimationFrame(draw);
+    };
+  })();
+
+  var playStage = function () {
+    if (!reduced) bgVideo.play().catch(function () {});
+    if (flyVideo) flyVideo.play().catch(function () {});
+  };
   function startStage() {
     stageOn = true;
     body.classList.add('kw-staged');
+    bgVideo.currentTime = 0;
+    if (flyVideo) flyVideo.currentTime = 0;
     playStage();
+    scheduleFly();
+    // keep the butterflies in step with their shadows in the background video
+    if (flyVideo) setInterval(function () {
+      if (bgVideo.paused || flyVideo.paused || flyVideo.readyState < 2) return;
+      var d = Math.abs(flyVideo.currentTime - bgVideo.currentTime);
+      if (d > .12 && d < bgVideo.duration - .12) flyVideo.currentTime = bgVideo.currentTime;
+    }, 1000);
   }
   // nothing runs while the tab is in the background
   document.addEventListener('visibilitychange', function () {
     if (!stageOn) return;
-    if (document.hidden) bgVideo.pause(); else playStage();
+    if (document.hidden) { bgVideo.pause(); if (flyVideo) flyVideo.pause(); }
+    else { playStage(); scheduleFly(); }
   });
 
   /* --- opening: camera pushes into the scene, letterbox bars part, then the invitation reveals --- */
