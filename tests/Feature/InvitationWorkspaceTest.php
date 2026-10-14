@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Pages\Dashboard\InvitationManagePage;
 use App\Models\Customer;
 use App\Models\Invitation;
+use App\Models\InvitationTemplate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -22,7 +23,7 @@ class InvitationWorkspaceTest extends TestCase
         $component = Livewire::actingAs($customer, 'customer')
             ->test(InvitationManagePage::class, ['invitation' => $invitation]);
 
-        $this->assertSame(['overview', 'details', 'media', 'guests'], $component->instance()->availableSections());
+        $this->assertSame(['overview', 'details', 'media', 'guests', 'guide'], $component->instance()->availableSections());
     }
 
     public function test_responses_section_appears_when_the_template_uses_rsvp(): void
@@ -34,7 +35,7 @@ class InvitationWorkspaceTest extends TestCase
         $component = Livewire::actingAs($customer, 'customer')
             ->test(InvitationManagePage::class, ['invitation' => $invitation]);
 
-        $this->assertSame(['overview', 'details', 'program', 'guests', 'responses'], $component->instance()->availableSections());
+        $this->assertSame(['overview', 'details', 'program', 'guests', 'responses', 'guide'], $component->instance()->availableSections());
     }
 
     public function test_switching_sections_shows_that_sections_fields(): void
@@ -115,5 +116,42 @@ class InvitationWorkspaceTest extends TestCase
         $this->actingAs($customer, 'customer')
             ->get('/dashboard')
             ->assertSee('href="/dashboard/invitations/'.$invitation->id.'" target="_blank"', false);
+    }
+
+    public function test_guide_explains_each_field_the_template_uses(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['sender_name', 'photo_gallery']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->call('showSection', 'guide')
+            ->assertSet('section', 'guide')
+            ->assertSee(InvitationTemplate::FIELD_CATALOG['sender_name']['hint'])
+            ->assertSee(InvitationTemplate::FIELD_CATALOG['photo_gallery']['hint'])
+            ->assertDontSee(InvitationTemplate::FIELD_CATALOG['groom_name']['hint']);
+    }
+
+    public function test_guide_is_open_before_payment_but_editing_sections_are_not(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->unpaid()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['sender_name']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->call('showSection', 'details')
+            ->assertSet('section', 'overview')
+            ->call('showSection', 'guide')
+            ->assertSet('section', 'guide')
+            ->assertSee(InvitationTemplate::FIELD_CATALOG['sender_name']['hint']);
+    }
+
+    public function test_every_catalog_field_has_a_customer_hint(): void
+    {
+        foreach (InvitationTemplate::FIELD_CATALOG as $key => $field) {
+            $this->assertNotEmpty($field['hint'] ?? null, "Field [{$key}] is missing a customer-facing hint.");
+        }
     }
 }

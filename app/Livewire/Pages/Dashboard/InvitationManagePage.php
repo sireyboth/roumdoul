@@ -64,14 +64,14 @@ class InvitationManagePage extends Component
         $this->invitation = $invitation;
         $this->fieldValues = $invitation->field_values ?? [];
 
-        if (! in_array($this->section, $this->availableSections(), true)) {
+        if (! in_array($this->section, $this->visibleSections(), true)) {
             $this->section = 'overview';
         }
     }
 
     public function showSection(string $section): void
     {
-        if (in_array($section, $this->availableSections(), true)) {
+        if (in_array($section, $this->visibleSections(), true)) {
             $this->section = $section;
             $this->saved = false;
         }
@@ -95,7 +95,15 @@ class InvitationManagePage extends Component
             $sections[] = 'responses';
         }
 
+        $sections[] = 'guide';
+
         return $sections;
+    }
+
+    /** Sections the sidebar actually offers right now — only overview and the guide until paid. */
+    public function visibleSections(): array
+    {
+        return $this->invitation->isPaid() ? $this->availableSections() : ['overview', 'guide'];
     }
 
     /** This template's field keys that are edited under the given sidebar section. */
@@ -341,7 +349,7 @@ class InvitationManagePage extends Component
 
         return view('livewire.pages.dashboard.invitation-manage-page', [
             'fieldCatalog' => InvitationTemplate::FIELD_CATALOG,
-            'sections' => $this->availableSections(),
+            'sections' => $this->visibleSections(),
             'stats' => [
                 'recipients' => $recipients->count(),
                 'viewed' => $recipients->whereNotNull('viewed_at')->count(),

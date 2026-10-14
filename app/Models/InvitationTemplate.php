@@ -20,37 +20,40 @@ class InvitationTemplate extends Model
      * rows), boolean, datetime, color.
      */
     public const FIELD_CATALOG = [
+        // `hint` is the customer-facing explanation shown under each input in the dashboard
+        // and in its "Guide" section — write it for the customer, not for admins.
+
         // Identity / basics — always available on every plan once a template selects them,
         // see FREE_FIELDS below.
-        'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text'],
-        'groom_name' => ['label' => "Groom's name", 'type' => 'text'],
-        'bride_name' => ['label' => "Bride's name", 'type' => 'text'],
-        'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text'],
-        'turning_age' => ['label' => 'Turning (age)', 'type' => 'text'],
-        'headline' => ['label' => 'Headline', 'type' => 'text'],
-        'message' => ['label' => 'Message', 'type' => 'textarea'],
-        'cover_image' => ['label' => 'Cover image', 'type' => 'image'],
-        'event_date' => ['label' => 'Event date', 'type' => 'datetime'],
-        'venue_name' => ['label' => 'Venue name', 'type' => 'text'],
-        'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text'],
-        'accent_color' => ['label' => 'Accent color', 'type' => 'color'],
-        'groom_photo' => ['label' => "Groom's photo", 'type' => 'image'],
-        'bride_photo' => ['label' => "Bride's photo", 'type' => 'image'],
-        'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text'],
-        'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text'],
+        'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text', 'hint' => 'ឈ្មោះរបស់អ្នក — ភ្ញៀវនឹងឃើញថាអ្នកណាជាអ្នកអញ្ជើញ។'],
+        'groom_name' => ['label' => "Groom's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនកំលោះ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។'],
+        'bride_name' => ['label' => "Bride's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនក្រមុំ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។'],
+        'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text', 'hint' => 'ឈ្មោះអ្នកដែលមានខួបកំណើត។'],
+        'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'អាយុដែលនឹងគ្រប់ក្នុងខួបនេះ ឧ. 25។'],
+        'headline' => ['label' => 'Headline', 'type' => 'text', 'hint' => 'ចំណងជើងធំនៅខាងលើធៀប ឧ. «សូមគោរពអញ្ជើញ»។'],
+        'message' => ['label' => 'Message', 'type' => 'textarea', 'hint' => 'សារដែលអ្នកចង់ផ្ញើដល់ភ្ញៀវ — ពីរបីប្រយោគខ្លីៗគឺល្អបំផុត។'],
+        'cover_image' => ['label' => 'Cover image', 'type' => 'image', 'hint' => 'រូបភាពធំដែលភ្ញៀវឃើញមុនគេពេលបើកធៀប — ជ្រើសរូបច្បាស់ និងស្អាតបំផុត។'],
+        'event_date' => ['label' => 'Event date', 'type' => 'datetime', 'hint' => 'ថ្ងៃ និងម៉ោងនៃកម្មវិធី — ប្រើសម្រាប់បង្ហាញកាលបរិច្ឆេទ និងនាឡិការាប់ថយក្រោយ។'],
+        'venue_name' => ['label' => 'Venue name', 'type' => 'text', 'hint' => 'ឈ្មោះកន្លែងរៀបកម្មវិធី ឧ. «គេហដ្ឋានខាងស្រី» ឬឈ្មោះសណ្ឋាគារ។'],
+        'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text', 'hint' => 'ចម្លងតំណបទចម្រៀងពី YouTube ឬ TikTok មកដាក់ — ភ្ញៀវអាចស្ដាប់ភ្លេងពេលបើកធៀប។'],
+        'accent_color' => ['label' => 'Accent color', 'type' => 'color', 'hint' => 'ពណ៌សំខាន់របស់ធៀប (ប៊ូតុង ស៊ុម និងអក្សរលម្អ)។'],
+        'groom_photo' => ['label' => "Groom's photo", 'type' => 'image', 'hint' => 'រូបថតកូនកំលោះ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
+        'bride_photo' => ['label' => "Bride's photo", 'type' => 'image', 'hint' => 'រូបថតកូនក្រមុំ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
+        'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនកំលោះ ដែលភ្ញៀវអាចទាក់ទងបាន។'],
+        'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនក្រមុំ ដែលភ្ញៀវអាចទាក់ទងបាន។'],
 
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
         // shows these to the recipient if the plan's `features` list includes the key.
-        'venue_address' => ['label' => 'Venue address (for map link)', 'type' => 'text'],
-        'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text'],
-        'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean'],
-        'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean'],
-        'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery'],
-        'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule'],
-        'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story'],
-        'qr_code' => ['label' => 'QR code image', 'type' => 'image'],
-        'cta_label' => ['label' => 'Button label', 'type' => 'text'],
-        'cta_url' => ['label' => 'Button link', 'type' => 'text'],
+        'venue_address' => ['label' => 'Venue address (for map link)', 'type' => 'text', 'hint' => 'អាសយដ្ឋានពេញរបស់កន្លែងកម្មវិធី — ភ្ញៀវចុចប៊ូតុងមើលផ្លូវ ដើម្បីបើក Google Maps។'],
+        'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text', 'hint' => 'ថ្ងៃខែតាមចន្ទគតិ ឧ. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ»។'],
+        'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីឲ្យភ្ញៀវចុច «ចូលរួម» ឬ «មិនចូលរួម» — អ្នកមើលចម្លើយបាននៅផ្ទាំង «ការឆ្លើយតប»។'],
+        'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញនាឡិការាប់ថយក្រោយដល់ថ្ងៃកម្មវិធី (ត្រូវបំពេញ Event date ផងដែរ)។'],
+        'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery', 'hint' => 'រូបថតជាច្រើន (ឧ. រូប Pre-wedding) បង្ហាញជាវិចិត្រសាលនៅលើធៀប។'],
+        'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule', 'hint' => 'របៀបវារៈកម្មវិធី — ម៉ោង និងសកម្មភាពនីមួយៗ ឧ. «7:00 AM — ហែជំនូន»។'],
+        'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story', 'hint' => 'រឿងរ៉ាវរបស់អ្នកទាំងពីរ ចែកជាជំពូក — ចំណងជើង និងខ្លឹមសារខ្លីៗ។'],
+        'qr_code' => ['label' => 'QR code image', 'type' => 'image', 'hint' => 'រូប QR code ឧ. QR ធនាគារ សម្រាប់ភ្ញៀវផ្ញើចំណងដៃពីចម្ងាយ។'],
+        'cta_label' => ['label' => 'Button label', 'type' => 'text', 'hint' => 'អក្សរនៅលើប៊ូតុងផ្ទាល់ខ្លួន ឧ. «ចូលរួម Telegram Group» — ត្រូវបំពេញជាមួយ Button link។'],
+        'cta_url' => ['label' => 'Button link', 'type' => 'text', 'hint' => 'តំណដែលប៊ូតុងនឹងបើក — ត្រូវចាប់ផ្ដើមដោយ https://'],
     ];
 
     /**

@@ -6,6 +6,7 @@
     'program' => ['label' => 'កម្មវិធី', 'icon' => 'calendar'],
     'guests' => ['label' => 'ភ្ញៀវ', 'icon' => 'users'],
     'responses' => ['label' => 'ការឆ្លើយតប', 'icon' => 'chat'],
+    'guide' => ['label' => 'ការណែនាំ', 'icon' => 'question'],
   ];
   $isPaid = $invitation->isPaid();
   $daysLeft = $invitation->expires_at ? max(0, (int) floor(now()->diffInDays($invitation->expires_at, false))) : null;
@@ -59,7 +60,7 @@
     </div>
 
     <nav class="mt-5 flex-1 overflow-y-auto px-3">
-      @foreach ($isPaid ? $sections : ['overview'] as $key)
+      @foreach ($sections as $key)
         <button type="button" wire:click="showSection('{{ $key }}')" @click="sidebarOpen = false" wire:key="nav-{{ $key }}"
           @class([
             'mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors',
@@ -107,13 +108,19 @@
     <div class="mx-auto max-w-3xl">
       <h1 class="text-2xl font-extrabold text-plum-900 dark:text-white">{{ $navItems[$section]['label'] }}</h1>
 
-      @if (! $isPaid)
+      @if ($section === 'guide')
+        @include('livewire.pages.dashboard.partials.guide')
+
+      @elseif (! $isPaid)
         <div class="mt-8 flex flex-col items-center gap-3 rounded-xl border border-dashed border-gold-400 bg-gold-500/10 py-16 text-center">
           <x-app-icon name="clock" class="h-10 w-10 text-gold-600" />
           <p class="text-base font-semibold text-plum-800 dark:text-plum-100">Waiting for payment confirmation</p>
           <p class="max-w-sm text-sm text-plum-500 dark:text-plum-400">
             You'll be able to fill in details and add recipients as soon as your order is confirmed as paid.
           </p>
+          <button type="button" wire:click="showSection('guide')" class="mt-2 text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400">
+            ស្វែងយល់ពីរបៀបប្រើប្រាស់ →
+          </button>
         </div>
 
       @elseif ($section === 'overview')
@@ -169,6 +176,16 @@
           </ol>
         </div>
 
+        <button type="button" wire:click="showSection('guide')"
+          class="mt-4 flex w-full items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 text-left transition-colors hover:border-brand-400 dark:border-brand-500/30 dark:bg-brand-500/10">
+          <x-app-icon name="question" class="h-6 w-6 shrink-0 text-brand-600 dark:text-brand-400" />
+          <span class="flex-1">
+            <span class="block text-sm font-semibold text-plum-900 dark:text-white">លើកដំបូងប្រើប្រាស់?</span>
+            <span class="block text-xs text-plum-500 dark:text-plum-400">អានការណែនាំពីរបៀបប្រើប្រាស់ និងអត្ថន័យនៃប្រអប់នីមួយៗ</span>
+          </span>
+          <x-app-icon name="chevron-right" class="h-4 w-4 text-plum-300" />
+        </button>
+
       @elseif (in_array($section, ['details', 'media', 'program'], true))
         <form wire:submit="save" class="mt-6">
           <div class="flex flex-col gap-5 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
@@ -184,6 +201,9 @@
                     </span>
                   @endunless
                 </div>
+                @if (! empty($catalogField['hint']))
+                  <p class="-mt-0.5 mb-2 text-xs text-plum-500 dark:text-plum-400">{{ $catalogField['hint'] }}</p>
+                @endif
                 @include('livewire.pages.dashboard.partials.field-input')
               </div>
             @endforeach
