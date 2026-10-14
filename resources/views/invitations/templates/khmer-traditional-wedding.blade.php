@@ -198,22 +198,18 @@
   .kw-page{ position:relative; z-index:1; max-width:520px; margin:0 auto; background:transparent; overflow:hidden;
     box-shadow:0 0 0 1px rgba(201,162,77,.25), 0 30px 90px rgba(0,0,0,.6); }
 
-  /* rendered (Blender) animation layers, shown once the invitation opens: the background loop sits
-     behind the page, the hanging-flower overlay floats above the text and lets taps pass through.
-     Both are H.264 video (hardware-decoded on phones); the overlay MP4 carries colour on its left
-     half and the alpha mask on its right half, recombined into a transparent canvas with WebGL. */
+  /* rendered (Blender) animation, shown behind the page once the invitation opens. A single H.264
+     video, so phones decode it in hardware. */
   .kw-stage{ position:fixed; top:0; bottom:0; left:50%; width:min(100%,520px); transform:translate3d(-50%,0,0); will-change:transform; pointer-events:none;
-    opacity:0; visibility:hidden; transition:opacity 1.6s ease .6s, visibility 0s linear 2.2s; }
-  .kw-stage video,.kw-stage canvas{ width:100%; height:100%; object-fit:cover; display:block; }
-  .kw-stage.bg{ z-index:0; background:var(--ivory); }
-  .kw-stage.fg{ z-index:35; }
+    z-index:0; background:var(--ivory); opacity:0; visibility:hidden; transition:opacity 1.6s ease .6s, visibility 0s linear 2.2s; }
+  .kw-stage video{ width:100%; height:100%; object-fit:cover; display:block; }
   .kw-staged .kw-stage{ opacity:1; visibility:visible; transition-delay:.6s, 0s; }
-  /* the overlay's source video must stay "on screen": iOS throttles decoding of display:none videos */
-  .kw-stage-src{ position:fixed; left:0; top:0; width:2px; height:2px; opacity:.01; pointer-events:none; z-index:-1; }
-  /* once the videos run, drop the effects that make phones repaint every frame */
+  /* once the video runs, drop the effects that make phones repaint every frame */
   .kw-staged .kw-dustfield{ display:none; }
   .kw-staged .kw-branch{ filter:none; }
   .kw-js .kw-staged .kw-rev{ filter:none; }
+  /* performance test switch (?kwtest=nofx): freezes every CSS/SVG ambient animation on the page */
+  .kw-nofx .kw-page *,.kw-nofx .kw-petals,.kw-nofx .kw-petals *{ animation:none !important; }
   .kw-sec{ position:relative; padding:76px 26px; text-align:center; overflow:hidden; }
   .kw-sec > :not(.kw-deco):not(.kw-frame):not(.kw-corner){ position:relative; z-index:1; }
   .kw-deco{ position:absolute; pointer-events:none; }
@@ -501,7 +497,7 @@
     html{ scroll-behavior:auto; }
     .kw *,.kw *::before,.kw *::after{ animation:none !important; transition:none !important; }
     .kw-js .kw-rev{ opacity:1; transform:none; filter:none; }
-    .kw-fly,.kw-dust,.kw-petals,.kw-stage.fg{ display:none; }
+    .kw-fly,.kw-dust,.kw-petals{ display:none; }
   }
   @media (min-width:768px){
     .kw-sec{ padding:92px 40px; }
@@ -591,8 +587,8 @@
     <div class="kw-bar top"></div><div class="kw-bar bottom"></div>
   </div>
 
-  <div class="kw-stage bg" aria-hidden="true">
-    <video id="kw-bg-video" src="{{ asset('images/invitations/khmer-traditional/background.mp4') }}" muted loop playsinline preload="auto"></video>
+  <div class="kw-stage" aria-hidden="true">
+    <video id="kw-bg-video" src="{{ asset('images/invitations/khmer-traditional/invitation.mp4') }}" poster="{{ asset('images/invitations/khmer-traditional/poster.jpg') }}" muted loop playsinline preload="auto"></video>
   </div>
 
   <main class="kw-page">
@@ -799,8 +795,6 @@
     </footer>
   </main>
 
-  <video class="kw-stage-src" id="kw-fg-video" src="{{ asset('images/invitations/khmer-traditional/overlay_alpha.mp4') }}" muted loop playsinline preload="auto" aria-hidden="true"></video>
-  <div class="kw-stage fg" aria-hidden="true"><canvas id="kw-fg-canvas"></canvas></div>
 
   {{-- ============ MUSIC ============ --}}
   @if ($youtubeId)
@@ -899,65 +893,22 @@
     });
   }
 
-  /* --- rendered background + overlay videos (started by the open tap, which also satisfies autoplay rules) --- */
-  var bgVideo = document.getElementById('kw-bg-video'), fgVideo = document.getElementById('kw-fg-video'), fgCanvas = document.getElementById('kw-fg-canvas');
-  var stageOn = false, scheduleFg = function () {};
+  /* --- rendered background video (started by the open tap, which also satisfies autoplay rules) --- */
+  var bgVideo = document.getElementById('kw-bg-video'), stageOn = false;
 
-  // overlay: left half of each frame is colour, right half the alpha mask; a WebGL quad joins them
-  (function initOverlay() {
-    var gl = !reduced && fgCanvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false });
-    if (!gl) { fgCanvas.parentNode.remove(); fgVideo.remove(); fgVideo = null; return; }
-    var sh = function (type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
-    var prog = gl.createProgram();
-    gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 p; varying vec2 uv; void main(){ uv = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0.,1.); }'));
-    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, 'precision mediump float; varying vec2 uv; uniform sampler2D t;'
-      + 'void main(){ vec3 c = texture2D(t, vec2(uv.x*.5, uv.y)).rgb; float a = texture2D(t, vec2(.5+uv.x*.5, uv.y)).r; gl_FragColor = vec4(c*a, a); }'));
-    gl.linkProgram(prog); gl.useProgram(prog);
-    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-    var loc = gl.getAttribLocation(prog, 'p');
-    gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
-    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(function (k) { gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE); });
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.clearColor(0, 0, 0, 0);
+  // performance test switch: ?kwtest=nofx freezes the template's own CSS/SVG animations
+  if ((new URLSearchParams(location.search).get('kwtest') || '').split(',').indexOf('nofx') > -1) body.classList.add('kw-nofx');
 
-    var hasVfc = 'requestVideoFrameCallback' in HTMLVideoElement.prototype, texReady = false;
-    var draw = function () {
-      if (fgVideo.readyState >= 2) {
-        var w = fgVideo.videoWidth / 2, h = fgVideo.videoHeight;
-        if (fgCanvas.width !== w || fgCanvas.height !== h) { fgCanvas.width = w; fgCanvas.height = h; gl.viewport(0, 0, w, h); texReady = false; }
-        // allocate the texture once, then only upload new pixels
-        if (!texReady) { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fgVideo); texReady = true; }
-        else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, fgVideo);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      }
-      scheduleFg();
-    };
-    // redraw only when the video has a new frame (30/s), not on every screen refresh
-    scheduleFg = function () {
-      if (!stageOn || document.hidden) return;
-      if (hasVfc) fgVideo.requestVideoFrameCallback(draw); else requestAnimationFrame(draw);
-    };
-  })();
-
-  var playStage = function () {
-    if (!reduced) bgVideo.play().catch(function () {});
-    if (fgVideo) fgVideo.play().catch(function () {});
-  };
+  var playStage = function () { if (!reduced) bgVideo.play().catch(function () {}); };
   function startStage() {
     stageOn = true;
     body.classList.add('kw-staged');
     playStage();
-    scheduleFg();
   }
   // nothing runs while the tab is in the background
   document.addEventListener('visibilitychange', function () {
     if (!stageOn) return;
-    if (document.hidden) { bgVideo.pause(); if (fgVideo) fgVideo.pause(); }
-    else { playStage(); scheduleFg(); }
+    if (document.hidden) bgVideo.pause(); else playStage();
   });
 
   /* --- opening: camera pushes into the scene, letterbox bars part, then the invitation reveals --- */
