@@ -31,7 +31,8 @@
     $timeKhmer = $eventDate
         ? 'ម៉ោង '.$khDigits($eventDate->format('g:i')).' '.($eventDate->hour < 12 ? 'ព្រឹក' : ($eventDate->hour < 18 ? 'រសៀល' : 'ល្ងាច'))
         : null;
-    $khmerLunarDate = $isUnlocked('khmer_date') && ! empty($fields['khmer_date']) ? $fields['khmer_date'] : null;
+    $dateEnglish = $eventDate ? mb_strtoupper($eventDate->format('j F Y')).' | '.$eventDate->format('g:iA') : null;
+    $khmerLunarDate =$isUnlocked('khmer_date') && ! empty($fields['khmer_date']) ? $fields['khmer_date'] : null;
 
     $venueName = $fields['venue_name'] ?? null;
     $venueAddress = ($isUnlocked('venue_address') && ! empty($fields['venue_address'])) ? $fields['venue_address'] : null;
@@ -203,11 +204,14 @@
      on phones); the butterfly MP4 carries colour on its left half and the alpha mask on its right half,
      recombined into a transparent canvas with WebGL. */
   .kw-stage{ position:fixed; top:0; bottom:0; left:50%; width:min(100%,520px); transform:translate3d(-50%,0,0); will-change:transform; pointer-events:none;
-    opacity:0; visibility:hidden; transition:opacity 1.6s ease .6s, visibility 0s linear 2.2s; }
+    opacity:0; visibility:hidden; transition:opacity .4s ease, visibility 0s linear .4s; }
   .kw-stage video,.kw-stage canvas{ width:100%; height:100%; object-fit:cover; display:block; }
   .kw-stage.bg{ z-index:0; background:var(--ivory); }
   .kw-stage.fg{ z-index:35; }
-  .kw-staged .kw-stage{ opacity:1; visibility:visible; transition-delay:.6s, 0s; }
+  /* the butterflies already fly over the cover; they step aside while the roumdul blooms (the stage restarts them in sync underneath) */
+  .kw-covering .kw-stage.fg{ z-index:55; opacity:1; visibility:visible; transition-delay:0s,0s; }
+  .kw-covering .kw-gate.blooming ~ .kw-stage.fg{ opacity:0; visibility:hidden; transition:opacity .4s ease, visibility 0s linear .4s; }
+  .kw-staged .kw-stage{ opacity:1; visibility:visible; transition-delay:0s, 0s; }
   /* the butterfly source video must stay "on screen": iOS throttles decoding of display:none videos */
   .kw-stage-src{ position:fixed; left:0; top:0; width:2px; height:2px; opacity:.01; pointer-events:none; z-index:-1; }
   /* once the video runs, drop the effects that make phones repaint every frame */
@@ -228,9 +232,7 @@
   .kw-maroon .kw-count > div{ background:rgba(255,250,240,.45); }
   .kw-beige{ background:rgba(232,216,189,.55); }
 
-  /* scenery colour roles: dusk silhouettes on the opener, gold leaf on the red/maroon sections */
-  .kw-gate{ --br-stem:#1c0404; --br-leaf:#2a0808; --br-leaf-edge:rgba(240,176,96,.35); --br-flower:#F6E6BC; --br-flower-edge:#d9a752;
-    --br-bird:#120303; --br-bird-wing:#2c0909; --br-bird-eye:#F6E6BC; --gull:#1a0404; --tp-fill:#1a0404; --tp-rim:rgba(240,170,90,.6); }
+  /* scenery colour roles: gold leaf on the red/maroon sections */
   .kw-red,.kw-maroon{ --br-stem:#C9A24D; --br-leaf:rgba(201,162,77,.22); --br-leaf-edge:#C9A24D; --br-flower:#FBF4E4; --br-flower-edge:#C9A24D;
     --br-bird:#C9A24D; --br-bird-wing:#E9CD85; --br-bird-eye:#4A0D0D; --gull:rgba(110,40,30,.7); --tp-fill:rgba(74,13,13,.35); --tp-rim:rgba(201,162,77,.75); }
 
@@ -302,58 +304,34 @@
     background:radial-gradient(circle at 30% 30%,#fffdf5,#f3dfa6 62%,#d6ad57); box-shadow:0 2px 4px rgba(74,13,13,.18);
     animation:kw-flutter var(--f) ease-in-out infinite; }
 
-  /* ============ opening scene ============ */
-  .kw-gate{ position:fixed; inset:0; z-index:50; overflow:hidden; background:#0b0202; color:var(--ivory); --hz:79%; --bar:6.5vh;
-    transition:opacity 1.2s ease 1.1s, visibility 0s linear 2.4s; }
+  /* ============ cover ============ */
+  /* cover.mp4 (9:16) is the whole cover: its first frame is the card, and the open tap plays it through a
+     roumdul bloom that lands on the background video's first frame. The live text sits on the same 9:16 box,
+     positioned in % and sized in cqw so it stays on the card's rules at any screen size. */
+  .kw-gate{ position:fixed; inset:0; z-index:50; overflow:hidden; background:#0b0202; transition:opacity .9s ease, visibility 0s linear .9s; }
   .kw-gate.open{ opacity:0; visibility:hidden; pointer-events:none; }
-  .kw-cine{ position:absolute; inset:0; transform-origin:50% 72%; }
-  .kw-gate.open .kw-cine{ transform:scale(1.28) translateY(-3%); transition:transform 2.6s var(--cine); }
-  .kw-cam{ position:absolute; inset:0; transform-origin:50% 75%; animation:kw-push 28s ease-in-out infinite alternate; }
-  .kw-sky{ position:absolute; inset:0; background:linear-gradient(180deg,#090202 0%,#1d0505 22%,#420d0c 44%,#7e2814 60%,#c0662a 71%,#eba45a 77%,#f7c97f var(--hz),#2a0a06 var(--hz)); }
-  .kw-stars{ position:absolute; top:0; left:0; width:2px; height:2px; border-radius:50%; background:#fff3cf; opacity:.7; animation:kw-twinkle 4s ease-in-out infinite alternate;
-    box-shadow:8vw 6vh #fff3cf,22vw 13vh rgba(255,243,207,.6),37vw 4vh #fff3cf,51vw 17vh rgba(255,243,207,.5),66vw 8vh #fff3cf,79vw 15vh rgba(255,243,207,.7),91vw 5vh #fff3cf,
-      14vw 24vh rgba(255,243,207,.4),45vw 27vh rgba(255,243,207,.35),72vw 25vh rgba(255,243,207,.4),86vw 30vh rgba(255,243,207,.3),30vw 33vh rgba(255,243,207,.3); }
-  .kw-sun{ position:absolute; left:50%; top:calc(var(--hz) - 5%); width:95vmin; height:95vmin; border-radius:50%; transform:translate(-50%,-50%);
-    background:radial-gradient(circle,rgba(255,231,170,.95) 0,rgba(247,180,90,.6) 9%,rgba(214,110,45,.28) 26%,rgba(140,40,20,.1) 45%,transparent 64%);
-    animation:kw-glow 10s ease-in-out infinite alternate; }
-  .kw-rays{ position:absolute; left:50%; top:calc(var(--hz) - 4%); width:220vmax; height:220vmax; transform:translate(-50%,-50%);
-    background:repeating-conic-gradient(from 0deg, rgba(255,214,150,.07) 0deg 3deg, transparent 3deg 13deg);
-    -webkit-mask:radial-gradient(circle,#000 0,transparent 42%); mask:radial-gradient(circle,#000 0,transparent 42%);
-    animation:kw-spin 160s linear infinite; }
-  .kw-horizon{ position:absolute; left:50%; bottom:calc(100% - var(--hz)); width:min(135vw,980px); transform:translateX(-50%); z-index:1; }
-  .kw-water{ position:absolute; left:0; right:0; top:var(--hz); bottom:0; overflow:hidden; z-index:1;
-    background:linear-gradient(180deg,rgba(235,150,80,.45),#3a0d07 22%,#120303 80%); }
-  .kw-reflect{ position:absolute; left:50%; top:0; width:min(135vw,980px); transform:translateX(-50%) scaleY(-1); transform-origin:50% 0; opacity:.42; filter:blur(.6px);
-    -webkit-mask:linear-gradient(to top,#000,transparent 75%); mask:linear-gradient(to top,#000,transparent 75%); animation:kw-ripple 6s ease-in-out infinite alternate; }
-  .kw-glint{ position:absolute; inset:0 -20%; background:repeating-linear-gradient(180deg,transparent 0 7px,rgba(255,215,150,.13) 7px 8px);
-    -webkit-mask:radial-gradient(60% 70% at 50% 0,#000,transparent); mask:radial-gradient(60% 70% at 50% 0,#000,transparent); animation:kw-shimmer-x 7s ease-in-out infinite alternate; }
-  .kw-mist{ position:absolute; left:-50%; width:200%; height:16%; border-radius:50%; z-index:2;
-    background:radial-gradient(50% 50% at 50% 50%,rgba(255,220,180,.22),transparent 72%); animation:kw-drift 46s ease-in-out infinite alternate; }
-  .kw-mist.m1{ top:calc(var(--hz) - 9%); } .kw-mist.m2{ top:calc(var(--hz) - 2%); height:10%; animation-duration:34s; animation-direction:alternate-reverse; opacity:.8; }
-  .kw-gate .kw-branch-wrap{ top:calc(var(--bar) - 34px); width:min(34vw,300px); z-index:3; }
-  .kw-gate .kw-flock{ z-index:1; }
-  .kw-gate .kw-dustfield{ z-index:3; }
-  .kw-vignette{ position:absolute; inset:0; z-index:4; pointer-events:none; background:radial-gradient(130% 95% at 50% 45%,transparent 45%,rgba(0,0,0,.72) 100%); }
-  .kw-grain{ position:absolute; inset:-50%; z-index:4; pointer-events:none; opacity:.09; mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    animation:kw-grain 1s steps(5) infinite; }
-  .kw-bar{ position:absolute; left:0; right:0; height:var(--bar); background:#000; z-index:7; transition:transform 1.5s var(--cine) .15s; }
-  .kw-bar.top{ top:0; } .kw-bar.bottom{ bottom:0; }
-  .kw-gate.open .kw-bar.top{ transform:translateY(-100%); } .kw-gate.open .kw-bar.bottom{ transform:translateY(100%); }
-  .kw-gate-content{ position:absolute; inset:0; z-index:6; display:flex; flex-direction:column; align-items:center; justify-content:space-between; text-align:center;
-    padding:calc(var(--bar) + 12vh) 22px calc(var(--bar) + 4.5vh); transition:opacity .9s ease, transform 1.2s var(--cine), filter .9s; }
-  .kw-gate.open .kw-gate-content{ opacity:0; transform:translateY(-28px); filter:blur(6px); }
-  .kw-gate-top > *,.kw-gate-cta{ animation:kw-cine-in 1.8s var(--ease) both; }
-  .kw-gate-top > :nth-child(1){ animation-delay:.7s } .kw-gate-top > :nth-child(2){ animation-delay:1s } .kw-gate-top > :nth-child(3){ animation-delay:1.3s }
-  .kw-gate-top > :nth-child(4){ animation-delay:1.6s } .kw-gate-top > :nth-child(5){ animation-delay:2s } .kw-gate-cta{ animation-delay:2.5s; }
-  .kw-gate .kw-eyebrow{ color:var(--gold-hi); font-size:clamp(.95rem,4.2vw,1.2rem); text-shadow:0 2px 14px rgba(0,0,0,.6); }
-  .kw-gate .kw-divider{ margin:10px auto 16px; }
-  .kw-invite{ font-family:var(--f-kh-serif); font-size:.95rem; color:rgba(248,241,227,.85); letter-spacing:.04em; }
-  .kw-gate .kw-names{ font-size:clamp(1.9rem,9vw,3.4rem); letter-spacing:.12em; filter:drop-shadow(0 3px 16px rgba(0,0,0,.55)); }
-  .kw-amp{ font-family:var(--f-en); font-style:italic; font-size:clamp(1.6rem,6vw,2.2rem); color:var(--gold-hi); line-height:1.1; }
-  .kw-date-chip{ margin-top:14px; font-family:var(--f-caps); font-size:clamp(.95rem,4vw,1.15rem); letter-spacing:.34em; color:var(--ivory); text-shadow:0 2px 12px rgba(0,0,0,.7); }
-  .kw-gate-cta{ display:flex; flex-direction:column; align-items:center; gap:10px; }
-  .kw-hint{ font-family:var(--f-caps); font-size:.62rem; letter-spacing:.42em; color:rgba(243,221,160,.7); }
+  /* tall screens fill the width (cropping the sides a little); wider ones show the whole card, centred */
+  .kw-cover{ position:absolute; left:50%; top:50%; aspect-ratio:9/16; transform:translate(-50%,-50%); container-type:inline-size; background:#f6efe6;
+    width:max(100vw,calc(100vh * 9 / 16)); width:max(100vw,calc(100svh * 9 / 16)); }
+  @media (min-aspect-ratio:19/32){ .kw-cover{ width:calc(100vh * 9 / 16); width:calc(100svh * 9 / 16); } }
+  .kw-cover video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+  .kw-cover-ui{ position:absolute; inset:0; color:#6e1111; text-align:center; transition:opacity .7s ease; }
+  .kw-gate.blooming .kw-cover-ui{ opacity:0; pointer-events:none; }
+  .kw-cover-title{ position:absolute; left:14.2%; top:14.8%; width:71.6%; height:auto; display:block; }
+  /* the text lines stay inside what the screen shows when the card's sides are cropped */
+  .kw-cover-guest{ position:absolute; left:max(6%,calc((100cqw - 100vw) / 2 + 12px)); right:max(6%,calc((100cqw - 100vw) / 2 + 12px)); top:65.4%; height:8.2%;
+    display:flex; align-items:center; justify-content:center; font-family:var(--f-kh-serif); font-weight:700; font-size:min(5.6cqw,6vw); line-height:1.4; overflow-wrap:anywhere; }
+  .kw-cover-when{ position:absolute; left:max(5%,calc((100cqw - 100vw) / 2 + 12px)); right:max(5%,calc((100cqw - 100vw) / 2 + 12px)); top:80%;
+    font-family:var(--f-kh-serif); font-weight:600; font-size:min(3.6cqw,3.9vw); line-height:1.5; }
+  .kw-cover-when .en{ font-family:var(--f-kh-sans); font-weight:400; font-size:min(3.5cqw,3.8vw); line-height:1.55; letter-spacing:.02em; }
+  .kw-cover-open{ position:absolute; left:28.7%; top:90.1%; width:43.6%; height:6%; display:flex; align-items:center; justify-content:center; border-radius:2.4cqw;
+    transition:scale .3s var(--ease); }
+  .kw-cover-open:active{ scale:.96; }
+  .kw-cover-open img{ width:50%; height:auto; display:block; pointer-events:none; }
+  .kw-cover-ui > *{ animation:kw-cover-in 1.4s var(--ease) both; }
+  .kw-cover-ui > :nth-child(2){ animation-delay:.25s } .kw-cover-ui > :nth-child(3){ animation-delay:.45s }
+  .kw-cover-ui > .kw-cover-open{ animation:kw-cover-in 1.4s var(--ease) .65s both, kw-cover-call 2.6s ease-out 2.4s infinite; }
+  .kw-gate.blooming .kw-cover-ui > .kw-cover-open{ animation:none; }
 
   .kw-btn{ position:relative; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:50px; padding:12px 32px; border-radius:999px; font-family:var(--f-kh-serif); font-weight:600; font-size:1rem;
     background:linear-gradient(180deg,#8f1c1c,var(--red)); color:var(--ivory); border:1px solid var(--gold); box-shadow:0 10px 28px rgba(122,21,21,.35), inset 0 1px 0 rgba(255,230,170,.25);
@@ -361,10 +339,6 @@
   .kw-btn::after{ content:""; position:absolute; top:0; bottom:0; width:40%; left:-60%; background:linear-gradient(100deg,transparent,rgba(255,240,200,.35),transparent); animation:kw-sweep 4.5s ease-in-out infinite; }
   .kw-btn:hover{ transform:translateY(-2px); box-shadow:0 14px 34px rgba(122,21,21,.45), inset 0 1px 0 rgba(255,230,170,.3); }
   .kw-btn.gold{ background:linear-gradient(180deg,#e2c272,var(--gold)); color:var(--maroon); box-shadow:0 10px 26px rgba(0,0,0,.3); }
-  .kw-btn.open-btn{ background:linear-gradient(180deg,rgba(122,21,21,.9),rgba(74,13,13,.95)); box-shadow:0 0 0 6px rgba(201,162,77,.12), 0 12px 40px rgba(0,0,0,.6); }
-  .kw-btn.open-btn::before{ content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1px;
-    background:conic-gradient(from var(--kw-ang),transparent 0 62%,#fff1c4 76%,transparent 90%);
-    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; animation:kw-orbit 4s linear infinite; }
 
   /* ============ hero ============ */
   .kw-hero{ padding-top:96px; padding-bottom:88px; }
@@ -480,24 +454,18 @@
   @keyframes kw-dust{ 0%{ transform:translate(0,0); opacity:0 } 15%,80%{ opacity:var(--o) } 100%{ transform:translate(var(--dx),var(--rise)); opacity:0 } }
   @keyframes kw-fall{ from{ transform:translate3d(0,-6vh,0) } to{ transform:translate3d(var(--dx),108vh,0) } }
   @keyframes kw-flutter{ 0%{ transform:translateX(-16px) rotate(0) rotateX(0) } 50%{ transform:translateX(16px) rotate(170deg) rotateX(65deg) } 100%{ transform:translateX(-16px) rotate(340deg) rotateX(0) } }
-  @keyframes kw-push{ from{ transform:scale(1) } to{ transform:scale(1.07) } }
   @keyframes kw-glow{ from{ opacity:.8; transform:translate(-50%,-50%) scale(.96) } to{ opacity:1; transform:translate(-50%,-50%) scale(1.05) } }
   .kw-hero-glow{ animation-name:kw-glow-h; }
   @keyframes kw-glow-h{ from{ opacity:.6; transform:translateX(-50%) scale(.95) } to{ opacity:1; transform:translateX(-50%) scale(1.06) } }
-  @keyframes kw-spin{ to{ transform:translate(-50%,-50%) rotate(360deg) } }
   @keyframes kw-spin-slow{ to{ transform:rotate(360deg) } }
-  @keyframes kw-ripple{ from{ transform:translateX(-50%) scaleY(-1) skewX(0) } to{ transform:translateX(-50%) scaleY(-1.04) skewX(1.5deg) } }
-  @keyframes kw-shimmer-x{ from{ transform:translateX(-3%) } to{ transform:translateX(3%) } }
-  @keyframes kw-drift{ from{ transform:translateX(-12%) } to{ transform:translateX(12%) } }
-  @keyframes kw-twinkle{ from{ opacity:.25 } to{ opacity:.85 } }
-  @keyframes kw-grain{ 0%{ transform:translate(0,0) } 20%{ transform:translate(-4%,3%) } 40%{ transform:translate(3%,-2%) } 60%{ transform:translate(-2%,-4%) } 80%{ transform:translate(4%,2%) } }
-  @keyframes kw-cine-in{ from{ opacity:0; transform:translateY(18px) scale(.98); filter:blur(10px); letter-spacing:.3em } to{ opacity:1; transform:none; filter:none } }
   @keyframes kw-sheen{ 0%,100%{ background-position:0% 50% } 50%{ background-position:100% 50% } }
   @keyframes kw-breathe{ 0%,100%{ transform:scale(1); opacity:.9 } 50%{ transform:scale(1.07); opacity:1 } }
   @keyframes kw-orbit{ to{ --kw-ang:360deg } }
   @keyframes kw-sweep{ 0%,55%{ left:-60% } 100%{ left:130% } }
   @keyframes kw-kenburns{ from{ transform:scale(1.02) translate(0,0) } to{ transform:scale(1.14) translate(-2%,-3%) } }
   @keyframes kw-pulse{ from{ opacity:.7; transform:scale(1) } to{ opacity:0; transform:scale(1.5) } }
+  @keyframes kw-cover-in{ from{ opacity:0; transform:translateY(2cqw); filter:blur(6px) } to{ opacity:1; transform:none; filter:none } }
+  @keyframes kw-cover-call{ 0%{ box-shadow:0 0 0 0 rgba(110,17,17,.45) } 70%,100%{ box-shadow:0 0 0 3cqw rgba(110,17,17,0) } }
 
   @media (prefers-reduced-motion: reduce){
     html{ scroll-behavior:auto; }
@@ -552,45 +520,21 @@
     </defs>
   </svg>
 
-  {{-- ============ 1 · OPENING SCENE (Angkor at dusk) ============ --}}
-  <div class="kw-gate" id="kw-gate" role="dialog" aria-label="លិខិតអញ្ជើញ">
-    <div class="kw-cine">
-      <div class="kw-cam">
-        <div class="kw-sky"></div>
-        <div class="kw-stars"></div>
-        <div class="kw-rays"></div>
-        <div class="kw-sun"></div>
-        {!! $flock([[14, 26, -4, 30, .95, .9, false], [17, 26, -3.4, 22, .8, .8, false], [12, 26, -3, 18, .85, .7, false], [30, 34, -20, 16, .7, .55, true], [33, 34, -19.2, 12, .65, .5, true], [22, 40, -9, 24, 1.05, .8, false]]) !!}
-        <div class="kw-horizon">{!! $templeSvg !!}</div>
-        <div class="kw-water"><div class="kw-reflect">{!! $templeSvg !!}</div><div class="kw-glint"></div></div>
-        <div class="kw-mist m1"></div><div class="kw-mist m2"></div>
-        <div class="kw-dustfield kw-deco" data-dust="26" data-rise="-46vh"></div>
-        <div class="kw-branch-wrap tl">{!! $branch(true) !!}</div>
-        <div class="kw-branch-wrap tr">{!! $branch(false) !!}</div>
-      </div>
-    </div>
-    <div class="kw-vignette"></div>
-    <div class="kw-grain"></div>
-
-    <div class="kw-gate-content">
-      <div class="kw-gate-top">
-        <p class="kw-eyebrow">សិរីមង្គលអាពាហ៍ពិពាហ៍</p>
-        <div class="kw-divider"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
-        <p class="kw-invite">សូមគោរពអញ្ជើញ</p>
-        <div style="margin:10px 0 0">
-          @if ($groomUpper)<h1 class="kw-names kw-shimmer">{{ $groomUpper }}</h1>@endif
-          @if ($groomUpper && $brideUpper)<div class="kw-amp">&amp;</div>@endif
-          @if ($brideUpper)<h1 class="kw-names kw-shimmer">{{ $brideUpper }}</h1>@endif
+  {{-- ============ 1 · COVER (video: card -> roumdul bloom -> the page's background; plays on the open tap) ============ --}}
+  <div class="kw-gate" id="kw-gate" role="dialog" aria-label="{{ trim('លិខិតអញ្ជើញ '.$coupleTitle) }}">
+    <div class="kw-cover">
+      <video id="kw-cover-video" src="{{ asset('images/invitations/khmer-traditional/cover/cover.mov') }}" poster="{{ asset('images/invitations/khmer-traditional/cover/poster.jpg') }}" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
+      <div class="kw-cover-ui">
+        <img class="kw-cover-title" src="{{ asset('images/invitations/khmer-traditional/cover/title.png') }}" alt="សិរីមង្គលអាពាហ៍ពិពាហ៍ · The Wedding Invitation">
+        <p class="kw-cover-guest">{{ ! empty($recipientName) ? $recipientName : 'លោក លោកស្រី អ្នកនាង កញ្ញា' }}</p>
+        <div class="kw-cover-when">
+          @if ($dateKhmer)<p>{{ $dateKhmer }} វេលា{{ $timeKhmer }}</p>@endif
+          @if ($venueName)<p>ស្ថិតនៅ {{ $venueName }}</p>@endif
+          @if ($dateEnglish)<p class="en">{{ $dateEnglish }}</p>@endif
         </div>
-        @if ($dateNumeric)<p class="kw-date-chip">{{ $dateNumeric }}</p>@else<span></span>@endif
-      </div>
-      <div class="kw-gate-cta">
-        <button type="button" class="kw-btn open-btn" id="kw-open">បើកលិខិតអញ្ជើញ</button>
-        <span class="kw-hint">TAP TO OPEN</span>
+        <button type="button" class="kw-cover-open" id="kw-open"><img src="{{ asset('images/invitations/khmer-traditional/cover/btn-text.png') }}" alt="ចុចបើកសំបុត្រ"></button>
       </div>
     </div>
-
-    <div class="kw-bar top"></div><div class="kw-bar bottom"></div>
   </div>
 
   <div class="kw-stage bg" aria-hidden="true">
@@ -804,7 +748,6 @@
   <video class="kw-stage-src" id="kw-fly-video" src="{{ asset('images/invitations/khmer-traditional/butterflies.mp4') }}" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
   <div class="kw-stage fg" aria-hidden="true"><canvas id="kw-fly-canvas"></canvas></div>
 
-
   {{-- ============ MUSIC ============ --}}
   @if ($youtubeId)
     <iframe id="kw-yt" title="Background music" aria-hidden="true" tabindex="-1" style="position:absolute;width:0;height:0;border:0"
@@ -904,7 +847,7 @@
 
   /* --- rendered background + butterfly videos (started by the open tap, which also satisfies autoplay rules) --- */
   var bgVideo = document.getElementById('kw-bg-video'), flyVideo = document.getElementById('kw-fly-video'), flyCanvas = document.getElementById('kw-fly-canvas');
-  var stageOn = false, scheduleFly = function () {};
+  var stageOn = false, flyOn = false, scheduleFly = function () {};
 
   // performance test switches, e.g. ?kwtest=nofx,nofly  (nofx: freeze the template's CSS/SVG animations, nofly: no butterflies)
   var kwTest = (new URLSearchParams(location.search).get('kwtest') || '').split(',');
@@ -946,7 +889,7 @@
     };
     // redraw only when the video has a new frame (30/s), not on every screen refresh
     scheduleFly = function () {
-      if (!stageOn || document.hidden) return;
+      if (!flyOn || document.hidden) return;
       if (hasVfc) flyVideo.requestVideoFrameCallback(draw); else requestAnimationFrame(draw);
     };
   })();
@@ -956,12 +899,13 @@
     if (flyVideo) flyVideo.play().catch(function () {});
   };
   function startStage() {
-    stageOn = true;
+    var wasFlying = flyOn;
+    stageOn = flyOn = true;
     body.classList.add('kw-staged');
     bgVideo.currentTime = 0;
     if (flyVideo) flyVideo.currentTime = 0;
     playStage();
-    scheduleFly();
+    if (!wasFlying) scheduleFly();
     // keep the butterflies in step with their shadows in the background video
     if (flyVideo) setInterval(function () {
       if (bgVideo.paused || flyVideo.paused || flyVideo.readyState < 2) return;
@@ -971,22 +915,50 @@
   }
   // nothing runs while the tab is in the background
   document.addEventListener('visibilitychange', function () {
-    if (!stageOn) return;
+    if (!stageOn && !flyOn) return;
     if (document.hidden) { bgVideo.pause(); if (flyVideo) flyVideo.pause(); }
-    else { playStage(); scheduleFly(); }
+    else { if (stageOn) playStage(); else flyVideo.play().catch(function () {}); scheduleFly(); }
   });
 
-  /* --- opening: camera pushes into the scene, letterbox bars part, then the invitation reveals --- */
-  var gate = document.getElementById('kw-gate');
-  document.getElementById('kw-open').addEventListener('click', function () {
-    gate.classList.add('open');
+  // butterflies over the cover from the start (muted, so no tap needed)
+  if (flyVideo) {
+    flyOn = true;
+    body.classList.add('kw-covering');
+    flyVideo.play().catch(function () {});
+    scheduleFly();
+  }
+
+  /* --- cover: the open tap plays the cover video (card -> roumdul bloom -> the background's first frame),
+         the text fades as the bloom grows, then the page takes over under it --- */
+  var gate = document.getElementById('kw-gate'), coverVideo = document.getElementById('kw-cover-video'), opened = false, revealed = false;
+  function reveal() {
+    if (revealed) return;
+    revealed = true;
+    if (!stageOn) startStage();
+    gate.classList.add('blooming', 'open');
     body.classList.remove('kw-locked');
-    startStage();
     window.scrollTo(0, 0);
+    setTimeout(startReveal, reduced ? 0 : 500);
+    setTimeout(spawnPetals, 900);
+    setTimeout(function () { gate.style.display = 'none'; coverVideo.pause(); body.classList.remove('kw-covering'); }, reduced ? 0 : 1000);
+  }
+  document.getElementById('kw-open').addEventListener('click', function () {
+    if (opened) return;
+    opened = true;
     if (yt) { ytCmd('unMute'); ytCmd('playVideo'); setPlaying(true); }
-    setTimeout(startReveal, reduced ? 0 : 1300);
-    setTimeout(spawnPetals, 1800);
-    setTimeout(function () { gate.style.display = 'none'; }, reduced ? 0 : 2600);
+    if (reduced) { reveal(); return; }
+    coverVideo.addEventListener('timeupdate', function () {
+      var t = coverVideo.currentTime;
+      if (t > 2.3) gate.classList.add('blooming');   // the roumdul starts covering the card
+      if (t > 4.9 && !stageOn) startStage();         // cover is on the background's first frame; start it underneath
+      if (t > 5.5) reveal();
+    });
+    coverVideo.addEventListener('ended', reveal);
+    coverVideo.addEventListener('error', reveal);
+    coverVideo.currentTime = 0;
+    var p = coverVideo.play();
+    if (p) p.catch(reveal);
+    setTimeout(reveal, 10000);   // a stalled download never keeps the guest on the cover
   });
 
   /* --- countdown (uses the invitation's real event date) --- */
