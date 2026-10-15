@@ -22,6 +22,8 @@
     $groomUpper = mb_strtoupper($groomName);
     $brideUpper = mb_strtoupper($brideName);
     $coupleTitle = collect([$groomUpper, $brideUpper])->filter()->implode(' & ');
+    // Names may be typed in Khmer or English; Khmer script needs no tracking and taller lines.
+    $kh = fn (?string $s) => preg_match('/\p{Khmer}/u', (string) $s) ? ' kw-kh' : '';
 
     $eventDate = ! empty($fields['event_date']) ? Carbon::parse($fields['event_date']) : null;
     $dateNumeric = $eventDate ? $eventDate->format('d · m · Y') : null;
@@ -197,6 +199,8 @@
     --f-caps:'Cinzel','Cormorant Garamond','Times New Roman',serif;
     --f-en:'Cormorant Garamond','Playfair Display','Times New Roman',serif;
     --f-love:'Great Vibes','Cormorant Garamond',cursive;
+    /* Cinzel has no Khmer glyphs, so the browser renders Latin letters in Cinzel and Khmer letters in Moul. */
+    --f-names:'Cinzel','Moul','Khmer OS Muol Light','Noto Serif Khmer',serif;
     --ease:cubic-bezier(.22,.8,.3,1);
     --cine:cubic-bezier(.7,0,.3,1);
   }
@@ -255,7 +259,8 @@
   .kw-eyebrow{ font-family:var(--f-moul); font-size:.95rem; letter-spacing:.02em; color:var(--gold); line-height:2; }
   .kw-title{ font-family:var(--f-moul); font-weight:400; font-size:1.3rem; line-height:2; color:var(--red); }
   .kw-red .kw-title,.kw-maroon .kw-title{ color:var(--gold); }
-  .kw-names{ font-family:var(--f-caps); font-weight:500; letter-spacing:.14em; line-height:1.2; overflow-wrap:anywhere; }
+  .kw-names{ font-family:var(--f-names); font-weight:500; letter-spacing:.14em; line-height:1.2; overflow-wrap:anywhere; }
+  .kw-names.kw-kh,.kw-footer-names.kw-kh,.kw-contact .n.kw-kh{ font-weight:400; letter-spacing:0 !important; line-height:1.9; }
   .kw-body-text{ font-family:var(--f-kh-sans); font-size:1rem; line-height:2; text-wrap:pretty; overflow-wrap:break-word; }
   .kw-script{ font-family:var(--f-en); font-style:italic; color:var(--gold); }
   .kw-shimmer{ background:linear-gradient(100deg,#a87a2e 0%,#f7e2a8 22%,#c9a24d 44%,#fff3cf 62%,#b8893a 82%,#e9cd85 100%); background-size:260% 100%;
@@ -402,7 +407,7 @@
     border-top:1px solid var(--gold); border-bottom:1px solid var(--gold); box-shadow:0 24px 50px rgba(74,13,13,.22); }
   .kw-duo-img{ position:absolute; inset:0; }
   .kw-duo-img img,.kw-duo-img .ph{ width:100%; height:100%; object-fit:cover; display:block; }
-  .kw-duo-img .ph{ display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#7A1515,#3a0909); color:var(--gold-hi); font-family:var(--f-caps); font-size:4.5rem; letter-spacing:.06em; }
+  .kw-duo-img .ph{ display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#7A1515,#3a0909); color:var(--gold-hi); font-family:var(--f-names); font-size:4.5rem; letter-spacing:.06em; }
   .kw-duo::after{ content:""; position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(180deg,rgba(20,4,4,0) 38%,rgba(20,4,4,.45) 64%,rgba(20,4,4,.88)); }
   .kw-duo::before{ content:""; position:absolute; inset:12px; z-index:1; border:1px solid rgba(243,221,160,.45); pointer-events:none; }
@@ -473,7 +478,7 @@
   .kw-contact{ display:grid; gap:14px; }
   .kw-contact a{ display:block; padding:18px 14px; border:1px solid var(--gold-soft); background:#fffaf0; text-decoration:none; color:inherit; transition:transform .3s var(--ease), border-color .3s; }
   .kw-contact a:hover{ transform:translateY(-2px); border-color:var(--gold); }
-  .kw-contact .n{ font-family:var(--f-caps); font-size:1.3rem; letter-spacing:.14em; color:var(--red); }
+  .kw-contact .n{ font-family:var(--f-names); font-size:1.3rem; letter-spacing:.14em; color:var(--red); }
   .kw-contact .r{ font-family:var(--f-kh-serif); font-size:.85rem; color:var(--gold); }
   .kw-contact .p{ font-family:var(--f-en); font-size:1.15rem; letter-spacing:.06em; color:var(--maroon); margin-top:4px; }
 
@@ -482,7 +487,7 @@
   .kw-finale .kw-names{ font-size:clamp(1.3rem,6.4vw,2rem); letter-spacing:.1em; margin-top:4px; }
   .kw-seal-wrap{ position:relative; width:124px; height:124px; margin:0 auto 26px; }
   .kw-seal{ width:100%; height:100%; overflow:visible; filter:drop-shadow(0 10px 16px rgba(74,13,13,.35)); }
-  .kw-seal text{ font-family:var(--f-caps); font-weight:600; fill:#F3DDA0; letter-spacing:.06em; }
+  .kw-seal text{ font-family:var(--f-names); font-weight:600; fill:#F3DDA0; letter-spacing:.06em; }
   .kw-seal-ring{ position:absolute; inset:0; border-radius:50%; border:1.5px solid #b0822f; opacity:0; pointer-events:none; }
   .kw-finale-text{ max-width:360px; margin:18px auto 0; }
   .kw-sign{ margin-top:30px; font-family:var(--f-love); font-size:2rem; line-height:1.2; color:var(--gold-hi); }
@@ -497,7 +502,7 @@
     background:#5a1010; border:1px solid var(--gold); color:var(--gold-hi); box-shadow:0 8px 20px rgba(42,6,6,.4); transition:transform .4s var(--ease); }
   .kw-top:hover{ transform:translateY(-3px); }
   .kw-top svg{ width:20px; height:20px; }
-  .kw-footer-names{ font-family:var(--f-caps); font-size:1rem; letter-spacing:.24em; color:var(--gold-hi); overflow-wrap:anywhere; }
+  .kw-footer-names{ font-family:var(--f-names); font-size:1rem; letter-spacing:.24em; color:var(--gold-hi); overflow-wrap:anywhere; }
   .kw-footer-date{ margin-top:6px; font-family:var(--f-caps); font-size:.72rem; letter-spacing:.3em; color:rgba(232,216,189,.7); }
   .kw-footer-love{ margin-top:22px; font-family:var(--f-kh-serif); font-size:.85rem; line-height:1.9; color:rgba(232,216,189,.85); }
   .kw-footer-love .hb{ display:inline-block; color:#e0575b; animation:kw-beat 1.6s ease-in-out infinite; }
@@ -648,9 +653,9 @@
 
       @if ($coupleTitle)
         <h2 class="kw-hero-names kw-gs" aria-label="{{ $coupleTitle }}">
-          @if ($groomUpper)<span class="kw-names kw-shimmer">{{ $groomUpper }}</span>@endif
+          @if ($groomUpper)<span class="kw-names kw-shimmer{{ $kh($groomName) }}">{{ $groomUpper }}</span>@endif
           @if ($groomUpper && $brideUpper)<span class="kw-amp" aria-hidden="true">&amp;</span>@endif
-          @if ($brideUpper)<span class="kw-names kw-shimmer">{{ $brideUpper }}</span>@endif
+          @if ($brideUpper)<span class="kw-names kw-shimmer{{ $kh($brideName) }}">{{ $brideUpper }}</span>@endif
         </h2>
         <div class="kw-tagline">
           <p class="en kw-gs">Two hearts, one forever</p>
@@ -713,13 +718,13 @@
           </div>
           <figcaption class="kw-duo-cap">
             @if ($brideName)
-              <div class="kw-duo-person"><p class="kw-role">កូនក្រមុំ · THE BRIDE</p><h3 class="kw-names">{{ $brideUpper }}</h3></div>
+              <div class="kw-duo-person"><p class="kw-role">កូនក្រមុំ · THE BRIDE</p><h3 class="kw-names{{ $kh($brideName) }}">{{ $brideUpper }}</h3></div>
             @endif
             @if ($brideName && $groomName)
               <div class="kw-duo-heart" aria-hidden="true"><svg viewBox="-17 -17 34 34"><use href="#kw-roumdul"/></svg></div>
             @endif
             @if ($groomName)
-              <div class="kw-duo-person"><p class="kw-role">កូនកំលោះ · THE GROOM</p><h3 class="kw-names">{{ $groomUpper }}</h3></div>
+              <div class="kw-duo-person"><p class="kw-role">កូនកំលោះ · THE GROOM</p><h3 class="kw-names{{ $kh($groomName) }}">{{ $groomUpper }}</h3></div>
             @endif
           </figcaption>
         </figure>
@@ -852,7 +857,7 @@
           @foreach ($contacts as $c)
             <a class="kw-rev" href="tel:{{ preg_replace('/[^\d+]/', '', $c['phone']) }}">
               <div class="r">{{ $c['role'] }}</div>
-              <div class="n">{{ $c['name'] }}</div>
+              <div class="n{{ $kh($c['name']) }}">{{ $c['name'] }}</div>
               <div class="p">{{ $c['phone'] }}</div>
             </a>
           @endforeach
@@ -885,7 +890,7 @@
         <p class="kw-body-text kw-gs" style="margin-top:10px">សូមអរគុណសម្រាប់ក្តីស្រឡាញ់ និងពរជ័យ<br>ដែលលោកអ្នកបានផ្តល់ជូនយើងទាំងពីរ។</p>
       </div>
       <p class="kw-sign kw-gs">With love,</p>
-      @if ($coupleTitle)<p class="kw-names kw-shimmer kw-gs">{{ $coupleTitle }}</p>@endif
+      @if ($coupleTitle)<p class="kw-names kw-shimmer kw-gs{{ $kh($coupleTitle) }}">{{ $coupleTitle }}</p>@endif
       @if ($dateNumeric)<p class="kw-finale-date kw-gs">{{ $dateNumeric }}</p>@endif
     </section>
 
@@ -895,7 +900,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
       </button>
       <div class="kw-divider"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
-      @if ($coupleTitle)<p class="kw-footer-names">{{ $coupleTitle }}</p>@endif
+      @if ($coupleTitle)<p class="kw-footer-names{{ $kh($coupleTitle) }}">{{ $coupleTitle }}</p>@endif
       @if ($dateNumeric)<p class="kw-footer-date">{{ $dateNumeric }}</p>@endif
       <p class="kw-footer-love">រៀបចំឡើងដោយក្តីស្រឡាញ់ <span class="hb" aria-hidden="true">♥</span></p>
       <p class="kw-brand">CRAFTED BY <b>ROUMDOUL</b> · {{ now()->year }}</p>
