@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class InvitationTemplate extends Model
 {
@@ -109,6 +110,16 @@ class InvitationTemplate extends Model
         'fields' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        // invitations.invitation_template_id is restrictOnDelete, and soft-deleted invitations
+        // are still real rows — purge them first so they don't block deleting the template.
+        // Live invitations still block it (on purpose: their public links would break).
+        static::deleting(function (self $template) {
+            $template->invitations()->onlyTrashed()->forceDelete();
+        });
+    }
+
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
@@ -117,6 +128,45 @@ class InvitationTemplate extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(Invitation::class);
+    }
+
+    /**
+     * Create the shop Service (+ its plans) this template is sold as, under the
+     * "Digital Invitations" category. Used on create, and to re-link a template whose
+     * Service was deleted (service_id is nullOnDelete, which silently drops it from the shop).
+     *
+     * @param  array<int, array{label: string, price: mixed, max_recipients?: mixed, retention_months?: mixed, features?: array}>  $plans
+     */
+    public static function createServiceFor(string $name, bool $isActive, array $plans): Service
+    {
+        $category = Category::firstOrCreate(
+            ['slug' => 'digital-invitations'],
+            ['name_en' => 'Digital Invitations', 'name_km' => 'កម្មវត្ថុអញ្ជើញឌីជីថល', 'icon' => 'sparkles']
+        );
+
+        $service = Service::create([
+            'category_id' => $category->id,
+            'name_en' => $name,
+            'name_km' => $name,
+            'slug' => Str::slug($name).'-'.Str::random(6),
+            'short_description' => $name,
+            'description' => $name,
+            'base_price' => $plans[0]['price'] ?? 0,
+            'is_active' => $isActive,
+        ]);
+
+        foreach ($plans as $index => $plan) {
+            $service->plans()->create([
+                'label' => $plan['label'],
+                'price' => $plan['price'],
+                'max_recipients' => $plan['max_recipients'] ?? null,
+                'retention_months' => $plan['retention_months'] ?? null,
+                'features' => $plan['features'] ?? [],
+                'sort_order' => $index,
+            ]);
+        }
+
+        return $service;
     }
 
     /**

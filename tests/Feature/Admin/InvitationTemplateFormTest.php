@@ -5,10 +5,14 @@ namespace Tests\Feature\Admin;
 use App\Filament\Resources\InvitationTemplates\Pages\CreateInvitationTemplate;
 use App\Filament\Resources\InvitationTemplates\Pages\EditInvitationTemplate;
 use App\Filament\Resources\InvitationTemplates\Pages\ListInvitationTemplates;
+use App\Filament\Resources\InvitationTemplates\RelationManagers\InvitationsRelationManager;
 use App\Filament\Resources\Services\Pages\ListServices;
+use App\Models\Invitation;
 use App\Models\InvitationTemplate;
 use App\Models\Service;
 use App\Models\User;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -139,5 +143,78 @@ class InvitationTemplateFormTest extends TestCase
         Livewire::test(ListServices::class)
             ->assertCanSeeTableRecords([$regularService])
             ->assertCanNotSeeTableRecords([$invitationService]);
+    }
+
+    public function test_deleting_a_template_purges_its_soft_deleted_invitations(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $template = InvitationTemplate::factory()->create();
+        $trashed = Invitation::factory()->for($template, 'template')->create();
+        $trashed->delete();
+
+        Livewire::test(ListInvitationTemplates::class)
+            ->callAction(TestAction::make(DeleteAction::class)->table($template));
+
+        $this->assertModelMissing($template);
+        $this->assertDatabaseMissing('invitations', ['id' => $trashed->id]);
+    }
+
+    public function test_a_template_with_live_invitations_is_not_deleted(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $template = InvitationTemplate::factory()->create();
+        Invitation::factory()->for($template, 'template')->create();
+
+        Livewire::test(ListInvitationTemplates::class)
+            ->callAction(TestAction::make(DeleteAction::class)->table($template))
+            ->assertNotified('Template is still in use');
+
+        $this->assertModelExists($template);
+    }
+
+    public function test_a_template_whose_service_was_deleted_can_be_relinked_to_the_shop(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $template = InvitationTemplate::factory()->create(['service_id' => null, 'is_active' => true]);
+
+        Livewire::test(EditInvitationTemplate::class, ['record' => $template->getRouteKey()])
+            ->assertActionHidden('managePricing')
+            ->assertActionVisible('setUpPricing')
+            ->callAction('setUpPricing');
+
+        $template->refresh();
+        $this->assertNotNull($template->service_id);
+        $this->assertSame($template->name, $template->service->name_en);
+        $this->assertTrue($template->service->is_active);
+        $this->assertSame('digital-invitations', $template->service->category->slug);
+        $this->assertCount(1, $template->service->plans);
+    }
+
+    public function test_edit_page_lists_the_template_invitations_and_can_delete_them_to_unblock_deletion(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $template = InvitationTemplate::factory()->create();
+        $invitation = Invitation::factory()->for($template, 'template')->create();
+        $other = Invitation::factory()->create();
+
+        Livewire::test(InvitationsRelationManager::class, [
+            'ownerRecord' => $template,
+            'pageClass' => EditInvitationTemplate::class,
+        ])
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords([$invitation])
+            ->assertCanNotSeeTableRecords([$other])
+            ->callAction(TestAction::make(DeleteAction::class)->table($invitation));
+
+        $this->assertSoftDeleted($invitation);
+
+        Livewire::test(ListInvitationTemplates::class)
+            ->callAction(TestAction::make(DeleteAction::class)->table($template));
+
+        $this->assertModelMissing($template);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\InvitationTemplates;
 use App\Filament\Resources\InvitationTemplates\Pages\CreateInvitationTemplate;
 use App\Filament\Resources\InvitationTemplates\Pages\EditInvitationTemplate;
 use App\Filament\Resources\InvitationTemplates\Pages\ListInvitationTemplates;
+use App\Filament\Resources\InvitationTemplates\RelationManagers\InvitationsRelationManager;
 use App\Filament\Resources\InvitationTemplates\Schemas\InvitationTemplateForm;
 use App\Filament\Resources\InvitationTemplates\Tables\InvitationTemplatesTable;
 use App\Models\InvitationTemplate;
@@ -39,7 +40,7 @@ class InvitationTemplateResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            InvitationsRelationManager::class,
         ];
     }
 

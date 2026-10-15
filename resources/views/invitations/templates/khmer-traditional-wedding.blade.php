@@ -1266,7 +1266,7 @@
         thanks.textContent = !ok ? 'សូមព្យាយាមម្ដងទៀត'
           : (chosen === 'yes' ? 'សូមអរគុណ! យើងខ្ញុំរង់ចាំស្វាគមន៍លោកអ្នកដោយក្តីរីករាយ ♥' : 'សូមអរគុណដែលបានជូនដំណឹង។ ក្តីនឹករលឹក និងពរជ័យរបស់លោកអ្នក គឺមានន័យណាស់សម្រាប់យើង។');
         if (ok && chosen === 'yes') heartBurst(form.querySelector('button'));
-        thanks.classList.add('show'); if (ok) form.classList.remove('show');
+        thanks.classList.add('show'); if (ok) form.classList.remove('show' );
       };
       if (!rsvpUrl) { done(true); return; }   // demo preview: no recipient, nothing to save
       fetch(rsvpUrl, {
