@@ -11,6 +11,10 @@ class InvitationShowController extends Controller
     {
         abort_unless($recipient->invitation_id === $invitation->id, 404);
 
+        if ($recipient->revoked_at !== null) {
+            return response()->view('invitations.expired', status: 410);
+        }
+
         if ($invitation->isExpired()) {
             return response()->view('invitations.expired', status: 410);
         }

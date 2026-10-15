@@ -20,6 +20,9 @@ class ImageOptimizer
 
     public const QUALITY = 82;
 
+    /** Hard ceiling for a stored image: anything larger is compressed further. */
+    public const MAX_BYTES = 5 * 1024 * 1024;
+
     /** Stores the optimized image under $directory on $disk and returns its path. */
     public function store(UploadedFile $file, string $directory, string $disk = 's3'): string
     {
@@ -38,22 +41,43 @@ class ImageOptimizer
         $image = $this->orient($image, $file->getRealPath(), $mime);
         $image = $this->fit($image);
 
-        ob_start();
-        if ($mime === 'image/jpeg') {
-            imagejpeg($image, null, self::QUALITY);
-            $ext = 'jpg';
-        } else {
-            imagealphablending($image, false);
-            imagesavealpha($image, true);
-            imagewebp($image, null, self::QUALITY);
-            $ext = 'webp';
+        $jpeg = $mime === 'image/jpeg';
+        $ext = $jpeg ? 'jpg' : 'webp';
+        $quality = self::QUALITY;
+
+        // Re-encode, stepping quality and then size down until the result fits MAX_BYTES.
+        for ($attempt = 0; ; $attempt++) {
+            $bytes = $this->encode($image, $jpeg, $quality);
+
+            if (strlen($bytes) <= self::MAX_BYTES || $attempt >= 8) {
+                break;
+            }
+
+            if ($quality > 50) {
+                $quality -= 10;
+            } else {
+                $image = imagescale($image, (int) round(imagesx($image) * 0.8), -1, IMG_BICUBIC) ?: $image;
+            }
         }
-        $bytes = ob_get_clean();
 
         $path = trim($directory, '/').'/'.Str::random(40).'.'.$ext;
         Storage::disk($disk)->put($path, $bytes);
 
         return $path;
+    }
+
+    private function encode(\GdImage $image, bool $jpeg, int $quality): string
+    {
+        ob_start();
+        if ($jpeg) {
+            imagejpeg($image, null, $quality);
+        } else {
+            imagealphablending($image, false);
+            imagesavealpha($image, true);
+            imagewebp($image, null, $quality);
+        }
+
+        return (string) ob_get_clean();
     }
 
     private function load(string $path, ?string $mime): \GdImage|false

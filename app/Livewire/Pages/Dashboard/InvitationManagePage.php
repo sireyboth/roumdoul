@@ -5,8 +5,10 @@ namespace App\Livewire\Pages\Dashboard;
 use App\Models\Invitation;
 use App\Models\InvitationTemplate;
 use App\Services\ImageOptimizer;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -125,6 +127,13 @@ class InvitationManagePage extends Component
             $this->validate($rules);
         }
 
+        // Only keys this invitation's template actually declares may be stored, and uploads for
+        // any other key are ignored — fieldValues/imageUploads are client-writable properties.
+        $allowedKeys = $this->invitation->template->fields ?? [];
+        $this->fieldValues = Arr::only($this->fieldValues, $allowedKeys);
+        $this->imageUploads = Arr::only($this->imageUploads, $allowedKeys);
+        $this->galleryUploads = Arr::only($this->galleryUploads, $allowedKeys);
+
         $optimizer = app(ImageOptimizer::class);
         $directory = 'invitations/'.$this->invitation->id;
 
@@ -179,8 +188,13 @@ class InvitationManagePage extends Component
                 $type === 'schedule' => ['nullable', 'array', 'max:20'],
                 $type === 'story' => ['nullable', 'array', 'max:8'],
                 $type === 'gallery' => ['nullable', 'array', 'max:'.self::MAX_GALLERY_PHOTOS],
+                $type === 'image' => ['nullable', 'string', $this->ownStoragePathRule()],
                 default => null,
             };
+
+            if ($type === 'gallery') {
+                $rules["fieldValues.{$key}.*"] = ['string', $this->ownStoragePathRule()];
+            }
 
             if ($type === 'schedule') {
                 $rules["fieldValues.{$key}.*.time"] = ['nullable', 'string', 'max:50'];
@@ -194,6 +208,23 @@ class InvitationManagePage extends Component
         }
 
         return array_filter([...$rules, ...$this->uploadRules()]);
+    }
+
+    /**
+     * Stored photo values must be paths this invitation's own upload flow produced
+     * (invitations/{id}/{file}) — never an external URL (a tracking pixel for every guest) or
+     * another customer's storage key.
+     */
+    protected function ownStoragePathRule(): \Closure
+    {
+        $prefix = 'invitations/'.$this->invitation->id.'/';
+
+        return function (string $attribute, mixed $value, \Closure $fail) use ($prefix) {
+            if (! is_string($value) || ! str_starts_with($value, $prefix)
+                || ! preg_match('#^[A-Za-z0-9._-]+$#', substr($value, strlen($prefix)))) {
+                $fail('That photo is not valid. Please upload it again.');
+            }
+        };
     }
 
     /**
@@ -339,6 +370,26 @@ class InvitationManagePage extends Component
         abort_unless($this->invitation->isPaid(), 403);
 
         $this->invitation->recipients()->whereKey($recipientId)->delete();
+        $this->invitation->load('recipients');
+    }
+
+    /** Pauses or restores one guest's link without deleting their RSVP. */
+    public function toggleRecipient(int $recipientId): void
+    {
+        abort_unless($this->invitation->isPaid(), 403);
+
+        $recipient = $this->invitation->recipients()->whereKey($recipientId)->firstOrFail();
+        $recipient->update(['revoked_at' => $recipient->revoked_at ? null : now()]);
+        $this->invitation->load('recipients');
+    }
+
+    /** Issues a new unguessable token; the old link stops working immediately. */
+    public function rotateRecipient(int $recipientId): void
+    {
+        abort_unless($this->invitation->isPaid(), 403);
+
+        $recipient = $this->invitation->recipients()->whereKey($recipientId)->firstOrFail();
+        $recipient->update(['token' => Str::random(32), 'revoked_at' => null]);
         $this->invitation->load('recipients');
     }
 

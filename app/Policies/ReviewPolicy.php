@@ -29,6 +29,6 @@ class ReviewPolicy
 
     public function delete(User $user, Review $review): bool
     {
-        return true;
+        return $user->isAdmin();
     }
 }
