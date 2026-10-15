@@ -134,6 +134,9 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
   }
 }
 
-document.addEventListener('alpine:init', () => {
+// Register whether this script runs before Alpine starts (the normal case) or after it.
+if (window.Alpine) {
   window.Alpine.data('photoUploader', photoUploader)
-})
+} else {
+  document.addEventListener('alpine:init', () => window.Alpine.data('photoUploader', photoUploader))
+}

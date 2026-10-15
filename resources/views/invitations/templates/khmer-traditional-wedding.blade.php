@@ -260,7 +260,7 @@
   .kw-title{ font-family:var(--f-moul); font-weight:400; font-size:1.3rem; line-height:2; color:var(--red); }
   .kw-red .kw-title,.kw-maroon .kw-title{ color:var(--gold); }
   .kw-names{ font-family:var(--f-names); font-weight:500; letter-spacing:.14em; line-height:1.2; overflow-wrap:anywhere; }
-  .kw-names.kw-kh,.kw-footer-names.kw-kh,.kw-contact .n.kw-kh{ font-weight:400; letter-spacing:0 !important; line-height:1.9; }
+  .kw-names.kw-kh,.kw-footer-names.kw-kh,.kw-contact .n.kw-kh,.kw-venue-name.kw-kh{ font-weight:400; letter-spacing:0 !important; line-height:1.9; }
   .kw-body-text{ font-family:var(--f-kh-sans); font-size:1rem; line-height:2; text-wrap:pretty; overflow-wrap:break-word; }
   .kw-script{ font-family:var(--f-en); font-style:italic; color:var(--gold); }
   .kw-shimmer{ background:linear-gradient(100deg,#a87a2e 0%,#f7e2a8 22%,#c9a24d 44%,#fff3cf 62%,#b8893a 82%,#e9cd85 100%); background-size:260% 100%;
@@ -461,7 +461,7 @@
   /* venue + footer horizons */
   .kw-sec-horizon{ left:50%; bottom:0; width:150%; transform:translateX(-50%); z-index:0; opacity:.95; }
   .kw-venue{ padding-bottom:150px; }
-  .kw-venue-name{ font-family:var(--f-caps); font-weight:500; font-size:clamp(1.5rem,7.5vw,2.1rem); letter-spacing:.1em; line-height:1.3; overflow-wrap:anywhere; }
+  .kw-venue-name{ font-family:var(--f-names); font-weight:500; font-size:clamp(1.5rem,7.5vw,2.1rem); letter-spacing:.1em; line-height:1.3; overflow-wrap:anywhere; }
 
   /* rsvp */
   .kw-rsvp-opts{ display:flex; flex-direction:column; gap:12px; margin-top:22px; }
@@ -820,7 +820,7 @@
         <h2 class="kw-title kw-rev">ទីតាំងប្រារព្ធពិធី</h2>
         <p class="kw-sub kw-rev">Where forever begins</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
-        @if ($venueName)<p class="kw-venue-name kw-shimmer kw-rev">{{ mb_strtoupper($venueName) }}</p>@endif
+        @if ($venueName)<p class="kw-venue-name kw-shimmer kw-rev{{ $kh($venueName) }}">{{ mb_strtoupper($venueName) }}</p>@endif
         @if ($venueAddress)<p class="kw-body-text kw-rev" style="color:var(--beige); margin-top:10px">{{ $venueAddress }}</p>@endif
         @if ($mapUrl && $venueAddress)
           <div class="kw-rev" style="margin-top:28px"><a class="kw-btn gold" href="{{ $mapUrl }}" target="_blank" rel="noopener noreferrer">មើលផែនទី</a></div>
