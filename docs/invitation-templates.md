@@ -145,8 +145,9 @@ next one peeking in, fade-up entrance, tap-to-open lightbox with swipe, optional
 Include it with `@include('invitations.partials.photo-feed', ['photos' => $urls, 'alt' => '…'])`.
 
 - Choose per invitation with the `gallery_feed` boolean field (free field; tick it on the template),
-  or set `$fields['gallery_layout']` to `frame`/`feed`. Unset = the original `frame` layout, so existing
-  invitations are unchanged. Append `?layout=feed|frame` to the URL to preview.
+  or set `$fields['gallery_layout']` to `frame`/`feed`. In the Khmer Traditional Wedding template, unset =
+  `feed` (its design) and the dashboard checkbox starts ticked; unticking it gives the framed grid.
+  Append `?layout=feed|frame` to the URL to preview.
 - Demo: `/templates/khmer-traditional-wedding/demo?photos=15` previews N photos (1–30).
 - `?autoscroll=1` starts the slow auto-scroll (for screen recordings); touch/wheel/key stops it.
 - `?snap=proximity|mandatory` turns on page scroll-snap for testing; the partial defaults to none.

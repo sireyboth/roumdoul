@@ -66,6 +66,11 @@ class InvitationManagePage extends Component
         $this->invitation = $invitation;
         $this->fieldValues = $invitation->field_values ?? [];
 
+        // The feed is the default gallery layout, so an untouched checkbox should show ticked.
+        if (in_array('gallery_feed', $invitation->template->fields ?? [], true)) {
+            $this->fieldValues += ['gallery_feed' => true];
+        }
+
         if (! in_array($this->section, $this->visibleSections(), true)) {
             $this->section = 'overview';
         }

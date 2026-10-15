@@ -138,7 +138,7 @@ class InvitationTemplateSeeder extends Seeder
                 'fields' => [
                     'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'cover_image',
                     'message', 'event_date', 'khmer_date', 'venue_name', 'venue_address',
-                    'story_chapters', 'event_schedule', 'photo_gallery', 'rsvp_enabled',
+                    'story_chapters', 'event_schedule', 'photo_gallery', 'gallery_feed', 'rsvp_enabled',
                     'countdown_enabled', 'music_url', 'groom_phone', 'bride_phone',
                 ],
                 'view' => 'invitations.templates.khmer-traditional-wedding',

@@ -58,8 +58,9 @@
         ->values();
     $gallery = collect($isUnlocked('photo_gallery') ? ($fields['photo_gallery'] ?? []) : [])
         ->filter()->map($resolveUrl)->values();
-    // gallery layout: per-invitation 'gallery_layout' (frame|feed) or the 'gallery_feed' checkbox; ?layout= previews
-    $galleryLayout = request('layout') ?: ($fields['gallery_layout'] ?? (array_key_exists('gallery_feed', $fields) ? ($fields['gallery_feed'] ? 'feed' : 'frame') : 'frame'));
+    // gallery layout: per-invitation 'gallery_layout' (frame|feed) or the 'gallery_feed' checkbox; ?layout= previews.
+    // Unset = the vertical feed, this template's design; unticking 'gallery_feed' switches to the framed grid.
+    $galleryLayout = request('layout') ?: ($fields['gallery_layout'] ?? (array_key_exists('gallery_feed', $fields) ? ($fields['gallery_feed'] ? 'feed' : 'frame') : 'feed'));
     $galleryLayout = $galleryLayout === 'frame' ? 'frame' : 'feed';
 
     $showCountdown = $eventDate && ! empty($fields['countdown_enabled']) && $isUnlocked('countdown_enabled');
