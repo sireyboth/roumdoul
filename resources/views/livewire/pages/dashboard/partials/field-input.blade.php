@@ -6,9 +6,14 @@
     @break
 
   @case('image')
-    @php $tempImage = $imageUploads[$key] ?? null; @endphp
+    @php
+      $tempImage = $imageUploads[$key] ?? null;
+      $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
+    @endphp
+    <div x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
     <label
       for="upload-{{ $key }}"
+      :class="busy && 'pointer-events-none'"
       class="group relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-xl border-2 border-dashed border-plum-300 bg-plum-50 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5"
     >
       @if ($tempImage && $tempImage->isPreviewable())
@@ -28,16 +33,28 @@
         <span class="text-[11px] text-plum-400">JPG, PNG or WebP &middot; up to 20 MB</span>
       @endif
 
-      <div wire:loading wire:target="imageUploads.{{ $key }}" class="absolute inset-0 flex items-center justify-center bg-white/85 dark:bg-plum-900/85">
-        <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">Uploading&hellip;</span>
+      <div x-show="busy" style="display: none" class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/85 dark:bg-plum-900/85">
+        <span class="text-xs font-semibold text-plum-600 dark:text-plum-300" x-text="preparing ? 'Preparing photo…' : `Uploading… ${progress}%`"></span>
+        <div class="h-1.5 w-2/3 overflow-hidden rounded-full bg-plum-200 dark:bg-plum-700">
+          <div class="h-full bg-brand-500 transition-all" :style="`width: ${progress}%`"></div>
+        </div>
+        <button type="button" x-on:click.prevent="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">Cancel</button>
       </div>
 
-      <input id="upload-{{ $key }}" type="file" wire:model="imageUploads.{{ $key }}" accept="image/*" class="sr-only" />
+      <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
     </label>
+    <p x-show="error" x-text="error" style="display: none" class="mt-1 text-xs text-red-600 dark:text-red-400"></p>
     @error('imageUploads.'.$key) <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+    </div>
     @break
 
   @case('gallery')
+    @php
+      $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
+      $galleryRoom = max(0, $page::MAX_GALLERY_PHOTOS - count($fieldValues[$key] ?? []) - count($galleryUploads[$key] ?? []));
+    @endphp
+    <div data-room="{{ $galleryRoom }}"
+      x-data="photoUploader({ name: 'galleryUploads.{{ $key }}', multiple: true, maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
     <div class="flex flex-wrap gap-2">
       @foreach (($fieldValues[$key] ?? []) as $i => $path)
         <div wire:key="gallery-{{ $key }}-{{ $i }}" class="relative">
@@ -54,21 +71,32 @@
         </div>
       @endforeach
 
-      <label
-        for="upload-{{ $key }}"
-        class="group flex h-20 w-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-plum-300 bg-plum-50 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5"
-      >
-        <x-app-icon name="upload" class="h-5 w-5 text-plum-400 group-hover:text-brand-500" />
-        <span class="text-[10px] font-semibold text-plum-600 dark:text-plum-300">Add photos</span>
-        <input id="upload-{{ $key }}" type="file" wire:model="galleryUploads.{{ $key }}" multiple accept="image/*" class="sr-only" />
-      </label>
+      @if ($galleryRoom > 0)
+        <label
+          for="upload-{{ $key }}"
+          :class="busy && 'pointer-events-none opacity-50'"
+          class="group flex h-20 w-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-plum-300 bg-plum-50 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5"
+        >
+          <x-app-icon name="upload" class="h-5 w-5 text-plum-400 group-hover:text-brand-500" />
+          <span class="text-[10px] font-semibold text-plum-600 dark:text-plum-300">Add photos</span>
+          <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" multiple accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
+        </label>
+      @endif
     </div>
-    <div wire:loading wire:target="galleryUploads.{{ $key }}" class="mt-1.5 text-xs font-semibold text-plum-500 dark:text-plum-400">Uploading&hellip;</div>
-    <p class="mt-1.5 text-[11px] text-plum-400">Up to {{ \App\Livewire\Pages\Dashboard\InvitationManagePage::MAX_GALLERY_PHOTOS }} photos &middot; JPG, PNG or WebP &middot; up to 20 MB each</p>
+    <div x-show="busy" style="display: none" class="mt-2 flex items-center gap-3">
+      <div class="h-1.5 w-40 overflow-hidden rounded-full bg-plum-200 dark:bg-plum-700">
+        <div class="h-full bg-brand-500 transition-all" :style="`width: ${progress}%`"></div>
+      </div>
+      <span class="text-xs font-semibold text-plum-500 dark:text-plum-400" x-text="preparing ? 'Preparing photos…' : `Uploading… ${progress}%`"></span>
+      <button type="button" x-on:click="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">Cancel</button>
+    </div>
+    <p x-show="error" x-text="error" style="display: none" class="mt-1 text-xs text-red-600 dark:text-red-400"></p>
+    <p class="mt-1.5 text-[11px] text-plum-400">{{ $galleryRoom }} of {{ $page::MAX_GALLERY_PHOTOS }} spots left &middot; JPG, PNG or WebP &middot; big photos are shrunk automatically</p>
     {{-- per-file errors land on galleryUploads.{key}.{n}; show each distinct message once --}}
     @foreach (collect([...$errors->get('galleryUploads.'.$key), ...\Illuminate\Support\Arr::flatten($errors->get('galleryUploads.'.$key.'.*'))])->unique() as $message)
       <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
     @endforeach
+    </div>
     @break
 
   @case('schedule')

@@ -187,7 +187,10 @@
         </button>
 
       @elseif (in_array($section, ['details', 'media', 'program'], true))
-        <form wire:submit="save" class="mt-6">
+        <form wire:submit="save" class="mt-6"
+          x-data="{ uploading: 0 }"
+          x-on:photo-upload-start="uploading++"
+          x-on:photo-upload-end="uploading = Math.max(0, uploading - 1)">
           <div class="flex flex-col gap-5 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
             @foreach ($this->sectionFields($section) as $key)
               @php $catalogField = $fieldCatalog[$key]; @endphp
@@ -210,10 +213,13 @@
           </div>
 
           <div class="sticky bottom-0 mt-4 flex items-center gap-3 bg-plum-50/90 py-4 backdrop-blur dark:bg-plum-950/90">
-            <button type="submit"
-              class="flex items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-700">
-              <span wire:loading.remove wire:target="save">Save</span>
-              <span wire:loading wire:target="save">Saving...</span>
+            <button type="submit" :disabled="uploading > 0" wire:loading.attr="disabled" wire:target="save"
+              class="flex items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">
+              <span x-show="uploading > 0" style="display: none">Wait for photos&hellip;</span>
+              <span x-show="uploading === 0">
+                <span wire:loading.remove wire:target="save">Save</span>
+                <span wire:loading wire:target="save">Saving...</span>
+              </span>
             </button>
             @if ($saved)
               <p class="text-sm font-semibold text-green-600 dark:text-green-400">Saved!</p>

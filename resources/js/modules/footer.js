@@ -6,14 +6,15 @@ export function initFooter() {
   const phoneLink = document.getElementById('footer-phone-link')
   const phoneText = document.getElementById('footer-phone-text')
   const telegramChatLink = document.getElementById('footer-telegram-chat-link')
+  const year = document.getElementById('footer-year')
 
-  emailLink.href = gmailLink
-  emailText.textContent = companyEmail
-  phoneLink.href = telegramLink
-  phoneText.textContent = companyPhone
+  // Some pages (dashboard, invitation views) render without the site footer.
+  if (emailLink) emailLink.href = gmailLink
+  if (emailText) emailText.textContent = companyEmail
+  if (phoneLink) phoneLink.href = telegramLink
+  if (phoneText) phoneText.textContent = companyPhone
   if (telegramChatLink) telegramChatLink.href = telegramLink
-
-  document.getElementById('footer-year').textContent = new Date().getFullYear()
+  if (year) year.textContent = new Date().getFullYear()
 
   document.querySelectorAll('[data-social]').forEach((link) => {
     const url = socialLinks[link.getAttribute('data-social')]

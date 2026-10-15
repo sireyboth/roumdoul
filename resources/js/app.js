@@ -8,6 +8,7 @@ import { initScrollReveal } from './modules/scrollReveal.js'
 import { initCounters } from './modules/counters.js'
 import { initHeroParticles } from './modules/heroParticles.js'
 import { initTilt } from './modules/tilt.js'
+import './modules/photoUploader.js'
 
 document.addEventListener('livewire:init', () => {
   // Pagination, filters, etc. update a Livewire component in place without a
