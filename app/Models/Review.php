@@ -17,12 +17,14 @@ class Review extends Model
         'rating',
         'source',
         'is_approved',
+        'reported_at',
         'comment',
     ];
 
     protected $casts = [
         'rating' => 'integer',
         'is_approved' => 'boolean',
+        'reported_at' => 'datetime',
     ];
 
     public function order(): BelongsTo

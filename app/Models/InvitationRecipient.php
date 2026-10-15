@@ -18,10 +18,12 @@ class InvitationRecipient extends Model
         'rsvp_status',
         'rsvp_note',
         'viewed_at',
+        'revoked_at',
     ];
 
     protected $casts = [
         'viewed_at' => 'datetime',
+        'revoked_at' => 'datetime',
     ];
 
     protected static function booted(): void

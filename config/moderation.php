@@ -32,4 +32,43 @@ return [
         'retard', 'retarded',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Khmer banned words
+    |--------------------------------------------------------------------------
+    |
+    | Intentionally empty: add vetted Khmer profanity / sexual / threat terms here,
+    | one per entry. Matching is whole-word and Khmer-aware (combining vowel signs
+    | count as part of the word), so a short term will not fire inside a longer,
+    | innocent word. Have a native speaker review additions to avoid false positives.
+    |
+    */
+
+    'banned_words_km' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Spam phrases, links and repetition
+    |--------------------------------------------------------------------------
+    */
+
+    'spam_phrases' => [
+        'buy now', 'click here', 'free money', 'earn money', 'make money', 'work from home',
+        'crypto', 'bitcoin', 'forex', 'investment opportunity', 'casino', 'betting', 'loan offer',
+        'whatsapp me', 'telegram me', 'dm me', 'promo code', 'limited offer', 'viagra',
+    ],
+
+    // Guests and customers have no reason to post links in a review or RSVP note.
+    'block_links' => true,
+
+    'link_tlds' => ['com', 'net', 'org', 'info', 'biz', 'xyz', 'top', 'site', 'online', 'club', 'shop', 'link', 'click', 'ru', 'cn', 'io', 'co', 'me', 'ly', 'gg', 'tk', 'cc', 'kh', 'vip', 'bet', 'win'],
+
+    'max_repeated_chars' => 12,
+
+    // Cooldowns / limits (see InvitationRsvpController, PublicFeedbackForm)
+    'rsvp_updates_per_window' => 6,
+    'rsvp_window_seconds' => 600,
+    'feedback_per_hour_per_ip' => 5,
+    'duplicate_window_hours' => 24,
+
 ];

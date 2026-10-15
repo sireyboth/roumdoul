@@ -265,8 +265,8 @@ class InvitationPurchaseAndManageTest extends TestCase
         Livewire::actingAs($customer, 'customer')
             ->test(InvitationManagePage::class, ['invitation' => $invitation])
             ->set('imageUploads.cover_image', UploadedFile::fake()->create('shell.php', 10, 'application/x-php'))
-            ->call('save')
-            ->assertHasErrors(['imageUploads.cover_image']);
+            ->assertHasErrors(['imageUploads.cover_image'])
+            ->call('save');
 
         $this->assertNull($invitation->fresh()->field_values['cover_image'] ?? null);
     }

@@ -256,6 +256,9 @@
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
                   <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $recipient->recipient_name }}</p>
+                  @if ($recipient->revoked_at)
+                    <span class="text-[11px] font-bold text-red-600 dark:text-red-400">Paused</span>
+                  @endif
                   @if ($recipient->viewed_at)
                     <span class="flex items-center gap-1 text-[11px] font-semibold text-brand-600 dark:text-brand-400">
                       <x-app-icon name="eye" class="h-3.5 w-3.5" /> Opened
@@ -270,6 +273,14 @@
                   class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
                   <span x-show="!copied">Copy link</span>
                   <span x-cloak x-show="copied" class="text-green-600 dark:text-green-400">Copied!</span>
+                </button>
+                <button type="button" wire:click="toggleRecipient({{ $recipient->id }})"
+                  class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
+                  {{ $recipient->revoked_at ? 'Restore link' : 'Pause link' }}
+                </button>
+                <button type="button" wire:click="rotateRecipient({{ $recipient->id }})" wire:confirm="Create a new link for {{ $recipient->recipient_name }}? The old link will stop working."
+                  class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
+                  New link
                 </button>
                 <button type="button" wire:click="removeRecipient({{ $recipient->id }})" wire:confirm="Remove {{ $recipient->recipient_name }}? Their link will stop working."
                   class="text-plum-400 hover:text-red-600">

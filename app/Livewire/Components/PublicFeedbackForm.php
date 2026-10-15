@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Components;
 
+use App\Models\ModerationLog;
 use App\Models\Review;
 use App\Rules\NoProfanity;
+use App\Services\ContentModerator;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 class PublicFeedbackForm extends Component
@@ -40,7 +43,25 @@ class PublicFeedbackForm extends Component
             return;
         }
 
+        $limiterKey = 'feedback|'.request()->ip();
+        if (RateLimiter::tooManyAttempts($limiterKey, (int) config('moderation.feedback_per_hour_per_ip', 5))) {
+            $this->addError('comment', 'សូមព្យាយាមម្ដងទៀតនៅពេលក្រោយ។ / Too many submissions — please try again later.');
+
+            return;
+        }
+
         $validated = $this->validate();
+        RateLimiter::hit($limiterKey, 3600);
+
+        $moderator = app(ContentModerator::class);
+        $validated['comment'] = $moderator->sanitize($validated['comment']);
+
+        if ($validated['comment'] === '' || $moderator->isRecentDuplicateReview($validated['comment'])) {
+            ModerationLog::record('review_rejected', 'review', null, ['duplicate_or_empty'], $moderator->fingerprint($validated['comment']));
+            $this->addError('comment', 'មតិនេះត្រូវបានផ្ញើរួចហើយ។ / This comment has already been submitted.');
+
+            return;
+        }
 
         Review::create([
             ...$validated,

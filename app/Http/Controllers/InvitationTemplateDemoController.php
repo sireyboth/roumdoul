@@ -77,8 +77,10 @@ class InvitationTemplateDemoController extends Controller
                 ['time' => '10:00 AM', 'label' => 'ពិធីបង្វិលពពិល'],
                 ['time' => '05:00 PM', 'label' => 'ពិធីទទួលភ្ញៀវ'],
             ],
-            'photo_gallery' => collect(range(1, 6))
-                ->map(fn ($i) => "https://picsum.photos/seed/khmerwed{$i}/700/".($i % 2 ? '900' : '700'))
+            'gallery_feed' => true,
+            // ?photos=N (1–30) previews the feed with any number of photos, mixed portrait/landscape
+            'photo_gallery' => collect(range(1, max(1, min(30, (int) request('photos', 6)))))
+                ->map(fn ($i) => "https://picsum.photos/seed/khmerwed{$i}/".($i % 3 === 0 ? '1000/700' : ($i % 2 ? '700/900' : '700/700')))
                 ->all(),
         ];
     }
