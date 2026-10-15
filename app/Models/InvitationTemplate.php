@@ -49,6 +49,7 @@ class InvitationTemplate extends Model
         'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីឲ្យភ្ញៀវចុច «ចូលរួម» ឬ «មិនចូលរួម» — អ្នកមើលចម្លើយបាននៅផ្ទាំង «ការឆ្លើយតប»។'],
         'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញនាឡិការាប់ថយក្រោយដល់ថ្ងៃកម្មវិធី (ត្រូវបំពេញ Event date ផងដែរ)។'],
         'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery', 'hint' => 'រូបថតជាច្រើន (ឧ. រូប Pre-wedding) បង្ហាញជាវិចិត្រសាលនៅលើធៀប។'],
+        'gallery_feed' => ['label' => 'Scrolling photo feed', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញរូបថតជាបន្ទះបញ្ឈរធំៗ រមូរចុះក្រោម (ដូច TikTok)។ មិនធីក = រូបតូចៗក្នុងស៊ុម។'],
         'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule', 'hint' => 'របៀបវារៈកម្មវិធី — ម៉ោង និងសកម្មភាពនីមួយៗ ឧ. «7:00 AM — ហែជំនូន»។'],
         'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story', 'hint' => 'រឿងរ៉ាវរបស់អ្នកទាំងពីរ ចែកជាជំពូក — ចំណងជើង និងខ្លឹមសារខ្លីៗ។'],
         'qr_code' => ['label' => 'QR code image', 'type' => 'image', 'hint' => 'រូប QR code ឧ. QR ធនាគារ សម្រាប់ភ្ញៀវផ្ញើចំណងដៃពីចម្ងាយ។'],
@@ -68,6 +69,7 @@ class InvitationTemplate extends Model
         'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age',
         'headline', 'message', 'cover_image', 'event_date', 'venue_name',
         'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
+        'gallery_feed',
     ];
 
     /**
@@ -82,7 +84,7 @@ class InvitationTemplate extends Model
         'universal' => [
             'sender_name', 'headline', 'message', 'cover_image', 'event_date', 'venue_name',
             'music_url', 'accent_color', 'venue_address', 'rsvp_enabled', 'countdown_enabled',
-            'photo_gallery', 'event_schedule', 'qr_code', 'cta_label', 'cta_url',
+            'photo_gallery', 'gallery_feed', 'event_schedule', 'qr_code', 'cta_label', 'cta_url',
         ],
         'wedding' => [
             'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',

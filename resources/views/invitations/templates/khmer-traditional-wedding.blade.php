@@ -56,6 +56,9 @@
         ->values();
     $gallery = collect($isUnlocked('photo_gallery') ? ($fields['photo_gallery'] ?? []) : [])
         ->filter()->map($resolveUrl)->values();
+    // gallery layout: per-invitation 'gallery_layout' (frame|feed) or the 'gallery_feed' checkbox; ?layout= previews
+    $galleryLayout = request('layout') ?: ($fields['gallery_layout'] ?? (array_key_exists('gallery_feed', $fields) ? ($fields['gallery_feed'] ? 'feed' : 'frame') : 'frame'));
+    $galleryLayout = $galleryLayout === 'frame' ? 'frame' : 'feed';
 
     $showCountdown = $eventDate && ! empty($fields['countdown_enabled']) && $isUnlocked('countdown_enabled');
     $showRsvp = ! empty($fields['rsvp_enabled']) && $isUnlocked('rsvp_enabled');
@@ -789,11 +792,15 @@
         <h2 class="kw-title kw-rev">កម្រងរូបភាព</h2>
         <p class="kw-sub kw-rev">Moments of us</p>
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
-        <div class="kw-gal">
-          @foreach ($gallery as $i => $url)
-            <figure class="kw-gs"><img src="{{ $url }}" alt="{{ $coupleTitle }} {{ $i + 1 }}" loading="lazy"></figure>
-          @endforeach
-        </div>
+        @if ($galleryLayout === 'feed')
+          @include('invitations.partials.photo-feed', ['photos' => $gallery, 'alt' => $coupleTitle, 'snap' => 'none'])
+        @else
+                <div class="kw-gal">
+            @foreach ($gallery as $i => $url)
+              <figure class="kw-gs"><img src="{{ $url }}" alt="{{ $coupleTitle }} {{ $i + 1 }}" loading="lazy"></figure>
+            @endforeach
+          </div>
+        @endif
       </section>
     @endif
 

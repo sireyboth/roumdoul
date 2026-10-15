@@ -137,3 +137,16 @@ exactly like they do for every other product in the shop.
 - Expiry enforcement → handled generically by `Invitation::isExpired()` and the retention purge
   job, not something each template needs to check itself (though the public recipient route
   does check it before rendering any template).
+
+## Photo gallery layouts (`frame` | `feed`)
+
+`invitations/partials/photo-feed.blade.php` is a reusable vertical photo feed (tall rounded photos,
+next one peeking in, fade-up entrance, tap-to-open lightbox with swipe, optional auto-scroll).
+Include it with `@include('invitations.partials.photo-feed', ['photos' => $urls, 'alt' => '…'])`.
+
+- Choose per invitation with the `gallery_feed` boolean field (free field; tick it on the template),
+  or set `$fields['gallery_layout']` to `frame`/`feed`. Unset = the original `frame` layout, so existing
+  invitations are unchanged. Append `?layout=feed|frame` to the URL to preview.
+- Demo: `/templates/khmer-traditional-wedding/demo?photos=15` previews N photos (1–30).
+- `?autoscroll=1` starts the slow auto-scroll (for screen recordings); touch/wheel/key stops it.
+- `?snap=proximity|mandatory` turns on page scroll-snap for testing; the partial defaults to none.
