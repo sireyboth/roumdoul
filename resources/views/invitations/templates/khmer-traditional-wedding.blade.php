@@ -230,6 +230,10 @@
   .kw-stage.fg{ z-index:35; }
   /* the butterflies already fly over the cover; they step aside while the roumdul blooms (the stage restarts them in sync underneath) */
   .kw-covering .kw-stage.fg{ z-index:55; opacity:1; visibility:visible; transition-delay:0s,0s; }
+  /* over the cover, the butterflies take the cover's exact box (see .kw-cover) so they span the whole card */
+  .kw-covering .kw-stage.fg{ top:50%; height:auto; aspect-ratio:9/16; transform:translate3d(-50%,-50%,0);
+    width:max(100vw,calc(100vh * 9 / 16)); width:max(100vw,calc(100svh * 9 / 16)); }
+  @media (min-aspect-ratio:19/32){ .kw-covering .kw-stage.fg{ width:calc(100vh * 9 / 16); width:calc(100svh * 9 / 16); } }
   .kw-covering .kw-gate.blooming ~ .kw-stage.fg{ opacity:0; visibility:hidden; transition:opacity .4s ease, visibility 0s linear .4s; }
   .kw-staged .kw-stage{ opacity:1; visibility:visible; transition-delay:0s, 0s; }
   /* the butterfly source video must stay "on screen": iOS throttles decoding of display:none videos */
