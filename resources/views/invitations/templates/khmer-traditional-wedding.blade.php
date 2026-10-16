@@ -448,7 +448,8 @@
     transition:transform .5s var(--ease), box-shadow .5s; }
   .kw-sched-item:hover{ transform:translateX(4px); box-shadow:-4px 0 0 var(--gold); }
   .kw-sched-item::after{ content:""; position:absolute; left:96px; top:14px; bottom:14px; width:1px; background:var(--gold-soft); margin-left:7px; }
-  .kw-sched-time{ font-family:var(--f-caps); font-weight:600; font-size:.98rem; letter-spacing:.04em; color:var(--red); line-height:1.3; }
+  /* Cinzel for Latin digits/AM-PM, Noto Serif Khmer picks up Khmer numerals and words (e.g. ៧:០០ ព្រឹក) */
+  .kw-sched-time{ font-family:'Cinzel','Noto Serif Khmer','Khmer OS Siemreap',serif; font-weight:600; font-size:.98rem; color:var(--red); line-height:1.8; }
   .kw-sched-label{ font-family:var(--f-kh-serif); font-weight:600; font-size:1.05rem; line-height:1.8; color:var(--maroon); padding-left:12px; }
 
   /* gallery */
