@@ -46,6 +46,7 @@ class InvitationTemplate extends Model
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
         // shows these to the recipient if the plan's `features` list includes the key.
         'venue_address' => ['label' => 'Venue address (for map link)', 'type' => 'text', 'hint' => 'អាសយដ្ឋានពេញរបស់កន្លែងកម្មវិធី — ភ្ញៀវចុចប៊ូតុងមើលផ្លូវ ដើម្បីបើក Google Maps។'],
+        'map_url' => ['label' => 'Google Maps link', 'type' => 'text', 'hint' => 'ចម្លងតំណទីតាំងពី Google Maps (ចុច Share → Copy link) មកដាក់ — ប៊ូតុង «មើលផែនទី» នឹងបើកចំទីតាំងពិតប្រាកដ។'],
         'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text', 'hint' => 'ថ្ងៃខែតាមចន្ទគតិ ឧ. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ»។'],
         'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីឲ្យភ្ញៀវចុច «ចូលរួម» ឬ «មិនចូលរួម» — អ្នកមើលចម្លើយបាននៅផ្ទាំង «ការឆ្លើយតប»។'],
         'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញនាឡិការាប់ថយក្រោយដល់ថ្ងៃកម្មវិធី (ត្រូវបំពេញ Event date ផងដែរ)។'],
@@ -54,6 +55,7 @@ class InvitationTemplate extends Model
         'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule', 'hint' => 'របៀបវារៈកម្មវិធី — ម៉ោង និងសកម្មភាពនីមួយៗ ឧ. «7:00 AM — ហែជំនូន»។'],
         'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story', 'hint' => 'រឿងរ៉ាវរបស់អ្នកទាំងពីរ ចែកជាជំពូក — ចំណងជើង និងខ្លឹមសារខ្លីៗ។'],
         'qr_code' => ['label' => 'QR code image', 'type' => 'image', 'hint' => 'រូប QR code ឧ. QR ធនាគារ សម្រាប់ភ្ញៀវផ្ញើចំណងដៃពីចម្ងាយ។'],
+        'gift_account' => ['label' => 'Gift account details', 'type' => 'textarea', 'hint' => 'ឈ្មោះ និងលេខគណនីធនាគារ បង្ហាញនៅក្រោម QR ឧ. «ABA · SOKHA & SREYNEANG · 000 123 456»។'],
         'cta_label' => ['label' => 'Button label', 'type' => 'text', 'hint' => 'អក្សរនៅលើប៊ូតុងផ្ទាល់ខ្លួន ឧ. «ចូលរួម Telegram Group» — ត្រូវបំពេញជាមួយ Button link។'],
         'cta_url' => ['label' => 'Button link', 'type' => 'text', 'hint' => 'តំណដែលប៊ូតុងនឹងបើក — ត្រូវចាប់ផ្ដើមដោយ https://'],
     ];
@@ -70,7 +72,7 @@ class InvitationTemplate extends Model
         'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age',
         'headline', 'message', 'cover_image', 'event_date', 'venue_name',
         'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
-        'gallery_feed',
+        'gallery_feed', 'gift_account',
     ];
 
     /**
@@ -84,8 +86,8 @@ class InvitationTemplate extends Model
     public const FIELD_SECTIONS = [
         'universal' => [
             'sender_name', 'headline', 'message', 'cover_image', 'event_date', 'venue_name',
-            'music_url', 'accent_color', 'venue_address', 'rsvp_enabled', 'countdown_enabled',
-            'photo_gallery', 'gallery_feed', 'event_schedule', 'qr_code', 'cta_label', 'cta_url',
+            'music_url', 'accent_color', 'venue_address', 'map_url', 'rsvp_enabled', 'countdown_enabled',
+            'photo_gallery', 'gallery_feed', 'event_schedule', 'qr_code', 'gift_account', 'cta_label', 'cta_url',
         ],
         'wedding' => [
             'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',

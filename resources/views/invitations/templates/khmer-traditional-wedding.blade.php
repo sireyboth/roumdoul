@@ -12,6 +12,7 @@
         ? $path
         : Storage::disk('s3')->url($path);
     $isUnlocked = fn (string $key) => $invitation ? $invitation->fieldUnlocked($key) : true;
+    $contentImg = fn (string $file) => asset('images/invitations/khmer-traditional/content/'.rawurlencode($file));
 
     $khDigits = fn ($v) => strtr((string) $v, ['0' => '០', '1' => '១', '2' => '២', '3' => '៣', '4' => '៤', '5' => '៥', '6' => '៦', '7' => '៧', '8' => '៨', '9' => '៩']);
     $khMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
@@ -38,10 +39,19 @@
 
     $venueName = $fields['venue_name'] ?? null;
     $venueAddress = ($isUnlocked('venue_address') && ! empty($fields['venue_address'])) ? $fields['venue_address'] : null;
-    $mapUrl = ($venueAddress || $venueName)
-        ? 'https://maps.google.com/?q='.urlencode($venueAddress ?: $venueName)
+    // a pasted Google Maps link pins the exact spot; otherwise fall back to searching the address
+    $mapLink = ($isUnlocked('map_url') && preg_match('#^https?://#i', $fields['map_url'] ?? '')) ? $fields['map_url'] : null;
+    $mapQuery = $venueAddress ?: $venueName;
+    if ($mapLink && preg_match('#[@=](-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)#', urldecode($mapLink), $pin)) {
+        $mapQuery = $pin[1].','.$pin[2];
+    }
+    $mapUrl = $mapLink ?: ($mapQuery ? 'https://maps.google.com/?q='.urlencode($mapQuery) : null);
+    $mapEmbed = ($mapLink || $venueAddress) && $mapQuery
+        ? 'https://maps.google.com/maps?q='.urlencode($mapQuery).'&z=16&output=embed'
         : null;
-    $showVenue = $venueName || $venueAddress;
+    $showVenue = $venueName || $venueAddress || $mapLink;
+    $giftQr = ($isUnlocked('qr_code') && ! empty($fields['qr_code'])) ? $resolveUrl($fields['qr_code']) : null;
+    $giftAccount = ($giftQr && ! empty($fields['gift_account'])) ? $fields['gift_account'] : null;
 
     $personalNote = ! empty($fields['message']) ? $fields['message'] : null;
 
@@ -56,6 +66,29 @@
     $schedule = collect($isUnlocked('event_schedule') ? ($fields['event_schedule'] ?? []) : [])
         ->filter(fn ($row) => ! empty($row['time']) || ! empty($row['label']))
         ->values();
+    // "06:00 AM" / "17:30" -> "ម៉ោង ០៦:០០ នាទីព្រឹក"; anything else (already Khmer, free text) shows as typed
+    $schedTime = function (?string $t) use ($khDigits): string {
+        $t = trim((string) $t);
+        if (! preg_match('/^(\d{1,2})[:.](\d{2})\s*(?:([ap])\.?\s*m\.?)?$/i', $t, $m)) {
+            return $t;
+        }
+        $h = (int) $m[1];
+        if (! empty($m[3])) {
+            $h = $h % 12 + (strtolower($m[3]) === 'p' ? 12 : 0);
+        }
+        $period = $h < 12 ? 'នាទីព្រឹក' : ($h === 12 ? 'ថ្ងៃត្រង់' : ($h < 17 ? 'រសៀល' : 'ល្ងាច'));
+
+        return 'ម៉ោង '.$khDigits(sprintf('%02d:%s', $h % 12 ?: 12, $m[2])).' '.$period;
+    };
+    // reception card under the schedule: the last timed program item (the reception closes the
+    // day), else the main event time; venue from venue_name
+    $receptionRow = $schedule->filter(fn ($row) => ! empty($row['time']))->last();
+    $receptionLabel = trim($receptionRow['label'] ?? '') ?: 'ពិធីអាពាហ៍ពិពាហ៍';
+    $receptionTime = $receptionRow ? $schedTime($receptionRow['time']) : ($eventDate ? $schedTime($eventDate->format('H:i')) : null);
+    if ($receptionTime && str_starts_with($receptionTime, 'ម៉ោង')) {
+        $receptionTime = 'វេលា'.$receptionTime;
+    }
+    $showReception = $receptionTime || $venueName;
     $gallery = collect($isUnlocked('photo_gallery') ? ($fields['photo_gallery'] ?? []) : [])
         ->filter()->map($resolveUrl)->values();
     // gallery layout: per-invitation 'gallery_layout' (frame|feed) or the 'gallery_feed' checkbox; ?layout= previews.
@@ -91,52 +124,8 @@
 
     // ------------------------------------------------------------------------------------
     // Scenery (pure decoration, no customer data). Built once here and echoed wherever a
-    // scene needs it: Angkor Wat + sugar palms, roumdul branches, flying and perched birds.
+    // scene needs it: roumdul branches, flying and perched birds.
     // ------------------------------------------------------------------------------------
-
-    // lotus-bud prang (Angkor tower): base y $b, tip y $t, half-width $w, plus tier ribs
-    $tower = function (float $cx, float $b, float $t, float $w): string {
-        $h = $b - $t;
-        $shape = sprintf('<path d="M%s %s C%s %s %s %s %s %sC%s %s %s %s %s %sZ"/>',
-            $cx - $w, $b, $cx - $w, $b - $h * .55, $cx - $w * .3, $t + $h * .12, $cx, $t,
-            $cx + $w * .3, $t + $h * .12, $cx + $w, $b - $h * .55, $cx + $w, $b);
-        $ribs = '';
-        foreach ([.22, .42, .6, .76] as $k) {
-            $y = $b - $h * $k;
-            $hw = $w * (1 - $k * $k * .75);
-            $ribs .= sprintf('<path class="rib" d="M%s %sQ%s %s %s %s"/>', $cx - $hw, $y, $cx, $y - 1.4, $cx + $hw, $y);
-        }
-
-        return $shape.$ribs;
-    };
-    // thnot (sugar palm): slim trunk with a round crown of fan leaves; sways from its base
-    $palm = function (float $x, float $h, float $lean, string $t, string $d) {
-        $top = 110 - $h;
-        $cx = $x + $lean;
-        $fronds = '';
-        foreach (range(0, 13) as $i) {
-            $a = deg2rad(-200 + $i * 17.5);
-            $len = 9 + ($i % 3) * 2.5;
-            $fronds .= sprintf('<path d="M%1$s %2$sQ%3$s %4$s %5$s %6$s"/>', $cx, $top,
-                $cx + cos($a) * $len * .6, $top + sin($a) * $len * .6 - 2, $cx + cos($a) * $len, $top + sin($a) * $len + 2);
-        }
-
-        return sprintf('<g class="kw-palm" style="--t:%s;--d:%s;transform-origin:%spx 110px">'
-            .'<path class="trunk" d="M%s 110Q%s %s %s %s"/><circle cx="%s" cy="%s" r="4.5"/><g class="frond">%s</g></g>',
-            $t, $d, $x, $x, $x, 110 - $h * .5, $cx, $top, $cx, $top, $fronds);
-    };
-    $templeSvg = '<svg class="kw-temple" viewBox="-70 0 540 112" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false">'
-        .$palm(-48, 70, -3, '9s', '-2s').$palm(-22, 84, 2, '11s', '-5s').$palm(424, 78, 3, '10s', '-1s').$palm(452, 62, -2, '8.5s', '-4s')
-        .'<g class="wat">'
-        .'<rect x="-70" y="106" width="540" height="6"/>'
-        .'<path d="M22 106V96h356v10Z"/><path d="M30 96l6-4h328l6 4Z"/>'
-        .$tower(40, 92, 74, 7).$tower(360, 92, 74, 7)
-        .'<path d="M78 92V80h244v12Z"/><path d="M84 80l5-3h222l5 3Z"/>'
-        .'<path d="M122 77V64h156v13Z"/><path d="M168 64V56h64v8Z"/>'
-        .$tower(140, 64, 34, 12).$tower(260, 64, 34, 12)
-        .$tower(170, 60, 24, 12).$tower(230, 60, 24, 12)
-        .$tower(200, 56, 4, 17)
-        .'</g></svg>';
 
     // flying birds: [top %, cross seconds, delay, size px, flap seconds, opacity, right-to-left]
     $flock = function (array $birds): string {
@@ -187,7 +176,7 @@
 <title>{{ $coupleTitle ?: 'សិរីមង្គលអាពាហ៍ពិពាហ៍' }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Moul&family=Noto+Sans+Khmer:wght@400;500;600&family=Noto+Serif+Khmer:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Moul&family=Moulpali&family=Noto+Sans+Khmer:wght@400;500;600&family=Noto+Serif+Khmer:wght@400;600;700&display=swap">
 <style>
   @property --kw-ang{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
   :root{
@@ -258,7 +247,7 @@
 
   /* scenery colour roles: gold leaf on the red/maroon sections */
   .kw-red,.kw-maroon{ --br-stem:#C9A24D; --br-leaf:rgba(201,162,77,.22); --br-leaf-edge:#C9A24D; --br-flower:#FBF4E4; --br-flower-edge:#C9A24D;
-    --br-bird:#C9A24D; --br-bird-wing:#E9CD85; --br-bird-eye:#4A0D0D; --gull:rgba(110,40,30,.7); --tp-fill:rgba(74,13,13,.35); --tp-rim:rgba(201,162,77,.75); }
+    --br-bird:#C9A24D; --br-bird-wing:#E9CD85; --br-bird-eye:#4A0D0D; --gull:rgba(110,40,30,.7); }
 
   /* type */
   .kw-eyebrow{ font-family:var(--f-moul); font-size:.95rem; letter-spacing:.02em; color:var(--gold); line-height:2; }
@@ -297,7 +286,7 @@
   .kw-branch .stem.thin{ stroke-width:1.5; }
   .kw-branch .lf{ fill:var(--br-leaf); stroke:var(--br-leaf-edge); stroke-width:.7; }
   .kw-branch use[href="#kw-roumdul"]{ fill:var(--br-flower); stroke:var(--br-flower-edge); stroke-width:.7; }
-  .kw-sw,.kw-bob,.kw-palm,.kw-perch .head,.kw-perch .tail{ transform-box:view-box; }
+  .kw-sw,.kw-bob,.kw-perch .head,.kw-perch .tail{ transform-box:view-box; }
   .kw-sw{ animation:kw-sway var(--t) ease-in-out var(--d) infinite; }
   .kw-bob{ animation:kw-bob var(--t) ease-in-out var(--d) infinite; }
   /* perched bird */
@@ -315,14 +304,6 @@
   .kw-fly-bob{ animation:kw-glide var(--b) ease-in-out infinite alternate; }
   .kw-gull{ height:auto; fill:var(--gull); overflow:visible; }
   .kw-wings{ animation:kw-flap var(--f) ease-in-out infinite; }
-  /* temple + palms */
-  .kw-temple{ width:100%; height:auto; overflow:visible; }
-  .kw-temple .wat,.kw-temple circle{ fill:var(--tp-fill); }
-  .kw-temple .wat > path:not(.rib),.kw-temple .wat > rect{ stroke:var(--tp-rim); stroke-width:.5; }
-  .kw-temple .rib{ fill:none; stroke:var(--tp-rim); stroke-width:.55; }
-  .kw-temple .trunk,.kw-temple .frond path{ fill:none; stroke:var(--tp-fill); stroke-linecap:round; }
-  .kw-temple .trunk{ stroke-width:2.4; } .kw-temple .frond path{ stroke-width:1.8; }
-  .kw-palm{ animation:kw-sway var(--t) ease-in-out var(--d) infinite; --a:1.2deg; }
   /* floating gold dust */
   .kw-dustfield{ inset:0; z-index:1; overflow:hidden; }
   .kw-dust{ position:absolute; width:var(--s); height:var(--s); border-radius:50%; opacity:0;
@@ -377,6 +358,24 @@
   .kw-hero-glow{ left:50%; top:60px; width:420px; height:420px; transform:translateX(-50%); border-radius:50%;
     background:radial-gradient(circle,rgba(255,214,140,.28),transparent 65%); animation:kw-glow 8s ease-in-out infinite alternate; }
   .kw-hero .kw-names{ font-size:clamp(1.6rem,8vw,2.7rem); letter-spacing:.1em; }
+  /* invitation card: kbach artwork + text set in the same maroon Moul lettering as the artwork */
+  .kw-hero{ --kbach:#8c2a22; --kbach-ink:#6e2219; }
+  #kw-top{ padding-top:44px; }
+  #kw-top > .kw-kbach-top{ display:block; width:92%; height:auto; margin:0 auto 18px; z-index:3; }
+  .kw-invite-title{ font-family:var(--f-moul); font-weight:400; font-size:clamp(1.7rem,9vw,2.5rem); line-height:1.9; color:var(--kbach);
+    text-shadow:0 1px 0 rgba(255,235,210,.6), 0 2px 3px rgba(110,34,25,.25); }
+  .kw-tacteing{ display:block; width:min(62%,150px); height:auto; margin:4px auto 20px; }
+  .kw-invite-text{ max-width:440px; margin:0 auto; font-family:'Moulpali',var(--f-moul); font-size:clamp(.85rem,3.6vw,1rem); line-height:2.1; color:var(--kbach-ink); text-wrap:balance; }
+  .kw-invite-text .kw-guest{ color:var(--kbach); margin:0 0 4px; }
+  /* names are placed over the artwork in % of its width (container units), so they scale with it */
+  .kw-namekbach{ position:relative; width:100%; max-width:480px; margin:26px auto 0; container-type:inline-size; }
+  .kw-namekbach img{ display:block; width:100%; height:auto; margin-top:70px; }
+  .kw-hero .kw-namekbach .kw-names{ position:absolute; top:50%; width:34%; padding:0 1%; font-family:var(--f-names); font-size:4cqw; letter-spacing:.04em; line-height:1.4; text-align:center; overflow-wrap:normal; word-break:keep-all;
+    background:linear-gradient(180deg,#c4404a,#951d29 60%,#6f1219); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 1px 0 rgba(255,230,220,.7)); }
+  .kw-hero .kw-namekbach .kw-names.kw-kh{ font-size:5cqw; line-height:1.9; }
+  .kw-hero .kw-namekbach .kw-names.groom{ left:1%; margin-top:40px; }
+  .kw-hero .kw-namekbach .kw-names.bride{ right:0; margin-top:40px; }
   .kw-arch{ width:min(70%,280px); aspect-ratio:3/4; margin:0 auto 36px; border-radius:999px 999px 6px 6px; padding:7px; border:1px solid var(--gold); position:relative;
     box-shadow:0 20px 50px rgba(0,0,0,.35); }
   .kw-arch::before{ content:""; position:absolute; inset:-1px; border-radius:inherit; padding:1.5px;
@@ -446,15 +445,33 @@
   .kw-count b{ display:block; font-family:var(--f-caps); font-weight:500; font-size:clamp(1.6rem,8vw,2.4rem); line-height:1.15; color:var(--gold); font-variant-numeric:tabular-nums; }
   .kw-count span{ display:block; margin-top:6px; font-family:var(--f-caps); font-size:.58rem; letter-spacing:.2em; color:var(--beige); }
 
-  /* schedule */
-  .kw-sched{ display:flex; flex-direction:column; gap:14px; text-align:left; }
-  .kw-sched-item{ position:relative; display:grid; grid-template-columns:96px 1fr; gap:14px; align-items:center; padding:16px 16px 16px 14px; background:#fffaf0; border:1px solid var(--gold-soft);
-    transition:transform .5s var(--ease), box-shadow .5s; }
-  .kw-sched-item:hover{ transform:translateX(4px); box-shadow:-4px 0 0 var(--gold); }
-  .kw-sched-item::after{ content:""; position:absolute; left:96px; top:14px; bottom:14px; width:1px; background:var(--gold-soft); margin-left:7px; }
-  /* Cinzel for Latin digits/AM-PM, Noto Serif Khmer picks up Khmer numerals and words (e.g. ៧:០០ ព្រឹក) */
-  .kw-sched-time{ font-family:'Cinzel','Noto Serif Khmer','Khmer OS Siemreap',serif; font-weight:600; font-size:.98rem; color:var(--red); line-height:1.8; }
-  .kw-sched-label{ font-family:var(--f-kh-serif); font-weight:600; font-size:1.05rem; line-height:1.8; color:var(--maroon); padding-left:12px; }
+  /* schedule: an open timeline straight on the page; time | gold thread + ring dots | item */
+  .kw-prog-date{ margin-top:4px; font-family:var(--f-moul); font-size:clamp(.78rem,3.6vw,.92rem); line-height:2; color:#9a6f22; }
+  .kw-sched{ --tw:clamp(110px,38%,160px); position:relative; max-width:420px; margin:0 auto; text-align:left; }
+  /* the thread runs from the first dot to the last, fading at both ends */
+  .kw-sched::before{ content:""; position:absolute; left:calc(var(--tw) + 12px + 8px); top:20px; bottom:20px; width:1.5px;
+    background:linear-gradient(transparent,var(--gold) 8%,var(--gold) 92%,transparent); }
+  .kw-sched-item{ position:relative; display:grid; grid-template-columns:var(--tw) 18px 1fr; column-gap:12px; }
+  .kw-sched-item > .kw-sched-time{ padding:10px 0 14px; text-align:left; }
+  .kw-sched-dot{ position:relative; justify-self:center; margin-top:19px; width:13px; height:13px; border-radius:50%; background:var(--ivory); border:1.5px solid var(--red);
+    box-shadow:0 0 0 4px rgba(201,162,77,.18); transition:background .5s, box-shadow .5s; }
+  .kw-sched-dot::after{ content:""; position:absolute; inset:2.5px; border-radius:50%; background:var(--gold); }
+  .kw-sched-item:hover .kw-sched-dot{ box-shadow:0 0 0 6px rgba(201,162,77,.3); }
+  .kw-sched-text{ min-width:0; padding:10px 0 14px; border-bottom:1px solid rgba(201,162,77,.28); }
+  .kw-sched-item:last-child .kw-sched-text{ border-bottom:0; }
+  .kw-sched-time{ font-family:var(--f-moul); font-size:clamp(.78rem,3.6vw,.88rem); line-height:2; color:var(--red); }
+  .kw-sched-label{ font-family:var(--f-kh-serif); font-weight:600; font-size:clamp(.98rem,4.4vw,1.08rem); line-height:1.9; color:var(--maroon); overflow-wrap:anywhere; }
+
+  /* reception card: cream paper, double maroon rule with a gold hairline, Moul lettering */
+  #kw-reception{ padding-top:24px; }
+  .kw-rcard{ --rc:#8c2a22; position:relative; max-width:440px; margin:0 auto; padding:26px 20px 28px; background:#fbf5ea;
+    border:1.5px solid var(--rc); outline:1px solid rgba(201,162,77,.75); outline-offset:-7px; box-shadow:0 0 0 4px #fbf5ea, 0 0 0 5px rgba(140,42,34,.55), 0 16px 36px rgba(74,13,13,.14); }
+  .kw-rcard-title{ font-family:var(--f-moul); font-weight:400; font-size:clamp(1.3rem,6.6vw,1.75rem); line-height:1.9; color:var(--rc); }
+  .kw-rcard-orn{ display:block; width:min(52%,130px); height:auto; margin:0 auto 12px; }
+  .kw-rcard-text{ font-family:'Moulpali',var(--f-moul); font-size:clamp(.82rem,3.5vw,.95rem); line-height:2.1; color:#6e2219; text-wrap:balance; overflow-wrap:break-word; }
+  .kw-rcard-guest{ font-family:var(--f-moul); color:var(--rc); }
+  .kw-rcard-venue{ font-family:var(--f-names); color:var(--rc); }
+  .kw-rcard-venue.kw-kh{ font-family:var(--f-moul); }
 
   /* gallery */
   .kw-gal{ columns:2; column-gap:12px; }
@@ -463,11 +480,31 @@
   .kw-gal figure:hover img{ transform:scale(1.05); }
   /* laid out like keepsake prints, each at its own slight angle */
   .kw-gal figure:nth-child(odd){ rotate:-1.2deg; } .kw-gal figure:nth-child(even){ rotate:1.4deg; }
+  /* feed under GSAP: the script takes over the feed's own fade-in and adds a sheen to each photo */
+  .kw-gfeed .pf-item{ opacity:1 !important; transform:none; transition:none !important; }
+  .kw-gfeed .pf-ph{ will-change:transform; }
+  .kw-glint{ position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,243,207,.5) 48%,rgba(255,255,255,.65) 50%,rgba(255,243,207,.5) 52%,transparent 70%); }
 
   /* venue + footer horizons */
-  .kw-sec-horizon{ left:50%; bottom:0; width:150%; transform:translateX(-50%); z-index:0; opacity:.95; }
-  .kw-venue{ padding-bottom:150px; }
   .kw-venue-name{ font-family:var(--f-names); font-weight:500; font-size:clamp(1.5rem,7.5vw,2.1rem); letter-spacing:.1em; line-height:1.3; overflow-wrap:anywhere; }
+
+  /* photo feed inside the gallery: the section already has its lotus divider, and the feed's
+     own backdrop fades into the beige instead of starting on a hard edge */
+  #kw-gallery .pf-bloom-top{ display:none; }
+  #kw-gallery .pf-bg{ inset:-20px -26px; background:none;
+    -webkit-mask-image:linear-gradient(transparent,#000 120px,#000 calc(100% - 120px),transparent);
+            mask-image:linear-gradient(transparent,#000 120px,#000 calc(100% - 120px),transparent); }
+  #kw-gallery .pf-bg::after{ background:rgba(240,226,203,.55); }
+
+  /* venue map: a gold-framed window onto Google Maps */
+  .kw-map{ position:relative; z-index:1; max-width:420px; margin:26px auto 0; padding:6px; background:var(--ivory); border:1px solid var(--gold); box-shadow:0 12px 30px rgba(0,0,0,.28); }
+  .kw-map iframe{ display:block; width:100%; aspect-ratio:4/3; border:0; }
+
+  /* gift: the bank QR on an ivory card, mounted like a keepsake print */
+  .kw-qr{ max-width:260px; margin:24px auto 0; padding:14px; background:#fffaf0; border:1px solid var(--gold); box-shadow:0 10px 26px rgba(74,13,13,.14); }
+  .kw-qr img{ display:block; width:100%; height:auto; }
+  .kw-qr figcaption{ margin-top:12px; font-family:var(--f-kh-serif); font-weight:600; font-size:1rem; line-height:1.8; color:var(--maroon); overflow-wrap:anywhere; white-space:pre-line; }
 
   /* rsvp */
   .kw-rsvp-opts{ display:flex; flex-direction:column; gap:12px; margin-top:22px; }
@@ -489,7 +526,7 @@
   .kw-contact .p{ font-family:var(--f-en); font-size:1.15rem; letter-spacing:.06em; color:var(--maroon); margin-top:4px; }
 
   /* closing: a wax seal presses onto the letter */
-  .kw-finale{ padding-top:96px; padding-bottom:180px; }
+  .kw-finale{ padding-top:96px; }
   .kw-finale .kw-names{ font-size:clamp(1.3rem,6.4vw,2rem); letter-spacing:.1em; margin-top:4px; }
   .kw-seal-wrap{ position:relative; width:124px; height:124px; margin:0 auto 26px; }
   .kw-seal{ width:100%; height:100%; overflow:visible; filter:drop-shadow(0 10px 16px rgba(74,13,13,.35)); }
@@ -567,8 +604,6 @@
     .kw-sec{ padding:92px 40px; }
     .kw-title{ font-size:1.5rem; }
     .kw-duo{ margin-inline:-40px; }
-    .kw-venue{ padding-bottom:170px; }
-    .kw-finale{ padding-bottom:200px; }
   }
 </style>
 
@@ -601,16 +636,6 @@
           <circle cx="48" cy="48" r="1.4" fill="currentColor" stroke="none" fill-opacity=".7"/>
         </g>
       </symbol>
-      {{-- roumdul (Cambodia's national flower): three thick outer petals, three inner, gold heart --}}
-      <g id="kw-roumdul">
-        <g><path d="M0 0C-6-4-6-12 0-15 6-12 6-4 0 0Z"/><path d="M0 0C-6-4-6-12 0-15 6-12 6-4 0 0Z" transform="rotate(120)"/><path d="M0 0C-6-4-6-12 0-15 6-12 6-4 0 0Z" transform="rotate(240)"/></g>
-        <g fill-opacity=".72"><path d="M0 0C-3.5-3-3.5-8 0-10 3.5-8 3.5-3 0 0Z" transform="rotate(60)"/><path d="M0 0C-3.5-3-3.5-8 0-10 3.5-8 3.5-3 0 0Z" transform="rotate(180)"/><path d="M0 0C-3.5-3-3.5-8 0-10 3.5-8 3.5-3 0 0Z" transform="rotate(300)"/></g>
-        <circle r="2.4" fill="#C9A24D" stroke="none"/>
-      </g>
-      <path id="kw-leaf" d="M0 0C8-8 24-9 38 0 24 8 8 7 0 0ZM3 0H34" />
-      <radialGradient id="kw-wax" cx="40%" cy="35%" r="70%">
-        <stop offset="0" stop-color="#b02a2a"/><stop offset=".55" stop-color="#7A1515"/><stop offset="1" stop-color="#4a0b0b"/>
-      </radialGradient>
     </defs>
   </svg>
 
@@ -649,36 +674,31 @@
       <svg class="kw-corner br" aria-hidden="true"><use href="#kw-corner"/></svg>
       <div class="kw-deco kw-branch-wrap tl">{!! $branch(true) !!}</div>
       <div class="kw-deco kw-branch-wrap tr">{!! $branch(false) !!}</div>
-
+{{--
       @if ($coverUrl)
         <div class="kw-arch kw-rev"><div class="kw-arch-in"><img src="{{ $coverUrl }}" alt="{{ $coupleTitle }}" loading="eager"></div></div>
-      @endif
+      @endif --}}
 
-      <p class="kw-eyebrow kw-rev">សិរីមង្គលអាពាហ៍ពិពាហ៍</p>
-      <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
+      <img class="kw-kbach-top kw-rev" src="{{ $contentImg('kbach-dombol.png') }}" alt="" aria-hidden="true">
 
-      @if ($coupleTitle)
-        <h2 class="kw-hero-names kw-gs" aria-label="{{ $coupleTitle }}">
-          @if ($groomUpper)<span class="kw-names kw-shimmer{{ $kh($groomName) }}">{{ $groomUpper }}</span>@endif
-          @if ($groomUpper && $brideUpper)<span class="kw-amp" aria-hidden="true">&amp;</span>@endif
-          @if ($brideUpper)<span class="kw-names kw-shimmer{{ $kh($brideName) }}">{{ $brideUpper }}</span>@endif
-        </h2>
-        <div class="kw-tagline">
-          <p class="en kw-gs">Two hearts, one forever</p>
-          <p class="kh kw-gs">ពីរបេះដូង រួមដំណើរតែមួយ ជារៀងរហូត</p>
-        </div>
-      @endif
+      <h1 class="kw-invite-title kw-rev">សូមគោរពអញ្ជើញ</h1>
+      <img class="kw-tacteing kw-rev" src="{{ $contentImg('tacteing 3 .png') }}" alt="" aria-hidden="true">
 
-      <div class="kw-body-text kw-rev d2" style="margin-top:26px">
-        <p>សូមគោរពអញ្ជើញ</p>
+      <div class="kw-invite-text kw-rev d2">
         @if (! empty($recipientName))
           <p class="kw-guest">{{ $recipientName }}</p>
         @else
-          <p class="kw-guest">លោក លោកស្រី អ្នកនាង កញ្ញា</p>
+          <p>ឯកឧត្តម លោកជំទាវ លោក លោកស្រី អ្នកនាង កញ្ញា</p>
         @endif
-        <p>ចូលរួមជាអធិបតី និងជាភ្ញៀវកិត្តិយស</p>
-        <p>ក្នុងពិធីមង្គលការរបស់យើងខ្ញុំ</p>
+        <p>អញ្ជើញចូលរួមជាអធិបតី និងជាភ្ញៀវកិត្តិយស ដើម្បីប្រសិទ្ធិពរជ័យ សិរីសួស្តី ជ័យមង្គល ក្នុងពិធីអាពាហ៍ពិពាហ៍ កូនប្រុស-កូនស្រី របស់យើងខ្ញុំ</p>
       </div>
+
+      {{-- name kbach: the artwork carries the "កូនប្រុសនាម / កូនស្រីនាម" labels, the names sit under them --}}
+      <h2 class="kw-namekbach kw-hero-names kw-gs" aria-label="{{ $coupleTitle ?: 'សិរីមង្គលអាពាហ៍ពិពាហ៍' }}">
+        <img src="{{ $contentImg('name kbach 1.png') }}" alt="" aria-hidden="true">
+        @if ($groomUpper)<span class="kw-names groom{{ $kh($groomName) }}">{{ $groomUpper }}</span>@endif
+        @if ($brideUpper)<span class="kw-names bride{{ $kh($brideName) }}">{{ $brideUpper }}</span>@endif
+      </h2>
 
       @if ($personalNote)
         <p class="kw-note kw-rev">{{ $personalNote }}</p>
@@ -783,16 +803,44 @@
     {{-- ============ 6 · PROGRAM ============ --}}
     @if ($schedule->isNotEmpty())
       <section class="kw-sec" id="kw-program">
-        <h2 class="kw-title kw-rev">កម្មវិធីពិធីមង្គលការ</h2>
-        <p class="kw-sub kw-rev">The celebration</p>
+        <h2 class="kw-title kw-rev">កម្មវិធីអាពាហ៍ពិពាហ៍</h2>
+        @if ($dateKhmer)
+          <p class="kw-prog-date kw-rev">{{ $dateKhmer }}</p>
+        @endif
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         <div class="kw-sched">
           @foreach ($schedule as $row)
             <div class="kw-sched-item kw-rev">
-              <div class="kw-sched-time">{{ $row['time'] ?? '' }}</div>
-              <div class="kw-sched-label">{{ $row['label'] ?? '' }}</div>
+              <div class="kw-sched-time">{{ ! empty($row['time']) ? $schedTime($row['time']) : '' }}</div>
+              <span class="kw-sched-dot" aria-hidden="true"></span>
+              <div class="kw-sched-text">
+                <div class="kw-sched-label">{{ $row['label'] ?? '' }}</div>
+              </div>
             </div>
           @endforeach
+        </div>
+      </section>
+    @endif
+
+    {{-- ============ 6b · RECEPTION CARD (formal invitation to the reception) ============ --}}
+    @if ($showReception)
+      <section class="kw-sec" id="kw-reception">
+        <div class="kw-rcard kw-rev">
+          <h2 class="kw-rcard-title">សូមគោរពអញ្ជើញ</h2>
+          <img class="kw-rcard-orn" src="{{ $contentImg('tacteing 3 .png') }}" alt="" aria-hidden="true">
+          <div class="kw-rcard-text">
+            @if (! empty($recipientName))
+              <p class="kw-rcard-guest">{{ $recipientName }}</p>
+            @else
+              <p>ឯកឧត្តម លោកឧកញ៉ា លោកជំទាវ លោក លោកស្រី អ្នកនាង កញ្ញា</p>
+            @endif
+            <p>និងញាតិមិត្ត អញ្ជើញចូលរួមជាអធិបតី និងជាភ្ញៀវកិត្តិយសក្នុង {{ $receptionLabel }}</p>
+            <p>
+              @if ($receptionTime){{ $receptionTime }}@endif
+              @if ($venueName) នៅ <span class="kw-rcard-venue{{ $kh($venueName) }}">{{ $venueName }}</span>@endif
+              ដោយមេត្រីភាព ។
+            </p>
+          </div>
         </div>
       </section>
     @endif
@@ -819,7 +867,6 @@
     @if ($showVenue)
       <section class="kw-sec kw-red kw-venue kw-live" id="kw-venue">
         {!! $flock([[10, 24, -3, 18, .8, .7, false], [13, 24, -2.5, 13, .7, .6, false]]) !!}
-        <div class="kw-deco kw-sec-horizon">{!! $templeSvg !!}</div>
         <div class="kw-frame"></div>
         <svg class="kw-corner tl" aria-hidden="true"><use href="#kw-corner"/></svg>
         <svg class="kw-corner tr" aria-hidden="true"><use href="#kw-corner"/></svg>
@@ -828,9 +875,29 @@
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
         @if ($venueName)<p class="kw-venue-name kw-shimmer kw-rev{{ $kh($venueName) }}">{{ mb_strtoupper($venueName) }}</p>@endif
         @if ($venueAddress)<p class="kw-body-text kw-rev" style="color:var(--beige); margin-top:10px">{{ $venueAddress }}</p>@endif
-        @if ($mapUrl && $venueAddress)
+        @if ($mapEmbed)
+          <div class="kw-map kw-rev">
+            <iframe src="{{ $mapEmbed }}" title="Google Maps" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+          </div>
+        @endif
+        @if ($mapUrl && ($venueAddress || $mapLink))
           <div class="kw-rev" style="margin-top:28px"><a class="kw-btn gold" href="{{ $mapUrl }}" target="_blank" rel="noopener noreferrer">មើលផែនទី</a></div>
         @endif
+      </section>
+    @endif
+
+    {{-- ============ 8b · WEDDING GIFT (bank QR) ============ --}}
+    @if ($giftQr)
+      <section class="kw-sec kw-beige" id="kw-gift">
+        <h2 class="kw-title kw-rev">ចំណងដៃ</h2>
+        <p class="kw-sub kw-rev">Wedding gift</p>
+        <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
+        <p class="kw-body-text kw-rev">សម្រាប់ភ្ញៀវកិត្តិយសដែលមិនអាចអញ្ជើញមកដល់ ឬចង់ផ្ញើចំណងដៃពីចម្ងាយ<br>សូមស្កេន QR ខាងក្រោម។ សូមអរគុណ!</p>
+        <figure class="kw-qr kw-rev">
+          <img src="{{ $giftQr }}" alt="QR code សម្រាប់ផ្ញើចំណងដៃ" loading="lazy">
+          @if ($giftAccount)<figcaption>{{ $giftAccount }}</figcaption>@endif
+        </figure>
+        <div class="kw-rev" style="margin-top:22px"><a class="kw-btn" href="{{ $giftQr }}" download target="_blank" rel="noopener noreferrer">រក្សាទុក QR</a></div>
       </section>
     @endif
 
@@ -876,7 +943,6 @@
       {!! $flock([[30, 26, -5, 18, .8, .7, false], [34, 26, -4.4, 14, .7, .6, false], [27, 26, -4, 11, .75, .5, false]]) !!}
       <div class="kw-dustfield kw-deco" data-dust="14" data-rise="-260px"></div>
       <div class="kw-deco kw-branch-wrap tr">{!! $branch(true) !!}</div>
-      <div class="kw-deco kw-sec-horizon">{!! $templeSvg !!}</div>
 
       <div class="kw-seal-wrap">
         <svg class="kw-seal kw-gs" viewBox="-60 -60 120 120" aria-hidden="true" focusable="false">
@@ -1035,18 +1101,15 @@
     var q = function (sel, ctx) { return (ctx || document).querySelector(sel); };
     var qa = function (sel, ctx) { return G.utils.toArray((ctx || document).querySelectorAll(sel)); };
 
-    // hero: each name is written in, the ampersand blooms between them
+    // hero: the name kbach fades up, then each name is written in under its label
     var names = q('.kw-hero-names');
     if (names) {
-      G.set(names, { opacity: 1 });
-      var lines = qa('.kw-names', names), amp = q('.kw-amp', names);
-      var hero = G.timeline({ delay: .45 });
-      lines.forEach(function (ln, i) {
+      var hero = G.timeline({ scrollTrigger: once(names, 'top 85%') })
+        .fromTo(names, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
+      qa('.kw-names', names).forEach(function (ln, i) {
         hero.fromTo(ln, { clipPath: 'inset(-20% 100% -20% -10%)' },
-          { clipPath: 'inset(-20% -10% -20% -10%)', duration: 1.3, ease: 'power2.inOut', clearProps: 'clipPath' }, i ? '-=.35' : 0);
-        if (!i && amp) hero.fromTo(amp, { opacity: 0, scale: .3, rotation: -35 }, { opacity: 1, scale: 1, rotation: 0, duration: .9, ease: 'back.out(2.2)' }, '-=.35');
+          { clipPath: 'inset(-20% -10% -20% -10%)', duration: 1.3, ease: 'power2.inOut', clearProps: 'clipPath' }, i ? '-=.6' : '-=.3');
       });
-      hero.fromTo(qa('.kw-tagline > *'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1, stagger: .22, ease: 'power3.out' }, '-=.4');
     }
 
     // love verse: the heartbeat line draws itself into a heart, a roumdul opens inside it
@@ -1083,13 +1146,42 @@
       });
     }
 
-    // gallery: prints are dealt onto the table
+    // gallery (framed): prints are dealt onto the table, each photo settling inside its frame
     var figs = qa('.kw-gal figure');
     if (figs.length) {
       G.set(figs, { y: 50, rotation: function (i) { return i % 2 ? 8 : -8; } });
+      G.set(qa('.kw-gal img'), { scale: 1.3 });
       ST.batch(figs, { start: 'top 90%', once: true, onEnter: function (batch) {
         G.to(batch, { opacity: 1, y: 0, rotation: 0, duration: 1.1, stagger: .14, ease: 'power3.out' });
+        G.to(batch.map(function (f) { return f.querySelector('img'); }), { scale: 1, duration: 1.8, stagger: .14, ease: 'power2.out', clearProps: 'transform' });
       } });
+    }
+
+    // gallery (feed): each photo unveils from alternating sides as a light sheen crosses it, then
+    // drifts in parallax inside its frame and swells slightly as it passes the middle of the screen
+    var gal = q('#kw-gallery');
+    var feed = gal && qa('.pf-item', gal);
+    if (feed && feed.length) {
+      gal.classList.add('kw-gfeed');
+      qa('.pf-bloom svg', gal).forEach(function (b) {
+        G.fromTo(b, { opacity: 0, scale: .3, rotation: -90 }, { opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'back.out(1.6)', scrollTrigger: once(b, 'top 92%') });
+      });
+      feed.forEach(function (item, i) {
+        var ph = q('.pf-ph', item), img = q('img', item);
+        var sheen = document.createElement('i'); sheen.className = 'kw-glint'; ph.appendChild(sheen);
+        G.set(sheen, { xPercent: -130 });
+        var from = i % 2 ? 'inset(0% 0% 0% 100% round 16px)' : 'inset(0% 100% 0% 0% round 16px)';
+        G.set(img, { scale: 1.45 });
+        G.timeline({ scrollTrigger: once(item, 'top 88%') })
+          .fromTo(item, { y: 70, rotation: i % 2 ? 3 : -3 }, { y: 0, rotation: 0, duration: 1.4, ease: 'power3.out' })
+          .fromTo(ph, { clipPath: from }, { clipPath: 'inset(0% 0% 0% 0% round 16px)', duration: 1.3, ease: 'power3.inOut', clearProps: 'clipPath' }, 0)
+          .to(img, { scale: 1.16, duration: 2, ease: 'power2.out' }, 0)
+          .fromTo(sheen, { xPercent: -130 }, { xPercent: 130, duration: 1.3, ease: 'power2.inOut' }, '-=1');
+        G.timeline({ scrollTrigger: { trigger: item, start: 'top bottom', end: 'bottom top', scrub: .6 } })
+          .fromTo(img, { yPercent: -6 }, { yPercent: 6, duration: 2, ease: 'none' }, 0)
+          .fromTo(ph, { scale: .92 }, { scale: 1, duration: 1, ease: 'power1.out' }, 0)
+          .to(ph, { scale: .92, duration: 1, ease: 'power1.in' }, 1);
+      });
     }
 
     // closing: the wax seal presses down, a ripple runs out, then the thank-you is written

@@ -119,12 +119,12 @@ class InvitationTemplateSeeder extends Seeder
 
         ServicePlan::updateOrCreate(
             ['service_id' => $khmerService->id, 'label' => 'Essential — 50 recipients, 6 months'],
-            ['price' => 9.99, 'max_recipients' => 50, 'retention_months' => 6, 'features' => ['venue_address', 'event_schedule'], 'sort_order' => 0]
+            ['price' => 9.99, 'max_recipients' => 50, 'retention_months' => 6, 'features' => ['venue_address', 'map_url', 'event_schedule', 'qr_code'], 'sort_order' => 0]
         );
 
         ServicePlan::updateOrCreate(
             ['service_id' => $khmerService->id, 'label' => 'Premium — 200 recipients, 1 year'],
-            ['price' => 19.99, 'max_recipients' => 200, 'retention_months' => 12, 'features' => ['venue_address', 'event_schedule', 'story_chapters', 'photo_gallery', 'countdown_enabled', 'rsvp_enabled', 'khmer_date'], 'sort_order' => 1]
+            ['price' => 19.99, 'max_recipients' => 200, 'retention_months' => 12, 'features' => ['venue_address', 'map_url', 'event_schedule', 'qr_code', 'story_chapters', 'photo_gallery', 'countdown_enabled', 'rsvp_enabled', 'khmer_date'], 'sort_order' => 1]
         );
 
         InvitationTemplate::updateOrCreate(
@@ -137,8 +137,8 @@ class InvitationTemplateSeeder extends Seeder
                 'is_active' => true,
                 'fields' => [
                     'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'cover_image',
-                    'message', 'event_date', 'khmer_date', 'venue_name', 'venue_address',
-                    'story_chapters', 'event_schedule', 'photo_gallery', 'gallery_feed', 'rsvp_enabled',
+                    'message', 'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
+                    'qr_code', 'gift_account', 'story_chapters', 'event_schedule', 'photo_gallery', 'gallery_feed', 'rsvp_enabled',
                     'countdown_enabled', 'music_url', 'groom_phone', 'bride_phone',
                 ],
                 'view' => 'invitations.templates.khmer-traditional-wedding',
