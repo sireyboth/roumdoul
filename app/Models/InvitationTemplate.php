@@ -22,42 +22,46 @@ class InvitationTemplate extends Model
      */
     public const FIELD_CATALOG = [
         // `hint` is the customer-facing explanation shown under each input in the dashboard
-        // and in its "Guide" section — write it for the customer, not for admins.
+        // and in its "Guide" section — write it for the customer, not for admins. `example`
+        // (optional) is a sample value, used as the input placeholder and in the help panel.
 
         // Identity / basics — always available on every plan once a template selects them,
         // see FREE_FIELDS below.
-        'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text', 'hint' => 'ឈ្មោះរបស់អ្នក — ភ្ញៀវនឹងឃើញថាអ្នកណាជាអ្នកអញ្ជើញ។'],
-        'groom_name' => ['label' => "Groom's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនកំលោះ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។'],
-        'bride_name' => ['label' => "Bride's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនក្រមុំ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។'],
-        'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text', 'hint' => 'ឈ្មោះអ្នកដែលមានខួបកំណើត។'],
-        'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'អាយុដែលនឹងគ្រប់ក្នុងខួបនេះ ឧ. 25។'],
-        'headline' => ['label' => 'Headline', 'type' => 'text', 'hint' => 'ចំណងជើងធំនៅខាងលើធៀប ឧ. «សូមគោរពអញ្ជើញ»។'],
+        'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text', 'hint' => 'ឈ្មោះរបស់អ្នក — ភ្ញៀវនឹងឃើញថាអ្នកណាជាអ្នកអញ្ជើញ។', 'example' => 'សុខា'],
+        'groom_name' => ['label' => "Groom's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនកំលោះ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។', 'example' => 'សុខ សុខា'],
+        'bride_name' => ['label' => "Bride's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនក្រមុំ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។', 'example' => 'ចាន់ ស្រីនាង'],
+        'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text', 'hint' => 'ឈ្មោះអ្នកដែលមានខួបកំណើត។', 'example' => 'ស្រីពៅ'],
+        'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'អាយុដែលនឹងគ្រប់ក្នុងខួបនេះ ឧ. 25។', 'example' => '25'],
+        'headline' => ['label' => 'Headline', 'type' => 'text', 'hint' => 'ចំណងជើងធំនៅខាងលើធៀប ឧ. «សូមគោរពអញ្ជើញ»។', 'example' => 'សូមគោរពអញ្ជើញ'],
         'message' => ['label' => 'Message', 'type' => 'textarea', 'hint' => 'សារដែលអ្នកចង់ផ្ញើដល់ភ្ញៀវ — ពីរបីប្រយោគខ្លីៗគឺល្អបំផុត។'],
         'cover_image' => ['label' => 'Cover image', 'type' => 'image', 'hint' => 'រូបភាពធំដែលភ្ញៀវឃើញមុនគេពេលបើកធៀប — ជ្រើសរូបច្បាស់ និងស្អាតបំផុត។'],
         'event_date' => ['label' => 'Event date', 'type' => 'datetime', 'hint' => 'ថ្ងៃ និងម៉ោងនៃកម្មវិធី — ប្រើសម្រាប់បង្ហាញកាលបរិច្ឆេទ និងនាឡិការាប់ថយក្រោយ។'],
-        'venue_name' => ['label' => 'Venue name', 'type' => 'text', 'hint' => 'ឈ្មោះកន្លែងរៀបកម្មវិធី ឧ. «គេហដ្ឋានខាងស្រី» ឬឈ្មោះសណ្ឋាគារ។'],
-        'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text', 'hint' => 'ចម្លងតំណបទចម្រៀងពី YouTube ឬ TikTok មកដាក់ — ភ្ញៀវអាចស្ដាប់ភ្លេងពេលបើកធៀប។'],
+        'venue_name' => ['label' => 'Venue name', 'type' => 'text', 'hint' => 'ឈ្មោះកន្លែងរៀបកម្មវិធី ឧ. «គេហដ្ឋានខាងស្រី» ឬឈ្មោះសណ្ឋាគារ។', 'example' => 'គេហដ្ឋានខាងស្រី'],
+        'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text', 'hint' => 'ចម្លងតំណបទចម្រៀងពី YouTube ឬ TikTok មកដាក់ — ភ្ញៀវអាចស្ដាប់ភ្លេងពេលបើកធៀប។', 'example' => 'https://youtu.be/…'],
         'accent_color' => ['label' => 'Accent color', 'type' => 'color', 'hint' => 'ពណ៌សំខាន់របស់ធៀប (ប៊ូតុង ស៊ុម និងអក្សរលម្អ)។'],
         'groom_photo' => ['label' => "Groom's photo", 'type' => 'image', 'hint' => 'រូបថតកូនកំលោះ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
         'bride_photo' => ['label' => "Bride's photo", 'type' => 'image', 'hint' => 'រូបថតកូនក្រមុំ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
-        'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនកំលោះ ដែលភ្ញៀវអាចទាក់ទងបាន។'],
-        'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនក្រមុំ ដែលភ្ញៀវអាចទាក់ទងបាន។'],
+        'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនកំលោះ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '012 345 678'],
+        'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនក្រមុំ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '098 765 432'],
 
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
         // shows these to the recipient if the plan's `features` list includes the key.
-        'venue_address' => ['label' => 'Venue address (for map link)', 'type' => 'text', 'hint' => 'អាសយដ្ឋានពេញរបស់កន្លែងកម្មវិធី — ភ្ញៀវចុចប៊ូតុងមើលផ្លូវ ដើម្បីបើក Google Maps។'],
-        'map_url' => ['label' => 'Google Maps link', 'type' => 'text', 'hint' => 'ចម្លងតំណទីតាំងពី Google Maps (ចុច Share → Copy link) មកដាក់ — ប៊ូតុង «មើលផែនទី» នឹងបើកចំទីតាំងពិតប្រាកដ។'],
-        'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text', 'hint' => 'ថ្ងៃខែតាមចន្ទគតិ ឧ. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ»។'],
+        'venue_address' => ['label' => 'Venue address (for map link)', 'type' => 'text', 'hint' => 'អាសយដ្ឋានពេញរបស់កន្លែងកម្មវិធី — ភ្ញៀវចុចប៊ូតុងមើលផ្លូវ ដើម្បីបើក Google Maps។', 'example' => 'ផ្ទះលេខ 12, ផ្លូវ 271, ភ្នំពេញ'],
+        'map_url' => ['label' => 'Google Maps link', 'type' => 'text', 'hint' => 'ចម្លងតំណទីតាំងពី Google Maps (ចុច Share → Copy link) មកដាក់ — ប៊ូតុង «មើលផែនទី» នឹងបើកចំទីតាំងពិតប្រាកដ។', 'example' => 'https://maps.app.goo.gl/…'],
+        'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text', 'hint' => 'ថ្ងៃខែតាមចន្ទគតិ ឧ. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ»។', 'example' => 'ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ'],
         'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីឲ្យភ្ញៀវចុច «ចូលរួម» ឬ «មិនចូលរួម» — អ្នកមើលចម្លើយបាននៅផ្ទាំង «ការឆ្លើយតប»។'],
         'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញនាឡិការាប់ថយក្រោយដល់ថ្ងៃកម្មវិធី (ត្រូវបំពេញ Event date ផងដែរ)។'],
         'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery', 'hint' => 'រូបថតជាច្រើន (ឧ. រូប Pre-wedding) បង្ហាញជាវិចិត្រសាលនៅលើធៀប។'],
         'gallery_feed' => ['label' => 'Scrolling photo feed', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញរូបថតជាបន្ទះបញ្ឈរធំៗ រមូរចុះក្រោម (ដូច TikTok)។ មិនធីក = រូបតូចៗក្នុងស៊ុម។'],
         'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule', 'hint' => 'របៀបវារៈកម្មវិធី — ម៉ោង និងសកម្មភាពនីមួយៗ ឧ. «7:00 AM — ហែជំនូន»។'],
+        // `section` puts a field under a different dashboard tab than its type would (an image
+        // normally goes under "media"); see InvitationManagePage::fieldSection().
+        'schedule_image' => ['label' => 'Schedule as an image (optional)', 'type' => 'image', 'section' => 'program', 'hint' => 'មានរបៀបវារៈដែលរចនារួចជារូបភាព (ឧ. កាតក្បាច់)? ដាក់រូបនៅទីនេះ — ធៀបនឹងបង្ហាញរូបនេះជំនួសរបៀបវារៈដែលវាយខាងលើ។ ទុកទទេ ដើម្បីប្រើរបៀបវារៈដែលវាយ។'],
         'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story', 'hint' => 'រឿងរ៉ាវរបស់អ្នកទាំងពីរ ចែកជាជំពូក — ចំណងជើង និងខ្លឹមសារខ្លីៗ។'],
         'qr_code' => ['label' => 'QR code image', 'type' => 'image', 'hint' => 'រូប QR code ឧ. QR ធនាគារ សម្រាប់ភ្ញៀវផ្ញើចំណងដៃពីចម្ងាយ។'],
-        'gift_account' => ['label' => 'Gift account details', 'type' => 'textarea', 'hint' => 'ឈ្មោះ និងលេខគណនីធនាគារ បង្ហាញនៅក្រោម QR ឧ. «ABA · SOKHA & SREYNEANG · 000 123 456»។'],
-        'cta_label' => ['label' => 'Button label', 'type' => 'text', 'hint' => 'អក្សរនៅលើប៊ូតុងផ្ទាល់ខ្លួន ឧ. «ចូលរួម Telegram Group» — ត្រូវបំពេញជាមួយ Button link។'],
-        'cta_url' => ['label' => 'Button link', 'type' => 'text', 'hint' => 'តំណដែលប៊ូតុងនឹងបើក — ត្រូវចាប់ផ្ដើមដោយ https://'],
+        'gift_account' => ['label' => 'Gift account details', 'type' => 'textarea', 'hint' => 'ឈ្មោះ និងលេខគណនីធនាគារ បង្ហាញនៅក្រោម QR ឧ. «ABA · SOKHA & SREYNEANG · 000 123 456»។', 'example' => 'ABA · SOKHA · 000 123 456'],
+        'cta_label' => ['label' => 'Button label', 'type' => 'text', 'hint' => 'អក្សរនៅលើប៊ូតុងផ្ទាល់ខ្លួន ឧ. «ចូលរួម Telegram Group» — ត្រូវបំពេញជាមួយ Button link។', 'example' => 'ចូលរួម Telegram Group'],
+        'cta_url' => ['label' => 'Button link', 'type' => 'text', 'hint' => 'តំណដែលប៊ូតុងនឹងបើក — ត្រូវចាប់ផ្ដើមដោយ https://', 'example' => 'https://t.me/…'],
     ];
 
     /**
@@ -76,6 +80,15 @@ class InvitationTemplate extends Model
     ];
 
     /**
+     * Premium fields that are an alternative form of another premium field, so they follow that
+     * field's plan unlock instead of needing their own (see Invitation::fieldUnlocked()) — a plan
+     * that includes the schedule includes it either way, typed rows or a ready-made image.
+     */
+    public const UNLOCKED_WITH = [
+        'schedule_image' => 'event_schedule',
+    ];
+
+    /**
      * Every FIELD_CATALOG key grouped by which event type it's actually relevant to — purely
      * for organizing the admin "Fields this design uses" checklist into readable sections as
      * the catalog grows. Has no effect on gating or rendering (that's FREE_FIELDS/hasFeature).
@@ -87,7 +100,7 @@ class InvitationTemplate extends Model
         'universal' => [
             'sender_name', 'headline', 'message', 'cover_image', 'event_date', 'venue_name',
             'music_url', 'accent_color', 'venue_address', 'map_url', 'rsvp_enabled', 'countdown_enabled',
-            'photo_gallery', 'gallery_feed', 'event_schedule', 'qr_code', 'gift_account', 'cta_label', 'cta_url',
+            'photo_gallery', 'gallery_feed', 'event_schedule', 'schedule_image', 'qr_code', 'gift_account', 'cta_label', 'cta_url',
         ],
         'wedding' => [
             'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
@@ -182,13 +195,14 @@ class InvitationTemplate extends Model
     }
 
     /**
-     * FIELD_CATALOG entries minus FREE_FIELDS, labeled for a plan's "unlocked fields" checkbox
-     * list — i.e. every field that *can* be gated behind a pricing plan.
+     * FIELD_CATALOG entries minus FREE_FIELDS (and UNLOCKED_WITH followers), labeled for a
+     * plan's "unlocked fields" checkbox list — i.e. every field that *can* be gated behind a
+     * pricing plan.
      */
     public static function premiumFieldOptions(): array
     {
         return collect(self::FIELD_CATALOG)
-            ->except(self::FREE_FIELDS)
+            ->except([...self::FREE_FIELDS, ...array_keys(self::UNLOCKED_WITH)])
             ->map(fn (array $field) => $field['label'])
             ->all();
     }

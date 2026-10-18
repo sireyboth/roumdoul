@@ -35,6 +35,8 @@
     $schedule = collect($scheduleUnlocked ? ($fields['event_schedule'] ?? []) : [])
         ->filter(fn ($row) => ! empty($row['time']) || ! empty($row['label']))
         ->values();
+    // a ready-made schedule image replaces the typed timeline
+    $scheduleImg = ($scheduleUnlocked && ! empty($fields['schedule_image'])) ? $resolveUrl($fields['schedule_image']) : null;
     if ($schedule->isEmpty()) {
         $schedule = collect([
             ['time' => '5:00 PM', 'label' => 'Ceremony'],
@@ -370,6 +372,8 @@
   #timeline .head{ text-align:center; margin-bottom:8vh; }
   #timeline .head .display{ font-size:clamp(1.8rem,5vw,3rem); margin-top:10px; }
   #timeline .rail-wrap{ width:var(--container); margin:0 auto; position:relative; padding-left:40px; }
+  #timeline .sched-img{ display:block; width:var(--container); max-width:560px; margin:0 auto; border:1px solid var(--line); }
+  #timeline .sched-img img{ display:block; width:100%; height:auto; }
   #timeline .spine{ position:absolute; left:0; top:6px; bottom:6px; width:1px; background:var(--line); }
   #timeline .spine i{ position:absolute; left:0; top:0; width:1px; background:var(--brass); height:0; }
   #timeline .ev{ position:relative; padding:34px 0; opacity:.4; transition:opacity .4s; }
@@ -593,12 +597,16 @@
   <!-- 11 — TIMELINE -->
   <section class="reel" id="timeline" data-scene="11" data-tc="00:02:58:03">
     <div class="head"><span class="eyebrow">Chapter Eleven</span><h2 class="display">How the evening unfolds</h2></div>
+    @if ($scheduleImg)
+      <a class="sched-img" href="{{ $scheduleImg }}" target="_blank" rel="noopener"><img src="{{ $scheduleImg }}" alt="Schedule" loading="lazy"></a>
+    @else
     <div class="rail-wrap">
       <div class="spine"><i id="spine-fill"></i></div>
       @foreach ($schedule as $row)
         <div class="ev"><span class="time">{{ $row['time'] ?? '' }}</span><h3 class="display">{{ $row['label'] ?? '' }}</h3></div>
       @endforeach
     </div>
+    @endif
   </section>
 
   <!-- 12 — LOCATION -->
@@ -1138,6 +1146,7 @@
   /* ================= 11 TIMELINE ================= */
   (function(){
     var evs=gsap.utils.toArray('#timeline .ev');
+    if (!document.querySelector('#timeline .rail-wrap')) return;
     ScrollTrigger.create({
       trigger:'#timeline .rail-wrap', start:'top 60%', end:'bottom 60%', scrub:1,
       onUpdate:function(self){

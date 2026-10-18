@@ -27,6 +27,7 @@ class InvitationManagePage extends Component
     /**
      * Which FIELD_CATALOG field types are edited under which sidebar section. A section only
      * appears in the sidebar if this invitation's template actually uses one of its types.
+     * A catalog entry's own `section` overrides this (e.g. schedule_image sits under program).
      */
     public const SECTION_FIELD_TYPES = [
         'details' => ['text', 'textarea', 'datetime', 'color', 'boolean'],
@@ -54,6 +55,9 @@ class InvitationManagePage extends Component
     /** Pending multi-image uploads, keyed by gallery field key (e.g. 'photo_gallery'). */
     public array $galleryUploads = [];
 
+    /** Field the help panel opens on when a section is reached from the guide. */
+    public ?string $focusField = null;
+
     public string $newRecipientName = '';
 
     public bool $saved = false;
@@ -80,6 +84,19 @@ class InvitationManagePage extends Component
     {
         if (in_array($section, $this->visibleSections(), true)) {
             $this->section = $section;
+            $this->focusField = null;
+            $this->saved = false;
+        }
+    }
+
+    /** Opens the section a field is edited in with that field focused (used by the guide). */
+    public function editField(string $key): void
+    {
+        $section = self::fieldSection($key);
+
+        if (in_array($key, $this->invitation->template->fields ?? [], true) && in_array($section, $this->visibleSections(), true)) {
+            $this->section = $section;
+            $this->focusField = $key;
             $this->saved = false;
         }
     }
@@ -87,13 +104,14 @@ class InvitationManagePage extends Component
     /** Sidebar sections in display order, skipping field sections this template has nothing for. */
     public function availableSections(): array
     {
-        $usedTypes = collect($this->invitation->template->fields ?? [])
-            ->map(fn (string $key) => InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null)
+        $usedSections = collect($this->invitation->template->fields ?? [])
+            ->map(fn (string $key) => self::fieldSection($key))
             ->filter();
 
         $fieldSections = collect(self::SECTION_FIELD_TYPES)
-            ->filter(fn (array $types) => $usedTypes->intersect($types)->isNotEmpty())
             ->keys()
+            ->filter(fn (string $section) => $usedSections->contains($section))
+            ->values()
             ->all();
 
         $sections = ['overview', ...$fieldSections, 'guests'];
@@ -116,12 +134,23 @@ class InvitationManagePage extends Component
     /** This template's field keys that are edited under the given sidebar section. */
     public function sectionFields(string $section): array
     {
-        $types = self::SECTION_FIELD_TYPES[$section] ?? [];
-
         return collect($this->invitation->template->fields ?? [])
-            ->filter(fn (string $key) => in_array(InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null, $types, true))
+            ->filter(fn (string $key) => self::fieldSection($key) === $section)
             ->values()
             ->all();
+    }
+
+    /** The sidebar section a catalog field is edited under: its own `section`, else by its type. */
+    public static function fieldSection(string $key): ?string
+    {
+        $field = InvitationTemplate::FIELD_CATALOG[$key] ?? null;
+
+        if (! $field) {
+            return null;
+        }
+
+        return $field['section'] ?? (collect(self::SECTION_FIELD_TYPES)
+            ->search(fn (array $types) => in_array($field['type'], $types, true)) ?: null);
     }
 
     public function save(): void

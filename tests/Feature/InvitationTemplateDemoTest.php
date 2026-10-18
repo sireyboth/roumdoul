@@ -83,6 +83,34 @@ class InvitationTemplateDemoTest extends TestCase
         $response->assertDontSee('សូមអញ្ជើញបញ្ជាក់ការចូលរួម');
     }
 
+    public function test_the_khmer_wedding_shows_a_schedule_image_instead_of_the_typed_schedule(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('s3');
+        $template = InvitationTemplate::factory()->create([
+            'view' => 'invitations.templates.khmer-traditional-wedding',
+        ]);
+        $plan = \App\Models\ServicePlan::factory()->create([
+            'service_id' => \App\Models\Service::factory()->create()->id,
+            'features' => ['event_schedule'],
+        ]);
+        $invitation = \App\Models\Invitation::factory()->create([
+            'invitation_template_id' => $template->id,
+            'service_plan_id' => $plan->id,
+            'field_values' => [
+                'groom_name' => 'Dara', 'bride_name' => 'Maly',
+                'event_schedule' => [['time' => '07:00', 'label' => 'TYPED-PROGRAM-ROW']],
+                'schedule_image' => 'invitations/1/kbach-schedule.jpg',
+            ],
+        ]);
+        $recipient = \App\Models\InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+
+        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+
+        $response->assertOk();
+        $response->assertSee('kbach-schedule.jpg');
+        $response->assertDontSee('class="kw-sched-item', false);
+    }
+
     public function test_an_inactive_template_demo_404s(): void
     {
         $template = InvitationTemplate::factory()->create([

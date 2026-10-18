@@ -60,6 +60,7 @@ but they only actually render for a customer whose plan has that exact key in
 | `countdown_enabled` | boolean | Shows a live countdown timer |
 | `photo_gallery` | gallery | Multi-image gallery |
 | `event_schedule` | schedule | Repeatable time + item rows (e.g. "5:00 PM — Ceremony") |
+| `schedule_image` | image | Optional ready-made schedule picture (e.g. a kbach card). When set, templates show it **instead of** the typed `event_schedule` rows. Has no plan unlock of its own — it follows `event_schedule` via `InvitationTemplate::UNLOCKED_WITH`, and is edited in the dashboard's Program tab via the catalog entry's `section` override |
 | `qr_code` | image | A QR code image upload |
 | `cta_label` + `cta_url` | text | Custom call-to-action button |
 

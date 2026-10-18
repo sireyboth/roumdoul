@@ -105,7 +105,7 @@
 
   {{-- Main content --}}
   <main class="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-10">
-    <div class="mx-auto max-w-3xl">
+    <div @class(['mx-auto', 'max-w-6xl' => $isPaid && in_array($section, ['details', 'media', 'program'], true), 'max-w-3xl' => ! ($isPaid && in_array($section, ['details', 'media', 'program'], true))])>
       <h1 class="text-2xl font-extrabold text-plum-900 dark:text-white">{{ $navItems[$section]['label'] }}</h1>
 
       @if ($section === 'guide')
@@ -187,14 +187,60 @@
         </button>
 
       @elseif (in_array($section, ['details', 'media', 'program'], true))
-        <form wire:submit="save" class="mt-6"
-          x-data="{ uploading: 0 }"
+        @php
+          $formFields = $this->sectionFields($section);
+          $isFilled = fn (string $key) => filled($fieldValues[$key] ?? null) || ! empty($imageUploads[$key]) || ! empty($galleryUploads[$key]);
+          $initialFocus = in_array($focusField, $formFields, true) ? $focusField : ($formFields[0] ?? null);
+        @endphp
+        <p class="mt-1 flex items-center gap-1.5 text-sm text-plum-500 dark:text-plum-400">
+          <x-app-icon name="light-bulb" class="h-4 w-4 shrink-0 text-gold-500" />
+          ចុចលើប្រអប់ណាមួយ ដើម្បីមើលថាវាបង្ហាញនៅកន្លែងណាលើធៀប។ ប្រអប់ទទេនឹងមិនបង្ហាញទេ។
+        </p>
+
+        <form wire:submit="save" class="mt-6 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:items-start xl:gap-6"
+          x-data="{ uploading: 0, focus: @js($initialFocus) }"
+          @if ($focusField) x-init="$nextTick(() => document.getElementById('field-{{ $focusField }}')?.scrollIntoView({ block: 'center' }))" @endif
           x-on:photo-upload-start="uploading++"
           x-on:photo-upload-end="uploading = Math.max(0, uploading - 1)">
-          <div class="flex flex-col gap-5 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
-            @foreach ($this->sectionFields($section) as $key)
+
+          {{-- Help panel (wide screens): the focused field's diagram + tips, then a checklist of every field here --}}
+          <aside class="sticky top-6 hidden flex-col gap-4 xl:flex">
+            <div class="rounded-xl border border-brand-200 bg-white p-5 dark:border-brand-500/30 dark:bg-plum-900">
+              @foreach ($formFields as $key)
+                <div x-show="focus === '{{ $key }}'" @if ($key !== $initialFocus) style="display: none" @endif wire:key="help-{{ $key }}">
+                  @include('livewire.pages.dashboard.partials.field-help', ['catalogField' => $fieldCatalog[$key], 'filled' => $isFilled($key)])
+                </div>
+              @endforeach
+            </div>
+
+            <div class="rounded-xl border border-plum-200 bg-white p-3 dark:border-plum-800 dark:bg-plum-900">
+              <p class="px-2 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-plum-400">ប្រអប់ក្នុងផ្ទាំងនេះ</p>
+              @foreach ($formFields as $key)
+                <button type="button" wire:key="jump-{{ $key }}"
+                  @click="focus = '{{ $key }}'; document.getElementById('field-{{ $key }}').scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                  :class="focus === '{{ $key }}' ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300' : 'text-plum-600 hover:bg-plum-50 dark:text-plum-300 dark:hover:bg-plum-800'"
+                  class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-semibold">
+                  @if (! $invitation->fieldUnlocked($key))
+                    <x-app-icon name="lock-closed" class="h-4 w-4 shrink-0 text-gold-500" />
+                  @elseif ($isFilled($key))
+                    <x-app-icon name="check-circle" class="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+                  @else
+                    <span class="flex h-4 w-4 shrink-0 items-center justify-center"><span class="h-2.5 w-2.5 rounded-full border-2 border-plum-300 dark:border-plum-600"></span></span>
+                  @endif
+                  <span class="truncate">{{ $fieldCatalog[$key]['label'] }}</span>
+                </button>
+              @endforeach
+            </div>
+          </aside>
+
+          <div>
+          <div class="flex flex-col gap-2 rounded-xl border border-plum-200 bg-white p-3 sm:p-4 dark:border-plum-800 dark:bg-plum-900">
+            @foreach ($formFields as $key)
               @php $catalogField = $fieldCatalog[$key]; @endphp
-              <div wire:key="field-{{ $key }}">
+              <div wire:key="field-{{ $key }}" id="field-{{ $key }}"
+                x-on:focusin="focus = '{{ $key }}'" x-on:click="focus = '{{ $key }}'"
+                :class="focus === '{{ $key }}' ? 'bg-brand-50/60 ring-2 ring-brand-300 dark:bg-brand-500/5 dark:ring-brand-500/40' : ''"
+                class="scroll-mt-24 rounded-lg p-3 transition-colors">
                 <div class="mb-1.5 flex items-center gap-2">
                   <label class="block text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $catalogField['label'] }}</label>
                   @unless ($invitation->fieldUnlocked($key))
@@ -204,9 +250,13 @@
                     </span>
                   @endunless
                 </div>
-                @if (! empty($catalogField['hint']))
-                  <p class="-mt-0.5 mb-2 text-xs text-plum-500 dark:text-plum-400">{{ $catalogField['hint'] }}</p>
-                @endif
+
+                {{-- Help card (narrow screens): opens under the field being edited --}}
+                <div x-show="focus === '{{ $key }}'" @if ($key !== $initialFocus) style="display: none" @endif
+                  class="mb-3 rounded-lg border border-brand-200 bg-white p-3 xl:hidden dark:border-brand-500/30 dark:bg-plum-900">
+                  @include('livewire.pages.dashboard.partials.field-help', ['filled' => $isFilled($key), 'compact' => true])
+                </div>
+
                 @include('livewire.pages.dashboard.partials.field-input')
               </div>
             @endforeach
@@ -225,10 +275,17 @@
               <p class="text-sm font-semibold text-green-600 dark:text-green-400">Saved!</p>
             @endif
           </div>
+          </div>
         </form>
 
       @elseif ($section === 'guests')
         @php $usage = $invitation->max_recipients ? min(100, $stats['recipients'] / $invitation->max_recipients * 100) : 0; @endphp
+        @include('livewire.pages.dashboard.partials.flow-steps', ['flow' => [
+          ['icon' => 'user-plus', 'title' => 'វាយឈ្មោះភ្ញៀវ', 'text' => 'ម្នាក់ម្ដងៗ'],
+          ['icon' => 'link', 'title' => 'ចុច Copy link', 'text' => 'តំណមានឈ្មោះភ្ញៀវនោះ'],
+          ['icon' => 'paper-airplane', 'title' => 'ផ្ញើទៅភ្ញៀវ', 'text' => 'Telegram · Messenger · SMS'],
+          ['icon' => 'eye', 'title' => 'មើល «Opened»', 'text' => 'ដឹងថាភ្ញៀវបានបើកហើយ'],
+        ]])
         <div class="mt-6 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
           <div class="flex items-center justify-between text-sm">
             <span class="font-semibold text-plum-700 dark:text-plum-200">{{ $stats['recipients'] }} / {{ $invitation->max_recipients }} recipients</span>

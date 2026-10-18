@@ -1,102 +1,105 @@
 {{-- "How to use" guide for the invitation workspace. Expects $invitation, $navItems, $fieldCatalog, $isPaid. --}}
 @php
-  $steps = [
-    ['title' => 'បំពេញព័ត៌មាន', 'body' => 'ចូលទៅផ្ទាំង «ព័ត៌មានលម្អិត» ហើយបំពេញឈ្មោះ សារ ថ្ងៃ និងទីកន្លែងកម្មវិធី។ កុំភ្លេចចុច Save មុនប្ដូរទៅផ្ទាំងផ្សេង។'],
-    ['title' => 'ដាក់រូបភាព', 'body' => 'នៅផ្ទាំង «រូបភាព» ចុចលើប្រអប់ដើម្បីជ្រើសរូបពីទូរស័ព្ទ ឬកុំព្យូទ័រ។ រូបធំៗនឹងត្រូវបង្រួមដោយស្វ័យប្រវត្តិ។'],
-    ['title' => 'មើលជាមុន', 'body' => 'ចុច «មើលជាមុន» ដើម្បីឃើញធៀបដូចភ្ញៀវឃើញ។ ការមើលជាមុនមិនរាប់ថាភ្ញៀវបានបើកមើលទេ។'],
-    ['title' => 'បន្ថែមភ្ញៀវ', 'body' => 'នៅផ្ទាំង «ភ្ញៀវ» វាយឈ្មោះភ្ញៀវម្នាក់ៗ។ ភ្ញៀវម្នាក់ៗទទួលបានតំណផ្ទាល់ខ្លួន ដែលមានឈ្មោះរបស់គេនៅលើធៀប។'],
-    ['title' => 'ផ្ញើតំណ', 'body' => 'ចុច «Copy link» ហើយផ្ញើទៅភ្ញៀវតាម Telegram, Messenger ឬ SMS។ កុំផ្ញើតំណរបស់ភ្ញៀវម្នាក់ទៅអ្នកផ្សេង ព្រោះវាមានឈ្មោះគេ។'],
-    ['title' => 'តាមដានការឆ្លើយតប', 'body' => 'មើលថាភ្ញៀវណាបានបើកធៀប (Opened) និងអ្នកណាឆ្លើយថាចូលរួម ឬមិនចូលរួម។'],
+  $flow = [
+    ['icon' => 'pencil', 'title' => 'បំពេញព័ត៌មាន', 'text' => 'ឈ្មោះ ថ្ងៃ ទីកន្លែង → Save'],
+    ['icon' => 'photo', 'title' => 'ដាក់រូបភាព', 'text' => 'ចុចប្រអប់ ជ្រើសរូប'],
+    ['icon' => 'eye', 'title' => 'មើលជាមុន', 'text' => 'ឃើញដូចភ្ញៀវឃើញ'],
+    ['icon' => 'user-plus', 'title' => 'បន្ថែមភ្ញៀវ', 'text' => 'ម្នាក់ = តំណមួយ'],
+    ['icon' => 'paper-airplane', 'title' => 'ផ្ញើតំណ', 'text' => 'Telegram · Messenger'],
+    ['icon' => 'chat', 'title' => 'មើលចម្លើយ', 'text' => 'អ្នកណាចូលរួម'],
   ];
 
   $sectionHelp = [
-    'overview' => 'ស្ថិតិសង្ខេប — ចំនួនភ្ញៀវ ចំនួនអ្នកបានបើកមើល ចំនួនអ្នកចូលរួម និងចំនួនថ្ងៃដែលធៀបនៅដំណើរការ។',
-    'details' => 'អក្សរ និងព័ត៌មានរបស់ធៀប — ឈ្មោះ សារ ថ្ងៃខែ ទីកន្លែង ពណ៌ និងមុខងារបើក/បិទ។',
-    'media' => 'រូបភាពទាំងអស់ — រូបគម្រប រូបថតបុគ្គល និងវិចិត្រសាលរូបថត។',
-    'program' => 'កម្មវិធីលម្អិត — របៀបវារៈតាមម៉ោង និងរឿងរ៉ាវរបស់អ្នក។',
-    'guests' => 'បន្ថែម ឬលុបភ្ញៀវ និងចម្លងតំណផ្ទាល់ខ្លួនរបស់ភ្ញៀវម្នាក់ៗ។',
-    'responses' => 'បញ្ជីអ្នកឆ្លើយថាចូលរួម ឬមិនចូលរួម រួមទាំងសារដែលភ្ញៀវសរសេរមក។',
+    'overview' => 'ស្ថិតិ និងជំហានបន្ទាប់',
+    'details' => 'ឈ្មោះ សារ ថ្ងៃ ទីកន្លែង',
+    'media' => 'រូបគម្រប និងរូបថត',
+    'program' => 'របៀបវារៈ និងរឿងរ៉ាវ',
+    'guests' => 'បន្ថែមភ្ញៀវ និង Copy link',
+    'responses' => 'អ្នកចូលរួម / មិនចូលរួម',
   ];
 
   $fieldGroups = collect(['details', 'media', 'program'])
     ->mapWithKeys(fn ($s) => [$s => $this->sectionFields($s)])
     ->filter();
+  $open = $this->visibleSections();
 @endphp
 
-<p class="mt-1 text-sm text-plum-500 dark:text-plum-400">របៀបប្រើប្រាស់ផ្ទាំងនេះ និងអត្ថន័យនៃប្រអប់នីមួយៗ</p>
+<p class="mt-1 text-sm text-plum-500 dark:text-plum-400">របៀបប្រើប្រាស់ ក្នុង ៦ ជំហាន</p>
 
-{{-- Step by step --}}
-<div class="mt-6 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
-  <h2 class="text-base font-bold text-plum-900 dark:text-white">ជំហានប្រើប្រាស់</h2>
-  <ol class="mt-4 flex flex-col gap-4">
-    @foreach ($steps as $i => $step)
-      <li class="flex gap-3">
-        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">{{ $i + 1 }}</span>
-        <div>
-          <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $step['title'] }}</p>
-          <p class="mt-0.5 text-sm text-plum-600 dark:text-plum-300">{{ $step['body'] }}</p>
-        </div>
-      </li>
-    @endforeach
-  </ol>
+{{-- Step by step, as icons --}}
+@include('livewire.pages.dashboard.partials.flow-steps', ['flow' => $flow])
+
+{{-- The sidebar menu, as tiles that go straight there --}}
+<h2 class="mt-8 text-base font-bold text-plum-900 dark:text-white">ម៉ឺនុយនៅខាងឆ្វេង</h2>
+<div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+  @foreach ($this->availableSections() as $key)
+    @continue(! isset($sectionHelp[$key]))
+    <button type="button" wire:key="guide-nav-{{ $key }}" wire:click="showSection('{{ $key }}')" @disabled(! in_array($key, $open, true))
+      class="flex items-center gap-3 rounded-xl border border-plum-200 bg-white p-3 text-left transition-colors enabled:hover:border-brand-400 disabled:cursor-default dark:border-plum-800 dark:bg-plum-900">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+        <x-app-icon :name="$navItems[$key]['icon']" class="h-5 w-5" />
+      </span>
+      <span class="min-w-0">
+        <span class="block text-sm font-semibold text-plum-900 dark:text-white">{{ $navItems[$key]['label'] }}</span>
+        <span class="block text-[11px] text-plum-500 dark:text-plum-400">{{ $sectionHelp[$key] }}</span>
+      </span>
+    </button>
+  @endforeach
 </div>
 
-{{-- What each sidebar item is for --}}
-<div class="mt-4 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
-  <h2 class="text-base font-bold text-plum-900 dark:text-white">ម៉ឺនុយនៅខាងឆ្វេង</h2>
-  <dl class="mt-4 flex flex-col gap-3">
-    @foreach ($this->availableSections() as $key)
-      @continue(! isset($sectionHelp[$key]))
-      <div class="flex gap-3">
-        <x-app-icon :name="$navItems[$key]['icon']" class="mt-0.5 h-5 w-5 shrink-0 text-brand-600 dark:text-brand-400" />
-        <div>
-          <dt class="text-sm font-semibold text-plum-900 dark:text-white">{{ $navItems[$key]['label'] }}</dt>
-          <dd class="mt-0.5 text-sm text-plum-600 dark:text-plum-300">{{ $sectionHelp[$key] }}</dd>
-        </div>
-      </div>
-    @endforeach
-  </dl>
-</div>
-
-{{-- What every field on this template means --}}
+{{-- Every field on this template, with where it shows on the invitation --}}
 @if ($fieldGroups->isNotEmpty())
-  <div class="mt-4 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
-    <h2 class="text-base font-bold text-plum-900 dark:text-white">អត្ថន័យនៃប្រអប់នីមួយៗ</h2>
-    <p class="mt-1 text-xs text-plum-500 dark:text-plum-400">ប្រអប់ទាំងអស់មិនតម្រូវឲ្យបំពេញទេ — ប្រអប់ដែលទុកទទេនឹងមិនបង្ហាញលើធៀបឡើយ។</p>
+  <h2 class="mt-8 text-base font-bold text-plum-900 dark:text-white">ប្រអប់នីមួយៗ បង្ហាញនៅកន្លែងណា?</h2>
+  <p class="mt-1 flex items-center gap-1.5 text-xs text-plum-500 dark:text-plum-400">
+    <span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span> ពណ៌ផ្កាឈូក = កន្លែងដែលប្រអប់នោះបង្ហាញលើធៀប · ប្រអប់ទទេមិនបង្ហាញ
+  </p>
 
-    @foreach ($fieldGroups as $group => $keys)
-      <h3 class="mt-5 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-plum-400">
-        <x-app-icon :name="$navItems[$group]['icon']" class="h-4 w-4" /> {{ $navItems[$group]['label'] }}
-      </h3>
-      <dl class="mt-2 divide-y divide-plum-100 dark:divide-plum-800">
-        @foreach ($keys as $key)
-          <div wire:key="guide-{{ $key }}" class="py-3">
-            <dt class="flex items-center gap-2 text-sm font-semibold text-plum-900 dark:text-white">
+  @foreach ($fieldGroups as $group => $keys)
+    <h3 class="mt-5 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-plum-400">
+      <x-app-icon :name="$navItems[$group]['icon']" class="h-4 w-4" /> {{ $navItems[$group]['label'] }}
+    </h3>
+    <div class="mt-2 grid gap-2 sm:grid-cols-2">
+      @foreach ($keys as $key)
+        <div wire:key="guide-{{ $key }}" class="flex gap-3 rounded-xl border border-plum-200 bg-white p-3 dark:border-plum-800 dark:bg-plum-900">
+          <x-invite-diagram :field="$key" class="w-12 shrink-0" />
+          <div class="flex min-w-0 flex-1 flex-col">
+            <p class="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-plum-900 dark:text-white">
               {{ $fieldCatalog[$key]['label'] }}
               @unless ($invitation->fieldUnlocked($key))
                 <span class="flex items-center gap-1 rounded-full bg-gold-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-gold-600 dark:text-gold-400">
                   <x-app-icon name="lock-closed" class="h-3 w-3" /> Premium
                 </span>
               @endunless
-            </dt>
-            <dd class="mt-0.5 text-sm text-plum-600 dark:text-plum-300">{{ $fieldCatalog[$key]['hint'] ?? '' }}</dd>
+            </p>
+            <p class="mt-1 text-xs leading-relaxed text-plum-600 dark:text-plum-300">{{ $fieldCatalog[$key]['hint'] ?? '' }}</p>
+            @if (! empty($fieldCatalog[$key]['example']))
+              <p class="mt-1.5 truncate text-[11px] text-plum-500 dark:text-plum-400"><span class="font-bold">ឧ.</span> {{ $fieldCatalog[$key]['example'] }}</p>
+            @endif
+            @if ($isPaid)
+              <button type="button" wire:click="editField('{{ $key }}')" class="mt-auto self-start pt-2 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400">
+                បំពេញឥឡូវ →
+              </button>
+            @endif
           </div>
-        @endforeach
-      </dl>
-    @endforeach
-  </div>
+        </div>
+      @endforeach
+    </div>
+  @endforeach
 @endif
 
-{{-- Good to know --}}
-<div class="mt-4 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
-  <h2 class="text-base font-bold text-plum-900 dark:text-white">គួរដឹង</h2>
-  <ul class="mt-3 flex list-disc flex-col gap-2 pl-5 text-sm text-plum-600 dark:text-plum-300">
-    <li>ផ្លាក <span class="font-bold text-gold-600 dark:text-gold-400">Premium</span> មានន័យថាប្រអប់នោះមិនរួមបញ្ចូលក្នុងគម្រោងរបស់អ្នកទេ — អ្នកអាចបំពេញបាន ប៉ុន្តែភ្ញៀវនឹងមិនឃើញវាឡើយ។</li>
-    <li>ការកែប្រែនីមួយៗត្រូវចុច <strong>Save</strong> ទើបរក្សាទុក។ ភ្ញៀវដែលមានតំណរួចហើយនឹងឃើញការកែប្រែភ្លាមៗ មិនចាំបាច់ផ្ញើតំណថ្មីទេ។</li>
-    <li>គម្រោងរបស់អ្នកអនុញ្ញាតភ្ញៀវបានរហូតដល់ <strong>{{ $invitation->max_recipients }}</strong> នាក់។ ការលុបភ្ញៀវចេញនឹងធ្វើឲ្យតំណរបស់គេលែងដំណើរការ។</li>
-    @if ($invitation->expires_at)
-      <li>ធៀបនេះដំណើរការរហូតដល់ថ្ងៃ <strong>{{ $invitation->expires_at->format('d M Y') }}</strong>។ ក្រោយថ្ងៃនោះ តំណទាំងអស់នឹងបិទ។</li>
-    @endif
-    <li>រូបភាព៖ JPG, PNG ឬ WebP រហូតដល់ 20 MB ក្នុងមួយរូប, GIF រហូតដល់ 5 MB។</li>
-  </ul>
+{{-- Good to know, one icon per point --}}
+<h2 class="mt-8 text-base font-bold text-plum-900 dark:text-white">គួរដឹង</h2>
+<div class="mt-3 grid gap-2 sm:grid-cols-2">
+  @foreach (array_filter([
+    ['icon' => 'lock-closed', 'text' => 'ផ្លាក Premium = មិននៅក្នុងគម្រោងរបស់អ្នក ភ្ញៀវមើលមិនឃើញ។'],
+    ['icon' => 'check-circle', 'text' => 'ចុច Save ទើបរក្សាទុក។ ភ្ញៀវឃើញការកែភ្លាមៗ មិនបាច់ផ្ញើតំណថ្មី។'],
+    ['icon' => 'users', 'text' => 'ភ្ញៀវបានរហូតដល់ '.$invitation->max_recipients.' នាក់។ លុបភ្ញៀវ = តំណគេលែងដំណើរការ។'],
+    $invitation->expires_at ? ['icon' => 'clock', 'text' => 'ដំណើរការដល់ '.$invitation->expires_at->format('d M Y').'។ ក្រោយនោះតំណបិទ។'] : null,
+    ['icon' => 'photo', 'text' => 'រូប JPG/PNG/WebP ≤ 20 MB · GIF ≤ 5 MB។'],
+  ]) as $note)
+    <div class="flex items-start gap-3 rounded-xl border border-plum-200 bg-white p-3 dark:border-plum-800 dark:bg-plum-900">
+      <x-app-icon :name="$note['icon']" class="mt-0.5 h-5 w-5 shrink-0 text-brand-600 dark:text-brand-400" />
+      <p class="text-sm text-plum-700 dark:text-plum-300">{!! str_replace('Premium', '<strong class="text-gold-600 dark:text-gold-400">Premium</strong>', e($note['text'])) !!}</p>
+    </div>
+  @endforeach
 </div>

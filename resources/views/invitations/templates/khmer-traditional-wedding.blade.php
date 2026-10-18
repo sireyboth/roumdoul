@@ -75,6 +75,8 @@
     $schedule = collect($isUnlocked('event_schedule') ? ($fields['event_schedule'] ?? []) : [])
         ->filter(fn ($row) => ! empty($row['time']) || ! empty($row['label']))
         ->values();
+    // a ready-made schedule image (e.g. a kbach-designed card) replaces the typed timeline
+    $scheduleImg = ($isUnlocked('schedule_image') && ! empty($fields['schedule_image'])) ? $resolveUrl($fields['schedule_image']) : null;
     // "06:00 AM" / "17:30" -> "ម៉ោង ០៦:០០ នាទីព្រឹក"; anything else (already Khmer, free text) shows as typed
     $schedTime = function (?string $t) use ($khDigits): string {
         $t = trim((string) $t);
@@ -476,6 +478,9 @@
   .kw-sched-text{ min-width:0; padding:10px 0 14px; border-bottom:1px solid rgba(201,162,77,.28); }
   .kw-sched-item:last-child .kw-sched-text{ border-bottom:0; }
   .kw-sched-time{ font-family:var(--f-moul); font-size:clamp(.78rem,3.6vw,.88rem); line-height:2; color:var(--red); }
+  /* schedule as an uploaded image: framed like the QR card; tap opens it full size to zoom */
+  .kw-sched-img{ display:block; max-width:440px; margin:0 auto; padding:8px; background:#fffaf0; border:1px solid var(--gold); box-shadow:0 12px 30px rgba(74,13,13,.14); }
+  .kw-sched-img img{ display:block; width:100%; height:auto; }
   .kw-sched-label{ font-family:var(--f-kh-serif); font-weight:600; font-size:clamp(.98rem,4.4vw,1.08rem); line-height:1.9; color:var(--maroon); overflow-wrap:anywhere; }
 
   /* reception card: cream paper, double maroon rule with a gold hairline, Moul lettering */
@@ -821,13 +826,18 @@
     @endif
 
     {{-- ============ 6 · PROGRAM ============ --}}
-    @if ($schedule->isNotEmpty())
+    @if ($scheduleImg || $schedule->isNotEmpty())
       <section class="kw-sec" id="kw-program">
         <h2 class="kw-title kw-rev">កម្មវិធីអាពាហ៍ពិពាហ៍</h2>
         @if ($dateKhmer)
           <p class="kw-prog-date kw-rev">{{ $dateKhmer }}</p>
         @endif
         <div class="kw-divider kw-rev"><i></i><svg aria-hidden="true"><use href="#kw-lotus"/></svg><i></i></div>
+        @if ($scheduleImg)
+          <a class="kw-sched-img kw-rev" href="{{ $scheduleImg }}" target="_blank" rel="noopener">
+            <img src="{{ $scheduleImg }}" alt="កម្មវិធីអាពាហ៍ពិពាហ៍" loading="lazy">
+          </a>
+        @else
         <div class="kw-sched">
           @foreach ($schedule as $row)
             <div class="kw-sched-item kw-rev">
@@ -839,6 +849,7 @@
             </div>
           @endforeach
         </div>
+        @endif
       </section>
     @endif
 

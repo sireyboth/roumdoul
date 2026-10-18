@@ -1,7 +1,8 @@
 {{-- One template field's input, picked by its FIELD_CATALOG type. Expects $key and $catalogField. --}}
+@php $placeholder = ! empty($catalogField['example']) ? 'ឧ. '.$catalogField['example'] : null; @endphp
 @switch($catalogField['type'])
   @case('textarea')
-    <textarea wire:model="fieldValues.{{ $key }}" rows="3"
+    <textarea wire:model="fieldValues.{{ $key }}" rows="3" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
       class="w-full rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700"></textarea>
     @break
 
@@ -155,6 +156,6 @@
     @break
 
   @default
-    <input type="text" wire:model="fieldValues.{{ $key }}"
+    <input type="text" wire:model="fieldValues.{{ $key }}" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
       class="w-full rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />
 @endswitch

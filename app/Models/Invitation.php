@@ -83,10 +83,13 @@ class Invitation extends Model
      * Whether a given FIELD_CATALOG key should actually render for this invitation's
      * recipients. FREE_FIELDS are always unlocked; everything else needs the purchased
      * plan's `features` to include that exact field key — this is the pricing upsell lever
-     * (e.g. Basic doesn't include 'venue_address', so no map link; Premium does).
+     * (e.g. Basic doesn't include 'venue_address', so no map link; Premium does). Keys in
+     * InvitationTemplate::UNLOCKED_WITH follow the field they're an alternative to.
      */
     public function fieldUnlocked(string $key): bool
     {
+        $key = InvitationTemplate::UNLOCKED_WITH[$key] ?? $key;
+
         return in_array($key, InvitationTemplate::FREE_FIELDS, true) || $this->hasFeature($key);
     }
 }

@@ -38,6 +38,37 @@ class InvitationWorkspaceTest extends TestCase
         $this->assertSame(['overview', 'details', 'program', 'guests', 'responses', 'guide'], $component->instance()->availableSections());
     }
 
+    public function test_schedule_image_is_edited_under_program_not_media(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['sender_name', 'schedule_image']]);
+
+        $component = Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation]);
+
+        $this->assertSame(['overview', 'details', 'program', 'guests', 'guide'], $component->instance()->availableSections());
+        $this->assertSame(['schedule_image'], $component->instance()->sectionFields('program'));
+        $this->assertSame([], $component->instance()->sectionFields('media'));
+    }
+
+    public function test_guide_can_jump_straight_to_a_field(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['sender_name', 'cover_image']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->call('showSection', 'guide')
+            ->call('editField', 'cover_image')
+            ->assertSet('section', 'media')
+            ->assertSet('focusField', 'cover_image')
+            ->assertSee('id="field-cover_image"', false)
+            ->call('editField', 'groom_name')
+            ->assertSet('section', 'media');
+    }
+
     public function test_switching_sections_shows_that_sections_fields(): void
     {
         $customer = Customer::factory()->create();
