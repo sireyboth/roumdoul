@@ -41,12 +41,21 @@
     $venueAddress = ($isUnlocked('venue_address') && ! empty($fields['venue_address'])) ? $fields['venue_address'] : null;
     // a pasted Google Maps link pins the exact spot; otherwise fall back to searching the address
     $mapLink = ($isUnlocked('map_url') && preg_match('#^https?://#i', $fields['map_url'] ?? '')) ? $fields['map_url'] : null;
+    // a Maps link pasted into the address box is a map link, not an address to print or search
+    if ($venueAddress && preg_match('#^https?://\S+$#i', trim($venueAddress))) {
+        $mapLink = $mapLink ?: trim($venueAddress);
+        $venueAddress = null;
+    }
     $mapQuery = $venueAddress ?: $venueName;
+    $mapPinned = false;
     if ($mapLink && preg_match('#[@=](-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)#', urldecode($mapLink), $pin)) {
         $mapQuery = $pin[1].','.$pin[2];
+        $mapPinned = true;
     }
     $mapUrl = $mapLink ?: ($mapQuery ? 'https://maps.google.com/?q='.urlencode($mapQuery) : null);
-    $mapEmbed = ($mapLink || $venueAddress) && $mapQuery
+    // embed only when we know the spot: coordinates from the link, or a typed address.
+    // A short link (maps.app.goo.gl) carries no coordinates, so it gets just the button.
+    $mapEmbed = ($mapPinned || $venueAddress) && $mapQuery
         ? 'https://maps.google.com/maps?q='.urlencode($mapQuery).'&z=16&output=embed'
         : null;
     $showVenue = $venueName || $venueAddress || $mapLink;
