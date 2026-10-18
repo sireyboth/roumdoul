@@ -35,6 +35,40 @@ class InvitationManagePage extends Component
         'program' => ['schedule', 'story'],
     ];
 
+    /**
+     * How a tab's fields are grouped into cards on the form, in display order — purely layout.
+     * A field not listed here lands in a trailing "other" card. `or` groups are alternatives
+     * (fill one or the other) and render side by side with an "or" between them; `cols` => 3
+     * lets a card of small uploads sit three across when it's wide enough; `wide` gives a card its own row.
+     */
+    public const FORM_GROUPS = [
+        'people' => ['label' => 'អ្នកណាជាម្ចាស់កម្មវិធី', 'icon' => 'users', 'fields' => [
+            'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age', 'groom_phone', 'bride_phone',
+        ]],
+        'when_where' => ['label' => 'ពេលណា និងនៅឯណា', 'icon' => 'calendar', 'fields' => [
+            'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
+        ]],
+        'words' => ['label' => 'ពាក្យពេចន៍លើធៀប', 'icon' => 'pencil', 'fields' => ['headline', 'message']],
+        'options' => ['label' => 'មុខងារបើក/បិទ', 'icon' => 'bolt', 'fields' => [
+            'rsvp_enabled', 'countdown_enabled', 'gallery_feed',
+        ]],
+        'style' => ['label' => 'ភ្លេង និងពណ៌', 'icon' => 'paint-brush', 'fields' => ['music_url', 'accent_color']],
+        'button' => ['label' => 'ប៊ូតុងផ្ទាល់ខ្លួន', 'icon' => 'link', 'fields' => ['cta_label', 'cta_url']],
+        'portraits' => ['label' => 'រូបសំខាន់ៗ', 'icon' => 'photo', 'cols' => 3, 'wide' => true, 'fields' => ['cover_image', 'groom_photo', 'bride_photo']],
+        'gallery' => ['label' => 'វិចិត្រសាលរូបថត', 'icon' => 'squares', 'fields' => ['photo_gallery']],
+        'gift' => ['label' => 'ចំណងដៃ', 'icon' => 'heart', 'fields' => ['qr_code', 'gift_account']],
+        'schedule' => ['label' => 'របៀបវារៈ — វាយបញ្ចូល ឬដាក់រូបភាព', 'icon' => 'clock', 'or' => true, 'fields' => ['event_schedule', 'schedule_image']],
+        'story' => ['label' => 'រឿងរ៉ាវរបស់យើង', 'icon' => 'heart', 'fields' => ['story_chapters']],
+    ];
+
+    /** Field types/keys that take the full width of a card; everything else sits two per row. */
+    protected const FULL_WIDTH_TYPES = ['textarea', 'gallery', 'story'];
+
+    protected const FULL_WIDTH_KEYS = ['venue_address', 'map_url', 'music_url', 'cta_url'];
+
+    /** Cards containing these field types always span the full form width. */
+    protected const WIDE_CARD_TYPES = ['schedule', 'story'];
+
     /** Per-photo upload cap (KB); keep in step with livewire.temporary_file_upload.rules. */
     public const MAX_UPLOAD_KB = 20480;
 
@@ -140,6 +174,140 @@ class InvitationManagePage extends Component
             ->all();
     }
 
+    /**
+     * A section's fields split into the FORM_GROUPS cards they render in, skipping empty cards:
+     * [groupKey => ['label', 'icon', 'or', 'fields' => [...]]], with leftovers under 'other'.
+     */
+    public function sectionGroups(string $section): array
+    {
+        $fields = $this->sectionFields($section);
+        $groups = [];
+
+        foreach (self::FORM_GROUPS as $name => $group) {
+            $keys = array_values(array_intersect($group['fields'], $fields));
+            if ($keys) {
+                $groups[$name] = ['fields' => $keys, 'or' => ($group['or'] ?? false) && count($keys) > 1] + $group;
+            }
+        }
+
+        $grouped = collect($groups)->pluck('fields')->flatten()->all();
+        if ($rest = array_values(array_diff($fields, $grouped))) {
+            $groups['other'] = ['label' => 'ផ្សេងៗ', 'icon' => 'sparkles', 'or' => false, 'fields' => $rest];
+        }
+
+        foreach ($groups as $name => $group) {
+            $groups[$name]['full'] = $this->fullWidthFields($group);
+            $groups[$name]['wide'] = $group['or'] || ($group['wide'] ?? false) || collect($group['fields'])
+                ->contains(fn ($key) => in_array(InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null, self::WIDE_CARD_TYPES, true));
+            $groups[$name]['weight'] = $this->groupWeight($groups[$name]);
+        }
+
+        return $groups;
+    }
+
+    /**
+     * A section's cards arranged for wide screens, so there are no empty gaps: wide cards
+     * (schedule, story, either/or pairs) get a row to themselves, and each run of ordinary
+     * cards between them is split into two independently stacked columns balanced by
+     * estimated height. Returns segments: ['wide' => groupKey] or ['columns' => [[keys], [keys]]].
+     */
+    public function sectionLayout(string $section): array
+    {
+        $groups = $this->sectionGroups($section);
+        $segments = [];
+        $run = [];
+
+        $flush = function () use (&$run, &$segments, $groups) {
+            if (count($run) === 1) {
+                $segments[] = ['wide' => $run[0]];
+            } elseif ($run) {
+                $columns = [[], []];
+                $heights = [0, 0];
+                foreach ($run as $name) {
+                    $side = $heights[0] <= $heights[1] ? 0 : 1;
+                    $columns[$side][] = $name;
+                    $heights[$side] += $groups[$name]['weight'];
+                }
+                $segments[] = ['columns' => $columns];
+            }
+            $run = [];
+        };
+
+        foreach ($groups as $name => $group) {
+            if ($group['wide']) {
+                $flush();
+                $segments[] = ['wide' => $name];
+            } else {
+                $run[] = $name;
+            }
+        }
+        $flush();
+
+        return ['groups' => $groups, 'segments' => $segments];
+    }
+
+    /** Fields in a card that take its whole row: long inputs, and any short one left alone in its row. */
+    protected function fullWidthFields(array $group): array
+    {
+        $fields = $group['fields'];
+        if ($group['or'] || count($fields) === 1) {
+            return $fields;
+        }
+
+        $full = [];
+        $col = 0;
+        foreach ($fields as $i => $key) {
+            if (self::fieldIsFullWidth($key)) {
+                $full[] = $key;
+                $col = 0;
+
+                continue;
+            }
+            // a lone photo stays half width (stretched it's a huge empty drop zone), and
+            // three-across cards don't stretch at all
+            $isPhoto = (InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null) === 'image';
+            $next = $fields[$i + 1] ?? null;
+            if (! $isPhoto && ($group['cols'] ?? 2) === 2 && $col === 0 && ($next === null || self::fieldIsFullWidth($next))) {
+                $full[] = $key;
+
+                continue;
+            }
+            $col = 1 - $col;
+        }
+
+        return $full;
+    }
+
+    /** Rough rendered height of a card, in "input rows", for balancing the two columns. */
+    protected function groupWeight(array $group): float
+    {
+        $height = fn (string $key) => match (InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null) {
+            'image' => 3.0, 'gallery', 'textarea' => 2.0, 'boolean' => 0.8, default => 1.0,
+        };
+
+        $weight = 1.0; // the card title
+        $pending = null;
+        foreach ($group['fields'] as $key) {
+            if (in_array($key, $group['full'], true)) {
+                $weight += $height($key);
+            } elseif ($pending === null) {
+                $pending = $height($key);
+            } else {
+                $weight += max($pending, $height($key));
+                $pending = null;
+            }
+        }
+
+        return $weight + ($pending ?? 0);
+    }
+
+    /** Whether a field spans the whole card row instead of sharing it with a neighbour. */
+    public static function fieldIsFullWidth(string $key): bool
+    {
+        return in_array($key, self::FULL_WIDTH_KEYS, true)
+            || in_array(InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null, self::FULL_WIDTH_TYPES, true);
+    }
+
     /** The sidebar section a catalog field is edited under: its own `section`, else by its type. */
     public static function fieldSection(string $key): ?string
     {
@@ -158,7 +326,13 @@ class InvitationManagePage extends Component
         abort_unless($this->invitation->isPaid(), 403);
 
         if ($rules = $this->saveRules()) {
-            $this->validate($rules);
+            try {
+                $this->validate($rules);
+            } catch (ValidationException $e) {
+                $this->reportInvalidFields($e);
+
+                throw $e;
+            }
         }
 
         // Only keys this invitation's template actually declares may be stored, and uploads for
@@ -188,6 +362,40 @@ class InvitationManagePage extends Component
 
         $this->invitation->update(['field_values' => $this->fieldValues]);
         $this->saved = true;
+        $this->dispatch('invitation-saved');
+        $this->toast('success', 'បានរក្សាទុក! ភ្ញៀវនឹងឃើញការកែប្រែភ្លាមៗ។');
+    }
+
+    /** Shows a toast in the workspace (see resources/js/modules/toast.js). */
+    protected function toast(string $type, string $message): void
+    {
+        $this->dispatch('toast', type: $type, message: $message);
+    }
+
+    /**
+     * After a failed save: a toast saying how many fields need fixing, and the form jumps to
+     * the first one (its sidebar tab too, if it's on another tab).
+     */
+    protected function reportInvalidFields(ValidationException $e): void
+    {
+        $keys = collect(array_keys($e->errors()))
+            ->map(fn (string $attribute) => explode('.', $attribute)[1] ?? null)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($first = $keys->first()) {
+            $section = self::fieldSection($first);
+            if ($section && $section !== $this->section && in_array($section, $this->visibleSections(), true)) {
+                $this->section = $section;
+            }
+            $this->dispatch('field-error', key: $first);
+        }
+
+        $label = $first ? (InvitationTemplate::FIELD_CATALOG[$first]['label'] ?? $first) : null;
+        $this->toast('error', $keys->count() > 1
+            ? 'មិនទាន់រក្សាទុកទេ — មានប្រអប់ '.$keys->count().' ត្រូវកែ (ចាប់ពី «'.$label.'»)។'
+            : 'មិនទាន់រក្សាទុកទេ — សូមកែប្រអប់ «'.$label.'»។');
     }
 
     /**
@@ -314,6 +522,8 @@ class InvitationManagePage extends Component
         try {
             $this->livewireUploadErrored($name, $errorsInJson, $isMultiple);
         } catch (ValidationException) {
+            $this->toast('error', 'បង្ហោះរូបមិនបានទេ — រូបនីមួយៗធំបំផុត '.(self::MAX_UPLOAD_KB / 1024).' MB។');
+
             throw ValidationException::withMessages([
                 $name => "This photo couldn't be uploaded. Photos can be at most ".(self::MAX_UPLOAD_KB / 1024).' MB each.',
             ]);
@@ -334,9 +544,12 @@ class InvitationManagePage extends Component
             $this->validate($this->uploadRules());
         } catch (ValidationException $e) {
             unset($this->{$m[1]}[$m[2]]);
+            $this->toast('error', collect($e->errors())->flatten()->first() ?? 'រូបនេះប្រើមិនបានទេ។');
 
             throw $e;
         }
+
+        $this->toast('info', 'រូបរួចរាល់ហើយ — ចុច Save ដើម្បីរក្សាទុក។');
     }
 
     public function removeGalleryImage(string $key, int $index): void
@@ -344,6 +557,7 @@ class InvitationManagePage extends Component
         $images = $this->fieldValues[$key] ?? [];
         unset($images[$index]);
         $this->fieldValues[$key] = array_values($images);
+        $this->toast('info', 'បានដករូបចេញ — ចុច Save ដើម្បីរក្សាទុក។');
     }
 
     public function addScheduleItem(string $key): void
@@ -374,7 +588,13 @@ class InvitationManagePage extends Component
     {
         abort_unless($this->invitation->isPaid(), 403);
 
-        $this->validate(['newRecipientName' => ['required', 'string', 'max:255']]);
+        try {
+            $this->validate(['newRecipientName' => ['required', 'string', 'max:255']]);
+        } catch (ValidationException $e) {
+            $this->toast('error', trim($this->newRecipientName) === '' ? 'សូមវាយឈ្មោះភ្ញៀវជាមុនសិន។' : 'ឈ្មោះវែងពេក។');
+
+            throw $e;
+        }
 
         // Locks the invitation row for the duration of the check+create, so two rapid/
         // concurrent submits (double-click, or someone deliberately spamming the request)
@@ -391,20 +611,31 @@ class InvitationManagePage extends Component
 
         if (! $created) {
             $this->addError('newRecipientName', 'You have reached the recipient limit for this plan.');
+            $this->toast('warning', 'អ្នកបានប្រើភ្ញៀវគ្រប់ '.$this->invitation->max_recipients.' នាក់ក្នុងគម្រោងនេះហើយ។');
 
             return;
         }
 
         $this->newRecipientName = '';
         $this->invitation->load('recipients');
+        $this->toast('success', 'បានបន្ថែម «'.$created->recipient_name.'» — ចុច Copy link ដើម្បីផ្ញើ។');
     }
 
     public function removeRecipient(int $recipientId): void
     {
         abort_unless($this->invitation->isPaid(), 403);
 
-        $this->invitation->recipients()->whereKey($recipientId)->delete();
+        $recipient = $this->invitation->recipients()->whereKey($recipientId)->first();
+        if (! $recipient) {
+            $this->toast('warning', 'ភ្ញៀវនេះត្រូវបានលុបរួចហើយ។');
+            $this->invitation->load('recipients');
+
+            return;
+        }
+
+        $recipient->delete();
         $this->invitation->load('recipients');
+        $this->toast('success', 'បានលុប «'.$recipient->recipient_name.'» — តំណរបស់គេលែងដំណើរការហើយ។');
     }
 
     /** Pauses or restores one guest's link without deleting their RSVP. */
@@ -415,6 +646,9 @@ class InvitationManagePage extends Component
         $recipient = $this->invitation->recipients()->whereKey($recipientId)->firstOrFail();
         $recipient->update(['revoked_at' => $recipient->revoked_at ? null : now()]);
         $this->invitation->load('recipients');
+        $recipient->revoked_at
+            ? $this->toast('warning', 'បានផ្អាកតំណរបស់ «'.$recipient->recipient_name.'» — គេមិនអាចបើកធៀបបានទេ រហូតដល់អ្នកបើកវិញ។')
+            : $this->toast('success', 'បានបើកតំណរបស់ «'.$recipient->recipient_name.'» វិញហើយ។');
     }
 
     /** Issues a new unguessable token; the old link stops working immediately. */
@@ -425,6 +659,7 @@ class InvitationManagePage extends Component
         $recipient = $this->invitation->recipients()->whereKey($recipientId)->firstOrFail();
         $recipient->update(['token' => Str::random(32), 'revoked_at' => null]);
         $this->invitation->load('recipients');
+        $this->toast('success', 'បានបង្កើតតំណថ្មីសម្រាប់ «'.$recipient->recipient_name.'» — តំណចាស់លែងដំណើរការ។ កុំភ្លេចផ្ញើតំណថ្មី។');
     }
 
     public function render()

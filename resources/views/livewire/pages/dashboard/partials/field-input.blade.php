@@ -2,8 +2,8 @@
 @php $placeholder = ! empty($catalogField['example']) ? 'ឧ. '.$catalogField['example'] : null; @endphp
 @switch($catalogField['type'])
   @case('textarea')
-    <textarea wire:model="fieldValues.{{ $key }}" rows="3" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
-      class="w-full rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700"></textarea>
+    <textarea id="input-{{ $key }}" wire:model="fieldValues.{{ $key }}" rows="4" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
+      class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700"></textarea>
     @break
 
   @case('image')
@@ -11,7 +11,7 @@
       $tempImage = $imageUploads[$key] ?? null;
       $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
     @endphp
-    <div x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
+    <div class="max-w-lg" x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
     <label
       for="upload-{{ $key }}"
       :class="busy && 'pointer-events-none'"
@@ -59,7 +59,7 @@
     <div class="flex flex-wrap gap-2">
       @foreach (($fieldValues[$key] ?? []) as $i => $path)
         <div wire:key="gallery-{{ $key }}-{{ $i }}" class="relative">
-          <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($path) }}" alt="" class="h-20 w-20 rounded-lg object-cover" />
+          <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($path) }}" alt="" class="h-28 w-28 rounded-lg object-cover" />
           <button type="button" wire:click="removeGalleryImage('{{ $key }}', {{ $i }})"
             class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow">&times;</button>
         </div>
@@ -68,7 +68,7 @@
       @foreach ((($galleryUploads[$key] ?? [])) as $i => $tempFile)
         @continue(! $tempFile->isPreviewable())
         <div wire:key="gallery-pending-{{ $key }}-{{ $i }}" class="relative">
-          <img src="{{ $tempFile->temporaryUrl() }}" alt="" class="h-20 w-20 rounded-lg object-cover opacity-60" />
+          <img src="{{ $tempFile->temporaryUrl() }}" alt="" class="h-28 w-28 rounded-lg object-cover opacity-60" />
         </div>
       @endforeach
 
@@ -76,10 +76,10 @@
         <label
           for="upload-{{ $key }}"
           :class="busy && 'pointer-events-none opacity-50'"
-          class="group flex h-20 w-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-plum-300 bg-plum-50 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5"
+          class="group flex h-28 w-28 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-plum-300 bg-plum-50 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5"
         >
           <x-app-icon name="upload" class="h-5 w-5 text-plum-400 group-hover:text-brand-500" />
-          <span class="text-[10px] font-semibold text-plum-600 dark:text-plum-300">Add photos</span>
+          <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">Add photos</span>
           <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" multiple accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
         </label>
       @endif
@@ -143,19 +143,23 @@
     @break
 
   @case('boolean')
-    <input type="checkbox" wire:model="fieldValues.{{ $key }}" class="rounded border-plum-300" />
+    <span class="relative inline-flex shrink-0 cursor-pointer items-center">
+      <input id="input-{{ $key }}" type="checkbox" wire:model="fieldValues.{{ $key }}" class="peer sr-only" />
+      <span class="h-7 w-12 rounded-full bg-plum-300 transition-colors peer-checked:bg-brand-600 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-400 dark:bg-plum-700"></span>
+      <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
+    </span>
     @break
 
   @case('datetime')
-    <input type="datetime-local" wire:model="fieldValues.{{ $key }}"
-      class="w-full rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />
+    <input id="input-{{ $key }}" type="datetime-local" wire:model="fieldValues.{{ $key }}"
+      class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
     @break
 
   @case('color')
-    <input type="color" wire:model="fieldValues.{{ $key }}" class="h-10 w-16 rounded border border-plum-200 dark:border-plum-700" />
+    <input id="input-{{ $key }}" type="color" wire:model="fieldValues.{{ $key }}" class="h-12 w-full cursor-pointer rounded-lg border border-plum-200 bg-transparent p-1 dark:border-plum-700" />
     @break
 
   @default
-    <input type="text" wire:model="fieldValues.{{ $key }}" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
-      class="w-full rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />
+    <input id="input-{{ $key }}" type="text" wire:model="fieldValues.{{ $key }}" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
+      class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
 @endswitch

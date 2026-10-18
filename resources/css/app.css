@@ -384,3 +384,9 @@ a,
 button {
     cursor: pointer;
 }
+
+/* toast time-left bar (resources/views/components/toasts.blade.php) */
+@keyframes toast-timer {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}

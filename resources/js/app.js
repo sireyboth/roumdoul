@@ -9,6 +9,7 @@ import { initCounters } from './modules/counters.js'
 import { initHeroParticles } from './modules/heroParticles.js'
 import { initTilt } from './modules/tilt.js'
 import './modules/photoUploader.js'
+import './modules/toast.js'
 
 document.addEventListener('livewire:init', () => {
   // Pagination, filters, etc. update a Livewire component in place without a

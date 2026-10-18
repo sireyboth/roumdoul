@@ -55,19 +55,19 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
 
       const room = Number(this.$root.dataset.room ?? Infinity)
       if (multiple && files.length > room) {
-        this.error = room > 0
+        this.reject(room > 0
           ? `You picked ${files.length} photos, but only ${room} more fit in the gallery.`
-          : 'The gallery is full — remove a photo first.'
+          : 'The gallery is full — remove a photo first.')
         return
       }
 
       for (const file of files) {
         if (!ACCEPTED.includes(file.type)) {
-          this.error = `"${file.name}" is not a JPG, PNG, WebP or GIF photo.`
+          this.reject(`"${file.name}" is not a JPG, PNG, WebP or GIF photo.`)
           return
         }
         if (file.type === 'image/gif' && file.size > gifMb * 1024 * 1024) {
-          this.error = `"${file.name}" is too big. GIFs can be at most ${gifMb} MB.`
+          this.reject(`"${file.name}" is too big. GIFs can be at most ${gifMb} MB.`)
           return
         }
       }
@@ -98,6 +98,12 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
       }
     },
 
+    // shows the problem under the field and as a toast
+    reject(message) {
+      this.error = message
+      window.toast?.('error', message)
+    },
+
     cancel() {
       this.$wire.$cancelUpload(name)
       this.finish()
@@ -114,7 +120,8 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
       clearTimeout(this.stallTimer)
       this.busy = false
       this.preparing = false
-      this.error = error
+      if (error) this.reject(error)
+      else this.error = ''
       this.$dispatch('photo-upload-end')
     },
 

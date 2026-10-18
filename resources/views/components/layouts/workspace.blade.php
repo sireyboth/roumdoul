@@ -35,6 +35,8 @@
 
   {{ $slot }}
 
+  <x-toasts />
+
   @livewireScripts
 </body>
 

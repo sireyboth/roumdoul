@@ -50,7 +50,7 @@
     $mapPinned = false;
     if ($mapLink && preg_match('#[@=](-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)#', urldecode($mapLink), $pin)) {
         $mapQuery = $pin[1].','.$pin[2];
-        $mapPinned = true;
+        $mapPinned = true;b
     }
     $mapUrl = $mapLink ?: ($mapQuery ? 'https://maps.google.com/?q='.urlencode($mapQuery) : null);
     // embed only when we know the spot: coordinates from the link, or a typed address.

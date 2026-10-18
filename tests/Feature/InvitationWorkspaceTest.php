@@ -52,6 +52,69 @@ class InvitationWorkspaceTest extends TestCase
         $this->assertSame([], $component->instance()->sectionFields('media'));
     }
 
+    public function test_saving_reports_success_with_a_toast(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['sender_name']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('fieldValues.sender_name', 'Dara')
+            ->call('save')
+            ->assertDispatched('toast', type: 'success')
+            ->assertDispatched('invitation-saved');
+    }
+
+    public function test_a_failed_save_toasts_and_jumps_to_the_bad_field_on_its_tab(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['sender_name', 'music_url', 'cover_image']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->call('showSection', 'media')
+            ->set('fieldValues.music_url', 'javascript:alert(1)')
+            ->call('save')
+            ->assertHasErrors('fieldValues.music_url')
+            ->assertDispatched('toast', type: 'error')
+            ->assertDispatched('field-error', key: 'music_url')
+            ->assertSet('section', 'details')
+            ->assertNotDispatched('invitation-saved');
+    }
+
+    public function test_guest_actions_each_report_their_outcome(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id, 'max_recipients' => 1]);
+        $page = Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation]);
+
+        $page->call('addRecipient')->assertDispatched('toast', type: 'error');
+
+        $page->set('newRecipientName', 'Bella')->call('addRecipient')->assertDispatched('toast', type: 'success');
+        $recipient = $invitation->recipients()->first();
+
+        $page->set('newRecipientName', 'Chan')->call('addRecipient')->assertDispatched('toast', type: 'warning');
+        $page->call('toggleRecipient', $recipient->id)->assertDispatched('toast', type: 'warning');
+        $page->call('toggleRecipient', $recipient->id)->assertDispatched('toast', type: 'success');
+        $page->call('rotateRecipient', $recipient->id)->assertDispatched('toast', type: 'success');
+        $page->call('removeRecipient', $recipient->id)->assertDispatched('toast', type: 'success');
+        $page->call('removeRecipient', $recipient->id)->assertDispatched('toast', type: 'warning');
+    }
+
+    public function test_the_workspace_renders_the_toast_stack(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+
+        $this->actingAs($customer, 'customer')
+            ->get('/dashboard/invitations/'.$invitation->id)
+            ->assertOk()
+            ->assertSee('id="toast-root"', false);
+    }
+
     public function test_guide_can_jump_straight_to_a_field(): void
     {
         $customer = Customer::factory()->create();

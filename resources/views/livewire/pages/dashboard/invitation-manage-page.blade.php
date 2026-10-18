@@ -13,7 +13,9 @@
   $previewUrl = route('dashboard.invitations.preview', $invitation);
 @endphp
 
-<div x-data="{ sidebarOpen: false }" class="min-h-screen lg:flex">
+<div x-data="{ sidebarOpen: false, dirty: false, justSaved: false }" class="min-h-screen lg:flex"
+  x-on:invitation-saved.window="dirty = false; justSaved = true"
+  x-init="window.addEventListener('beforeunload', (e) => { if ($data.dirty) { e.preventDefault(); e.returnValue = '' } })">
   {{-- Mobile top bar --}}
   <div class="sticky top-0 z-30 flex items-center gap-3 border-b border-plum-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden dark:border-plum-800 dark:bg-plum-900/90">
     <button type="button" @click="sidebarOpen = true" aria-label="Open menu" class="text-plum-600 dark:text-plum-300">
@@ -105,7 +107,8 @@
 
   {{-- Main content --}}
   <main class="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-10">
-    <div @class(['mx-auto', 'max-w-6xl' => $isPaid && in_array($section, ['details', 'media', 'program'], true), 'max-w-3xl' => ! ($isPaid && in_array($section, ['details', 'media', 'program'], true))])>
+    @php $wide = $section === 'guide' || ($isPaid && in_array($section, ['details', 'media', 'program'], true)); @endphp
+    <div @class(['mx-auto', 'max-w-none' => $wide, 'max-w-3xl' => ! $wide])>
       <h1 class="text-2xl font-extrabold text-plum-900 dark:text-white">{{ $navItems[$section]['label'] }}</h1>
 
       @if ($section === 'guide')
@@ -192,20 +195,24 @@
           $isFilled = fn (string $key) => filled($fieldValues[$key] ?? null) || ! empty($imageUploads[$key]) || ! empty($galleryUploads[$key]);
           $initialFocus = in_array($focusField, $formFields, true) ? $focusField : ($formFields[0] ?? null);
         @endphp
-        <p class="mt-1 flex items-center gap-1.5 text-sm text-plum-500 dark:text-plum-400">
-          <x-app-icon name="light-bulb" class="h-4 w-4 shrink-0 text-gold-500" />
+        <p class="mt-2 flex items-start gap-2 rounded-xl bg-gold-500/10 px-4 py-3 text-base text-plum-700 dark:text-plum-200">
+          <x-app-icon name="light-bulb" class="mt-0.5 h-5 w-5 shrink-0 text-gold-500" />
           ចុចលើប្រអប់ណាមួយ ដើម្បីមើលថាវាបង្ហាញនៅកន្លែងណាលើធៀប។ ប្រអប់ទទេនឹងមិនបង្ហាញទេ។
         </p>
 
-        <form wire:submit="save" class="mt-6 xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:items-start xl:gap-6"
-          x-data="{ uploading: 0, focus: @js($initialFocus) }"
+        <form wire:submit="save" class="mt-6 xl:grid xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start xl:gap-8"
+          x-data="{ uploading: 0, zoom: null, focus: @js($initialFocus) }"
           @if ($focusField) x-init="$nextTick(() => document.getElementById('field-{{ $focusField }}')?.scrollIntoView({ block: 'center' }))" @endif
           x-on:photo-upload-start="uploading++"
-          x-on:photo-upload-end="uploading = Math.max(0, uploading - 1)">
+          x-on:photo-upload-end="uploading = Math.max(0, uploading - 1); dirty = true"
+          x-on:input="dirty = true" x-on:change="dirty = true"
+          x-on:field-error.window="focus = $event.detail.key; $nextTick(() => document.getElementById('field-' + $event.detail.key)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))">
+
+          @include('livewire.pages.dashboard.partials.field-help-zoom', ['zoomFields' => $formFields])
 
           {{-- Help panel (wide screens): the focused field's diagram + tips, then a checklist of every field here --}}
-          <aside class="sticky top-6 hidden flex-col gap-4 xl:flex">
-            <div class="rounded-xl border border-brand-200 bg-white p-5 dark:border-brand-500/30 dark:bg-plum-900">
+          <aside class="sticky top-6 hidden max-h-[calc(100vh-3rem)] flex-col gap-4 overflow-y-auto xl:flex">
+            <div class="rounded-xl border border-brand-200 bg-white p-6 dark:border-brand-500/30 dark:bg-plum-900">
               @foreach ($formFields as $key)
                 <div x-show="focus === '{{ $key }}'" @if ($key !== $initialFocus) style="display: none" @endif wire:key="help-{{ $key }}">
                   @include('livewire.pages.dashboard.partials.field-help', ['catalogField' => $fieldCatalog[$key], 'filled' => $isFilled($key)])
@@ -214,12 +221,12 @@
             </div>
 
             <div class="rounded-xl border border-plum-200 bg-white p-3 dark:border-plum-800 dark:bg-plum-900">
-              <p class="px-2 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-plum-400">ប្រអប់ក្នុងផ្ទាំងនេះ</p>
+              <p class="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wide text-plum-400">ប្រអប់ក្នុងផ្ទាំងនេះ</p>
               @foreach ($formFields as $key)
                 <button type="button" wire:key="jump-{{ $key }}"
                   @click="focus = '{{ $key }}'; document.getElementById('field-{{ $key }}').scrollIntoView({ behavior: 'smooth', block: 'center' })"
                   :class="focus === '{{ $key }}' ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300' : 'text-plum-600 hover:bg-plum-50 dark:text-plum-300 dark:hover:bg-plum-800'"
-                  class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-semibold">
+                  class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold">
                   @if (! $invitation->fieldUnlocked($key))
                     <x-app-icon name="lock-closed" class="h-4 w-4 shrink-0 text-gold-500" />
                   @elseif ($isFilled($key))
@@ -233,47 +240,52 @@
             </div>
           </aside>
 
-          <div>
-          <div class="flex flex-col gap-2 rounded-xl border border-plum-200 bg-white p-3 sm:p-4 dark:border-plum-800 dark:bg-plum-900">
-            @foreach ($formFields as $key)
-              @php $catalogField = $fieldCatalog[$key]; @endphp
-              <div wire:key="field-{{ $key }}" id="field-{{ $key }}"
-                x-on:focusin="focus = '{{ $key }}'" x-on:click="focus = '{{ $key }}'"
-                :class="focus === '{{ $key }}' ? 'bg-brand-50/60 ring-2 ring-brand-300 dark:bg-brand-500/5 dark:ring-brand-500/40' : ''"
-                class="scroll-mt-24 rounded-lg p-3 transition-colors">
-                <div class="mb-1.5 flex items-center gap-2">
-                  <label class="block text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $catalogField['label'] }}</label>
-                  @unless ($invitation->fieldUnlocked($key))
-                    <span title="Not included in your plan — this won't show to your guests"
-                      class="flex items-center gap-1 rounded-full bg-gold-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-gold-600 dark:text-gold-400">
-                      <x-app-icon name="lock-closed" class="h-3 w-3" /> Premium
-                    </span>
-                  @endunless
+          {{-- Wide cards (schedule, story, either/or) get a row to themselves; runs of ordinary
+               cards between them split into two balanced columns that stack independently, so
+               nothing leaves an empty gap. Container queries: the switch follows the space left
+               beside the help panel, not the screen size. --}}
+          <div class="min-w-0">
+          @php $layout = $this->sectionLayout($section); @endphp
+          <div class="@container flex flex-col gap-5">
+            @foreach ($layout['segments'] as $s => $segment)
+              @if (isset($segment['wide']))
+                @include('livewire.pages.dashboard.partials.form-group', ['groupKey' => $segment['wide'], 'group' => $layout['groups'][$segment['wide']]])
+              @else
+                <div wire:key="segment-{{ $s }}" class="grid items-start gap-5 @5xl:grid-cols-2">
+                  @foreach ($segment['columns'] as $column)
+                    <div class="flex min-w-0 flex-col gap-5">
+                      @foreach ($column as $groupKey)
+                        @include('livewire.pages.dashboard.partials.form-group', ['groupKey' => $groupKey, 'group' => $layout['groups'][$groupKey]])
+                      @endforeach
+                    </div>
+                  @endforeach
                 </div>
-
-                {{-- Help card (narrow screens): opens under the field being edited --}}
-                <div x-show="focus === '{{ $key }}'" @if ($key !== $initialFocus) style="display: none" @endif
-                  class="mb-3 rounded-lg border border-brand-200 bg-white p-3 xl:hidden dark:border-brand-500/30 dark:bg-plum-900">
-                  @include('livewire.pages.dashboard.partials.field-help', ['filled' => $isFilled($key), 'compact' => true])
-                </div>
-
-                @include('livewire.pages.dashboard.partials.field-input')
-              </div>
+              @endif
             @endforeach
           </div>
 
-          <div class="sticky bottom-0 mt-4 flex items-center gap-3 bg-plum-50/90 py-4 backdrop-blur dark:bg-plum-950/90">
+          {{-- Save bar: always says where things stand — uploading, unsaved, saving, saved --}}
+          <div class="sticky bottom-0 mt-4 flex flex-wrap items-center gap-3 bg-plum-50/90 py-4 backdrop-blur dark:bg-plum-950/90">
             <button type="submit" :disabled="uploading > 0" wire:loading.attr="disabled" wire:target="save"
-              class="flex items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">
-              <span x-show="uploading > 0" style="display: none">Wait for photos&hellip;</span>
-              <span x-show="uploading === 0">
+              :class="dirty && 'ring-4 ring-brand-300/60 dark:ring-brand-500/30'"
+              class="flex min-w-32 items-center justify-center gap-2 rounded-full bg-brand-600 px-7 py-3 text-base font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">
+              <span x-show="uploading > 0" style="display: none">កំពុងបង្ហោះរូប&hellip;</span>
+              <span x-show="uploading === 0" class="flex items-center gap-2">
                 <span wire:loading.remove wire:target="save">Save</span>
-                <span wire:loading wire:target="save">Saving...</span>
+                <span wire:loading wire:target="save" class="flex items-center gap-2">
+                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span> កំពុងរក្សាទុក&hellip;
+                </span>
               </span>
             </button>
-            @if ($saved)
-              <p class="text-sm font-semibold text-green-600 dark:text-green-400">Saved!</p>
-            @endif
+            <p wire:loading.remove wire:target="save" class="text-sm font-semibold">
+              <span x-show="uploading > 0" style="display: none" class="text-plum-500 dark:text-plum-400">រង់ចាំរូបបង្ហោះរួចសិន ទើប Save បាន</span>
+              <span x-show="uploading === 0 && dirty" style="display: none" class="flex items-center gap-1.5 text-gold-600 dark:text-gold-400">
+                <span class="h-2 w-2 rounded-full bg-gold-500"></span> មានការកែប្រែមិនទាន់រក្សាទុក
+              </span>
+              <span x-show="uploading === 0 && ! dirty && justSaved" style="display: none" class="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+                <x-app-icon name="check-circle" class="h-4 w-4" /> បានរក្សាទុក
+              </span>
+            </p>
           </div>
           </div>
         </form>
@@ -332,7 +344,9 @@
               </div>
               <div class="flex shrink-0 items-center gap-2">
                 <button type="button" x-data="{ copied: false }"
-                  @click="navigator.clipboard.writeText('{{ $link }}'); copied = true; setTimeout(() => copied = false, 1500)"
+                  @click="navigator.clipboard.writeText('{{ $link }}')
+                    .then(() => { copied = true; setTimeout(() => copied = false, 1500); window.toast('success', 'បានចម្លងតំណរបស់ «' + {{ \Illuminate\Support\Js::from($recipient->recipient_name) }} + '» — ឥឡូវផ្ញើទៅគេបាន។') })
+                    .catch(() => window.toast('error', 'ចម្លងមិនបាន — សូមចុចសង្កត់លើតំណ ហើយចម្លងដោយដៃ។'))"
                   class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
                   <span x-show="!copied">Copy link</span>
                   <span x-cloak x-show="copied" class="text-green-600 dark:text-green-400">Copied!</span>
