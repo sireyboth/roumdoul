@@ -215,6 +215,13 @@
   /* the invitation is a phone-width column; on larger screens it floats on a night backdrop */
   .kw-page{ position:relative; z-index:1; max-width:520px; margin:0 auto; background:transparent; overflow:hidden;
     box-shadow:0 0 0 1px rgba(201,162,77,.25), 0 30px 90px rgba(0,0,0,.6); }
+  /* hanging roumdul garland, pinned to the top of the screen over every layer (butterflies, music button, bursts)
+     and every section as the content scrolls. overlay.mp4 is packed colour | alpha mask, joined in WebGL
+     (see initSwing); without WebGL the garland is simply left out. Taps pass through. */
+  .kw-swing{ position:fixed; top:0; left:50%; width:min(100%,520px); transform:translate3d(-50%,0,0); z-index:70; pointer-events:none;
+    opacity:0; visibility:hidden; transition:opacity .4s ease, visibility 0s linear .4s; }
+  .kw-swing canvas{ width:100%; height:auto; aspect-ratio:540/780; display:block; }
+  .kw-staged .kw-swing{ opacity:1; visibility:visible; transition-delay:0s, 0s; }
 
   /* rendered (Blender) animation, shown once the invitation opens: the card + flowers video sits behind
      the page, the butterflies fly over the text and let taps pass through. Both are H.264 (hardware-decoded
@@ -669,6 +676,10 @@
     <video id="kw-bg-video" src="{{ asset('images/invitations/khmer-traditional/background.mp4') }}" poster="{{ asset('images/invitations/khmer-traditional/poster.jpg') }}" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback></video>
   </div>
 
+  {{-- hanging flowers swinging at the top of the screen while the page scrolls --}}
+  <div class="kw-swing" id="kw-swing" aria-hidden="true"><canvas id="kw-swing-canvas"></canvas></div>
+  <video class="kw-stage-src" id="kw-swing-video" src="{{ $contentImg('overlay.mp4') }}" muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
+
   <main class="kw-page">
 
     {{-- ============ 2 · HERO ============ --}}
@@ -1092,6 +1103,7 @@
 
   /* --- rendered background + butterfly videos (started by the open tap, which also satisfies autoplay rules) --- */
   var bgVideo = document.getElementById('kw-bg-video'), flyVideo = document.getElementById('kw-fly-video'), flyCanvas = document.getElementById('kw-fly-canvas');
+  var swingVideo = document.getElementById('kw-swing-video');
   var stageOn = false, flyOn = false, scheduleFly = function () {};
 
   // performance test switches, e.g. ?kwtest=nofx,nofly  (nofx: freeze the template's CSS/SVG animations, nofly: no butterflies)
@@ -1275,8 +1287,53 @@
     };
   })();
 
+  // swing garland: packed like the butterflies (left half colour, right half alpha mask), joined in WebGL so the
+  // flowers keep their real edges over every section. Redraws only on new video frames.
+  (function initSwing() {
+    if (!swingVideo) return;
+    var wrap = document.getElementById('kw-swing'), canvas = document.getElementById('kw-swing-canvas');
+    var gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, preserveDrawingBuffer: false });
+    if (!gl) { wrap.remove(); swingVideo.remove(); swingVideo = null; return; }
+    var sh = function (type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    var prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 p; varying vec2 uv; void main(){ uv = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0.,1.); }'));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, 'precision mediump float; varying vec2 uv; uniform sampler2D t;'
+      + 'void main(){ vec3 c = texture2D(t, vec2(uv.x*.5, uv.y)).rgb; float a = texture2D(t, vec2(.5+uv.x*.5, uv.y)).r; gl_FragColor = vec4(c*a, a); }'));
+    gl.linkProgram(prog); gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(function (k) { gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE); });
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.clearColor(0, 0, 0, 0);
+
+    var hasVfc = 'requestVideoFrameCallback' in HTMLVideoElement.prototype, texReady = false;
+    var draw = function () {
+      if (swingVideo.readyState < 2) return;
+      var w = swingVideo.videoWidth / 2, h = swingVideo.videoHeight;
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); texReady = false; }
+      if (!texReady) { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, swingVideo); texReady = true; }
+      else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, swingVideo);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+    var loop = function () {
+      draw();
+      if (swingVideo.paused || document.hidden) return;
+      if (hasVfc) swingVideo.requestVideoFrameCallback(loop); else requestAnimationFrame(loop);
+    };
+    // first frame shows even when it never plays (reduced motion); playing keeps the loop going
+    swingVideo.addEventListener('loadeddata', draw);
+    swingVideo.addEventListener('playing', loop);
+    if (swingVideo.readyState >= 2) draw();
+  })();
+
   var playStage = function () {
     if (!reduced) bgVideo.play().catch(function () {});
+    if (!reduced && swingVideo) swingVideo.play().catch(function () {});
     if (flyVideo) flyVideo.play().catch(function () {});
   };
   function startStage() {
@@ -1297,7 +1354,7 @@
   // nothing runs while the tab is in the background
   document.addEventListener('visibilitychange', function () {
     if (!stageOn && !flyOn) return;
-    if (document.hidden) { bgVideo.pause(); if (flyVideo) flyVideo.pause(); }
+    if (document.hidden) { bgVideo.pause(); if (swingVideo) swingVideo.pause(); if (flyVideo) flyVideo.pause(); }
     else { if (stageOn) playStage(); else flyVideo.play().catch(function () {}); scheduleFly(); }
   });
 
