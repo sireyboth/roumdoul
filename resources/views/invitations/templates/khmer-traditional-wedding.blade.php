@@ -292,7 +292,7 @@
         <img src="{{ $contentImg('name kbach 1.png') }}" alt="" aria-hidden="true">
         {{-- first name on the top line, the rest (family name) on the line below --}}
         @php
-          $splitName = fn ($n) => array_pad(preg_split('/[\s\x{200B}\x{00A0}]+/u', trim((string) $n, " \t\n\r\0\x0B\xC2\xA0"), 2) ?: [''], 2, '');
+          $splitName = fn ($n) => array_pad(preg_split('/[\s\p{Z}\p{Cf}]+/u', preg_replace('/^[\s\p{Z}\p{Cf}]+|[\s\p{Z}\p{Cf}]+$/u', '', (string) $n), 2) ?: [''], 2, '');
           [$groomFirst, $groomLast] = $splitName($groomUpper);
           [$brideFirst, $brideLast] = $splitName($brideUpper);
         @endphp
