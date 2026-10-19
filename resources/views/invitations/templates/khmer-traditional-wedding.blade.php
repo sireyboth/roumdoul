@@ -337,14 +337,14 @@
             @if ($couplePhoto)<img src="{{ $couplePhoto }}" alt="{{ $coupleTitle }}" loading="lazy">@else<div class="ph">{{ $monogram }}</div>@endif
           </div>
           <figcaption class="kw-duo-cap">
-            @if ($brideName)
-              <div class="kw-duo-person"><p class="kw-role">កូនក្រមុំ · THE BRIDE</p><h3 class="kw-names{{ $kh($brideName) }}">{{ $brideUpper }}</h3></div>
+            @if ($groomName)
+              <div class="kw-duo-person kw-duo-left"><p class="kw-role">កូនកំលោះ · THE GROOM</p><h3 class="kw-names{{ $kh($groomName) }}">{{ $groomUpper }}</h3></div>
             @endif
             @if ($brideName && $groomName)
               <div class="kw-duo-heart" aria-hidden="true"><svg viewBox="-17 -17 34 34"><use href="#kw-roumdul"/></svg></div>
             @endif
-            @if ($groomName)
-              <div class="kw-duo-person"><p class="kw-role">កូនកំលោះ · THE GROOM</p><h3 class="kw-names{{ $kh($groomName) }}">{{ $groomUpper }}</h3></div>
+            @if ($brideName)
+              <div class="kw-duo-person kw-duo-right"><p class="kw-role">កូនក្រមុំ · THE BRIDE</p><h3 class="kw-names{{ $kh($brideName) }}">{{ $brideUpper }}</h3></div>
             @endif
           </figcaption>
         </figure>
