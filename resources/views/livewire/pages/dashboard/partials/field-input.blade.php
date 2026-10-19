@@ -11,7 +11,11 @@
       $tempImage = $imageUploads[$key] ?? null;
       $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
     @endphp
-    <div class="max-w-lg" x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
+    <div class="relative max-w-lg" x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
+    @if ($tempImage || ! empty($fieldValues[$key]))
+      <button type="button" wire:click="removeImage('{{ $key }}')" x-show="!busy" title="Remove photo"
+        class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-base font-bold text-white shadow hover:bg-red-700">&times;</button>
+    @endif
     <label
       for="upload-{{ $key }}"
       :class="busy && 'pointer-events-none'"

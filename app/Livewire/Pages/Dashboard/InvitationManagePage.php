@@ -552,6 +552,14 @@ class InvitationManagePage extends Component
         $this->toast('info', 'រូបរួចរាល់ហើយ — ចុច Save ដើម្បីរក្សាទុក។');
     }
 
+    /** Clears a single-photo field (and any pending pick for it). */
+    public function removeImage(string $key): void
+    {
+        unset($this->imageUploads[$key]);
+        $this->fieldValues[$key] = null;
+        $this->toast('info', 'បានដករូបចេញ — ចុច Save ដើម្បីរក្សាទុក។');
+    }
+
     public function removeGalleryImage(string $key, int $index): void
     {
         $images = $this->fieldValues[$key] ?? [];
@@ -660,6 +668,40 @@ class InvitationManagePage extends Component
         $recipient->update(['token' => Str::random(32), 'revoked_at' => null]);
         $this->invitation->load('recipients');
         $this->toast('success', 'បានបង្កើតតំណថ្មីសម្រាប់ «'.$recipient->recipient_name.'» — តំណចាស់លែងដំណើរការ។ កុំភ្លេចផ្ញើតំណថ្មី។');
+    }
+
+    /**
+     * Ready-to-send message that "Copy link" puts on the clipboard: a short invite
+     * addressed to the guest, built from the saved fields, with their link at the end.
+     */
+    public function shareCaption(string $recipientName, string $link): string
+    {
+        $f = $this->invitation->field_values ?? [];
+        $couple = collect([$f['groom_name'] ?? null, $f['bride_name'] ?? null])->map(fn ($n) => trim((string) $n))->filter()->implode(' & ');
+        $celebrant = trim($f['celebrant_name'] ?? '');
+
+        try {
+            $date = ! empty($f['event_date']) ? \Carbon\Carbon::parse($f['event_date']) : null;
+        } catch (\Throwable) {
+            $date = null;
+        }
+
+        $lines = ["💌 សូមគោរពអញ្ជើញ {$recipientName}"];
+        if ($couple !== '') {
+            $lines[] = "ចូលរួមជាភ្ញៀវកិត្តិយស ក្នុងពិធីអាពាហ៍ពិពាហ៍របស់ {$couple}";
+        } elseif ($celebrant !== '') {
+            $lines[] = "ចូលរួមពិធីខួបកំណើតរបស់ {$celebrant}";
+        } elseif (! empty($f['sender_name'])) {
+            $lines[] = 'ពី '.trim($f['sender_name']);
+        }
+        if ($date) {
+            $lines[] = '📅 '.$date->format('d/m/Y').($date->format('H:i') !== '00:00' ? ' · '.$date->format('g:i A') : '');
+        }
+        if (! empty($f['venue_name'])) {
+            $lines[] = '📍 '.trim($f['venue_name']);
+        }
+
+        return implode("\n", $lines)."\n\nសូមចុចតំណខាងក្រោម ដើម្បីបើកលិខិតអញ្ជើញ 👇\n".$link;
     }
 
     public function render()

@@ -344,7 +344,7 @@
               </div>
               <div class="flex shrink-0 items-center gap-2">
                 <button type="button" x-data="{ copied: false }"
-                  @click="navigator.clipboard.writeText('{{ $link }}')
+                  @click="navigator.clipboard.writeText({{ \Illuminate\Support\Js::from($this->shareCaption($recipient->recipient_name, $link)) }})
                     .then(() => { copied = true; setTimeout(() => copied = false, 1500); window.toast('success', 'បានចម្លងតំណរបស់ «' + {{ \Illuminate\Support\Js::from($recipient->recipient_name) }} + '» — ឥឡូវផ្ញើទៅគេបាន។') })
                     .catch(() => window.toast('error', 'ចម្លងមិនបាន — សូមចុចសង្កត់លើតំណ ហើយចម្លងដោយដៃ។'))"
                   class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">

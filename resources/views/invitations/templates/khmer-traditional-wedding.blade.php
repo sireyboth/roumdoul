@@ -354,6 +354,23 @@
             <p class="kh">ព្រហ្មលិខិតបាននាំយើងមកជួបគ្នា<br>ហើយក្តីស្រឡាញ់បានចងយើងជាប់ជាមួយគ្នា</p>
           </div>
         @endif
+        {{-- their own portraits, side by side, when uploaded --}}
+        @if ($bridePhoto || $groomPhoto)
+          <div class="kw-portraits kw-rev">
+            @if ($bridePhoto)
+              <figure class="kw-portrait-card">
+                <div class="kw-portrait"><div class="kw-portrait-in"><img src="{{ $bridePhoto }}" alt="{{ $brideName }}" loading="lazy"></div></div>
+                <figcaption><p class="kw-role">កូនក្រមុំ</p>@if ($brideUpper)<p class="kw-names{{ $kh($brideName) }}">{{ $brideUpper }}</p>@endif</figcaption>
+              </figure>
+            @endif
+            @if ($groomPhoto)
+              <figure class="kw-portrait-card">
+                <div class="kw-portrait"><div class="kw-portrait-in"><img src="{{ $groomPhoto }}" alt="{{ $groomName }}" loading="lazy"></div></div>
+                <figcaption><p class="kw-role">កូនកំលោះ</p>@if ($groomUpper)<p class="kw-names{{ $kh($groomName) }}">{{ $groomUpper }}</p>@endif</figcaption>
+              </figure>
+            @endif
+          </div>
+        @endif
       </section>
     @endif
 
