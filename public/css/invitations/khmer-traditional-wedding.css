@@ -245,8 +245,10 @@ body.kw-locked{ overflow:hidden; height:100vh; }
 .kw-duo::before{ content:""; position:absolute; inset:12px; z-index:1; border:1px solid rgba(243,221,160,.45); pointer-events:none; }
 .kw-duo-cap{ position:absolute; left:0; right:0; bottom:0; z-index:2; display:flex; align-items:flex-end; justify-content:center; gap:10px; padding:0 26px 34px; }
 .kw-duo-person{ flex:1; min-width:0; }
-.kw-duo .kw-role{ margin:0 0 4px; font-size:.78rem; color:var(--gold-hi); }
-.kw-duo .kw-names{ font-size:clamp(1.05rem,5.4vw,1.5rem); color:#fffaf0; text-shadow:0 2px 12px rgba(0,0,0,.45); }
+.kw-duo-left{ text-align:left; }
+.kw-duo-right{ text-align:right; }
+.kw-duo .kw-role{ margin:0 0 4px; font-size:clamp(.6rem,2.9vw,.78rem); letter-spacing:0; white-space:nowrap; color:var(--gold-hi); }
+.kw-duo .kw-names{ font-size:clamp(.75rem,3.5vw,1.5rem); white-space:nowrap; overflow-wrap:normal; color:#fffaf0; text-shadow:0 2px 12px rgba(0,0,0,.45); }
 .kw-duo-heart{ flex:none; width:38px; height:38px; margin-bottom:2px; }
 .kw-duo-heart svg{ width:100%; height:100%; fill:#fffaf0; stroke:var(--gold); stroke-width:.8; animation:kw-spin-slow 24s linear infinite; }
 .kw-destiny{ margin-top:34px; }
