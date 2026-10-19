@@ -290,8 +290,14 @@
       {{-- name kbach: the artwork carries the "កូនប្រុសនាម / កូនស្រីនាម" labels, the names sit under them --}}
       <h2 class="kw-namekbach kw-hero-names kw-gs" aria-label="{{ $coupleTitle ?: 'សិរីមង្គលអាពាហ៍ពិពាហ៍' }}">
         <img src="{{ $contentImg('name kbach 1.png') }}" alt="" aria-hidden="true">
-        @if ($groomUpper)<span class="kw-names groom{{ $kh($groomName) }}">{{ $groomUpper }}</span>@endif
-        @if ($brideUpper)<span class="kw-names bride{{ $kh($brideName) }}">{{ $brideUpper }}</span>@endif
+        {{-- first name on the top line, the rest (family name) on the line below --}}
+        @php
+          $splitName = fn ($n) => array_pad(preg_split('/[\s\p{Z}\p{Cf}]+/u', preg_replace('/^[\s\p{Z}\p{Cf}]+|[\s\p{Z}\p{Cf}]+$/u', '', (string) $n), 2) ?: [''], 2, '');
+          [$groomFirst, $groomLast] = $splitName($groomUpper);
+          [$brideFirst, $brideLast] = $splitName($brideUpper);
+        @endphp
+        @if ($groomUpper)<span class="kw-names groom{{ $kh($groomName) }}">{{ $groomFirst }}@if ($groomLast)<br>{{ $groomLast }}@endif</span>@endif
+        @if ($brideUpper)<span class="kw-names bride{{ $kh($brideName) }}">{{ $brideFirst }}@if ($brideLast)<br>{{ $brideLast }}@endif</span>@endif
       </h2>
 
       @if ($personalNote)
@@ -579,7 +585,13 @@
         <p class="kw-body-text kw-gs" style="margin-top:10px">សូមអរគុណសម្រាប់ក្តីស្រឡាញ់ និងពរជ័យ<br>ដែលលោកអ្នកបានផ្តល់ជូនយើងទាំងពីរ។</p>
       </div>
       <p class="kw-sign kw-gs">With love,</p>
-      @if ($coupleTitle)<p class="kw-names kw-shimmer kw-gs{{ $kh($coupleTitle) }}">{{ $coupleTitle }}</p>@endif
+      @if ($brideName && $groomName)
+        <p class="kw-names kw-shimmer kw-gs{{ $kh($groomName) }}">{{ $groomUpper }}</p>
+        <p class="kw-amp kw-gs" aria-hidden="true">&amp;</p>
+        <p class="kw-names kw-shimmer kw-gs{{ $kh($brideName) }}">{{ $brideUpper }}</p>
+      @elseif ($coupleTitle)
+        <p class="kw-names kw-shimmer kw-gs{{ $kh($coupleTitle) }}">{{ $coupleTitle }}</p>
+      @endif
       @if ($dateNumeric)<p class="kw-finale-date kw-gs">{{ $dateNumeric }}</p>@endif
     </section>
 
