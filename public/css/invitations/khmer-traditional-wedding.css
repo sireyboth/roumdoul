@@ -190,8 +190,8 @@ body.kw-locked{ overflow:hidden; height:100vh; }
 .kw-hero{ --kbach:#8c2a22; --kbach-ink:#6e2219; }
 #kw-top{ padding-top:44px; }
 #kw-top > .kw-kbach-top{ display:block; width:92%; height:auto; margin:0 auto 18px; z-index:3; }
-.kw-parents{ display:grid; grid-template-columns:1fr 1fr; gap:0 18px; max-width:440px; margin:0 auto 14px; text-align:left; }
-.kw-parents-side p{ font-family:'Moulpali',var(--f-moul); font-size:clamp(.72rem,3.1vw,.88rem); line-height:2.1; color:var(--kbach-ink); overflow-wrap:anywhere; }
+.kw-parents{ display:grid; grid-template-columns:1fr 1fr; gap:0 14px; max-width:440px; margin:0 auto 14px; padding:0 22px; text-align:center; }
+.kw-parents-side p{ font-family:'Moulpali',var(--f-moul); font-size:clamp(1rem,4.4vw,1.25rem); line-height:2.1; color:var(--kbach-ink); overflow-wrap:anywhere; }
 .kw-invite-title{ font-family:var(--f-moul); font-weight:400; font-size:clamp(1.7rem,9vw,2.5rem); line-height:1.9; color:var(--kbach);
   text-shadow:0 1px 0 rgba(255,235,210,.6), 0 2px 3px rgba(110,34,25,.25); }
 .kw-tacteing{ display:block; width:min(62%,150px); height:auto; margin:4px auto 20px; }
@@ -519,8 +519,8 @@ body.kw-locked{ overflow:hidden; height:100vh; }
   #kw-top > .kw-kbach-top{ width:min(760px,74%); }
   .kw-invite-title{ font-size:3rem; }
   .kw-letter-text{ max-width:720px; font-size:1.18rem; }
-  .kw-parents{ max-width:720px; gap:0 40px; }
-  .kw-parents-side p{ font-size:1.05rem; }
+  .kw-parents{ max-width:720px; gap:0 40px; padding:0 32px; }
+  .kw-parents-side p{ font-size:1.5rem; }
   .kw-tacteing{ width:210px; }
   .kw-invite-text{ max-width:720px; font-size:1.18rem; }
   .kw-namekbach{ max-width:700px; }
