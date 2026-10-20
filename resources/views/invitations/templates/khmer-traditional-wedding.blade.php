@@ -64,6 +64,11 @@
     $giftAccount = ($giftQr && ! empty($fields['gift_account'])) ? $fields['gift_account'] : null;
 
     $personalNote = ! empty($fields['message']) ? $fields['message'] : null;
+    // closing statements: [heading, text] pairs, each shown only when the customer filled it in
+    $letters = collect([
+        ['សេចក្តីថ្លែងអំណរគុណ', trim($fields['thanks_message'] ?? '')],
+        ['លិខិតសូមអភ័យទោស', trim($fields['apology_message'] ?? '')],
+    ])->filter(fn ($l) => $l[1] !== '');
 
     $coverUrl = ! empty($fields['cover_image']) ? $resolveUrl($fields['cover_image']) : null;
     $groomPhoto = ! empty($fields['groom_photo']) ? $resolveUrl($fields['groom_photo']) : null;
@@ -100,7 +105,9 @@
     if ($receptionTime && str_starts_with($receptionTime, 'ម៉ោង')) {
         $receptionTime = 'វេលា'.$receptionTime;
     }
-    $showReception = $receptionTime || $venueName;
+    // customer-written wording replaces the default text under the guest name
+    $receptionCustom = trim($fields['reception_message'] ?? '');
+    $showReception = $receptionTime || $venueName || $receptionCustom !== '';
     $gallery = collect($isUnlocked('photo_gallery') ? ($fields['photo_gallery'] ?? []) : [])
         ->filter()->map($resolveUrl)->values();
     // gallery layout: per-invitation 'gallery_layout' (frame|feed) or the 'gallery_feed' checkbox; ?layout= previews.
@@ -111,6 +118,15 @@
     $showCountdown = $eventDate && ! empty($fields['countdown_enabled']) && $isUnlocked('countdown_enabled');
     $showRsvp = ! empty($fields['rsvp_enabled']) && $isUnlocked('rsvp_enabled');
     $rsvpUrl = ($invitation && ($recipient ?? null)) ? route('invitation.rsvp', [$invitation, $recipient]) : null;
+
+    // parents' names are typed without a title; "លោក" / "លោកស្រី" is added unless already typed
+    $parent = function (string $key, string $title) use ($fields): ?string {
+        $n = trim($fields[$key] ?? '');
+
+        return $n === '' ? null : (str_starts_with($n, 'លោក') ? $n : $title.' '.$n);
+    };
+    $groomParents = array_filter([$parent('groom_father', 'លោក'), $parent('groom_mother', 'លោកស្រី')]);
+    $brideParents = array_filter([$parent('bride_father', 'លោក'), $parent('bride_mother', 'លោកស្រី')]);
 
     $contacts = collect([
         ['name' => $groomUpper, 'phone' => trim($fields['groom_phone'] ?? ''), 'role' => 'ខាងកូនប្រុស'],
@@ -274,6 +290,13 @@
       @endif --}}
 
       <img class="kw-kbach-top kw-rev" src="{{ $contentImg('kbach-dombol.png') }}" alt="" aria-hidden="true">
+
+      @if ($groomParents || $brideParents)
+        <div class="kw-parents kw-rev">
+          <div class="kw-parents-side">@foreach ($groomParents as $line)<p>{{ $line }}</p>@endforeach</div>
+          <div class="kw-parents-side">@foreach ($brideParents as $line)<p>{{ $line }}</p>@endforeach</div>
+        </div>
+      @endif
 
       <h1 class="kw-invite-title kw-rev">សូមគោរពអញ្ជើញ</h1>
       <img class="kw-tacteing kw-rev" src="{{ $contentImg('tacteing 3 .png') }}" alt="" aria-hidden="true">
@@ -457,12 +480,16 @@
             @else
               <p>ឯកឧត្តម លោកឧកញ៉ា លោកជំទាវ លោក លោកស្រី អ្នកនាង កញ្ញា</p>
             @endif
-            <p>និងញាតិមិត្ត អញ្ជើញចូលរួមជាអធិបតី និងជាភ្ញៀវកិត្តិយសក្នុង {{ $receptionLabel }}</p>
-            <p>
-              @if ($receptionTime){{ $receptionTime }}@endif
-              @if ($venueName) នៅ <span class="kw-rcard-venue{{ $kh($venueName) }}">{{ $venueName }}</span>@endif
-              ដោយមេត្រីភាព ។
-            </p>
+            @if ($receptionCustom !== '')
+              <p class="kw-rcard-custom">{{ $receptionCustom }}</p>
+            @else
+              <p>និងញាតិមិត្ត អញ្ជើញចូលរួមជាអធិបតី និងជាភ្ញៀវកិត្តិយសក្នុង {{ $receptionLabel }}</p>
+              <p>
+                @if ($receptionTime){{ $receptionTime }}@endif
+                @if ($venueName) នៅ <span class="kw-rcard-venue{{ $kh($venueName) }}">{{ $venueName }}</span>@endif
+                ដោយមេត្រីភាព ។
+              </p>
+            @endif
           </div>
         </div>
       </section>
@@ -558,6 +585,19 @@
             </a>
           @endforeach
         </div>
+      </section>
+    @endif
+
+    {{-- ============ 10b · THANKS & APOLOGY (the couple's own statements) ============ --}}
+    @if ($letters->isNotEmpty())
+      <section class="kw-sec kw-pattern kw-letters" id="kw-letters">
+        @foreach ($letters as [$heading, $text])
+          <article class="kw-letter">
+            <h2 class="kw-title kw-rev">{{ $heading }}</h2>
+            <img class="kw-tacteing kw-rev" src="{{ $contentImg('tacteing 3 .png') }}" alt="" aria-hidden="true">
+            <p class="kw-letter-text kw-rev">{{ $text }}</p>
+          </article>
+        @endforeach
       </section>
     @endif
 

@@ -136,8 +136,8 @@ class InvitationTemplateSeeder extends Seeder
                 'is_premium' => true,
                 'is_active' => true,
                 'fields' => [
-                    'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'cover_image',
-                    'message', 'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
+                    'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'cover_image',
+                    'message', 'reception_message', 'thanks_message', 'apology_message', 'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
                     'qr_code', 'gift_account', 'story_chapters', 'event_schedule', 'schedule_image', 'photo_gallery', 'gallery_feed', 'rsvp_enabled',
                     'countdown_enabled', 'music_url', 'groom_phone', 'bride_phone',
                 ],
