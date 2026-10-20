@@ -43,12 +43,12 @@ class InvitationManagePage extends Component
      */
     public const FORM_GROUPS = [
         'people' => ['label' => 'អ្នកណាជាម្ចាស់កម្មវិធី', 'icon' => 'users', 'fields' => [
-            'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age', 'groom_phone', 'bride_phone',
+            'sender_name', 'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'celebrant_name', 'turning_age', 'groom_phone', 'bride_phone',
         ]],
         'when_where' => ['label' => 'ពេលណា និងនៅឯណា', 'icon' => 'calendar', 'fields' => [
             'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
         ]],
-        'words' => ['label' => 'ពាក្យពេចន៍លើធៀប', 'icon' => 'pencil', 'fields' => ['headline', 'message']],
+        'words' => ['label' => 'ពាក្យពេចន៍លើធៀប', 'icon' => 'pencil', 'fields' => ['headline', 'message', 'reception_message', 'thanks_message', 'apology_message']],
         'options' => ['label' => 'មុខងារបើក/បិទ', 'icon' => 'bolt', 'fields' => [
             'rsvp_enabled', 'countdown_enabled', 'gallery_feed',
         ]],

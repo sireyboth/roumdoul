@@ -38,10 +38,13 @@ add/remove), `boolean`, `datetime`, `color`.
 |---|---|---|
 | `sender_name` | text | Generic "who it's from" (date-asking, breakup, etc.) |
 | `groom_name` / `bride_name` | text | Wedding-specific names |
+| `groom_father` / `groom_mother` / `bride_father` / `bride_mother` | text | Wedding-specific parents' names (top of the card, above the title; "លោក"/"លោកស្រី" added automatically) |
 | `celebrant_name` | text | Birthday-specific name |
 | `turning_age` | text | Birthday-specific "turning ___" |
 | `headline` | text | Big title text |
 | `message` | long text | The main personalized paragraph / wish |
+| `reception_message` | long text | Wording of the reception invitation card (replaces the default text under the guest name) |
+| `thanks_message` / `apology_message` | long text | Thank-you statement and apology letter (own sections before the closing seal) |
 | `cover_image` | image | Hero photo |
 | `event_date` | datetime | The date being announced/proposed |
 | `venue_name` | text | Location name (plain text, not a map link) |

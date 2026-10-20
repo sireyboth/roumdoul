@@ -34,6 +34,9 @@ class InvitationTemplate extends Model
         'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'អាយុដែលនឹងគ្រប់ក្នុងខួបនេះ ឧ. 25។', 'example' => '25'],
         'headline' => ['label' => 'Headline', 'type' => 'text', 'hint' => 'ចំណងជើងធំនៅខាងលើធៀប ឧ. «សូមគោរពអញ្ជើញ»។', 'example' => 'សូមគោរពអញ្ជើញ'],
         'message' => ['label' => 'Message', 'type' => 'textarea', 'hint' => 'សារដែលអ្នកចង់ផ្ញើដល់ភ្ញៀវ — ពីរបីប្រយោគខ្លីៗគឺល្អបំផុត។'],
+        'thanks_message' => ['label' => 'Thank-you message', 'type' => 'textarea', 'hint' => 'សេចក្ដីថ្លែងអំណរគុណចំពោះភ្ញៀវកិត្តិយស — បង្ហាញនៅផ្នែកខាងក្រោមធៀប។ ទុកទទេ ដើម្បីមិនបង្ហាញ។'],
+        'apology_message' => ['label' => 'Apology letter', 'type' => 'textarea', 'hint' => 'លិខិតសូមអភ័យទោស ក្នុងករណីមិនបានអញ្ជើញដោយផ្ទាល់ — បង្ហាញនៅផ្នែកខាងក្រោមធៀប។ ទុកទទេ ដើម្បីមិនបង្ហាញ។'],
+        'reception_message' => ['label' => 'Reception invitation text', 'type' => 'textarea', 'hint' => 'អក្សរក្នុងកាតអញ្ជើញចូលរួមពិធីជប់លៀង ក្រោមឈ្មោះភ្ញៀវ ឧ. «និងញាតិមិត្ត អញ្ជើញចូលរួមជាអធិបតី… ដោយមេត្រីភាព ។» ទុកទទេ ដើម្បីប្រើអក្សរដើម។'],
         'cover_image' => ['label' => 'Cover image', 'type' => 'image', 'hint' => 'រូបភាពធំដែលភ្ញៀវឃើញមុនគេពេលបើកធៀប — ជ្រើសរូបច្បាស់ និងស្អាតបំផុត។'],
         'event_date' => ['label' => 'Event date', 'type' => 'datetime', 'hint' => 'ថ្ងៃ និងម៉ោងនៃកម្មវិធី — ប្រើសម្រាប់បង្ហាញកាលបរិច្ឆេទ និងនាឡិការាប់ថយក្រោយ។'],
         'venue_name' => ['label' => 'Venue name', 'type' => 'text', 'hint' => 'ឈ្មោះកន្លែងរៀបកម្មវិធី ឧ. «គេហដ្ឋានខាងស្រី» ឬឈ្មោះសណ្ឋាគារ។', 'example' => 'គេហដ្ឋានខាងស្រី'],
@@ -41,6 +44,10 @@ class InvitationTemplate extends Model
         'accent_color' => ['label' => 'Accent color', 'type' => 'color', 'hint' => 'ពណ៌សំខាន់របស់ធៀប (ប៊ូតុង ស៊ុម និងអក្សរលម្អ)។'],
         'groom_photo' => ['label' => "Groom's photo", 'type' => 'image', 'hint' => 'រូបថតកូនកំលោះ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
         'bride_photo' => ['label' => "Bride's photo", 'type' => 'image', 'hint' => 'រូបថតកូនក្រមុំ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
+        'groom_father' => ['label' => "Groom's father", 'type' => 'text', 'hint' => 'ឈ្មោះឪពុកខាងកូនកំលោះ — វាយតែឈ្មោះ (ពាក្យ «លោក» នឹងបន្ថែមឲ្យ)។', 'example' => 'ហេង ឌី'],
+        'groom_mother' => ['label' => "Groom's mother", 'type' => 'text', 'hint' => 'ឈ្មោះម្ដាយខាងកូនកំលោះ — វាយតែឈ្មោះ (ពាក្យ «លោកស្រី» នឹងបន្ថែមឲ្យ)។', 'example' => 'សុខ ជា'],
+        'bride_father' => ['label' => "Bride's father", 'type' => 'text', 'hint' => 'ឈ្មោះឪពុកខាងកូនក្រមុំ — វាយតែឈ្មោះ (ពាក្យ «លោក» នឹងបន្ថែមឲ្យ)។', 'example' => 'ឈិន សារ៉ាត'],
+        'bride_mother' => ['label' => "Bride's mother", 'type' => 'text', 'hint' => 'ឈ្មោះម្ដាយខាងកូនក្រមុំ — វាយតែឈ្មោះ (ពាក្យ «លោកស្រី» នឹងបន្ថែមឲ្យ)។', 'example' => 'ពិស្ណុ សារ៉ាត'],
         'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនកំលោះ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '012 345 678'],
         'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនក្រមុំ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '098 765 432'],
 
@@ -76,7 +83,7 @@ class InvitationTemplate extends Model
         'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age',
         'headline', 'message', 'cover_image', 'event_date', 'venue_name',
         'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
-        'gallery_feed', 'gift_account',
+        'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'thanks_message', 'apology_message', 'reception_message', 'gallery_feed', 'gift_account',
     ];
 
     /**
@@ -103,8 +110,8 @@ class InvitationTemplate extends Model
             'photo_gallery', 'gallery_feed', 'event_schedule', 'schedule_image', 'qr_code', 'gift_account', 'cta_label', 'cta_url',
         ],
         'wedding' => [
-            'groom_name', 'bride_name', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
-            'khmer_date', 'story_chapters',
+            'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
+            'khmer_date', 'story_chapters', 'thanks_message', 'apology_message', 'reception_message',
         ],
         'birthday' => ['celebrant_name', 'turning_age'],
     ];
