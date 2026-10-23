@@ -296,6 +296,21 @@
           <div class="kw-parents-side">@foreach ($groomParents as $line)<p>{{ $line }}</p>@endforeach</div>
           <div class="kw-parents-side">@foreach ($brideParents as $line)<p>{{ $line }}</p>@endforeach</div>
         </div>
+        <script>
+          // keep every parent line on one row: shrink the font of a line until it fits its column
+          (function () {
+            var fit = function () {
+              document.querySelectorAll('.kw-parents-side p').forEach(function (p) {
+                p.style.fontSize = '';
+                var w = p.parentNode.clientWidth, size = parseFloat(getComputedStyle(p).fontSize);
+                if (p.scrollWidth > w) p.style.fontSize = Math.max(size * w / p.scrollWidth - 0.5, 8) + 'px';
+              });
+            };
+            fit();
+            addEventListener('resize', fit);
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+          })();
+        </script>
       @endif
 
       <h1 class="kw-invite-title kw-rev">សូមគោរពអញ្ជើញ</h1>
