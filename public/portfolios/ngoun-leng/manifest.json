@@ -1,0 +1,60 @@
+{
+    "brand/favicon.svg": {
+        "svg": true,
+        "file": "brand/favicon.svg",
+        "mtime": 1794020385
+    },
+    "portrait/portrait.jpg": {
+        "w": 2400,
+        "h": 1600,
+        "variants": {
+            "480": "portrait/portrait-480.webp",
+            "960": "portrait/portrait-960.webp",
+            "1600": "portrait/portrait-1600.webp",
+            "2400": "portrait/portrait-2400.webp"
+        },
+        "mtime": 1794022980
+    },
+    "projects/animated-shorts/cover.jpg": {
+        "w": 1080,
+        "h": 1920,
+        "variants": {
+            "480": "projects/animated-shorts/cover-480.webp",
+            "960": "projects/animated-shorts/cover-960.webp",
+            "1080": "projects/animated-shorts/cover-1080.webp"
+        },
+        "mtime": 1791661469
+    },
+    "projects/digital-invitations/cover.jpg": {
+        "w": 1918,
+        "h": 905,
+        "variants": {
+            "480": "projects/digital-invitations/cover-480.webp",
+            "960": "projects/digital-invitations/cover-960.webp",
+            "1600": "projects/digital-invitations/cover-1600.webp",
+            "1918": "projects/digital-invitations/cover-1918.webp"
+        },
+        "mtime": 1794025392
+    },
+    "projects/roumdoul/cover.jpg": {
+        "w": 1902,
+        "h": 899,
+        "variants": {
+            "480": "projects/roumdoul/cover-480.webp",
+            "960": "projects/roumdoul/cover-960.webp",
+            "1600": "projects/roumdoul/cover-1600.webp",
+            "1902": "projects/roumdoul/cover-1902.webp"
+        },
+        "mtime": 1794024772
+    },
+    "projects/spreadsheet-education/cover.jpg": {
+        "w": 1280,
+        "h": 605,
+        "variants": {
+            "480": "projects/spreadsheet-education/cover-480.webp",
+            "960": "projects/spreadsheet-education/cover-960.webp",
+            "1280": "projects/spreadsheet-education/cover-1280.webp"
+        },
+        "mtime": 1794025763
+    }
+}

@@ -5,7 +5,13 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                // Personal portfolios (/portfolio/...) — separate design system, no Tailwind.
+                'resources/css/portfolio.css',
+                'resources/js/portfolio.js',
+            ],
             refresh: true,
         }),
         tailwindcss(),

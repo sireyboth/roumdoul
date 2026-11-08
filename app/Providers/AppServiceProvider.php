@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Portfolio\PortfolioRepository;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(PortfolioRepository::class, fn () => new PortfolioRepository(config('portfolio.path')));
     }
 
     /**
@@ -21,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->seedEphemeralSqliteDatabase();
+        $this->bootPortfolios();
+    }
+
+    /** Personal portfolios: {portfolio} route binding + <x-pf::…> Blade components. */
+    private function bootPortfolios(): void
+    {
+        Route::bind('portfolio', fn (string $slug) => app(PortfolioRepository::class)->find($slug) ?? abort(404));
+
+        Blade::anonymousComponentPath(resource_path('views/portfolio/components'), 'pf');
     }
 
     /**

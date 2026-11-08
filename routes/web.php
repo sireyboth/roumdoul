@@ -45,6 +45,8 @@ Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpCo
     ->middleware('throttle:20,1')
     ->name('invitation.rsvp');
 
+require __DIR__.'/portfolio.php';
+
 Route::middleware('guest:customer')->group(function () {
     Route::get('/register', RegisterPage::class)->name('register');
     Route::get('/login', LoginPage::class)->name('login');

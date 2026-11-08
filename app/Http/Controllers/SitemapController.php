@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Service;
+use App\Portfolio\PortfolioRepository;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
@@ -30,6 +31,28 @@ class SitemapController extends Controller
                 'priority' => '0.8',
                 'lastmod' => $service->updated_at?->toAtomString(),
             ];
+        }
+
+        foreach (app(PortfolioRepository::class)->all() as $portfolio) {
+            foreach ($portfolio->locales() as $locale) {
+                $params = ['portfolio' => $portfolio->slug, 'locale' => $locale];
+
+                foreach (['home' => '0.8', 'about' => '0.6', 'work' => '0.7', 'expertise' => '0.5', 'notes' => '0.5', 'contact' => '0.4'] as $page => $priority) {
+                    $urls[] = ['loc' => route("portfolio.{$page}", $params), 'priority' => $priority];
+                }
+
+                foreach ($portfolio->projects() as $project) {
+                    $urls[] = ['loc' => route('portfolio.work.show', $params + ['project' => $project->slug]), 'priority' => '0.6'];
+                }
+
+                foreach ($portfolio->notes()->reject->isDraft() as $note) {
+                    $urls[] = [
+                        'loc' => route('portfolio.notes.show', $params + ['note' => $note->slug]),
+                        'priority' => '0.5',
+                        'lastmod' => $note->date()?->toAtomString(),
+                    ];
+                }
+            }
         }
 
         $xml = view('sitemap', ['urls' => $urls])->render();
