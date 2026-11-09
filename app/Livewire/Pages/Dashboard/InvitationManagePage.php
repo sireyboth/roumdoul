@@ -44,19 +44,21 @@ class InvitationManagePage extends Component
     public const FORM_GROUPS = [
         'people' => ['label' => 'អ្នកណាជាម្ចាស់កម្មវិធី', 'icon' => 'users', 'fields' => [
             'sender_name', 'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'celebrant_name', 'turning_age', 'groom_phone', 'bride_phone',
+            'host_names', 'contact_phone',
         ]],
         'when_where' => ['label' => 'ពេលណា និងនៅឯណា', 'icon' => 'calendar', 'fields' => [
             'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
         ]],
-        'words' => ['label' => 'ពាក្យពេចន៍លើធៀប', 'icon' => 'pencil', 'fields' => ['headline', 'message', 'reception_message', 'thanks_message', 'apology_message']],
+        'words' => ['label' => 'ពាក្យពេចន៍លើធៀប', 'icon' => 'pencil', 'fields' => ['headline', 'opening_line', 'message', 'reception_message', 'rsvp_message', 'thanks_message', 'apology_message']],
         'options' => ['label' => 'មុខងារបើក/បិទ', 'icon' => 'bolt', 'fields' => [
             'rsvp_enabled', 'countdown_enabled', 'gallery_feed',
         ]],
-        'style' => ['label' => 'ភ្លេង និងពណ៌', 'icon' => 'paint-brush', 'fields' => ['music_url', 'accent_color']],
+        'music' => ['label' => 'ភ្លេង — ដាក់តំណ ឬបង្ហោះឯកសារ', 'icon' => 'sparkles', 'or' => true, 'fields' => ['music_url', 'music_file']],
+        'style' => ['label' => 'ពណ៌', 'icon' => 'paint-brush', 'fields' => ['accent_color']],
         'button' => ['label' => 'ប៊ូតុងផ្ទាល់ខ្លួន', 'icon' => 'link', 'fields' => ['cta_label', 'cta_url']],
-        'portraits' => ['label' => 'រូបសំខាន់ៗ', 'icon' => 'photo', 'cols' => 3, 'wide' => true, 'fields' => ['cover_image', 'groom_photo', 'bride_photo']],
+        'portraits' => ['label' => 'រូបសំខាន់ៗ', 'icon' => 'photo', 'cols' => 3, 'wide' => true, 'fields' => ['title_image', 'cover_image', 'background_image', 'groom_photo', 'bride_photo']],
         'gallery' => ['label' => 'វិចិត្រសាលរូបថត', 'icon' => 'squares', 'fields' => ['photo_gallery']],
-        'gift' => ['label' => 'ចំណងដៃ', 'icon' => 'heart', 'fields' => ['qr_code', 'gift_account']],
+        'gift' => ['label' => 'ចំណងដៃ', 'icon' => 'heart', 'fields' => ['qr_code', 'gift_account', 'gift_message']],
         'schedule' => ['label' => 'របៀបវារៈ — វាយបញ្ចូល ឬដាក់រូបភាព', 'icon' => 'clock', 'or' => true, 'fields' => ['event_schedule', 'schedule_image']],
         'story' => ['label' => 'រឿងរ៉ាវរបស់យើង', 'icon' => 'heart', 'fields' => ['story_chapters']],
     ];
@@ -76,6 +78,20 @@ class InvitationManagePage extends Component
 
     public const MAX_GALLERY_PHOTOS = 20;
 
+    /**
+     * Per-song upload cap (KB) — about 10 minutes of a normal 128 kbps MP3. There's no ffmpeg to
+     * re-encode on the server, so the cap is what keeps a 500 MB WAV or hour-long mix off storage
+     * and off guests' phones; the picker refuses bigger files before a single byte is sent.
+     */
+    public const MAX_AUDIO_KB = 10240;
+
+    /** Accepted song types => the extension it's stored under (not the client's file name). */
+    public const AUDIO_TYPES = [
+        'audio/mpeg' => 'mp3', 'audio/mp3' => 'mp3',
+        'audio/mp4' => 'm4a', 'audio/x-m4a' => 'm4a', 'audio/m4a' => 'm4a', 'video/mp4' => 'm4a',
+        'audio/aac' => 'aac', 'audio/x-aac' => 'aac', 'audio/aacp' => 'aac',
+    ];
+
     #[Url(as: 'tab')]
     public string $section = 'overview';
 
@@ -85,6 +101,9 @@ class InvitationManagePage extends Component
 
     /** Pending single-image uploads, keyed by field key (e.g. 'cover_image', 'qr_code'). */
     public array $imageUploads = [];
+
+    /** Pending song uploads, keyed by field key (e.g. 'music_file'). */
+    public array $audioUploads = [];
 
     /** Pending multi-image uploads, keyed by gallery field key (e.g. 'photo_gallery'). */
     public array $galleryUploads = [];
@@ -341,6 +360,7 @@ class InvitationManagePage extends Component
         $this->fieldValues = Arr::only($this->fieldValues, $allowedKeys);
         $this->imageUploads = Arr::only($this->imageUploads, $allowedKeys);
         $this->galleryUploads = Arr::only($this->galleryUploads, $allowedKeys);
+        $this->audioUploads = Arr::only($this->audioUploads, $allowedKeys);
 
         $optimizer = app(ImageOptimizer::class);
         $directory = 'invitations/'.$this->invitation->id;
@@ -359,6 +379,16 @@ class InvitationManagePage extends Component
             }
         }
         $this->galleryUploads = [];
+
+        // songs are stored as uploaded (already size/type-checked by uploadRules), under a random
+        // name with the extension their real content type maps to
+        foreach ($this->audioUploads as $key => $file) {
+            if ($file) {
+                $extension = self::AUDIO_TYPES[$file->getMimeType()] ?? 'mp3';
+                $this->fieldValues[$key] = $file->storeAs($directory, Str::random(40).'.'.$extension, 's3');
+            }
+        }
+        $this->audioUploads = [];
 
         $this->invitation->update(['field_values' => $this->fieldValues]);
         $this->saved = true;
@@ -430,7 +460,7 @@ class InvitationManagePage extends Component
                 $type === 'schedule' => ['nullable', 'array', 'max:20'],
                 $type === 'story' => ['nullable', 'array', 'max:8'],
                 $type === 'gallery' => ['nullable', 'array', 'max:'.self::MAX_GALLERY_PHOTOS],
-                $type === 'image' => ['nullable', 'string', $this->ownStoragePathRule()],
+                $type === 'image', $type === 'audio' => ['nullable', 'string', $this->ownStoragePathRule()],
                 default => null,
             };
 
@@ -491,6 +521,12 @@ class InvitationManagePage extends Component
             }
         }
 
+        foreach ($this->audioUploads as $key => $file) {
+            if ($file) {
+                $rules["audioUploads.{$key}"] = ['file', 'max:'.self::MAX_AUDIO_KB, 'mimetypes:'.implode(',', array_keys(self::AUDIO_TYPES))];
+            }
+        }
+
         foreach ($this->galleryUploads as $key => $files) {
             if (! empty($files)) {
                 $room = max(0, self::MAX_GALLERY_PHOTOS - count($this->fieldValues[$key] ?? []));
@@ -509,6 +545,8 @@ class InvitationManagePage extends Component
             'galleryUploads.*.*.max' => 'Each photo can be at most '.(self::MAX_UPLOAD_KB / 1024).' MB.',
             'galleryUploads.*.max' => 'The gallery holds up to '.self::MAX_GALLERY_PHOTOS.' photos — remove some first.',
             '*.dimensions' => 'This photo is too large (max 8000 × 8000 pixels).',
+            'audioUploads.*.max' => 'ឯកសារភ្លេងធំពេក — ធំបំផុត '.(self::MAX_AUDIO_KB / 1024).' MB (≈ បទ ១០ នាទី)។',
+            'audioUploads.*.mimetypes' => 'សូមប្រើឯកសារភ្លេង MP3 ឬ M4A ប៉ុណ្ណោះ។',
         ];
     }
 
@@ -522,6 +560,12 @@ class InvitationManagePage extends Component
         try {
             $this->livewireUploadErrored($name, $errorsInJson, $isMultiple);
         } catch (ValidationException) {
+            if (str_starts_with($name, 'audioUploads.')) {
+                $message = 'បង្ហោះភ្លេងមិនបានទេ — ឯកសារភ្លេងធំបំផុត '.(self::MAX_AUDIO_KB / 1024).' MB។';
+                $this->toast('error', $message);
+
+                throw ValidationException::withMessages([$name => $message]);
+            }
             $this->toast('error', 'បង្ហោះរូបមិនបានទេ — រូបនីមួយៗធំបំផុត '.(self::MAX_UPLOAD_KB / 1024).' MB។');
 
             throw ValidationException::withMessages([
@@ -536,7 +580,7 @@ class InvitationManagePage extends Component
      */
     public function updated(string $property): void
     {
-        if (! preg_match('/^(imageUploads|galleryUploads)\.([^.]+)/', $property, $m)) {
+        if (! preg_match('/^(imageUploads|galleryUploads|audioUploads)\.([^.]+)/', $property, $m)) {
             return;
         }
 
@@ -549,7 +593,9 @@ class InvitationManagePage extends Component
             throw $e;
         }
 
-        $this->toast('info', 'រូបរួចរាល់ហើយ — ចុច Save ដើម្បីរក្សាទុក។');
+        $this->toast('info', $m[1] === 'audioUploads'
+            ? 'ភ្លេងរួចរាល់ហើយ — ចុច Save ដើម្បីរក្សាទុក។'
+            : 'រូបរួចរាល់ហើយ — ចុច Save ដើម្បីរក្សាទុក។');
     }
 
     /** Clears a single-photo field (and any pending pick for it). */
@@ -558,6 +604,14 @@ class InvitationManagePage extends Component
         unset($this->imageUploads[$key]);
         $this->fieldValues[$key] = null;
         $this->toast('info', 'បានដករូបចេញ — ចុច Save ដើម្បីរក្សាទុក។');
+    }
+
+    /** Clears an uploaded song (and any pending pick for it). */
+    public function removeAudio(string $key): void
+    {
+        unset($this->audioUploads[$key]);
+        $this->fieldValues[$key] = null;
+        $this->toast('info', 'បានដកភ្លេងចេញ — ចុច Save ដើម្បីរក្សាទុក។');
     }
 
     public function removeGalleryImage(string $key, int $index): void

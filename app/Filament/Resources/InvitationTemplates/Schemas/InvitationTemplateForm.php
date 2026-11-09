@@ -133,6 +133,11 @@ class InvitationTemplateForm
                             ->options(InvitationTemplate::sectionFieldOptions('birthday'))
                             ->columns(3)
                             ->columnSpanFull(),
+                        CheckboxList::make('fields_ceremony')
+                            ->label('Buddhist ceremony-specific')
+                            ->options(InvitationTemplate::sectionFieldOptions('ceremony'))
+                            ->columns(3)
+                            ->columnSpanFull(),
                     ]);
     }
 

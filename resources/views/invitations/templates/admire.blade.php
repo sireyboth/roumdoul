@@ -36,9 +36,11 @@
         ];
     });
 
+    // an uploaded song wins over a link; it isn't fetched until it plays (preload="none")
+    $musicFile = ! empty($fields['music_file']) ? $resolveUrl($fields['music_file']) : null;
     $musicUrl = $fields['music_url'] ?? null;
     $youtubeId = null;
-    if ($musicUrl && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/', $musicUrl, $m)) {
+    if (! $musicFile && $musicUrl && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/', $musicUrl, $m)) {
         $youtubeId = $m[1];
     }
 
@@ -85,6 +87,8 @@
       this.py = (point.clientY / window.innerHeight - 0.5) * 2;
     },
     playMusic() {
+      const song = this.$refs.musicAudio;
+      if (song) { song.play().catch(() => {}); return; }
       const player = this.$refs.musicFrame?.contentWindow;
       if (!player) return;
       const post = (func) => player.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*');
@@ -196,7 +200,9 @@
   </section>
 
   {{-- ambient music, primed muted, unlocked the instant the puzzle is solved --}}
-  @if ($youtubeId)
+  @if ($musicFile)
+    <audio x-ref="musicAudio" src="{{ $musicFile }}" preload="none" loop></audio>
+  @elseif ($youtubeId)
     <div class="fixed h-0 w-0 overflow-hidden opacity-0">
       <iframe
         x-ref="musicFrame"

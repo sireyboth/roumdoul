@@ -21,8 +21,8 @@ catalog. A template just ticks which of these it uses; unrelated templates are u
 adding more entries, so the catalog is meant to keep growing as new event types show up.
 
 For readability, `InvitationTemplate::FIELD_SECTIONS` additionally groups every catalog key into
-`universal` (reusable by any template), `wedding`, or `birthday` — purely cosmetic, driving the
-three separate checkbox lists on the admin "Fields this design uses" screen (Filament's
+`universal` (reusable by any template), `wedding`, `birthday`, or `ceremony` (Buddhist merit-making
+ceremonies such as Kathina) — purely cosmetic, driving the separate checkbox lists on the admin "Fields this design uses" screen (Filament's
 `CheckboxList` has no native option-group support, so it's three components, not one). This has
 zero effect on gating or rendering — only `FREE_FIELDS` (below) and a template's own `fields`
 selection actually matter at runtime. Add a new section here when a new event type brings fields
@@ -41,14 +41,22 @@ add/remove), `boolean`, `datetime`, `color`.
 | `groom_father` / `groom_mother` / `bride_father` / `bride_mother` | text | Wedding-specific parents' names (top of the card, above the title; "លោក"/"លោកស្រី" added automatically) |
 | `celebrant_name` | text | Birthday-specific name |
 | `turning_age` | text | Birthday-specific "turning ___" |
+| `opening_line` | text | Buddhist ceremonies: the line under the title; empty = "នមោ តស្ស ភគវតោ អរហតោ សម្មាសម្ពុទ្ធស្ស" |
+| `host_names` | long text | Ceremony hosts / organizing committee, one name per line (Kathina: "ម្ចាស់ពិធី") |
+| `contact_phone` | text | One phone number guests can call for details (any event) |
 | `headline` | text | Big title text |
 | `message` | long text | The main personalized paragraph / wish |
 | `reception_message` | long text | Wording of the reception invitation card (replaces the default text under the guest name) |
-| `thanks_message` / `apology_message` | long text | Thank-you statement and apology letter (own sections before the closing seal) |
-| `cover_image` | image | Hero photo |
+| `thanks_message` / `apology_message` | long text | Thank-you statement and apology letter (own sections before the closing seal). Kathina uses `thanks_message` as the closing blessing text; empty = the template's own blessing |
+| `title_image` | image | Optional picture of the big title (e.g. a transparent PNG of decorated lettering). Kathina: shown instead of the title; without it the typed `headline` becomes the title text, and with neither the template's own title artwork is used |
+| `cover_image` | image | Hero photo (Kathina: replaces the trai in the middle of the first screen and above the blessing) |
+| `background_image` | image | Optional full-screen background (Kathina: replaces the temple picture; portrait works best) |
+| `gift_message` | long text | Optional wording above the gift/donation QR; empty = the template's own text |
+| `rsvp_message` | text | Optional question above the RSVP buttons; empty = the template's own text |
 | `event_date` | datetime | The date being announced/proposed |
 | `venue_name` | text | Location name (plain text, not a map link) |
-| `music_url` | text | Background music — a YouTube/TikTok link, not an upload |
+| `music_url` | text | Background music — a YouTube/TikTok link |
+| `music_file` | audio | Background music uploaded as a file (MP3/M4A/AAC, at most `InvitationManagePage::MAX_AUDIO_KB` = 10 MB ≈ 10 min). Checked in the browser before anything is sent and again on the server (size + real content type); stored under a random name in the invitation's own folder, never re-encoded (no ffmpeg). Templates play it instead of `music_url` when both are set, with `preload="none"` so guests download nothing until it plays |
 | `accent_color` | color | Theme color |
 
 **Premium fields — the pricing upsell lever.** A template can still tick these into its schema,

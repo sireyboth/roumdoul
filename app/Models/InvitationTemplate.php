@@ -37,10 +37,16 @@ class InvitationTemplate extends Model
         'thanks_message' => ['label' => 'Thank-you message', 'type' => 'textarea', 'hint' => 'សេចក្ដីថ្លែងអំណរគុណចំពោះភ្ញៀវកិត្តិយស — បង្ហាញនៅផ្នែកខាងក្រោមធៀប។ ទុកទទេ ដើម្បីមិនបង្ហាញ។'],
         'apology_message' => ['label' => 'Apology letter', 'type' => 'textarea', 'hint' => 'លិខិតសូមអភ័យទោស ក្នុងករណីមិនបានអញ្ជើញដោយផ្ទាល់ — បង្ហាញនៅផ្នែកខាងក្រោមធៀប។ ទុកទទេ ដើម្បីមិនបង្ហាញ។'],
         'reception_message' => ['label' => 'Reception invitation text', 'type' => 'textarea', 'hint' => 'អក្សរក្នុងកាតអញ្ជើញចូលរួមពិធីជប់លៀង ក្រោមឈ្មោះភ្ញៀវ ឧ. «និងញាតិមិត្ត អញ្ជើញចូលរួមជាអធិបតី… ដោយមេត្រីភាព ។» ទុកទទេ ដើម្បីប្រើអក្សរដើម។'],
+        'opening_line' => ['label' => 'Opening line', 'type' => 'text', 'hint' => 'បន្ទាត់ខាងលើគេ ក្រោមចំណងជើង — ទុកទទេ ដើម្បីប្រើ «នមោ តស្ស ភគវតោ អរហតោ សម្មាសម្ពុទ្ធស្ស»។', 'example' => 'នមោ តស្ស ភគវតោ អរហតោ សម្មាសម្ពុទ្ធស្ស'],
+        'gift_message' => ['label' => 'Text above the QR code', 'type' => 'textarea', 'hint' => 'ពាក្យពេចន៍ខាងលើ QR សម្រាប់ចូលរួមបច្ច័យ/ចំណងដៃ — ទុកទទេ ដើម្បីប្រើអក្សរដើមរបស់ធៀប។'],
+        'rsvp_message' => ['label' => 'RSVP question', 'type' => 'text', 'hint' => 'សំណួរខាងលើប៊ូតុងបញ្ជាក់ការចូលរួម — ទុកទទេ ដើម្បីប្រើអក្សរដើមរបស់ធៀប។', 'example' => 'តើលោកអ្នកនឹងអញ្ជើញចូលរួមកុសលជាមួយយើងខ្ញុំដែរឬទេ?'],
+        'background_image' => ['label' => 'Background image (optional)', 'type' => 'image', 'hint' => 'រូបផ្ទៃខាងក្រោយពេញអេក្រង់ — រូបបញ្ឈរល្អបំផុត។ ទុកទទេ ដើម្បីប្រើរូបដើមរបស់ធៀប។'],
+        'title_image' => ['label' => 'Title image (optional)', 'type' => 'image', 'hint' => 'រូបចំណងជើងធំនៅខាងលើគេបង្អស់ (ឧ. អក្សរក្បាច់ PNG ផ្ទៃថ្លា)។ ទុកទទេ ដើម្បីប្រើចំណងជើងដែលអ្នកវាយ ឬរូបចំណងជើងដើមរបស់ធៀប។'],
         'cover_image' => ['label' => 'Cover image', 'type' => 'image', 'hint' => 'រូបភាពធំដែលភ្ញៀវឃើញមុនគេពេលបើកធៀប — ជ្រើសរូបច្បាស់ និងស្អាតបំផុត។'],
         'event_date' => ['label' => 'Event date', 'type' => 'datetime', 'hint' => 'ថ្ងៃ និងម៉ោងនៃកម្មវិធី — ប្រើសម្រាប់បង្ហាញកាលបរិច្ឆេទ និងនាឡិការាប់ថយក្រោយ។'],
         'venue_name' => ['label' => 'Venue name', 'type' => 'text', 'hint' => 'ឈ្មោះកន្លែងរៀបកម្មវិធី ឧ. «គេហដ្ឋានខាងស្រី» ឬឈ្មោះសណ្ឋាគារ។', 'example' => 'គេហដ្ឋានខាងស្រី'],
         'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text', 'hint' => 'ចម្លងតំណបទចម្រៀងពី YouTube ឬ TikTok មកដាក់ — ភ្ញៀវអាចស្ដាប់ភ្លេងពេលបើកធៀប។', 'example' => 'https://youtu.be/…'],
+        'music_file' => ['label' => 'Background music (upload MP3)', 'type' => 'audio', 'section' => 'details', 'hint' => 'ឬបង្ហោះឯកសារភ្លេង MP3 / M4A ផ្ទាល់ពីទូរស័ព្ទ (ធំបំផុត 10 MB ≈ បទ ១០ នាទី)។ បើមានទាំងតំណ និងឯកសារ ធៀបនឹងចាក់ឯកសារនេះ។'],
         'accent_color' => ['label' => 'Accent color', 'type' => 'color', 'hint' => 'ពណ៌សំខាន់របស់ធៀប (ប៊ូតុង ស៊ុម និងអក្សរលម្អ)។'],
         'groom_photo' => ['label' => "Groom's photo", 'type' => 'image', 'hint' => 'រូបថតកូនកំលោះ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
         'bride_photo' => ['label' => "Bride's photo", 'type' => 'image', 'hint' => 'រូបថតកូនក្រមុំ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
@@ -50,6 +56,8 @@ class InvitationTemplate extends Model
         'bride_mother' => ['label' => "Bride's mother", 'type' => 'text', 'hint' => 'ឈ្មោះម្ដាយខាងកូនក្រមុំ — វាយតែឈ្មោះ (ពាក្យ «លោកស្រី» នឹងបន្ថែមឲ្យ)។', 'example' => 'ពិស្ណុ សារ៉ាត'],
         'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនកំលោះ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '012 345 678'],
         'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនក្រមុំ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '098 765 432'],
+        'contact_phone' => ['label' => 'Contact phone number', 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទដែលភ្ញៀវអាចទាក់ទងសួរព័ត៌មានបន្ថែម។', 'example' => '012 345 678'],
+        'host_names' => ['label' => 'Hosts / organizers', 'type' => 'textarea', 'hint' => 'ឈ្មោះម្ចាស់ពិធី ឬគណៈកម្មការរៀបចំ — មួយឈ្មោះក្នុងមួយបន្ទាត់ ឧ. «លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា»។', 'example' => 'លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា'],
 
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
         // shows these to the recipient if the plan's `features` list includes the key.
@@ -84,6 +92,7 @@ class InvitationTemplate extends Model
         'headline', 'message', 'cover_image', 'event_date', 'venue_name',
         'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
         'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'thanks_message', 'apology_message', 'reception_message', 'gallery_feed', 'gift_account',
+        'contact_phone', 'host_names', 'title_image', 'opening_line', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
     ];
 
     /**
@@ -108,12 +117,15 @@ class InvitationTemplate extends Model
             'sender_name', 'headline', 'message', 'cover_image', 'event_date', 'venue_name',
             'music_url', 'accent_color', 'venue_address', 'map_url', 'rsvp_enabled', 'countdown_enabled',
             'photo_gallery', 'gallery_feed', 'event_schedule', 'schedule_image', 'qr_code', 'gift_account', 'cta_label', 'cta_url',
+            'contact_phone', 'title_image', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
         ],
         'wedding' => [
             'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
             'khmer_date', 'story_chapters', 'thanks_message', 'apology_message', 'reception_message',
         ],
         'birthday' => ['celebrant_name', 'turning_age'],
+        // Buddhist merit-making ceremonies (Kathina, Phka Prak, ...)
+        'ceremony' => ['host_names', 'opening_line'],
     ];
 
     protected $fillable = [

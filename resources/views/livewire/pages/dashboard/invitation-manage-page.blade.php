@@ -192,7 +192,7 @@
       @elseif (in_array($section, ['details', 'media', 'program'], true))
         @php
           $formFields = $this->sectionFields($section);
-          $isFilled = fn (string $key) => filled($fieldValues[$key] ?? null) || ! empty($imageUploads[$key]) || ! empty($galleryUploads[$key]);
+          $isFilled = fn (string $key) => filled($fieldValues[$key] ?? null) || ! empty($imageUploads[$key]) || ! empty($galleryUploads[$key]) || ! empty($audioUploads[$key]);
           $initialFocus = in_array($focusField, $formFields, true) ? $focusField : ($formFields[0] ?? null);
         @endphp
         <p class="mt-2 flex items-start gap-2 rounded-xl bg-gold-500/10 px-4 py-3 text-base text-plum-700 dark:text-plum-200">

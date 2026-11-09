@@ -19,6 +19,15 @@ class InvitationTemplateDemoController extends Controller
             ]);
         }
 
+        if ($template->slug === 'kak-thern') {
+            return view('invitations.show', [
+                'view' => $template->view,
+                'recipientName' => 'លោក លោកស្រី សុខ សុភា',
+                'invitation' => null,
+                'fields' => $this->kathinaDemoFields(),
+            ]);
+        }
+
         return view('invitations.show', [
             'view' => $template->view,
             'recipientName' => 'Bella',
@@ -91,6 +100,39 @@ class InvitationTemplateDemoController extends Controller
             // ?photos=N (1–30) previews the feed with any number of photos, mixed portrait/landscape
             'photo_gallery' => collect(range(1, max(1, min(30, (int) request('photos', 6)))))
                 ->map(fn ($i) => "https://picsum.photos/seed/khmerwed{$i}/".($i % 3 === 0 ? '1000/700' : ($i % 2 ? '700/900' : '700/700')))
+                ->all(),
+        ];
+    }
+
+    /**
+     * Sample content for the Kathina ceremony preview — the same field keys a real customer
+     * fills in through the dashboard form, so the demo exercises every section.
+     */
+    private function kathinaDemoFields(): array
+    {
+        return [
+            'host_names' => "លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា\nព្រមទាំងកូនចៅ និងពុទ្ធបរិស័ទចំណុះជើងវត្ត",
+            'event_date' => '2026-11-22 07:00:00',
+            'khmer_date' => 'ត្រូវនឹងថ្ងៃអាទិត្យ ៣កើត ខែកត្តិក ឆ្នាំម្សាញ់ សប្តស័ក ព.ស. ២៥៧០',
+            'venue_name' => 'វត្តឧណ្ណាលោម',
+            'venue_address' => 'Wat Ounalom, Sisowath Quay, Phnom Penh',
+            'map_url' => 'https://www.google.com/maps/@11.5747,104.9302,17z',
+            'event_schedule' => [
+                ['time' => 'ថ្ងៃសៅរ៍ ២កើត', 'label' => ''],
+                ['time' => '05:00 PM', 'label' => 'ពិធីចូលរោងបុណ្យ និងសូត្រមន្តចម្រើនព្រះបរិត្ត'],
+                ['time' => '07:00 PM', 'label' => 'ពិធីសម្តែងព្រះធម្មទេសនា'],
+                ['time' => 'ថ្ងៃអាទិត្យ ៣កើត', 'label' => ''],
+                ['time' => '07:00 AM', 'label' => 'ពិធីដង្ហែកឋិនជុំវិញព្រះវិហារ ៣ ជុំ'],
+                ['time' => '09:00 AM', 'label' => 'ពិធីវេរកឋិនទានប្រគេនព្រះសង្ឃ'],
+                ['time' => '11:00 AM', 'label' => 'ប្រគេនចង្ហាន់ថ្ងៃត្រង់ព្រះសង្ឃ'],
+            ],
+            'countdown_enabled' => true,
+            'rsvp_enabled' => true,
+            'qr_code' => 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=ROUMDOUL-DEMO-KATHINA',
+            'gift_account' => "ABA · SOK HENG\n000 123 456",
+            'contact_phone' => '012 345 678',
+            'photo_gallery' => collect(range(1, 5))
+                ->map(fn ($i) => "https://picsum.photos/seed/kathina{$i}/800/1000")
                 ->all(),
         ];
     }
