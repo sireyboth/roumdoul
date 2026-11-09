@@ -306,7 +306,9 @@
         <div class="kt-divider kt-rev"><i></i><svg aria-hidden="true"><use href="#kt-lotus"/></svg><i></i></div>
         <div class="kt-gal">
           @foreach ($gallery as $i => $url)
-            <a class="kt-rev" href="{{ $url }}" target="_blank" rel="noopener"><img src="{{ $url }}" alt="{{ $headline }} {{ $i + 1 }}" loading="lazy"></a>
+            {{-- --d staggers each row's photos, --tilt / --kx alternate their entrance tilt and slow drift --}}
+            <a class="kt-ph kt-rev" href="{{ $url }}" target="_blank" rel="noopener" data-i="{{ $i }}"
+              style="--d:{{ ($i % 3) * 0.14 }}s;--tilt:{{ $i % 2 ? 2.5 : -2.5 }}deg;--kx:{{ $i % 2 ? -3 : 3 }}%"><img src="{{ $url }}" alt="{{ $headline }} {{ $i + 1 }}" loading="lazy"></a>
           @endforeach
         </div>
       </section>
