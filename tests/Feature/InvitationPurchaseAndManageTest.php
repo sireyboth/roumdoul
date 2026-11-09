@@ -453,6 +453,57 @@ class InvitationPurchaseAndManageTest extends TestCase
         $this->assertSame(1, $invitation->recipients()->count());
     }
 
+    public function test_importing_a_guest_list_adds_new_names_up_to_the_plan_limit(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id, 'max_recipients' => 4]);
+        InvitationRecipient::factory()->create(['invitation_id' => $invitation->id, 'recipient_name' => 'Dara']);
+        $csv = "\xEF\xBB\xBFName,Link\nសុខ សុភា,\n\ndara,x\n\"Bella, Jr\",\nMaly\nSophea\nសុខ សុភា\n";
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('guestFile', UploadedFile::fake()->createWithContent('guests.csv', $csv))
+            ->call('importGuests')
+            ->assertHasNoErrors();
+
+        $this->assertSame(
+            ['Dara', 'សុខ សុភា', 'Bella, Jr', 'Maly'],
+            $invitation->recipients()->orderBy('id')->pluck('recipient_name')->all()
+        );
+    }
+
+    public function test_importing_rejects_a_non_csv_file(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id, 'max_recipients' => 5]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('guestFile', UploadedFile::fake()->image('guests.png'))
+            ->call('importGuests')
+            ->assertHasErrors(['guestFile']);
+
+        $this->assertSame(0, $invitation->recipients()->count());
+    }
+
+    public function test_exporting_the_guest_list_downloads_a_csv_with_each_link(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $recipient = InvitationRecipient::factory()->create([
+            'invitation_id' => $invitation->id, 'recipient_name' => 'សុខ សុភា', 'rsvp_status' => 'yes',
+        ]);
+
+        $component = Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->call('exportGuests')
+            ->assertFileDownloaded('guests-'.$invitation->slug.'.csv');
+
+        $csv = base64_decode($component->effects['download']['content']);
+        $this->assertStringStartsWith("\xEF\xBB\xBFName,Link,Opened,RSVP", $csv);
+        $this->assertStringContainsString('"សុខ សុភា",'.route('invitation.show', [$invitation, $recipient]).',,មក', $csv);
+    }
+
     public function test_removing_a_recipient_deletes_it(): void
     {
         $customer = Customer::factory()->create();

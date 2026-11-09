@@ -319,10 +319,31 @@
               </button>
             </form>
             @error('newRecipientName') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+
+            <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-plum-100 pt-4 text-sm dark:border-plum-800">
+              <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-plum-200 px-4 py-2 font-semibold text-plum-700 hover:border-brand-500 hover:text-brand-600 dark:border-plum-700 dark:text-plum-200">
+                <x-app-icon name="arrow-up-tray" class="h-4 w-4" />
+                <span wire:loading.remove wire:target="guestFile,importGuests">Import list (CSV)</span>
+                <span wire:loading wire:target="guestFile,importGuests">Importing...</span>
+                <input type="file" accept=".csv,.txt,text/csv,text/plain" class="sr-only"
+                  wire:model="guestFile" x-on:livewire-upload-finish="$wire.importGuests()" />
+              </label>
+              <span class="text-xs text-plum-500 dark:text-plum-400">ឈ្មោះមួយក្នុងមួយជួរ (ជួរឈរទី១) · Excel → Save As → CSV UTF-8</span>
+            </div>
+            @error('guestFile') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
           @else
             <p class="mt-5 text-sm text-plum-500 dark:text-plum-400">You've used all {{ $invitation->max_recipients }} recipient links on this plan.</p>
           @endif
         </div>
+
+        @if ($invitation->recipients->isNotEmpty())
+          <div class="mt-4 flex justify-end">
+            <button type="button" wire:click="exportGuests"
+              class="inline-flex items-center gap-1.5 rounded-full border border-plum-200 px-4 py-2 text-sm font-semibold text-plum-700 hover:border-brand-500 hover:text-brand-600 dark:border-plum-700 dark:text-plum-200">
+              <x-app-icon name="upload" class="h-4 w-4" /> Export list (CSV)
+            </button>
+          </div>
+        @endif
 
         <div class="mt-4 flex flex-col gap-2">
           @forelse ($invitation->recipients as $recipient)

@@ -113,6 +113,9 @@ class InvitationManagePage extends Component
 
     public string $newRecipientName = '';
 
+    /** Pending guest-list file (CSV/TXT, one name per row) for importGuests(). */
+    public $guestFile = null;
+
     public bool $saved = false;
 
     public function mount(Invitation $invitation): void
@@ -566,6 +569,11 @@ class InvitationManagePage extends Component
 
                 throw ValidationException::withMessages([$name => $message]);
             }
+            if ($name === 'guestFile') {
+                $this->toast('error', 'បង្ហោះឯកសារមិនបានទេ — សូមព្យាយាមម្ដងទៀត។');
+
+                throw ValidationException::withMessages([$name => 'The guest list could not be uploaded.']);
+            }
             $this->toast('error', 'បង្ហោះរូបមិនបានទេ — រូបនីមួយៗធំបំផុត '.(self::MAX_UPLOAD_KB / 1024).' MB។');
 
             throw ValidationException::withMessages([
@@ -681,6 +689,90 @@ class InvitationManagePage extends Component
         $this->newRecipientName = '';
         $this->invitation->load('recipients');
         $this->toast('success', 'បានបន្ថែម «'.$created->recipient_name.'» — ចុច Copy link ដើម្បីផ្ញើ។');
+    }
+
+    /**
+     * Adds every name in the uploaded CSV/TXT (first column; a "Name"/"ឈ្មោះ" header row is
+     * skipped, so an exported list re-imports cleanly). Blank rows and names already on the
+     * list are skipped, and only as many as the plan has room for are added.
+     */
+    public function importGuests(): void
+    {
+        abort_unless($this->invitation->isPaid(), 403);
+
+        try {
+            $this->validate(['guestFile' => ['required', 'file', 'max:1024', 'mimes:csv,txt']], [
+                'guestFile.required' => 'សូមជ្រើសរើសឯកសារជាមុនសិន។',
+                'guestFile.max' => 'ឯកសារធំពេក (អតិបរមា 1MB)។',
+                'guestFile.mimes' => 'សូមប្រើឯកសារ .csv ឬ .txt (Excel → Save As → CSV UTF-8)។',
+            ]);
+        } catch (ValidationException $e) {
+            $this->toast('error', $e->validator->errors()->first());
+
+            throw $e;
+        }
+
+        $names = [];
+        $handle = fopen($this->guestFile->getRealPath(), 'r');
+        while (($row = fgetcsv($handle)) !== false) {
+            $name = trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) ($row[0] ?? '')));
+            if ($name === '' || mb_strlen($name) > 255 || in_array(mb_strtolower($name), ['name', 'names', 'ឈ្មោះ', 'ឈ្មោះភ្ញៀវ'], true)) {
+                continue;
+            }
+            $names[mb_strtolower($name)] ??= $name;
+        }
+        fclose($handle);
+
+        // Same row lock as addRecipient(), so an import can't race past the plan limit.
+        [$added, $full] = DB::transaction(function () use ($names) {
+            $invitation = Invitation::whereKey($this->invitation->id)->lockForUpdate()->first();
+            $existing = $invitation->recipients()->pluck('recipient_name')->map(fn ($n) => mb_strtolower(trim($n)))->flip();
+            $new = array_values(array_diff_key($names, $existing->all()));
+            $room = max(0, $invitation->max_recipients - $invitation->recipients()->count());
+
+            foreach (array_slice($new, 0, $room) as $name) {
+                $invitation->recipients()->create(['recipient_name' => $name]);
+            }
+
+            return [min($room, count($new)), max(0, count($new) - $room)];
+        });
+
+        $this->guestFile = null;
+        $this->invitation->load('recipients');
+
+        if ($added === 0 && $full === 0) {
+            $this->toast('warning', 'មិនមានឈ្មោះថ្មីក្នុងឯកសារនេះទេ។');
+        } elseif ($full > 0) {
+            $this->toast('warning', "បានបន្ថែម {$added} នាក់ — {$full} នាក់ទៀតមិនបានបន្ថែម ព្រោះគម្រោងនេះអនុញ្ញាតត្រឹម {$this->invitation->max_recipients} នាក់។");
+        } else {
+            $this->toast('success', "បាននាំចូលភ្ញៀវ {$added} នាក់។");
+        }
+    }
+
+    /** The guest list with each personal link, opened status and RSVP, as an Excel-friendly CSV. */
+    public function exportGuests()
+    {
+        abort_unless($this->invitation->isPaid(), 403);
+
+        $invitation = $this->invitation->load('recipients');
+        $rsvp = ['yes' => 'មក', 'no' => 'មិនមក'];
+
+        return response()->streamDownload(function () use ($invitation, $rsvp) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM, so Excel reads the Khmer as UTF-8
+            fputcsv($out, ['Name', 'Link', 'Opened', 'RSVP', 'Note', 'Link paused']);
+            foreach ($invitation->recipients as $r) {
+                fputcsv($out, [
+                    $r->recipient_name,
+                    route('invitation.show', [$invitation, $r]),
+                    $r->viewed_at?->format('Y-m-d H:i') ?? '',
+                    $rsvp[$r->rsvp_status] ?? '',
+                    $r->rsvp_note ?? '',
+                    $r->revoked_at ? 'yes' : '',
+                ]);
+            }
+            fclose($out);
+        }, 'guests-'.$invitation->slug.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function removeRecipient(int $recipientId): void

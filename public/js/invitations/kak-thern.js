@@ -7,7 +7,7 @@
 
   /* --- butterflies: the clip is packed side by side, colour on the left half and its alpha mask on the right
          half, joined back into a transparent canvas in WebGL (as in the wedding template). The canvas fills the
-         column and the clip is tiled across it at TILE x the column width, so the butterflies stay small; each
+         column and the clip is tiled across it at TILE x the column width (at most 560px), so the butterflies stay small; each
          row of tiles is shifted sideways so the repeat doesn't line up, and only a random DENSITY share of the
          tiles is drawn, so there are fewer of them. Without WebGL the layer is left out. --- */
   var TILE = 0.6, DENSITY = 0.4;
@@ -50,7 +50,7 @@
       var w = canvas.clientWidth, h = canvas.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
-      var tileW = w * TILE, tileH = tileW * video.videoHeight / (video.videoWidth / 2);
+      var tileW = Math.min(w, 560) * TILE, tileH = tileW * video.videoHeight / (video.videoWidth / 2);
       gl.uniform2f(repLoc, w / tileW, h / tileH);
       sized = true;
     };
@@ -92,7 +92,7 @@
     var layer = document.createElement('div');
     layer.className = 'kt-petals';
     layer.setAttribute('aria-hidden', 'true');
-    var n = window.innerWidth < 480 ? 12 : 16;
+    var n = window.innerWidth < 480 ? 12 : window.innerWidth < 900 ? 16 : 30;
     for (var i = 0; i < n; i++) {
       var petal = document.createElement('i'), t = rand(11, 19);
       petal.className = 'kt-petal';
@@ -142,6 +142,31 @@
     } else {
       revs.forEach(function (el) { el.classList.add('in'); });
     }
+    autoScroll();
+  };
+
+  /* --- after 5s without a touch, wheel, key or click the page drifts down slowly on its own; any input
+         stops it and the 5s start again. It stops at the bottom and while the photo viewer is open. --- */
+  var autoScroll = function () {
+    if (reduced) return;
+    var IDLE = 5000, SPEED = window.innerWidth < 900 ? 28 : 40;   // px per second
+    var timer, raf = 0, last, carry = 0;
+    var stop = function () { cancelAnimationFrame(raf); raf = 0; };
+    var step = function (now) {
+      var dt = Math.min(now - last, 100); last = now;
+      var bottom = document.documentElement.scrollHeight - window.innerHeight;
+      if (root.classList.contains('kt-lb-on') || window.scrollY >= bottom - 1) { stop(); return; }
+      carry += SPEED * dt / 1000;
+      var px = Math.floor(carry);
+      if (px) { carry -= px; window.scrollTo({ top: window.scrollY + px, behavior: 'instant' }); }
+      raf = requestAnimationFrame(step);
+    };
+    var wait = function () {
+      stop(); clearTimeout(timer);
+      timer = setTimeout(function () { last = performance.now(); carry = 0; raf = requestAnimationFrame(step); }, IDLE);
+    };
+    ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(function (t) { addEventListener(t, wait, { passive: true }); });
+    wait();
   };
 
   /* --- intro: plays once over the page, then fades out. Skipped on tap, on reduced motion, if autoplay is
@@ -244,10 +269,11 @@
     });
   }
 
-  /* --- gallery viewer: a tap opens the photo full screen (the link still opens it in a tab without JS);
-         swipe / arrow keys / buttons move between photos, the backdrop, x or Esc closes --- */
-  var photos = [].slice.call(document.querySelectorAll('.kt-gal a.kt-ph'));
-  if (photos.length) {
+  /* --- photo viewer: a tap opens the photo full screen (the link still opens it in a tab without JS);
+         swipe / arrow keys / buttons move between photos, the backdrop, x or Esc closes.
+         The gallery is one set; the schedule image opens on its own --- */
+  var viewer = function (photos) {
+    if (!photos.length) return;
     var lb, lbImg, lbCount, at = 0, lastFocus;
     var build = function () {
       lb = document.createElement('div');
@@ -318,7 +344,9 @@
     photos.forEach(function (a, i) {
       a.addEventListener('click', function (e) { e.preventDefault(); open(i); });
     });
-  }
+  };
+  viewer([].slice.call(document.querySelectorAll('.kt-gal a.kt-ph')));
+  viewer([].slice.call(document.querySelectorAll('a.kt-sched-img')));
 
   /* --- donation card: copy the account number --- */
   document.querySelectorAll('.kt-qr-copy').forEach(function (b) {

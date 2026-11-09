@@ -127,7 +127,7 @@ html.kt-intro-on, html.kt-intro-on body{ overflow:hidden; }
 .kt-sched-time{ font-family:var(--f-kh-serif); font-weight:700; color:var(--red); font-size:.95rem; text-align:right; }
 .kt-sched-dot{ width:9px; height:9px; transform:rotate(45deg) translateY(-1px); background:var(--gold); justify-self:center; }
 .kt-sched-label{ font-family:var(--f-kh-serif); line-height:1.9; }
-.kt-sched-img{ display:block; max-width:440px; margin:0 auto; border:1px solid var(--gold); padding:6px; background:#fff; }
+.kt-sched-img{ display:block; cursor:zoom-in; max-width:440px; margin:0 auto; border:1px solid var(--gold); padding:6px; background:#fff; }
 .kt-sched-img img{ width:100%; height:auto; display:block; }
 
 /* venue / map */
@@ -163,11 +163,11 @@ html.kt-intro-on, html.kt-intro-on body{ overflow:hidden; }
 .kt-qr + .kt-actions{ margin-top:30px; }
 
 /* gallery */
-.kt-gal{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.kt-gal a{ position:relative; display:block; aspect-ratio:3/4; border:1px solid var(--gold-soft); padding:4px; background:#fff; overflow:hidden;
+/* phones: one photo per row, each shown whole at its own shape */
+.kt-gal{ display:grid; grid-template-columns:1fr; gap:14px; max-width:460px; margin:0 auto; }
+.kt-gal a{ position:relative; display:block; border:1px solid var(--gold-soft); padding:4px; background:#fff; overflow:hidden;
   box-shadow:0 10px 24px rgba(122,30,18,.10); }
-.kt-gal a:nth-child(3n+1),.kt-gal a:last-child:nth-child(3n+2){ grid-column:span 2; aspect-ratio:16/10; }
-.kt-gal img{ width:100%; height:100%; object-fit:cover; display:block; }
+.kt-gal img{ width:100%; height:auto; display:block; }
 /* each photo rises in tilted, its picture opens like a curtain and comes into focus, a gold shine sweeps
    across once, then it drifts slowly (Ken Burns) — staggered per row by --d */
 .kt-js .kt-gal a.kt-rev{ opacity:0; transform:translateY(34px) rotate(var(--tilt)) scale(.94);
@@ -238,6 +238,60 @@ html.kt-lb-on, html.kt-lb-on body{ overflow:hidden; }
 @keyframes kt-kenburns{ from{ transform:scale(1) translate(0,0); } to{ transform:scale(1.12) translate(var(--kx), -2%); } }
 @keyframes kt-sweep{ from{ transform:translateX(-130%); } to{ transform:translateX(130%); } }
 @keyframes kt-pulse{ from{ transform:scale(1); opacity:.8; } to{ transform:scale(1.5); opacity:0; } }
+
+/* --- big screens: the page opens out to the full width over the landscape scene instead of a phone column.
+       Same query as the landscape background and intro clip. Content stays readable inside --wide. --- */
+@media (min-width:900px) and (min-aspect-ratio:5/4){
+  :root{ --col:100%; --wide:1120px; --gutter:max(clamp(32px,6vw,96px), calc((100% - var(--wide)) / 2)); }
+  .kt-page{ box-shadow:none; }
+
+  /* hero: title, opening line and the offering on the sky at left; the invitation on an ivory panel at right */
+  .kt-hero{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:auto auto 1fr auto; column-gap:clamp(28px,5vw,80px);
+    align-items:center; justify-items:center; padding:clamp(22px,4vh,48px) var(--gutter) 16px;
+    background:linear-gradient(to bottom, transparent 70%, rgba(29,15,6,.25)); }
+  .kt-hero > .kt-title-art,.kt-hero > .kt-headline{ grid-column:1; grid-row:1; width:min(100%,560px); }
+  .kt-namo{ grid-column:1; grid-row:2; font-size:1rem; }
+  .kt-trai{ grid-column:1; grid-row:3; width:min(26vw,44vh,360px); margin-top:clamp(8px,3vh,30px); }
+  .kt-hero-text{ grid-column:2; grid-row:1 / 4; align-self:center; width:100%; max-width:500px; margin:0; padding:48px 34px 40px;
+    background:rgba(251,245,232,.92); border:1px solid var(--gold); outline:1px solid var(--gold-soft); outline-offset:-9px;
+    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); box-shadow:0 30px 80px rgba(40,15,0,.35); }
+  .kt-invite-title{ font-size:1.45rem; }
+  .kt-guest{ font-size:1.5rem; }
+  .kt-guest.generic{ font-size:1.1rem; }
+  .kt-hero-date{ font-size:clamp(1.3rem,2.1vw,1.85rem); }
+  .kt-scroll{ grid-column:1 / -1; grid-row:4; margin-top:8px; color:var(--gold-hi); }
+
+  /* sections: more air, wider text */
+  .kt-sec{ padding:120px var(--gutter); }
+  .kt-window{ padding:150px var(--gutter); }
+  .kt-window + .kt-window{ padding-top:30px; }
+  .kt-title{ font-size:2.2rem; }
+  .kt-body{ max-width:680px; font-size:1.12rem; }
+  .kt-card{ max-width:860px; margin:0 auto; padding:64px 72px 56px; }
+  .kt-sched{ max-width:640px; }
+  .kt-sched-img{ max-width:720px; }
+  .kt-glass{ max-width:620px; padding:46px 40px; }
+
+  /* venue (with a map) and donation: the words on the left, the map / QR card on the right */
+  /* rows: title, divider, spacer, up to three lines of text, spacer — the map / card spans the middle ones */
+  #kt-venue:has(.kt-map),#kt-donate{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto 1fr auto auto auto 1fr; column-gap:72px; }
+  #kt-venue:has(.kt-map) > .kt-title,#kt-venue:has(.kt-map) > .kt-divider,#kt-donate > .kt-title,#kt-donate > .kt-divider{ grid-column:1 / -1; }
+  #kt-venue:has(.kt-map) > .kt-divider,#kt-donate > .kt-divider{ width:100%; margin-bottom:40px; }
+  #kt-venue:has(.kt-map) > .kt-venue-name{ grid-column:1; grid-row:4; }
+  #kt-venue:has(.kt-map) > .kt-body,#kt-donate > .kt-body{ grid-column:1; grid-row:5; }
+  #kt-venue:has(.kt-map) > .kt-actions,#kt-donate > .kt-actions{ grid-column:1; grid-row:6; }
+  #kt-venue .kt-map{ grid-column:2; grid-row:3 / 8; width:100%; max-width:none; margin:0; }
+  #kt-donate .kt-qr{ grid-column:2; grid-row:3 / 8; margin:0 auto; width:340px; }
+  #kt-donate .kt-qr-code{ width:220px; }
+
+  /* gallery: three across, cropped to the same 4:5 shape so the rows line up */
+  .kt-gal{ grid-template-columns:repeat(3,1fr); gap:18px; max-width:none; }
+  .kt-gal a{ aspect-ratio:4/5; }
+  .kt-gal img{ height:100%; object-fit:cover; }
+
+  .kt-footer{ padding:48px var(--gutter) 60px; }
+  .kt-music{ right:28px; bottom:28px; width:54px; height:54px; }
+}
 
 @media (prefers-reduced-motion:reduce){
   .kt *{ animation:none !important; }
