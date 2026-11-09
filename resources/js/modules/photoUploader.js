@@ -141,9 +141,51 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
   }
 }
 
+// Song picker (Alpine component `audioUploader`): same busy/progress/cancel/stall handling as the
+// photo picker, but nothing to shrink — a file over the cap or of the wrong type is refused here,
+// before a single byte is sent (the server checks both again).
+const AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/m4a', 'audio/aac', 'audio/x-aac', 'audio/aacp']
+const AUDIO_EXTENSIONS = /\.(mp3|m4a|aac)$/i
+
+export function audioUploader({ name, maxMb = 10 }) {
+  return {
+    ...photoUploader({ name, maxMb }),
+
+    pick(event) {
+      const file = event.target.files[0]
+      event.target.value = ''
+      if (this.busy || !file) return
+
+      this.error = ''
+      // some phones report m4a with an empty type, so the extension counts too
+      if (!AUDIO_TYPES.includes(file.type) && !AUDIO_EXTENSIONS.test(file.name)) {
+        this.reject(`"${file.name}" មិនមែនជាឯកសារភ្លេង MP3 ឬ M4A ទេ។`)
+        return
+      }
+      if (file.size > maxMb * 1024 * 1024) {
+        const mb = (file.size / 1024 / 1024).toFixed(file.size > 100 * 1024 * 1024 ? 0 : 1)
+        this.reject(`"${file.name}" ធំ ${mb} MB — ឯកសារភ្លេងធំបំផុត ${maxMb} MB (≈ បទ ១០ នាទី)។ សូមប្រើបទខ្លីជាងនេះ ឬ MP3 គុណភាព 128 kbps។`)
+        return
+      }
+
+      this.start()
+      this.armStallTimer()
+      const done = () => this.finish()
+      this.$wire.$upload(name, file, done, done, (e) => {
+        this.progress = e.detail.progress
+        this.armStallTimer()
+      }, done)
+    },
+  }
+}
+
 // Register whether this script runs before Alpine starts (the normal case) or after it.
-if (window.Alpine) {
+const register = () => {
   window.Alpine.data('photoUploader', photoUploader)
+  window.Alpine.data('audioUploader', audioUploader)
+}
+if (window.Alpine) {
+  register()
 } else {
-  document.addEventListener('alpine:init', () => window.Alpine.data('photoUploader', photoUploader))
+  document.addEventListener('alpine:init', register)
 }

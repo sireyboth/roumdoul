@@ -55,7 +55,7 @@ class InvitationTemplateSeeder extends Seeder
                 'fields' => [
                     'sender_name', 'headline', 'message', 'cover_image', 'event_date',
                     'venue_name', 'venue_address', 'rsvp_enabled', 'countdown_enabled',
-                    'music_url', 'cta_label', 'cta_url', 'accent_color',
+                    'music_url', 'music_file', 'cta_label', 'cta_url', 'accent_color',
                 ],
                 'view' => 'invitations.templates.date-asking',
             ]
@@ -74,7 +74,7 @@ class InvitationTemplateSeeder extends Seeder
                 'is_active' => true,
                 'fields' => [
                     'sender_name', 'headline', 'message', 'cover_image',
-                    'photo_gallery', 'music_url', 'cta_label', 'cta_url', 'accent_color',
+                    'photo_gallery', 'music_url', 'music_file', 'cta_label', 'cta_url', 'accent_color',
                 ],
                 'view' => 'invitations.templates.admire',
             ]
@@ -97,6 +97,26 @@ class InvitationTemplateSeeder extends Seeder
                     'event_schedule', 'schedule_image', 'rsvp_enabled',
                 ],
                 'view' => 'invitations.templates.private-screening',
+            ]
+        );
+
+        // Demo-only for now — no Service/plans yet, so it's previewable at
+        // /templates/kak-thern/demo but not purchasable until priced in admin
+        // (Catalog > Invitation Templates > this row > "Manage pricing & plans").
+        InvitationTemplate::updateOrCreate(
+            ['slug' => 'kak-thern'],
+            [
+                'service_id' => null,
+                'name' => 'Kathina Ceremony (បុណ្យកឋិនទាន)',
+                'category' => 'ceremony',
+                'is_premium' => true,
+                'is_active' => true,
+                'fields' => [
+                    'headline', 'title_image', 'opening_line', 'cover_image', 'background_image', 'message', 'thanks_message', 'gift_message', 'rsvp_message', 'host_names', 'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
+                    'event_schedule', 'schedule_image', 'countdown_enabled', 'rsvp_enabled', 'qr_code', 'gift_account',
+                    'photo_gallery', 'music_url', 'music_file', 'contact_phone', 'cta_label', 'cta_url',
+                ],
+                'view' => 'invitations.templates.kak-thern',
             ]
         );
 
@@ -139,7 +159,7 @@ class InvitationTemplateSeeder extends Seeder
                     'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'cover_image',
                     'message', 'reception_message', 'thanks_message', 'apology_message', 'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
                     'qr_code', 'gift_account', 'story_chapters', 'event_schedule', 'schedule_image', 'photo_gallery', 'gallery_feed', 'rsvp_enabled',
-                    'countdown_enabled', 'music_url', 'groom_phone', 'bride_phone',
+                    'countdown_enabled', 'music_url', 'music_file', 'groom_phone', 'bride_phone',
                 ],
                 'view' => 'invitations.templates.khmer-traditional-wedding',
             ]

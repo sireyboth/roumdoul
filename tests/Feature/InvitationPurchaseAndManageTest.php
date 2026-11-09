@@ -303,6 +303,72 @@ class InvitationPurchaseAndManageTest extends TestCase
             ->assertHasErrors(['imageUploads.cover_image' => "This photo couldn't be uploaded. Photos can be at most 20 MB each."]);
     }
 
+    public function test_uploading_a_song_stores_it_as_mp3_and_saves_the_path(): void
+    {
+        Storage::fake('s3');
+
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['music_url', 'music_file']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('section', 'details')
+            ->assertSee('Click to upload a song')
+            ->set('audioUploads.music_file', UploadedFile::fake()->create('our song.mp3', 4000, 'audio/mpeg'))
+            ->assertHasNoErrors()
+            ->assertSee('our song.mp3')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSee('<audio controls', false);
+
+        $path = $invitation->fresh()->field_values['music_file'];
+        $this->assertMatchesRegularExpression('#^invitations/'.$invitation->id.'/[A-Za-z0-9]{40}\.mp3$#', $path);
+        Storage::disk('s3')->assertExists($path);
+    }
+
+    public function test_a_song_over_the_size_limit_is_rejected_as_soon_as_it_is_picked(): void
+    {
+        Storage::fake('s3');
+
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['music_file']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('audioUploads.music_file', UploadedFile::fake()->create('mix.mp3', InvitationManagePage::MAX_AUDIO_KB + 1, 'audio/mpeg'))
+            ->assertHasErrors(['audioUploads.music_file' => 'max'])
+            ->assertSet('audioUploads', []);
+
+        Storage::disk('s3')->assertDirectoryEmpty('/');
+    }
+
+    public function test_a_non_audio_file_cannot_be_uploaded_as_the_song(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['music_file']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('audioUploads.music_file', UploadedFile::fake()->create('song.mp3', 100, 'application/x-msdownload'))
+            ->assertHasErrors(['audioUploads.music_file' => 'mimetypes']);
+    }
+
+    public function test_a_song_path_from_outside_this_invitation_is_rejected_on_save(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
+        $invitation->template->update(['fields' => ['music_file']]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->set('fieldValues.music_file', 'https://example.com/500mb.wav')
+            ->call('save')
+            ->assertHasErrors(['fieldValues.music_file']);
+    }
+
     public function test_gallery_uploads_cannot_push_the_gallery_past_its_photo_limit(): void
     {
         Storage::fake('s3');

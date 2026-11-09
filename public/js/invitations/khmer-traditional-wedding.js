@@ -84,9 +84,14 @@ function kwInit() {
     }
   }
 
-  /* --- music (YouTube iframe is primed muted; the open tap is the user gesture that lets it play) --- */
-  var yt = document.getElementById('kw-yt'), musicBtn = document.getElementById('kw-music'), playing = false;
+  /* --- music (an uploaded song, or a YouTube iframe primed muted; the open tap is the user gesture that lets it play) --- */
+  var yt = document.getElementById('kw-yt'), audio = document.getElementById('kw-audio'), musicBtn = document.getElementById('kw-music'), playing = false;
   function ytCmd(fn) {
+    if (audio) {   // the uploaded song takes the same commands
+      if (fn === 'playVideo') { var p = audio.play(); if (p) p.catch(function () { setPlaying(false); }); }
+      else if (fn === 'pauseVideo') audio.pause();
+      return;
+    }
     if (yt && yt.contentWindow) yt.contentWindow.postMessage(JSON.stringify({ event: 'command', func: fn, args: [] }), '*');
   }
   function setPlaying(on) {
@@ -396,7 +401,7 @@ function kwInit() {
     if (opened) return;
     opened = true;
     coverVideo.setAttribute('data-lock', '');
-    if (yt) { ytCmd('unMute'); ytCmd('playVideo'); setPlaying(true); }
+    if (yt || audio) { ytCmd('unMute'); ytCmd('playVideo'); setPlaying(true); }
     if (reduced) { reveal(); return; }
     coverVideo.addEventListener('timeupdate', function () {
       var t = coverVideo.currentTime;

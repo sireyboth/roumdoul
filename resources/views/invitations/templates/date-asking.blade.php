@@ -11,6 +11,8 @@
     $venueName = $fields['venue_name'] ?? null;
     $venueAddress = $fields['venue_address'] ?? null;
     $musicUrl = $fields['music_url'] ?? null;
+    // an uploaded song wins over a link; it isn't fetched until it plays (preload="none")
+    $musicFile = ! empty($fields['music_file']) ? \Illuminate\Support\Facades\Storage::disk('s3')->url($fields['music_file']) : null;
     $ctaLabel = $fields['cta_label'] ?? null;
     $ctaUrl = $fields['cta_url'] ?? null;
     $wantsRsvpNote = ! empty($fields['rsvp_enabled']);
@@ -23,12 +25,12 @@
     $isUnlocked = fn (string $key) => $invitation ? $invitation->fieldUnlocked($key) : true;
     $showMap = $venueAddress && $isUnlocked('venue_address');
     $showCountdown = $wantsCountdown && $isUnlocked('countdown_enabled');
-    $showMusic = (bool) $musicUrl; // background music is a free-tier essential, never gated
+    $showMusic = $musicUrl || $musicFile; // background music is a free-tier essential, never gated
     $trackRsvp = $isUnlocked('rsvp_enabled');
     $showCta = $wantsCta && $isUnlocked('cta_label');
 
     $youtubeId = null;
-    if ($musicUrl && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/', $musicUrl, $m)) {
+    if (! $musicFile && $musicUrl && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/', $musicUrl, $m)) {
         $youtubeId = $m[1];
     }
 
@@ -95,6 +97,8 @@
       @endif
     },
     playMusic() {
+      const song = this.$refs.musicAudio;
+      if (song) { song.play().catch(() => {}); return; }
       // Clicking Yes is a real user gesture, so this is the first moment the browser
       // will actually let audio play — the iframe itself has been sitting there muted
       // since page load just so it is already buffered and ready to go the instant this fires.
@@ -141,7 +145,9 @@
   {{-- Background music — silently primed on load, only actually starts once they click Yes
        (that click is the user gesture browsers require before audio is allowed to play) --}}
   @if ($showMusic)
-    @if ($youtubeId)
+    @if ($musicFile)
+      <audio x-ref="musicAudio" src="{{ $musicFile }}" preload="none" loop></audio>
+    @elseif ($youtubeId)
       <div class="fixed h-0 w-0 overflow-hidden opacity-0">
         <iframe
           x-ref="musicFrame"

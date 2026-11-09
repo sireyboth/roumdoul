@@ -133,9 +133,11 @@
         ['name' => $brideUpper, 'phone' => trim($fields['bride_phone'] ?? ''), 'role' => 'ខាងកូនស្រី'],
     ])->filter(fn ($c) => $c['phone'] !== '')->values();
 
+    // an uploaded song wins over a link; it isn't fetched until it plays (preload="none")
+    $musicFile = ! empty($fields['music_file']) ? $resolveUrl($fields['music_file']) : null;
     $musicUrl = $fields['music_url'] ?? null;
     $youtubeId = null;
-    if ($musicUrl && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/', $musicUrl, $m)) {
+    if (! $musicFile && $musicUrl && preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/', $musicUrl, $m)) {
         $youtubeId = $m[1];
     }
 
@@ -667,10 +669,14 @@
   <div class="kw-stage fg" aria-hidden="true"><canvas id="kw-fly-canvas"></canvas></div>
 
   {{-- ============ MUSIC ============ --}}
-  @if ($youtubeId)
+  @if ($musicFile || $youtubeId)
+    @if ($musicFile)
+      <audio id="kw-audio" src="{{ $musicFile }}" preload="none" loop></audio>
+    @else
     <iframe id="kw-yt" title="Background music" aria-hidden="true" tabindex="-1" style="position:absolute;width:0;height:0;border:0"
       src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=1&mute=1&loop=1&playlist={{ $youtubeId }}&enablejsapi=1&playsinline=1"
       allow="autoplay; encrypted-media"></iframe>
+    @endif
     <button type="button" class="kw-music paused" id="kw-music" aria-label="Toggle music">
       <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
       <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 3l18 18"/></svg>

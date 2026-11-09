@@ -53,6 +53,44 @@
     </div>
     @break
 
+  @case('audio')
+    @php
+      $tempAudio = $audioUploads[$key] ?? null;
+      $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
+    @endphp
+    <div class="max-w-lg" x-data="audioUploader({ name: 'audioUploads.{{ $key }}', maxMb: {{ $page::MAX_AUDIO_KB / 1024 }} })">
+      @if ($tempAudio || ! empty($fieldValues[$key]))
+        <div class="mb-2 flex items-center gap-2 rounded-xl border border-plum-200 bg-plum-50 p-2 dark:border-plum-700 dark:bg-plum-800/40">
+          @if (! $tempAudio)
+            <audio controls preload="none" class="h-10 min-w-0 flex-1" src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($fieldValues[$key]) }}"></audio>
+          @else
+            <span class="flex-1 truncate px-2 text-sm font-semibold text-plum-700 dark:text-plum-200">🎵 {{ $tempAudio->getClientOriginalName() }} — ចុច Save</span>
+          @endif
+          <button type="button" wire:click="removeAudio('{{ $key }}')" x-show="!busy" title="Remove song"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-600 text-base font-bold text-white shadow hover:bg-red-700">&times;</button>
+        </div>
+      @endif
+      <label for="upload-{{ $key }}" :class="busy && 'pointer-events-none'"
+        class="group relative flex w-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed border-plum-300 bg-plum-50 px-4 py-5 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5">
+        <x-app-icon name="upload" class="h-6 w-6 text-plum-400 group-hover:text-brand-500" />
+        <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">{{ ($tempAudio || ! empty($fieldValues[$key])) ? 'Change song' : 'Click to upload a song' }}</span>
+        <span class="text-[11px] text-plum-400">MP3 or M4A &middot; up to {{ $page::MAX_AUDIO_KB / 1024 }} MB</span>
+
+        <div x-show="busy" style="display: none" class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/90 dark:bg-plum-900/90">
+          <span class="text-xs font-semibold text-plum-600 dark:text-plum-300" x-text="`Uploading… ${progress}%`"></span>
+          <div class="h-1.5 w-2/3 overflow-hidden rounded-full bg-plum-200 dark:bg-plum-700">
+            <div class="h-full bg-brand-500 transition-all" :style="`width: ${progress}%`"></div>
+          </div>
+          <button type="button" x-on:click.prevent="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">Cancel</button>
+        </div>
+
+        <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,.mp3,.m4a,.aac" class="sr-only" />
+      </label>
+      <p x-show="error" x-text="error" style="display: none" class="mt-1 text-xs text-red-600 dark:text-red-400"></p>
+      @error('audioUploads.'.$key) <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+    </div>
+    @break
+
   @case('gallery')
     @php
       $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
