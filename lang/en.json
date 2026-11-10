@@ -1,0 +1,21 @@
+{
+    "\":name\" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.": "\":name\" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.",
+    "\":name\" is not a JPG, PNG, WebP or GIF photo.": "\":name\" is not a JPG, PNG, WebP or GIF photo.",
+    "\":name\" is not an MP3 or M4A audio file.": "\":name\" is not an MP3 or M4A audio file.",
+    "\":name\" is too big. GIFs can be at most :max MB.": "\":name\" is too big. GIFs can be at most :max MB.",
+    "Back online.": "Back online.",
+    "Can't connect to the internet. Please check your connection and try again.": "Can't connect to the internet. Please check your connection and try again.",
+    "Honored guest": "Honored guest",
+    "Not found — it may already have been deleted. Please reload the page.": "Not found — it may already have been deleted. Please reload the page.",
+    "Reload": "Reload",
+    "Slide :number": "Slide :number",
+    "Something went wrong. Please try again in a moment.": "Something went wrong. Please try again in a moment.",
+    "The file is too large. Please use a smaller photo.": "The file is too large. Please use a smaller photo.",
+    "The gallery is full — remove a photo first.": "The gallery is full — remove a photo first.",
+    "The upload is taking too long. Please try again on a better connection, or use a smaller photo.": "The upload is taking too long. Please try again on a better connection, or use a smaller photo.",
+    "This page is currently available in Khmer only.": "This page is currently available in Khmer only.",
+    "You can't do this — the invitation may have expired or not been paid yet.": "You can't do this — the invitation may have expired or not been paid yet.",
+    "You picked :count photos, but only :room more fit in the gallery.": "You picked :count photos, but only :room more fit in the gallery.",
+    "You're offline — changes can't be saved until you reconnect.": "You're offline — changes can't be saved until you reconnect.",
+    "Your session has expired. Please reload the page (unsaved changes may be lost).": "Your session has expired. Please reload the page (unsaved changes may be lost)."
+}

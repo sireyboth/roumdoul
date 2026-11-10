@@ -1,3 +1,5 @@
+import { t } from './i18n.js'
+
 let intervalId = null
 let pointerSection = null
 let pointerHandler = null
@@ -36,7 +38,7 @@ export function initHeroSlider() {
   const dots = Array.from(slides).map((_, index) => {
     const dot = document.createElement('button')
     dot.type = 'button'
-    dot.setAttribute('aria-label', `ស្លាយទី ${index + 1}`)
+    dot.setAttribute('aria-label', t('Slide :number', { number: index + 1 }))
     dot.className = 'h-2.5 w-2.5 rounded-full transition-colors'
     dot.addEventListener('click', () => goToSlide(index))
     dotsContainer.appendChild(dot)

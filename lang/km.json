@@ -1,0 +1,21 @@
+{
+    "\":name\" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.": "\":name\" ធំ :mb MB — ឯកសារភ្លេងធំបំផុត :max MB (≈ បទ ១០ នាទី)។ សូមប្រើបទខ្លីជាងនេះ ឬ MP3 គុណភាព 128 kbps។",
+    "\":name\" is not a JPG, PNG, WebP or GIF photo.": "«:name» មិនមែនជារូបភាព JPG, PNG, WebP ឬ GIF ទេ។",
+    "\":name\" is not an MP3 or M4A audio file.": "\":name\" មិនមែនជាឯកសារភ្លេង MP3 ឬ M4A ទេ។",
+    "\":name\" is too big. GIFs can be at most :max MB.": "«:name» ធំពេក។ រូប GIF ធំបំផុតបាន :max MB។",
+    "Back online.": "បានភ្ជាប់អ៊ីនធឺណិតវិញហើយ។",
+    "Can't connect to the internet. Please check your connection and try again.": "មិនអាចភ្ជាប់អ៊ីនធឺណិតបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។",
+    "Honored guest": "ភ្ញៀវកិត្តិយស",
+    "Not found — it may already have been deleted. Please reload the page.": "រកមិនឃើញ — វាប្រហែលជាត្រូវបានលុបរួចហើយ។ សូមផ្ទុកទំព័រឡើងវិញ។",
+    "Reload": "ផ្ទុកឡើងវិញ",
+    "Slide :number": "ស្លាយទី :number",
+    "Something went wrong. Please try again in a moment.": "មានបញ្ហាអ្វីមួយ។ សូមព្យាយាមម្ដងទៀតបន្តិចក្រោយ។",
+    "The file is too large. Please use a smaller photo.": "ឯកសារធំពេក។ សូមប្រើរូបតូចជាងនេះ។",
+    "The gallery is full — remove a photo first.": "វិចិត្រសាលពេញហើយ — សូមលុបរូបមួយចេញជាមុនសិន។",
+    "The upload is taking too long. Please try again on a better connection, or use a smaller photo.": "ការបង្ហោះយូរពេក។ សូមព្យាយាមម្ដងទៀតពេលអ៊ីនធឺណិតល្អជាងនេះ ឬប្រើរូបតូចជាងនេះ។",
+    "This page is currently available in Khmer only.": "ទំព័រនេះមានជាភាសាខ្មែរតែប៉ុណ្ណោះនៅពេលនេះ។",
+    "You can't do this — the invitation may have expired or not been paid yet.": "អ្នកមិនអាចធ្វើសកម្មភាពនេះបានទេ — ធៀបអាចផុតកំណត់ ឬមិនទាន់បានទូទាត់។",
+    "You picked :count photos, but only :room more fit in the gallery.": "អ្នកបានជ្រើសរូប :count សន្លឹក ប៉ុន្តែវិចិត្រសាលអាចដាក់បន្ថែមបានតែ :room សន្លឹកទៀតប៉ុណ្ណោះ។",
+    "You're offline — changes can't be saved until you reconnect.": "អ្នកកំពុងគ្មានអ៊ីនធឺណិត — ការកែប្រែនឹងមិនអាចរក្សាទុកបានទេ រហូតដល់ភ្ជាប់វិញ។",
+    "Your session has expired. Please reload the page (unsaved changes may be lost).": "វគ្គរបស់អ្នកបានផុតកំណត់។ សូមផ្ទុកទំព័រឡើងវិញ (ការកែប្រែដែលមិនទាន់ Save អាចបាត់)។"
+}
