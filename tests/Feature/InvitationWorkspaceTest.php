@@ -142,10 +142,10 @@ class InvitationWorkspaceTest extends TestCase
             ->test(InvitationManagePage::class, ['invitation' => $invitation])
             ->call('showSection', 'details')
             ->assertSet('section', 'details')
-            ->assertSee('Your name (sender)')
-            ->assertDontSee('Cover image')
+            ->assertSee(__('Your name (sender)'))
+            ->assertDontSee(__('Cover image'))
             ->call('showSection', 'media')
-            ->assertSee('Cover image');
+            ->assertSee(__('Cover image'));
     }
 
     public function test_an_unavailable_section_is_ignored(): void
@@ -222,9 +222,9 @@ class InvitationWorkspaceTest extends TestCase
             ->test(InvitationManagePage::class, ['invitation' => $invitation])
             ->call('showSection', 'guide')
             ->assertSet('section', 'guide')
-            ->assertSee(InvitationTemplate::FIELD_CATALOG['sender_name']['hint'])
-            ->assertSee(InvitationTemplate::FIELD_CATALOG['photo_gallery']['hint'])
-            ->assertDontSee(InvitationTemplate::FIELD_CATALOG['groom_name']['hint']);
+            ->assertSee(__(InvitationTemplate::FIELD_CATALOG['sender_name']['hint']))
+            ->assertSee(__(InvitationTemplate::FIELD_CATALOG['photo_gallery']['hint']))
+            ->assertDontSee(__(InvitationTemplate::FIELD_CATALOG['groom_name']['hint']));
     }
 
     public function test_guide_is_open_before_payment_but_editing_sections_are_not(): void
@@ -239,7 +239,7 @@ class InvitationWorkspaceTest extends TestCase
             ->assertSet('section', 'overview')
             ->call('showSection', 'guide')
             ->assertSet('section', 'guide')
-            ->assertSee(InvitationTemplate::FIELD_CATALOG['sender_name']['hint']);
+            ->assertSee(__(InvitationTemplate::FIELD_CATALOG['sender_name']['hint']));
     }
 
     public function test_every_catalog_field_has_a_customer_hint(): void

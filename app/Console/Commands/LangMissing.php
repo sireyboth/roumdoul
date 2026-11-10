@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Middleware\SetLocale;
+use App\Livewire\Pages\Dashboard\InvitationManagePage;
 use App\Models\InvitationTemplate;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Lang;
@@ -104,6 +105,7 @@ class LangMissing extends Command
     {
         return collect(InvitationTemplate::FIELD_CATALOG)
             ->flatMap(fn (array $field) => array_filter([$field['label'] ?? null, $field['hint'] ?? null]))
+            ->merge(array_column(InvitationManagePage::FORM_GROUPS, 'label'))
             ->unique()
             ->values()
             ->all();

@@ -11,13 +11,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.workspace')]
-#[Title('គ្រប់គ្រងកម្មវត្ថុអញ្ជើញ | ROUMDOUL')]
 class InvitationManagePage extends Component
 {
     use WithFileUploads {
@@ -37,30 +35,31 @@ class InvitationManagePage extends Component
 
     /**
      * How a tab's fields are grouped into cards on the form, in display order — purely layout.
+     * `label` is an English source string, translated in sectionGroups() (lang/*.json).
      * A field not listed here lands in a trailing "other" card. `or` groups are alternatives
      * (fill one or the other) and render side by side with an "or" between them; `cols` => 3
      * lets a card of small uploads sit three across when it's wide enough; `wide` gives a card its own row.
      */
     public const FORM_GROUPS = [
-        'people' => ['label' => 'អ្នកណាជាម្ចាស់កម្មវិធី', 'icon' => 'users', 'fields' => [
+        'people' => ['label' => 'Who is hosting', 'icon' => 'users', 'fields' => [
             'sender_name', 'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'celebrant_name', 'turning_age', 'groom_phone', 'bride_phone',
             'host_names', 'contact_phone',
         ]],
-        'when_where' => ['label' => 'ពេលណា និងនៅឯណា', 'icon' => 'calendar', 'fields' => [
+        'when_where' => ['label' => 'When and where', 'icon' => 'calendar', 'fields' => [
             'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
         ]],
-        'words' => ['label' => 'ពាក្យពេចន៍លើធៀប', 'icon' => 'pencil', 'fields' => ['headline', 'opening_line', 'message', 'reception_message', 'rsvp_message', 'thanks_message', 'apology_message']],
-        'options' => ['label' => 'មុខងារបើក/បិទ', 'icon' => 'bolt', 'fields' => [
+        'words' => ['label' => 'Invitation wording', 'icon' => 'pencil', 'fields' => ['headline', 'opening_line', 'message', 'reception_message', 'rsvp_message', 'thanks_message', 'apology_message']],
+        'options' => ['label' => 'On/off features', 'icon' => 'bolt', 'fields' => [
             'rsvp_enabled', 'countdown_enabled', 'gallery_feed',
         ]],
-        'music' => ['label' => 'ភ្លេង — ដាក់តំណ ឬបង្ហោះឯកសារ', 'icon' => 'sparkles', 'or' => true, 'fields' => ['music_url', 'music_file']],
-        'style' => ['label' => 'ពណ៌', 'icon' => 'paint-brush', 'fields' => ['accent_color']],
-        'button' => ['label' => 'ប៊ូតុងផ្ទាល់ខ្លួន', 'icon' => 'link', 'fields' => ['cta_label', 'cta_url']],
-        'portraits' => ['label' => 'រូបសំខាន់ៗ', 'icon' => 'photo', 'cols' => 3, 'wide' => true, 'fields' => ['title_image', 'cover_image', 'background_image', 'groom_photo', 'bride_photo']],
-        'gallery' => ['label' => 'វិចិត្រសាលរូបថត', 'icon' => 'squares', 'fields' => ['photo_gallery']],
-        'gift' => ['label' => 'ចំណងដៃ', 'icon' => 'heart', 'fields' => ['qr_code', 'gift_account', 'gift_message']],
-        'schedule' => ['label' => 'របៀបវារៈ — វាយបញ្ចូល ឬដាក់រូបភាព', 'icon' => 'clock', 'or' => true, 'fields' => ['event_schedule', 'schedule_image']],
-        'story' => ['label' => 'រឿងរ៉ាវរបស់យើង', 'icon' => 'heart', 'fields' => ['story_chapters']],
+        'music' => ['label' => 'Music — paste a link or upload a file', 'icon' => 'sparkles', 'or' => true, 'fields' => ['music_url', 'music_file']],
+        'style' => ['label' => 'Color', 'icon' => 'paint-brush', 'fields' => ['accent_color']],
+        'button' => ['label' => 'Your own button', 'icon' => 'link', 'fields' => ['cta_label', 'cta_url']],
+        'portraits' => ['label' => 'Main photos', 'icon' => 'photo', 'cols' => 3, 'wide' => true, 'fields' => ['title_image', 'cover_image', 'background_image', 'groom_photo', 'bride_photo']],
+        'gallery' => ['label' => 'Photo gallery', 'icon' => 'squares', 'fields' => ['photo_gallery']],
+        'gift' => ['label' => 'Wedding gifts', 'icon' => 'heart', 'fields' => ['qr_code', 'gift_account', 'gift_message']],
+        'schedule' => ['label' => 'Schedule — type it in or add an image', 'icon' => 'clock', 'or' => true, 'fields' => ['event_schedule', 'schedule_image']],
+        'story' => ['label' => 'Our story', 'icon' => 'heart', 'fields' => ['story_chapters']],
     ];
 
     /** Field types/keys that take the full width of a card; everything else sits two per row. */
@@ -208,13 +207,13 @@ class InvitationManagePage extends Component
         foreach (self::FORM_GROUPS as $name => $group) {
             $keys = array_values(array_intersect($group['fields'], $fields));
             if ($keys) {
-                $groups[$name] = ['fields' => $keys, 'or' => ($group['or'] ?? false) && count($keys) > 1] + $group;
+                $groups[$name] = ['fields' => $keys, 'or' => ($group['or'] ?? false) && count($keys) > 1, 'label' => __($group['label'])] + $group;
             }
         }
 
         $grouped = collect($groups)->pluck('fields')->flatten()->all();
         if ($rest = array_values(array_diff($fields, $grouped))) {
-            $groups['other'] = ['label' => 'ផ្សេងៗ', 'icon' => 'sparkles', 'or' => false, 'fields' => $rest];
+            $groups['other'] = ['label' => __('Other'), 'icon' => 'sparkles', 'or' => false, 'fields' => $rest];
         }
 
         foreach ($groups as $name => $group) {
@@ -396,7 +395,7 @@ class InvitationManagePage extends Component
         $this->invitation->update(['field_values' => $this->fieldValues]);
         $this->saved = true;
         $this->dispatch('invitation-saved');
-        $this->toast('success', 'បានរក្សាទុក! ភ្ញៀវនឹងឃើញការកែប្រែភ្លាមៗ។');
+        $this->toast('success', __('Saved! Guests will see the changes immediately.'));
     }
 
     /** Shows a toast in the workspace (see resources/js/modules/toast.js). */
@@ -425,10 +424,10 @@ class InvitationManagePage extends Component
             $this->dispatch('field-error', key: $first);
         }
 
-        $label = $first ? (InvitationTemplate::FIELD_CATALOG[$first]['label'] ?? $first) : null;
+        $label = $first ? (InvitationTemplate::localizedCatalog()[$first]['label'] ?? $first) : null;
         $this->toast('error', $keys->count() > 1
-            ? 'មិនទាន់រក្សាទុកទេ — មានប្រអប់ '.$keys->count().' ត្រូវកែ (ចាប់ពី «'.$label.'»)។'
-            : 'មិនទាន់រក្សាទុកទេ — សូមកែប្រអប់ «'.$label.'»។');
+            ? __('Not saved yet — :count fields need fixing (starting with «:field»).', ['count' => $keys->count(), 'field' => $label])
+            : __('Not saved yet — please fix «:field».', ['field' => $label]));
     }
 
     /**
@@ -548,8 +547,8 @@ class InvitationManagePage extends Component
             'galleryUploads.*.*.max' => 'Each photo can be at most '.(self::MAX_UPLOAD_KB / 1024).' MB.',
             'galleryUploads.*.max' => 'The gallery holds up to '.self::MAX_GALLERY_PHOTOS.' photos — remove some first.',
             '*.dimensions' => 'This photo is too large (max 8000 × 8000 pixels).',
-            'audioUploads.*.max' => 'ឯកសារភ្លេងធំពេក — ធំបំផុត '.(self::MAX_AUDIO_KB / 1024).' MB (≈ បទ ១០ នាទី)។',
-            'audioUploads.*.mimetypes' => 'សូមប្រើឯកសារភ្លេង MP3 ឬ M4A ប៉ុណ្ណោះ។',
+            'audioUploads.*.max' => __('The music file is too big — at most :mb MB (≈ a 10-minute song).', ['mb' => self::MAX_AUDIO_KB / 1024]),
+            'audioUploads.*.mimetypes' => __('Please use an MP3 or M4A music file only.'),
         ];
     }
 
@@ -564,17 +563,17 @@ class InvitationManagePage extends Component
             $this->livewireUploadErrored($name, $errorsInJson, $isMultiple);
         } catch (ValidationException) {
             if (str_starts_with($name, 'audioUploads.')) {
-                $message = 'បង្ហោះភ្លេងមិនបានទេ — ឯកសារភ្លេងធំបំផុត '.(self::MAX_AUDIO_KB / 1024).' MB។';
+                $message = __("Couldn't upload the music — music files can be at most :mb MB.", ['mb' => self::MAX_AUDIO_KB / 1024]);
                 $this->toast('error', $message);
 
                 throw ValidationException::withMessages([$name => $message]);
             }
             if ($name === 'guestFile') {
-                $this->toast('error', 'បង្ហោះឯកសារមិនបានទេ — សូមព្យាយាមម្ដងទៀត។');
+                $this->toast('error', __("Couldn't upload the file — please try again."));
 
                 throw ValidationException::withMessages([$name => 'The guest list could not be uploaded.']);
             }
-            $this->toast('error', 'បង្ហោះរូបមិនបានទេ — រូបនីមួយៗធំបំផុត '.(self::MAX_UPLOAD_KB / 1024).' MB។');
+            $this->toast('error', __("Couldn't upload the photo — each photo can be at most :mb MB.", ['mb' => self::MAX_UPLOAD_KB / 1024]));
 
             throw ValidationException::withMessages([
                 $name => "This photo couldn't be uploaded. Photos can be at most ".(self::MAX_UPLOAD_KB / 1024).' MB each.',
@@ -596,14 +595,14 @@ class InvitationManagePage extends Component
             $this->validate($this->uploadRules());
         } catch (ValidationException $e) {
             unset($this->{$m[1]}[$m[2]]);
-            $this->toast('error', collect($e->errors())->flatten()->first() ?? 'រូបនេះប្រើមិនបានទេ។');
+            $this->toast('error', collect($e->errors())->flatten()->first() ?? __("This photo can't be used."));
 
             throw $e;
         }
 
         $this->toast('info', $m[1] === 'audioUploads'
-            ? 'ភ្លេងរួចរាល់ហើយ — ចុច Save ដើម្បីរក្សាទុក។'
-            : 'រូបរួចរាល់ហើយ — ចុច Save ដើម្បីរក្សាទុក។');
+            ? __('The music is ready — press Save to keep it.')
+            : __('The photo is ready — press Save to keep it.'));
     }
 
     /** Clears a single-photo field (and any pending pick for it). */
@@ -611,7 +610,7 @@ class InvitationManagePage extends Component
     {
         unset($this->imageUploads[$key]);
         $this->fieldValues[$key] = null;
-        $this->toast('info', 'បានដករូបចេញ — ចុច Save ដើម្បីរក្សាទុក។');
+        $this->toast('info', __('Photo removed — press Save to keep this change.'));
     }
 
     /** Clears an uploaded song (and any pending pick for it). */
@@ -619,7 +618,7 @@ class InvitationManagePage extends Component
     {
         unset($this->audioUploads[$key]);
         $this->fieldValues[$key] = null;
-        $this->toast('info', 'បានដកភ្លេងចេញ — ចុច Save ដើម្បីរក្សាទុក។');
+        $this->toast('info', __('Music removed — press Save to keep this change.'));
     }
 
     public function removeGalleryImage(string $key, int $index): void
@@ -627,7 +626,7 @@ class InvitationManagePage extends Component
         $images = $this->fieldValues[$key] ?? [];
         unset($images[$index]);
         $this->fieldValues[$key] = array_values($images);
-        $this->toast('info', 'បានដករូបចេញ — ចុច Save ដើម្បីរក្សាទុក។');
+        $this->toast('info', __('Photo removed — press Save to keep this change.'));
     }
 
     public function addScheduleItem(string $key): void
@@ -661,7 +660,7 @@ class InvitationManagePage extends Component
         try {
             $this->validate(['newRecipientName' => ['required', 'string', 'max:255']]);
         } catch (ValidationException $e) {
-            $this->toast('error', trim($this->newRecipientName) === '' ? 'សូមវាយឈ្មោះភ្ញៀវជាមុនសិន។' : 'ឈ្មោះវែងពេក។');
+            $this->toast('error', trim($this->newRecipientName) === '' ? __("Please type the guest's name first.") : __('The name is too long.'));
 
             throw $e;
         }
@@ -680,15 +679,15 @@ class InvitationManagePage extends Component
         });
 
         if (! $created) {
-            $this->addError('newRecipientName', 'You have reached the recipient limit for this plan.');
-            $this->toast('warning', 'អ្នកបានប្រើភ្ញៀវគ្រប់ '.$this->invitation->max_recipients.' នាក់ក្នុងគម្រោងនេះហើយ។');
+            $this->addError('newRecipientName', __('You have reached the guest limit for this plan.'));
+            $this->toast('warning', __("You've used all :max guests in this plan.", ['max' => $this->invitation->max_recipients]));
 
             return;
         }
 
         $this->newRecipientName = '';
         $this->invitation->load('recipients');
-        $this->toast('success', 'បានបន្ថែម «'.$created->recipient_name.'» — ចុច Copy link ដើម្បីផ្ញើ។');
+        $this->toast('success', __('Added «:name» — press Copy link to send it.', ['name' => $created->recipient_name]));
     }
 
     /**
@@ -702,9 +701,9 @@ class InvitationManagePage extends Component
 
         try {
             $this->validate(['guestFile' => ['required', 'file', 'max:1024', 'mimes:csv,txt']], [
-                'guestFile.required' => 'សូមជ្រើសរើសឯកសារជាមុនសិន។',
-                'guestFile.max' => 'ឯកសារធំពេក (អតិបរមា 1MB)។',
-                'guestFile.mimes' => 'សូមប្រើឯកសារ .csv ឬ .txt (Excel → Save As → CSV UTF-8)។',
+                'guestFile.required' => __('Please choose a file first.'),
+                'guestFile.max' => __('The file is too big (max 1MB).'),
+                'guestFile.mimes' => __('Please use a .csv or .txt file (Excel → Save As → CSV UTF-8).'),
             ]);
         } catch (ValidationException $e) {
             $this->toast('error', $e->validator->errors()->first());
@@ -741,11 +740,11 @@ class InvitationManagePage extends Component
         $this->invitation->load('recipients');
 
         if ($added === 0 && $full === 0) {
-            $this->toast('warning', 'មិនមានឈ្មោះថ្មីក្នុងឯកសារនេះទេ។');
+            $this->toast('warning', __('There are no new names in this file.'));
         } elseif ($full > 0) {
-            $this->toast('warning', "បានបន្ថែម {$added} នាក់ — {$full} នាក់ទៀតមិនបានបន្ថែម ព្រោះគម្រោងនេះអនុញ្ញាតត្រឹម {$this->invitation->max_recipients} នាក់។");
+            $this->toast('warning', __('Added :added — :full more were not added because this plan allows only :max guests.', ['added' => $added, 'full' => $full, 'max' => $this->invitation->max_recipients]));
         } else {
-            $this->toast('success', "បាននាំចូលភ្ញៀវ {$added} នាក់។");
+            $this->toast('success', __('Imported :added guests.', ['added' => $added]));
         }
     }
 
@@ -755,12 +754,12 @@ class InvitationManagePage extends Component
         abort_unless($this->invitation->isPaid(), 403);
 
         $invitation = $this->invitation->load('recipients');
-        $rsvp = ['yes' => 'មក', 'no' => 'មិនមក'];
+        $rsvp = ['yes' => __('Coming'), 'no' => __('Not coming')];
 
         return response()->streamDownload(function () use ($invitation, $rsvp) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM, so Excel reads the Khmer as UTF-8
-            fputcsv($out, ['Name', 'Link', 'Opened', 'RSVP', 'Note', 'Link paused']);
+            fputcsv($out, [__('Name'), __('Link'), __('Opened'), __('RSVP'), __('Note'), __('Link paused')]);
             foreach ($invitation->recipients as $r) {
                 fputcsv($out, [
                     $r->recipient_name,
@@ -781,7 +780,7 @@ class InvitationManagePage extends Component
 
         $recipient = $this->invitation->recipients()->whereKey($recipientId)->first();
         if (! $recipient) {
-            $this->toast('warning', 'ភ្ញៀវនេះត្រូវបានលុបរួចហើយ។');
+            $this->toast('warning', __('This guest has already been removed.'));
             $this->invitation->load('recipients');
 
             return;
@@ -789,7 +788,7 @@ class InvitationManagePage extends Component
 
         $recipient->delete();
         $this->invitation->load('recipients');
-        $this->toast('success', 'បានលុប «'.$recipient->recipient_name.'» — តំណរបស់គេលែងដំណើរការហើយ។');
+        $this->toast('success', __('Removed «:name» — their link no longer works.', ['name' => $recipient->recipient_name]));
     }
 
     /** Pauses or restores one guest's link without deleting their RSVP. */
@@ -801,8 +800,8 @@ class InvitationManagePage extends Component
         $recipient->update(['revoked_at' => $recipient->revoked_at ? null : now()]);
         $this->invitation->load('recipients');
         $recipient->revoked_at
-            ? $this->toast('warning', 'បានផ្អាកតំណរបស់ «'.$recipient->recipient_name.'» — គេមិនអាចបើកធៀបបានទេ រហូតដល់អ្នកបើកវិញ។')
-            : $this->toast('success', 'បានបើកតំណរបស់ «'.$recipient->recipient_name.'» វិញហើយ។');
+            ? $this->toast('warning', __("Paused «:name»'s link — they can't open the invitation until you turn it back on.", ['name' => $recipient->recipient_name]))
+            : $this->toast('success', __("Turned «:name»'s link back on.", ['name' => $recipient->recipient_name]));
     }
 
     /** Issues a new unguessable token; the old link stops working immediately. */
@@ -813,12 +812,14 @@ class InvitationManagePage extends Component
         $recipient = $this->invitation->recipients()->whereKey($recipientId)->firstOrFail();
         $recipient->update(['token' => Str::random(32), 'revoked_at' => null]);
         $this->invitation->load('recipients');
-        $this->toast('success', 'បានបង្កើតតំណថ្មីសម្រាប់ «'.$recipient->recipient_name.'» — តំណចាស់លែងដំណើរការ។ កុំភ្លេចផ្ញើតំណថ្មី។');
+        $this->toast('success', __("Made a new link for «:name» — the old link no longer works. Don't forget to send the new one.", ['name' => $recipient->recipient_name]));
     }
 
     /**
      * Ready-to-send message that "Copy link" puts on the clipboard: a short invite
      * addressed to the guest, built from the saved fields, with their link at the end.
+     * Always Khmer, like the invitation itself: it is sent to guests, not shown in the
+     * dashboard, so it deliberately ignores the owner's interface language.
      */
     public function shareCaption(string $recipientName, string $link): string
     {
@@ -856,7 +857,7 @@ class InvitationManagePage extends Component
         $templateFields = $this->invitation->template->fields ?? [];
 
         return view('livewire.pages.dashboard.invitation-manage-page', [
-            'fieldCatalog' => InvitationTemplate::FIELD_CATALOG,
+            'fieldCatalog' => InvitationTemplate::localizedCatalog(),
             'sections' => $this->visibleSections(),
             'stats' => [
                 'recipients' => $recipients->count(),
@@ -868,6 +869,14 @@ class InvitationManagePage extends Component
                     ->filter(fn (string $key) => filled($this->invitation->field_values[$key] ?? null))
                     ->count(),
             ],
-        ]);
+        ])->title(__('Manage invitation | ROUMDOUL'));
+    }
+
+    /** Field names in validation messages, in the interface language (e.g. "សូមបំពេញ ឈ្មោះកូនកំលោះ។"). */
+    protected function validationAttributes(): array
+    {
+        return collect(InvitationTemplate::localizedCatalog())
+            ->mapWithKeys(fn (array $field, string $key) => ["fieldValues.{$key}" => $field['label']])
+            ->all();
     }
 }

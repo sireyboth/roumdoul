@@ -24,17 +24,17 @@
     <div @class(['flex flex-wrap items-center gap-2', 'mt-2 justify-center' => $size === 'panel', 'mt-3 justify-center sm:justify-start' => $size === 'full'])>
       @if (! $invitation->fieldUnlocked($key))
         <span class="flex items-center gap-1 rounded-full bg-gold-500/15 px-2.5 py-1 text-xs font-bold text-gold-600 dark:text-gold-400">
-          <x-app-icon name="lock-closed" class="h-3.5 w-3.5" /> ភ្ញៀវមើលមិនឃើញ
+          <x-app-icon name="lock-closed" class="h-3.5 w-3.5" /> {{ __('Hidden from guests') }}
         </span>
       @elseif ($filled)
         <span class="flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-          <x-app-icon name="check-circle" class="h-3.5 w-3.5" /> បានបំពេញ
+          <x-app-icon name="check-circle" class="h-3.5 w-3.5" /> {{ __('Filled in') }}
         </span>
       @else
-        <span class="rounded-full bg-plum-100 px-2.5 py-1 text-xs font-bold text-plum-500 dark:bg-plum-800 dark:text-plum-400">ទទេ — មិនបង្ហាញ</span>
+        <span class="rounded-full bg-plum-100 px-2.5 py-1 text-xs font-bold text-plum-500 dark:bg-plum-800 dark:text-plum-400">{{ __('Empty — not shown') }}</span>
       @endif
       <span class="flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400">
-        <span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span> បង្ហាញត្រង់នេះ
+        <span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span> {{ __('Shows here') }}
       </span>
     </div>
 
@@ -53,7 +53,7 @@
         'text-sm' => $size !== 'full',
         'text-lg' => $size === 'full',
       ])>
-        <span class="font-bold text-plum-400">ឧ.</span>
+        <span class="font-bold text-plum-400">{{ __('e.g.') }}</span>
         <span class="truncate font-semibold text-plum-800 dark:text-plum-100">{{ $catalogField['example'] }}</span>
       </p>
     @endif
@@ -62,7 +62,7 @@
       <div @class(['mt-3', 'flex justify-center' => $size === 'panel'])>
         <button type="button" @click.stop="zoom = '{{ $key }}'"
           class="flex items-center gap-1.5 rounded-full border border-brand-200 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:border-brand-400 hover:bg-brand-50 dark:border-brand-500/30 dark:text-brand-300 dark:hover:bg-brand-500/10">
-          <x-app-icon name="arrows-expand" class="h-4 w-4" /> មើលពេញអេក្រង់
+          <x-app-icon name="arrows-expand" class="h-4 w-4" /> {{ __('View full screen') }}
         </button>
       </div>
     @endunless

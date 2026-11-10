@@ -1,5 +1,5 @@
 {{-- One template field's input, picked by its FIELD_CATALOG type. Expects $key and $catalogField. --}}
-@php $placeholder = ! empty($catalogField['example']) ? 'ឧ. '.$catalogField['example'] : null; @endphp
+@php $placeholder = ! empty($catalogField['example']) ? __('e.g.').' '.$catalogField['example'] : null; @endphp
 @switch($catalogField['type'])
   @case('textarea')
     <textarea id="input-{{ $key }}" wire:model="fieldValues.{{ $key }}" rows="4" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
@@ -13,7 +13,7 @@
     @endphp
     <div class="relative max-w-lg" x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
     @if ($tempImage || ! empty($fieldValues[$key]))
-      <button type="button" wire:click="removeImage('{{ $key }}')" x-show="!busy" title="Remove photo"
+      <button type="button" wire:click="removeImage('{{ $key }}')" x-show="!busy" title="{{ __('Remove photo') }}"
         class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-base font-bold text-white shadow hover:bg-red-700">&times;</button>
     @endif
     <label
@@ -30,12 +30,12 @@
       @if ($tempImage || ! empty($fieldValues[$key]))
         <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/0 opacity-0 transition-all group-hover:bg-black/50 group-hover:opacity-100">
           <x-app-icon name="upload" class="h-5 w-5 text-white" />
-          <span class="text-xs font-semibold text-white">Change photo</span>
+          <span class="text-xs font-semibold text-white">{{ __('Change photo') }}</span>
         </div>
       @else
         <x-app-icon name="upload" class="h-6 w-6 text-plum-400 group-hover:text-brand-500" />
-        <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">Click to upload photo</span>
-        <span class="text-[11px] text-plum-400">JPG, PNG or WebP &middot; up to 20 MB</span>
+        <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">{{ __('Click to upload photo') }}</span>
+        <span class="text-[11px] text-plum-400">{{ __('JPG, PNG or WebP · up to 20 MB') }}</span>
       @endif
 
       <div x-show="busy" style="display: none" class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/85 dark:bg-plum-900/85">
@@ -43,7 +43,7 @@
         <div class="h-1.5 w-2/3 overflow-hidden rounded-full bg-plum-200 dark:bg-plum-700">
           <div class="h-full bg-brand-500 transition-all" :style="`width: ${progress}%`"></div>
         </div>
-        <button type="button" x-on:click.prevent="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">Cancel</button>
+        <button type="button" x-on:click.prevent="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">{{ __('Cancel') }}</button>
       </div>
 
       <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
@@ -64,9 +64,9 @@
           @if (! $tempAudio)
             <audio controls preload="none" class="h-10 min-w-0 flex-1" src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($fieldValues[$key]) }}"></audio>
           @else
-            <span class="flex-1 truncate px-2 text-sm font-semibold text-plum-700 dark:text-plum-200">🎵 {{ $tempAudio->getClientOriginalName() }} — ចុច Save</span>
+            <span class="flex-1 truncate px-2 text-sm font-semibold text-plum-700 dark:text-plum-200">🎵 {{ $tempAudio->getClientOriginalName() }} — {{ __('press Save') }}</span>
           @endif
-          <button type="button" wire:click="removeAudio('{{ $key }}')" x-show="!busy" title="Remove song"
+          <button type="button" wire:click="removeAudio('{{ $key }}')" x-show="!busy" title="{{ __('Remove song') }}"
             class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-600 text-base font-bold text-white shadow hover:bg-red-700">&times;</button>
         </div>
       @endif
@@ -81,7 +81,7 @@
           <div class="h-1.5 w-2/3 overflow-hidden rounded-full bg-plum-200 dark:bg-plum-700">
             <div class="h-full bg-brand-500 transition-all" :style="`width: ${progress}%`"></div>
           </div>
-          <button type="button" x-on:click.prevent="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">Cancel</button>
+          <button type="button" x-on:click.prevent="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">{{ __('Cancel') }}</button>
         </div>
 
         <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,.mp3,.m4a,.aac" class="sr-only" />
@@ -121,7 +121,7 @@
           class="group flex h-28 w-28 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-plum-300 bg-plum-50 text-center transition-colors hover:border-brand-400 hover:bg-brand-50/50 dark:border-plum-700 dark:bg-plum-800/40 dark:hover:border-brand-500 dark:hover:bg-brand-500/5"
         >
           <x-app-icon name="upload" class="h-5 w-5 text-plum-400 group-hover:text-brand-500" />
-          <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">Add photos</span>
+          <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">{{ __('Add photos') }}</span>
           <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" multiple accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
         </label>
       @endif
@@ -131,7 +131,7 @@
         <div class="h-full bg-brand-500 transition-all" :style="`width: ${progress}%`"></div>
       </div>
       <span class="text-xs font-semibold text-plum-500 dark:text-plum-400" x-text="preparing ? 'Preparing photos…' : `Uploading… ${progress}%`"></span>
-      <button type="button" x-on:click="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">Cancel</button>
+      <button type="button" x-on:click="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">{{ __('Cancel') }}</button>
     </div>
     <p x-show="error" x-text="error" style="display: none" class="mt-1 text-xs text-red-600 dark:text-red-400"></p>
     <p class="mt-1.5 text-[11px] text-plum-400">{{ $galleryRoom }} of {{ $page::MAX_GALLERY_PHOTOS }} spots left &middot; JPG, PNG or WebP &middot; big photos are shrunk automatically</p>
@@ -148,7 +148,7 @@
         <div wire:key="schedule-{{ $key }}-{{ $i }}" class="flex gap-2">
           <input type="text" wire:model="fieldValues.{{ $key }}.{{ $i }}.time" placeholder="5:00 PM"
             class="w-28 shrink-0 rounded-lg border border-plum-200 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />
-          <input type="text" wire:model="fieldValues.{{ $key }}.{{ $i }}.label" placeholder="Ceremony begins"
+          <input type="text" wire:model="fieldValues.{{ $key }}.{{ $i }}.label" placeholder="{{ __('Ceremony begins') }}"
             class="flex-1 rounded-lg border border-plum-200 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />
           <button type="button" wire:click="removeScheduleItem('{{ $key }}', {{ $i }})" class="shrink-0 text-plum-400 hover:text-red-600">
             <x-app-icon name="trash" class="h-4 w-4" />
@@ -167,9 +167,9 @@
       @foreach (($fieldValues[$key] ?? []) as $i => $row)
         <div wire:key="story-{{ $key }}-{{ $i }}" class="flex gap-2">
           <div class="flex flex-1 flex-col gap-2">
-            <input type="text" wire:model="fieldValues.{{ $key }}.{{ $i }}.title" placeholder="Chapter title"
+            <input type="text" wire:model="fieldValues.{{ $key }}.{{ $i }}.title" placeholder="{{ __('Chapter title') }}"
               class="w-full rounded-lg border border-plum-200 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />
-            <textarea wire:model="fieldValues.{{ $key }}.{{ $i }}.text" rows="2" placeholder="What happened in this chapter?"
+            <textarea wire:model="fieldValues.{{ $key }}.{{ $i }}.text" rows="2" placeholder="{{ __('What happened in this chapter?') }}"
               class="w-full rounded-lg border border-plum-200 bg-transparent px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700"></textarea>
           </div>
           <button type="button" wire:click="removeStoryItem('{{ $key }}', {{ $i }})" class="shrink-0 self-start pt-2 text-plum-400 hover:text-red-600">

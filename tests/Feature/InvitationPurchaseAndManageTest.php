@@ -175,7 +175,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         $response = $this->actingAs($customer, 'customer')->get("/dashboard/invitations/{$invitation->id}");
 
         $response->assertStatus(200);
-        $response->assertSee('Waiting for payment confirmation');
+        $response->assertSee(__('Waiting for payment confirmation'));
     }
 
     public function test_saving_is_blocked_on_an_unpaid_invitation_even_if_called_directly(): void
@@ -500,7 +500,7 @@ class InvitationPurchaseAndManageTest extends TestCase
             ->assertFileDownloaded('guests-'.$invitation->slug.'.csv');
 
         $csv = base64_decode($component->effects['download']['content']);
-        $this->assertStringStartsWith("\xEF\xBB\xBFName,Link,Opened,RSVP", $csv);
+        $this->assertStringStartsWith("\xEF\xBB\xBF".implode(',', [__('Name'), __('Link'), __('Opened'), __('RSVP')]), $csv);
         $this->assertStringContainsString('"សុខ សុភា",'.route('invitation.show', [$invitation, $recipient]).',,មក', $csv);
     }
 

@@ -24,59 +24,63 @@ class InvitationTemplate extends Model
         // `hint` is the customer-facing explanation shown under each input in the dashboard
         // and in its "Guide" section — write it for the customer, not for admins. `example`
         // (optional) is a sample value, used as the input placeholder and in the help panel.
+        // `label` and `hint` are English source strings: the dashboard shows them through
+        // localizedCatalog(), so each needs an entry in lang/km.json and lang/en.json. The
+        // admin panel uses `label` untranslated. `example` is sample invitation content and
+        // stays as written (invitations are Khmer).
 
         // Identity / basics — always available on every plan once a template selects them,
         // see FREE_FIELDS below.
-        'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text', 'hint' => 'ឈ្មោះរបស់អ្នក — ភ្ញៀវនឹងឃើញថាអ្នកណាជាអ្នកអញ្ជើញ។', 'example' => 'សុខា'],
-        'groom_name' => ['label' => "Groom's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនកំលោះ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។', 'example' => 'សុខ សុខា'],
-        'bride_name' => ['label' => "Bride's name", 'type' => 'text', 'hint' => 'ឈ្មោះកូនក្រមុំ ដូចដែលអ្នកចង់ឲ្យបង្ហាញលើធៀប។', 'example' => 'ចាន់ ស្រីនាង'],
-        'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text', 'hint' => 'ឈ្មោះអ្នកដែលមានខួបកំណើត។', 'example' => 'ស្រីពៅ'],
-        'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'អាយុដែលនឹងគ្រប់ក្នុងខួបនេះ ឧ. 25។', 'example' => '25'],
-        'headline' => ['label' => 'Headline', 'type' => 'text', 'hint' => 'ចំណងជើងធំនៅខាងលើធៀប ឧ. «សូមគោរពអញ្ជើញ»។', 'example' => 'សូមគោរពអញ្ជើញ'],
-        'message' => ['label' => 'Message', 'type' => 'textarea', 'hint' => 'សារដែលអ្នកចង់ផ្ញើដល់ភ្ញៀវ — ពីរបីប្រយោគខ្លីៗគឺល្អបំផុត។'],
-        'thanks_message' => ['label' => 'Thank-you message', 'type' => 'textarea', 'hint' => 'សេចក្ដីថ្លែងអំណរគុណចំពោះភ្ញៀវកិត្តិយស — បង្ហាញនៅផ្នែកខាងក្រោមធៀប។ ទុកទទេ ដើម្បីមិនបង្ហាញ។'],
-        'apology_message' => ['label' => 'Apology letter', 'type' => 'textarea', 'hint' => 'លិខិតសូមអភ័យទោស ក្នុងករណីមិនបានអញ្ជើញដោយផ្ទាល់ — បង្ហាញនៅផ្នែកខាងក្រោមធៀប។ ទុកទទេ ដើម្បីមិនបង្ហាញ។'],
-        'reception_message' => ['label' => 'Reception invitation text', 'type' => 'textarea', 'hint' => 'អក្សរក្នុងកាតអញ្ជើញចូលរួមពិធីជប់លៀង ក្រោមឈ្មោះភ្ញៀវ ឧ. «និងញាតិមិត្ត អញ្ជើញចូលរួមជាអធិបតី… ដោយមេត្រីភាព ។» ទុកទទេ ដើម្បីប្រើអក្សរដើម។'],
-        'opening_line' => ['label' => 'Opening line', 'type' => 'text', 'hint' => 'បន្ទាត់ខាងលើគេ ក្រោមចំណងជើង — ទុកទទេ ដើម្បីប្រើ «នមោ តស្ស ភគវតោ អរហតោ សម្មាសម្ពុទ្ធស្ស»។', 'example' => 'នមោ តស្ស ភគវតោ អរហតោ សម្មាសម្ពុទ្ធស្ស'],
-        'gift_message' => ['label' => 'Text above the QR code', 'type' => 'textarea', 'hint' => 'ពាក្យពេចន៍ខាងលើ QR សម្រាប់ចូលរួមបច្ច័យ/ចំណងដៃ — ទុកទទេ ដើម្បីប្រើអក្សរដើមរបស់ធៀប។'],
-        'rsvp_message' => ['label' => 'RSVP question', 'type' => 'text', 'hint' => 'សំណួរខាងលើប៊ូតុងបញ្ជាក់ការចូលរួម — ទុកទទេ ដើម្បីប្រើអក្សរដើមរបស់ធៀប។', 'example' => 'តើលោកអ្នកនឹងអញ្ជើញចូលរួមកុសលជាមួយយើងខ្ញុំដែរឬទេ?'],
-        'background_image' => ['label' => 'Background image (optional)', 'type' => 'image', 'hint' => 'រូបផ្ទៃខាងក្រោយពេញអេក្រង់ — រូបបញ្ឈរល្អបំផុត។ ទុកទទេ ដើម្បីប្រើរូបដើមរបស់ធៀប។'],
-        'title_image' => ['label' => 'Title image (optional)', 'type' => 'image', 'hint' => 'រូបចំណងជើងធំនៅខាងលើគេបង្អស់ (ឧ. អក្សរក្បាច់ PNG ផ្ទៃថ្លា)។ ទុកទទេ ដើម្បីប្រើចំណងជើងដែលអ្នកវាយ ឬរូបចំណងជើងដើមរបស់ធៀប។'],
-        'cover_image' => ['label' => 'Cover image', 'type' => 'image', 'hint' => 'រូបភាពធំដែលភ្ញៀវឃើញមុនគេពេលបើកធៀប — ជ្រើសរូបច្បាស់ និងស្អាតបំផុត។'],
-        'event_date' => ['label' => 'Event date', 'type' => 'datetime', 'hint' => 'ថ្ងៃ និងម៉ោងនៃកម្មវិធី — ប្រើសម្រាប់បង្ហាញកាលបរិច្ឆេទ និងនាឡិការាប់ថយក្រោយ។'],
-        'venue_name' => ['label' => 'Venue name', 'type' => 'text', 'hint' => 'ឈ្មោះកន្លែងរៀបកម្មវិធី ឧ. «គេហដ្ឋានខាងស្រី» ឬឈ្មោះសណ្ឋាគារ។', 'example' => 'គេហដ្ឋានខាងស្រី'],
-        'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text', 'hint' => 'ចម្លងតំណបទចម្រៀងពី YouTube ឬ TikTok មកដាក់ — ភ្ញៀវអាចស្ដាប់ភ្លេងពេលបើកធៀប។', 'example' => 'https://youtu.be/…'],
-        'music_file' => ['label' => 'Background music (upload MP3)', 'type' => 'audio', 'section' => 'details', 'hint' => 'ឬបង្ហោះឯកសារភ្លេង MP3 / M4A ផ្ទាល់ពីទូរស័ព្ទ (ធំបំផុត 10 MB ≈ បទ ១០ នាទី)។ បើមានទាំងតំណ និងឯកសារ ធៀបនឹងចាក់ឯកសារនេះ។'],
-        'accent_color' => ['label' => 'Accent color', 'type' => 'color', 'hint' => 'ពណ៌សំខាន់របស់ធៀប (ប៊ូតុង ស៊ុម និងអក្សរលម្អ)។'],
-        'groom_photo' => ['label' => "Groom's photo", 'type' => 'image', 'hint' => 'រូបថតកូនកំលោះ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
-        'bride_photo' => ['label' => "Bride's photo", 'type' => 'image', 'hint' => 'រូបថតកូនក្រមុំ — រូបបញ្ឈរដែលឃើញមុខច្បាស់គឺល្អបំផុត។'],
-        'groom_father' => ['label' => "Groom's father", 'type' => 'text', 'hint' => 'ឈ្មោះឪពុកខាងកូនកំលោះ — វាយតែឈ្មោះ (ពាក្យ «លោក» នឹងបន្ថែមឲ្យ)។', 'example' => 'ហេង ឌី'],
-        'groom_mother' => ['label' => "Groom's mother", 'type' => 'text', 'hint' => 'ឈ្មោះម្ដាយខាងកូនកំលោះ — វាយតែឈ្មោះ (ពាក្យ «លោកស្រី» នឹងបន្ថែមឲ្យ)។', 'example' => 'សុខ ជា'],
-        'bride_father' => ['label' => "Bride's father", 'type' => 'text', 'hint' => 'ឈ្មោះឪពុកខាងកូនក្រមុំ — វាយតែឈ្មោះ (ពាក្យ «លោក» នឹងបន្ថែមឲ្យ)។', 'example' => 'ឈិន សារ៉ាត'],
-        'bride_mother' => ['label' => "Bride's mother", 'type' => 'text', 'hint' => 'ឈ្មោះម្ដាយខាងកូនក្រមុំ — វាយតែឈ្មោះ (ពាក្យ «លោកស្រី» នឹងបន្ថែមឲ្យ)។', 'example' => 'ពិស្ណុ សារ៉ាត'],
-        'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនកំលោះ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '012 345 678'],
-        'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទខាងកូនក្រមុំ ដែលភ្ញៀវអាចទាក់ទងបាន។', 'example' => '098 765 432'],
-        'contact_phone' => ['label' => 'Contact phone number', 'type' => 'text', 'hint' => 'លេខទូរស័ព្ទដែលភ្ញៀវអាចទាក់ទងសួរព័ត៌មានបន្ថែម។', 'example' => '012 345 678'],
-        'host_names' => ['label' => 'Hosts / organizers', 'type' => 'textarea', 'hint' => 'ឈ្មោះម្ចាស់ពិធី ឬគណៈកម្មការរៀបចំ — មួយឈ្មោះក្នុងមួយបន្ទាត់ ឧ. «លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា»។', 'example' => 'លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា'],
+        'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text', 'hint' => 'Your name — guests will see who is inviting them.', 'example' => 'សុខា'],
+        'groom_name' => ['label' => "Groom's name", 'type' => 'text', 'hint' => "The groom's name, as you want it to appear on the invitation.", 'example' => 'សុខ សុខា'],
+        'bride_name' => ['label' => "Bride's name", 'type' => 'text', 'hint' => "The bride's name, as you want it to appear on the invitation.", 'example' => 'ចាន់ ស្រីនាង'],
+        'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text', 'hint' => 'The name of the person whose birthday it is.', 'example' => 'ស្រីពៅ'],
+        'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'The age they are turning, e.g. 25.', 'example' => '25'],
+        'headline' => ['label' => 'Headline', 'type' => 'text', 'hint' => 'The big title at the top of the invitation, e.g. «សូមគោរពអញ្ជើញ».', 'example' => 'សូមគោរពអញ្ជើញ'],
+        'message' => ['label' => 'Message', 'type' => 'textarea', 'hint' => 'The message you want to send your guests — a few short sentences work best.'],
+        'thanks_message' => ['label' => 'Thank-you message', 'type' => 'textarea', 'hint' => 'A thank-you note to your honored guests — shown at the bottom of the invitation. Leave empty to hide it.'],
+        'apology_message' => ['label' => 'Apology letter', 'type' => 'textarea', 'hint' => 'A note apologizing for not inviting guests in person — shown at the bottom of the invitation. Leave empty to hide it.'],
+        'reception_message' => ['label' => 'Reception invitation text', 'type' => 'textarea', 'hint' => "The text on the reception invitation card, under the guest's name, e.g. «និងញាតិមិត្ត អញ្ជើញចូលរួមជាអធិបតី… ដោយមេត្រីភាព ។» Leave empty to use the default text."],
+        'opening_line' => ['label' => 'Opening line', 'type' => 'text', 'hint' => 'The very first line, under the title — leave empty to use «នមោ តស្ស ភគវតោ អរហតោ សម្មាសម្ពុទ្ធស្ស».', 'example' => 'នមោ តស្ស ភគវតោ អរហតោ សម្មាសម្ពុទ្ធស្ស'],
+        'gift_message' => ['label' => 'Text above the QR code', 'type' => 'textarea', 'hint' => "The words above the QR code for donations or wedding gifts — leave empty to use the invitation's default text."],
+        'rsvp_message' => ['label' => 'RSVP question', 'type' => 'text', 'hint' => "The question above the RSVP buttons — leave empty to use the invitation's default text.", 'example' => 'តើលោកអ្នកនឹងអញ្ជើញចូលរួមកុសលជាមួយយើងខ្ញុំដែរឬទេ?'],
+        'background_image' => ['label' => 'Background image (optional)', 'type' => 'image', 'hint' => "A full-screen background image — portrait photos work best. Leave empty to use the invitation's default image."],
+        'title_image' => ['label' => 'Title image (optional)', 'type' => 'image', 'hint' => "A large title image at the very top (e.g. decorative lettering as a transparent PNG). Leave empty to use the headline you typed or the invitation's default title image."],
+        'cover_image' => ['label' => 'Cover image', 'type' => 'image', 'hint' => 'The big picture guests see first when they open the invitation — choose your clearest, most beautiful photo.'],
+        'event_date' => ['label' => 'Event date', 'type' => 'datetime', 'hint' => 'The date and time of the event — used to show the date and the countdown.'],
+        'venue_name' => ['label' => 'Venue name', 'type' => 'text', 'hint' => "The name of the venue, e.g. «គេហដ្ឋានខាងស្រី» (the bride's family home) or a hotel name.", 'example' => 'គេហដ្ឋានខាងស្រី'],
+        'music_url' => ['label' => 'Background music (YouTube/TikTok link)', 'type' => 'text', 'hint' => 'Paste a song link from YouTube or TikTok — guests can listen to the music when they open the invitation.', 'example' => 'https://youtu.be/…'],
+        'music_file' => ['label' => 'Background music (upload MP3)', 'type' => 'audio', 'section' => 'details', 'hint' => "Or upload an MP3 / M4A music file straight from your phone (max 10 MB ≈ a 10-minute song). If there's both a link and a file, the invitation plays the file."],
+        'accent_color' => ['label' => 'Accent color', 'type' => 'color', 'hint' => "The invitation's main color (buttons, borders and decorative text)."],
+        'groom_photo' => ['label' => "Groom's photo", 'type' => 'image', 'hint' => 'A photo of the groom — a portrait photo that clearly shows the face works best.'],
+        'bride_photo' => ['label' => "Bride's photo", 'type' => 'image', 'hint' => 'A photo of the bride — a portrait photo that clearly shows the face works best.'],
+        'groom_father' => ['label' => "Groom's father", 'type' => 'text', 'hint' => "The groom's father's name — type the name only («លោក» is added for you).", 'example' => 'ហេង ឌី'],
+        'groom_mother' => ['label' => "Groom's mother", 'type' => 'text', 'hint' => "The groom's mother's name — type the name only («លោកស្រី» is added for you).", 'example' => 'សុខ ជា'],
+        'bride_father' => ['label' => "Bride's father", 'type' => 'text', 'hint' => "The bride's father's name — type the name only («លោក» is added for you).", 'example' => 'ឈិន សារ៉ាត'],
+        'bride_mother' => ['label' => "Bride's mother", 'type' => 'text', 'hint' => "The bride's mother's name — type the name only («លោកស្រី» is added for you).", 'example' => 'ពិស្ណុ សារ៉ាត'],
+        'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => "A phone number on the groom's side that guests can call.", 'example' => '012 345 678'],
+        'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => "A phone number on the bride's side that guests can call.", 'example' => '098 765 432'],
+        'contact_phone' => ['label' => 'Contact phone number', 'type' => 'text', 'hint' => 'A phone number guests can call for more information.', 'example' => '012 345 678'],
+        'host_names' => ['label' => 'Hosts / organizers', 'type' => 'textarea', 'hint' => 'Names of the ceremony hosts or organizing committee — one name per line, e.g. «លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា».', 'example' => 'លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា'],
 
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
         // shows these to the recipient if the plan's `features` list includes the key.
-        'venue_address' => ['label' => 'Venue address (for map link)', 'type' => 'text', 'hint' => 'អាសយដ្ឋានពេញរបស់កន្លែងកម្មវិធី — ភ្ញៀវចុចប៊ូតុងមើលផ្លូវ ដើម្បីបើក Google Maps។', 'example' => 'ផ្ទះលេខ 12, ផ្លូវ 271, ភ្នំពេញ'],
-        'map_url' => ['label' => 'Google Maps link', 'type' => 'text', 'hint' => 'ចម្លងតំណទីតាំងពី Google Maps (ចុច Share → Copy link) មកដាក់ — ប៊ូតុង «មើលផែនទី» នឹងបើកចំទីតាំងពិតប្រាកដ។', 'example' => 'https://maps.app.goo.gl/…'],
-        'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text', 'hint' => 'ថ្ងៃខែតាមចន្ទគតិ ឧ. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ»។', 'example' => 'ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ'],
-        'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីឲ្យភ្ញៀវចុច «ចូលរួម» ឬ «មិនចូលរួម» — អ្នកមើលចម្លើយបាននៅផ្ទាំង «ការឆ្លើយតប»។'],
-        'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញនាឡិការាប់ថយក្រោយដល់ថ្ងៃកម្មវិធី (ត្រូវបំពេញ Event date ផងដែរ)។'],
-        'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery', 'hint' => 'រូបថតជាច្រើន (ឧ. រូប Pre-wedding) បង្ហាញជាវិចិត្រសាលនៅលើធៀប។'],
-        'gallery_feed' => ['label' => 'Scrolling photo feed', 'type' => 'boolean', 'hint' => 'ធីកដើម្បីបង្ហាញរូបថតជាបន្ទះបញ្ឈរធំៗ រមូរចុះក្រោម (ដូច TikTok)។ មិនធីក = រូបតូចៗក្នុងស៊ុម។'],
-        'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule', 'hint' => 'របៀបវារៈកម្មវិធី — ម៉ោង និងសកម្មភាពនីមួយៗ ឧ. «7:00 AM — ហែជំនូន»។'],
+        'venue_address' => ['label' => 'Venue address (for map link)', 'type' => 'text', 'hint' => "The venue's full address — guests tap the directions button to open Google Maps.", 'example' => 'ផ្ទះលេខ 12, ផ្លូវ 271, ភ្នំពេញ'],
+        'map_url' => ['label' => 'Google Maps link', 'type' => 'text', 'hint' => 'Paste the location link from Google Maps (tap Share → Copy link) — the «មើលផែនទី» (View map) button will open the exact location.', 'example' => 'https://maps.app.goo.gl/…'],
+        'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text', 'hint' => 'The date in the lunar calendar, e.g. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ».', 'example' => 'ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ'],
+        'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean', 'hint' => 'Tick to let guests tap «ចូលរួម» (attending) or «មិនចូលរួម» (not attending) — you can see their answers in the "Responses" tab.'],
+        'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean', 'hint' => 'Tick to show a countdown to the day of the event (Event date must be filled in too).'],
+        'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery', 'hint' => 'Lots of photos (e.g. pre-wedding photos), shown as a gallery on the invitation.'],
+        'gallery_feed' => ['label' => 'Scrolling photo feed', 'type' => 'boolean', 'hint' => 'Tick to show photos as big vertical panels you scroll down (like TikTok). Unticked = small photos in a frame.'],
+        'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule', 'hint' => 'The event program — each time and activity, e.g. «7:00 AM — ហែជំនូន».'],
         // `section` puts a field under a different dashboard tab than its type would (an image
         // normally goes under "media"); see InvitationManagePage::fieldSection().
-        'schedule_image' => ['label' => 'Schedule as an image (optional)', 'type' => 'image', 'section' => 'program', 'hint' => 'មានរបៀបវារៈដែលរចនារួចជារូបភាព (ឧ. កាតក្បាច់)? ដាក់រូបនៅទីនេះ — ធៀបនឹងបង្ហាញរូបនេះជំនួសរបៀបវារៈដែលវាយខាងលើ។ ទុកទទេ ដើម្បីប្រើរបៀបវារៈដែលវាយ។'],
-        'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story', 'hint' => 'រឿងរ៉ាវរបស់អ្នកទាំងពីរ ចែកជាជំពូក — ចំណងជើង និងខ្លឹមសារខ្លីៗ។'],
-        'qr_code' => ['label' => 'QR code image', 'type' => 'image', 'hint' => 'រូប QR code ឧ. QR ធនាគារ សម្រាប់ភ្ញៀវផ្ញើចំណងដៃពីចម្ងាយ។'],
-        'gift_account' => ['label' => 'Gift account details', 'type' => 'textarea', 'hint' => 'ឈ្មោះ និងលេខគណនីធនាគារ បង្ហាញនៅក្រោម QR ឧ. «ABA · SOKHA & SREYNEANG · 000 123 456»។', 'example' => 'ABA · SOKHA · 000 123 456'],
-        'cta_label' => ['label' => 'Button label', 'type' => 'text', 'hint' => 'អក្សរនៅលើប៊ូតុងផ្ទាល់ខ្លួន ឧ. «ចូលរួម Telegram Group» — ត្រូវបំពេញជាមួយ Button link។', 'example' => 'ចូលរួម Telegram Group'],
-        'cta_url' => ['label' => 'Button link', 'type' => 'text', 'hint' => 'តំណដែលប៊ូតុងនឹងបើក — ត្រូវចាប់ផ្ដើមដោយ https://', 'example' => 'https://t.me/…'],
+        'schedule_image' => ['label' => 'Schedule as an image (optional)', 'type' => 'image', 'section' => 'program', 'hint' => 'Already have a designed schedule as an image (e.g. a decorated card)? Put it here — the invitation will show this image instead of the schedule typed above. Leave empty to use the typed schedule.'],
+        'story_chapters' => ['label' => 'Our story (chapters)', 'type' => 'story', 'hint' => 'The story of you two, split into chapters — a title and a short text for each.'],
+        'qr_code' => ['label' => 'QR code image', 'type' => 'image', 'hint' => 'A QR code image, e.g. a bank QR, so guests can send a wedding gift from afar.'],
+        'gift_account' => ['label' => 'Gift account details', 'type' => 'textarea', 'hint' => 'Bank account name and number, shown under the QR code, e.g. «ABA · SOKHA & SREYNEANG · 000 123 456».', 'example' => 'ABA · SOKHA · 000 123 456'],
+        'cta_label' => ['label' => 'Button label', 'type' => 'text', 'hint' => 'The text on your own button, e.g. «ចូលរួម Telegram Group» — fill in together with Button link.', 'example' => 'ចូលរួម Telegram Group'],
+        'cta_url' => ['label' => 'Button link', 'type' => 'text', 'hint' => 'The link the button opens — must start with https://', 'example' => 'https://t.me/…'],
     ];
 
     /**
@@ -218,6 +222,15 @@ class InvitationTemplate extends Model
      * plan's "unlocked fields" checkbox list — i.e. every field that *can* be gated behind a
      * pricing plan.
      */
+    /** FIELD_CATALOG with `label` and `hint` in the current interface language (customer dashboard). */
+    public static function localizedCatalog(): array
+    {
+        return array_map(fn (array $field) => array_merge($field, array_filter([
+            'label' => __($field['label']),
+            'hint' => isset($field['hint']) ? __($field['hint']) : null,
+        ])), self::FIELD_CATALOG);
+    }
+
     public static function premiumFieldOptions(): array
     {
         return collect(self::FIELD_CATALOG)

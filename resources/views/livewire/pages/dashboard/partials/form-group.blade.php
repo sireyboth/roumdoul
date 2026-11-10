@@ -24,7 +24,7 @@
       @if ($group['or'] && $i > 0)
         <div class="flex items-center gap-3 @4xl:flex-col">
           <span class="h-px flex-1 bg-plum-200 @4xl:h-auto @4xl:w-px dark:bg-plum-700"></span>
-          <span class="whitespace-nowrap rounded-full bg-gold-500 px-4 py-1.5 text-sm font-bold text-white">ឬ</span>
+          <span class="whitespace-nowrap rounded-full bg-gold-500 px-4 py-1.5 text-sm font-bold text-white">{{ __('or') }}</span>
           <span class="h-px flex-1 bg-plum-200 @4xl:h-auto @4xl:w-px dark:bg-plum-700"></span>
         </div>
       @endif
@@ -43,7 +43,7 @@
           <span class="flex flex-wrap items-center gap-2">
             <label for="input-{{ $key }}" class="block text-base font-semibold text-plum-800 dark:text-plum-100">{{ $catalogField['label'] }}</label>
             @unless ($invitation->fieldUnlocked($key))
-              <span title="Not included in your plan — this won't show to your guests"
+              <span title="{{ __("Not included in your plan — this won't show to your guests") }}"
                 class="flex items-center gap-1 rounded-full bg-gold-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-gold-600 dark:text-gold-400">
                 <x-app-icon name="lock-closed" class="h-3 w-3" /> Premium
               </span>

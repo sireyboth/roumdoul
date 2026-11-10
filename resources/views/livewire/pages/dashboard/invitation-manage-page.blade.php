@@ -1,12 +1,12 @@
 @php
   $navItems = [
-    'overview' => ['label' => 'ទិដ្ឋភាពទូទៅ', 'icon' => 'squares'],
-    'details' => ['label' => 'ព័ត៌មានលម្អិត', 'icon' => 'pencil'],
-    'media' => ['label' => 'រូបភាព', 'icon' => 'photo'],
-    'program' => ['label' => 'កម្មវិធី', 'icon' => 'calendar'],
-    'guests' => ['label' => 'ភ្ញៀវ', 'icon' => 'users'],
-    'responses' => ['label' => 'ការឆ្លើយតប', 'icon' => 'chat'],
-    'guide' => ['label' => 'ការណែនាំ', 'icon' => 'question'],
+    'overview' => ['label' => __('Overview'), 'icon' => 'squares'],
+    'details' => ['label' => __('Details'), 'icon' => 'pencil'],
+    'media' => ['label' => __('Images'), 'icon' => 'photo'],
+    'program' => ['label' => __('Program'), 'icon' => 'calendar'],
+    'guests' => ['label' => __('Guests'), 'icon' => 'users'],
+    'responses' => ['label' => __('Responses'), 'icon' => 'chat'],
+    'guide' => ['label' => __('Guide'), 'icon' => 'question'],
   ];
   $isPaid = $invitation->isPaid();
   $daysLeft = $invitation->expires_at ? max(0, (int) floor(now()->diffInDays($invitation->expires_at, false))) : null;
@@ -18,7 +18,7 @@
   x-init="window.addEventListener('beforeunload', (e) => { if ($data.dirty) { e.preventDefault(); e.returnValue = '' } })">
   {{-- Mobile top bar --}}
   <div class="sticky top-0 z-30 flex items-center gap-3 border-b border-plum-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden dark:border-plum-800 dark:bg-plum-900/90">
-    <button type="button" @click="sidebarOpen = true" aria-label="Open menu" class="text-plum-600 dark:text-plum-300">
+    <button type="button" @click="sidebarOpen = true" aria-label="{{ __('Open menu') }}" class="text-plum-600 dark:text-plum-300">
       <x-app-icon name="bars" class="h-6 w-6" />
     </button>
     <p class="truncate text-sm font-bold text-plum-900 dark:text-white">{{ $invitation->template->name }}</p>
@@ -36,7 +36,7 @@
         <img src="/images/Roumdoul_Logo.png" alt="ROUMDOUL" class="h-9 w-9 rounded-full object-contain" />
         <span class="text-sm font-extrabold tracking-wide text-plum-900 dark:text-white">ROUMDOUL</span>
       </a>
-      <button type="button" @click="sidebarOpen = false" aria-label="Close menu" class="text-plum-400 lg:hidden">
+      <button type="button" @click="sidebarOpen = false" aria-label="{{ __('Close menu') }}" class="text-plum-400 lg:hidden">
         <x-app-icon name="x-mark" class="h-5 w-5" />
       </button>
     </div>
@@ -49,14 +49,14 @@
       @endif
       <div class="mt-3 flex items-center gap-2">
         @if ($invitation->isExpired())
-          <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">ផុតកំណត់</span>
+          <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">{{ __('Expired') }}</span>
         @elseif (! $isPaid)
-          <span class="rounded-full bg-gold-500/15 px-2.5 py-0.5 text-[11px] font-bold text-gold-600 dark:text-gold-400">រង់ចាំការទូទាត់</span>
+          <span class="rounded-full bg-gold-500/15 px-2.5 py-0.5 text-[11px] font-bold text-gold-600 dark:text-gold-400">{{ __('Awaiting payment') }}</span>
         @else
-          <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">សកម្ម</span>
+          <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">{{ __('Active') }}</span>
         @endif
         @if ($invitation->expires_at)
-          <span class="text-[11px] text-plum-500 dark:text-plum-400">ផុតកំណត់ {{ $invitation->expires_at->format('d M Y') }}</span>
+          <span class="text-[11px] text-plum-500 dark:text-plum-400">{{ __('Expires :date', ['date' => $invitation->expires_at->format('d M Y')]) }}</span>
         @endif
       </div>
     </div>
@@ -83,7 +83,7 @@
         <a href="{{ $previewUrl }}" target="_blank" rel="noopener"
           class="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-plum-600 transition-colors hover:bg-plum-50 hover:text-plum-900 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
           <x-app-icon name="eye" class="h-5 w-5 shrink-0" />
-          <span class="flex-1">មើលជាមុន</span>
+          <span class="flex-1">{{ __('Preview') }}</span>
           <x-app-icon name="external" class="h-4 w-4 text-plum-400" />
         </a>
       @endif
@@ -91,13 +91,13 @@
 
     <div class="border-t border-plum-200 p-3 dark:border-plum-800">
       <a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-plum-600 hover:bg-plum-50 dark:text-plum-300 dark:hover:bg-plum-800">
-        <x-app-icon name="chevron-left" class="h-5 w-5" /> ត្រឡប់ទៅផ្ទាំងគ្រប់គ្រង
+        <x-app-icon name="chevron-left" class="h-5 w-5" /> {{ __('Back to dashboard') }}
       </a>
       <div class="flex items-center justify-between px-3 py-2">
         <form method="POST" action="/logout">
           @csrf
           <button type="submit" class="flex items-center gap-2 text-sm font-semibold text-plum-500 hover:text-red-600 dark:text-plum-400 dark:hover:text-red-400">
-            <x-app-icon name="logout" class="h-5 w-5" /> ចាកចេញ
+            <x-app-icon name="logout" class="h-5 w-5" /> {{ __('Log out') }}
           </button>
         </form>
         <x-theme-toggle class="flex" />
@@ -117,12 +117,12 @@
       @elseif (! $isPaid)
         <div class="mt-8 flex flex-col items-center gap-3 rounded-xl border border-dashed border-gold-400 bg-gold-500/10 py-16 text-center">
           <x-app-icon name="clock" class="h-10 w-10 text-gold-600" />
-          <p class="text-base font-semibold text-plum-800 dark:text-plum-100">Waiting for payment confirmation</p>
+          <p class="text-base font-semibold text-plum-800 dark:text-plum-100">{{ __('Waiting for payment confirmation') }}</p>
           <p class="max-w-sm text-sm text-plum-500 dark:text-plum-400">
-            You'll be able to fill in details and add recipients as soon as your order is confirmed as paid.
+            {{ __("You'll be able to fill in details and add guests as soon as your order is confirmed as paid.") }}
           </p>
           <button type="button" wire:click="showSection('guide')" class="mt-2 text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400">
-            ស្វែងយល់ពីរបៀបប្រើប្រាស់ →
+            {{ __('Learn how to use it →') }}
           </button>
         </div>
 
@@ -131,10 +131,10 @@
 
         <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           @foreach ([
-            ['label' => 'ភ្ញៀវ', 'value' => $stats['recipients'].' / '.$invitation->max_recipients],
-            ['label' => 'បានបើកមើល', 'value' => $stats['viewed']],
-            ['label' => 'ចូលរួម', 'value' => $stats['attending']],
-            ['label' => 'ថ្ងៃនៅសល់', 'value' => $daysLeft ?? '—'],
+            ['label' => __('Guests'), 'value' => $stats['recipients'].' / '.$invitation->max_recipients],
+            ['label' => __('Viewed'), 'value' => $stats['viewed']],
+            ['label' => __('Attending'), 'value' => $stats['attending']],
+            ['label' => __('Days left'), 'value' => $daysLeft ?? '—'],
           ] as $tile)
             <div class="rounded-xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
               <p class="text-xs font-semibold text-plum-500 dark:text-plum-400">{{ $tile['label'] }}</p>
@@ -145,17 +145,17 @@
 
         @php
           $steps = [
-            ['done' => $stats['filled'] > 0, 'title' => 'បំពេញព័ត៌មានកម្មវត្ថុអញ្ជើញ', 'hint' => $stats['filled'].' / '.$stats['fields'].' fields filled', 'section' => $sections[1] ?? null],
-            ['done' => $stats['recipients'] > 0, 'title' => 'បន្ថែមភ្ញៀវ', 'hint' => 'Each guest gets their own personal link', 'section' => 'guests'],
-            ['done' => $stats['viewed'] > 0, 'title' => 'ចែករំលែកតំណភ្ជាប់', 'hint' => 'Copy each link and send it by Telegram, Messenger…', 'section' => 'guests'],
+            ['done' => $stats['filled'] > 0, 'title' => __('Fill in the invitation details'), 'hint' => __(':filled / :total fields filled', ['filled' => $stats['filled'], 'total' => $stats['fields']]), 'section' => $sections[1] ?? null],
+            ['done' => $stats['recipients'] > 0, 'title' => __('Add guests'), 'hint' => __('Each guest gets their own personal link'), 'section' => 'guests'],
+            ['done' => $stats['viewed'] > 0, 'title' => __('Share the links'), 'hint' => __('Copy each link and send it by Telegram, Messenger…'), 'section' => 'guests'],
           ];
         @endphp
         <div class="mt-6 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-base font-bold text-plum-900 dark:text-white">ជំហានរៀបចំ</h2>
+            <h2 class="text-base font-bold text-plum-900 dark:text-white">{{ __('Setup steps') }}</h2>
             <a href="{{ $previewUrl }}" target="_blank" rel="noopener"
               class="flex items-center gap-1.5 rounded-full border border-plum-200 px-3.5 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
-              <x-app-icon name="eye" class="h-4 w-4" /> មើលជាមុន
+              <x-app-icon name="eye" class="h-4 w-4" /> {{ __('Preview') }}
             </a>
           </div>
           <ol class="mt-4 flex flex-col gap-2">
@@ -183,8 +183,8 @@
           class="mt-4 flex w-full items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 text-left transition-colors hover:border-brand-400 dark:border-brand-500/30 dark:bg-brand-500/10">
           <x-app-icon name="question" class="h-6 w-6 shrink-0 text-brand-600 dark:text-brand-400" />
           <span class="flex-1">
-            <span class="block text-sm font-semibold text-plum-900 dark:text-white">លើកដំបូងប្រើប្រាស់?</span>
-            <span class="block text-xs text-plum-500 dark:text-plum-400">អានការណែនាំពីរបៀបប្រើប្រាស់ និងអត្ថន័យនៃប្រអប់នីមួយៗ</span>
+            <span class="block text-sm font-semibold text-plum-900 dark:text-white">{{ __('First time here?') }}</span>
+            <span class="block text-xs text-plum-500 dark:text-plum-400">{{ __('Read how it works and what each field means') }}</span>
           </span>
           <x-app-icon name="chevron-right" class="h-4 w-4 text-plum-300" />
         </button>
@@ -197,7 +197,7 @@
         @endphp
         <p class="mt-2 flex items-start gap-2 rounded-xl bg-gold-500/10 px-4 py-3 text-base text-plum-700 dark:text-plum-200">
           <x-app-icon name="light-bulb" class="mt-0.5 h-5 w-5 shrink-0 text-gold-500" />
-          ចុចលើប្រអប់ណាមួយ ដើម្បីមើលថាវាបង្ហាញនៅកន្លែងណាលើធៀប។ ប្រអប់ទទេនឹងមិនបង្ហាញទេ។
+          {{ __('Tap any field to see where it appears on the invitation. Empty fields are not shown.') }}
         </p>
 
         <form wire:submit="save" class="mt-6 xl:grid xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start xl:gap-8"
@@ -221,7 +221,7 @@
             </div>
 
             <div class="rounded-xl border border-plum-200 bg-white p-3 dark:border-plum-800 dark:bg-plum-900">
-              <p class="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wide text-plum-400">ប្រអប់ក្នុងផ្ទាំងនេះ</p>
+              <p class="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wide text-plum-400">{{ __('Fields on this tab') }}</p>
               @foreach ($formFields as $key)
                 <button type="button" wire:key="jump-{{ $key }}"
                   @click="focus = '{{ $key }}'; document.getElementById('field-{{ $key }}').scrollIntoView({ behavior: 'smooth', block: 'center' })"
@@ -269,21 +269,21 @@
             <button type="submit" :disabled="uploading > 0" wire:loading.attr="disabled" wire:target="save"
               :class="dirty && 'ring-4 ring-brand-300/60 dark:ring-brand-500/30'"
               class="flex min-w-32 items-center justify-center gap-2 rounded-full bg-brand-600 px-7 py-3 text-base font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">
-              <span x-show="uploading > 0" style="display: none">កំពុងបង្ហោះរូប&hellip;</span>
+              <span x-show="uploading > 0" style="display: none">{{ __('Uploading photos…') }}</span>
               <span x-show="uploading === 0" class="flex items-center gap-2">
-                <span wire:loading.remove wire:target="save">Save</span>
+                <span wire:loading.remove wire:target="save">{{ __('Save') }}</span>
                 <span wire:loading wire:target="save" class="flex items-center gap-2">
-                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span> កំពុងរក្សាទុក&hellip;
+                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span> {{ __('Saving…') }}
                 </span>
               </span>
             </button>
             <p wire:loading.remove wire:target="save" class="text-sm font-semibold">
-              <span x-show="uploading > 0" style="display: none" class="text-plum-500 dark:text-plum-400">រង់ចាំរូបបង្ហោះរួចសិន ទើប Save បាន</span>
+              <span x-show="uploading > 0" style="display: none" class="text-plum-500 dark:text-plum-400">{{ __('Wait for the photos to finish uploading before saving') }}</span>
               <span x-show="uploading === 0 && dirty" style="display: none" class="flex items-center gap-1.5 text-gold-600 dark:text-gold-400">
-                <span class="h-2 w-2 rounded-full bg-gold-500"></span> មានការកែប្រែមិនទាន់រក្សាទុក
+                <span class="h-2 w-2 rounded-full bg-gold-500"></span> {{ __('You have unsaved changes') }}
               </span>
               <span x-show="uploading === 0 && ! dirty && justSaved" style="display: none" class="flex items-center gap-1.5 text-green-600 dark:text-green-400">
-                <x-app-icon name="check-circle" class="h-4 w-4" /> បានរក្សាទុក
+                <x-app-icon name="check-circle" class="h-4 w-4" /> {{ __('Saved') }}
               </span>
             </p>
           </div>
@@ -293,15 +293,15 @@
       @elseif ($section === 'guests')
         @php $usage = $invitation->max_recipients ? min(100, $stats['recipients'] / $invitation->max_recipients * 100) : 0; @endphp
         @include('livewire.pages.dashboard.partials.flow-steps', ['flow' => [
-          ['icon' => 'user-plus', 'title' => 'វាយឈ្មោះភ្ញៀវ', 'text' => 'ម្នាក់ម្ដងៗ'],
-          ['icon' => 'link', 'title' => 'ចុច Copy link', 'text' => 'តំណមានឈ្មោះភ្ញៀវនោះ'],
-          ['icon' => 'paper-airplane', 'title' => 'ផ្ញើទៅភ្ញៀវ', 'text' => 'Telegram · Messenger · SMS'],
-          ['icon' => 'eye', 'title' => 'មើល «Opened»', 'text' => 'ដឹងថាភ្ញៀវបានបើកហើយ'],
+          ['icon' => 'user-plus', 'title' => __("Type the guest's name"), 'text' => __('One at a time')],
+          ['icon' => 'link', 'title' => __('Press Copy link'), 'text' => __("The link carries that guest's name")],
+          ['icon' => 'paper-airplane', 'title' => __('Send it to the guest'), 'text' => 'Telegram · Messenger · SMS'],
+          ['icon' => 'eye', 'title' => __('Watch for «Opened»'), 'text' => __('Know when the guest has opened it')],
         ]])
         <div class="mt-6 rounded-xl border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
           <div class="flex items-center justify-between text-sm">
-            <span class="font-semibold text-plum-700 dark:text-plum-200">{{ $stats['recipients'] }} / {{ $invitation->max_recipients }} recipients</span>
-            <span class="text-plum-500 dark:text-plum-400">{{ $stats['viewed'] }} opened</span>
+            <span class="font-semibold text-plum-700 dark:text-plum-200">{{ __(':count / :max guests', ['count' => $stats['recipients'], 'max' => $invitation->max_recipients]) }}</span>
+            <span class="text-plum-500 dark:text-plum-400">{{ __(':count opened', ['count' => $stats['viewed']]) }}</span>
           </div>
           <div class="mt-2 h-2 overflow-hidden rounded-full bg-plum-100 dark:bg-plum-800">
             <div class="h-full rounded-full bg-brand-500" style="width: {{ $usage }}%"></div>
@@ -309,13 +309,13 @@
 
           @if ($invitation->recipients->count() < $invitation->max_recipients)
             <form wire:submit="addRecipient" class="mt-5 flex gap-2">
-              <input type="text" wire:model="newRecipientName" placeholder="Recipient's name"
+              <input type="text" wire:model="newRecipientName" placeholder="{{ __("Guest's name") }}"
                 wire:loading.attr="disabled" wire:target="addRecipient"
                 class="flex-1 rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none disabled:opacity-50 dark:border-plum-700" />
               <button type="submit" wire:loading.attr="disabled" wire:target="addRecipient"
                 class="shrink-0 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
-                <span wire:loading.remove wire:target="addRecipient">Add</span>
-                <span wire:loading wire:target="addRecipient">Adding...</span>
+                <span wire:loading.remove wire:target="addRecipient">{{ __('Add') }}</span>
+                <span wire:loading wire:target="addRecipient">{{ __('Adding…') }}</span>
               </button>
             </form>
             @error('newRecipientName') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
@@ -323,16 +323,16 @@
             <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-plum-100 pt-4 text-sm dark:border-plum-800">
               <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-plum-200 px-4 py-2 font-semibold text-plum-700 hover:border-brand-500 hover:text-brand-600 dark:border-plum-700 dark:text-plum-200">
                 <x-app-icon name="arrow-up-tray" class="h-4 w-4" />
-                <span wire:loading.remove wire:target="guestFile,importGuests">Import list (CSV)</span>
-                <span wire:loading wire:target="guestFile,importGuests">Importing...</span>
+                <span wire:loading.remove wire:target="guestFile,importGuests">{{ __('Import list (CSV)') }}</span>
+                <span wire:loading wire:target="guestFile,importGuests">{{ __('Importing…') }}</span>
                 <input type="file" accept=".csv,.txt,text/csv,text/plain" class="sr-only"
                   wire:model="guestFile" x-on:livewire-upload-finish="$wire.importGuests()" />
               </label>
-              <span class="text-xs text-plum-500 dark:text-plum-400">ឈ្មោះមួយក្នុងមួយជួរ (ជួរឈរទី១) · Excel → Save As → CSV UTF-8</span>
+              <span class="text-xs text-plum-500 dark:text-plum-400">{{ __('One name per row (first column) · Excel → Save As → CSV UTF-8') }}</span>
             </div>
             @error('guestFile') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
           @else
-            <p class="mt-5 text-sm text-plum-500 dark:text-plum-400">You've used all {{ $invitation->max_recipients }} recipient links on this plan.</p>
+            <p class="mt-5 text-sm text-plum-500 dark:text-plum-400">{{ __("You've used all :max guest links on this plan.", ['max' => $invitation->max_recipients]) }}</p>
           @endif
         </div>
 
@@ -340,7 +340,7 @@
           <div class="mt-4 flex justify-end">
             <button type="button" wire:click="exportGuests"
               class="inline-flex items-center gap-1.5 rounded-full border border-plum-200 px-4 py-2 text-sm font-semibold text-plum-700 hover:border-brand-500 hover:text-brand-600 dark:border-plum-700 dark:text-plum-200">
-              <x-app-icon name="upload" class="h-4 w-4" /> Export list (CSV)
+              <x-app-icon name="upload" class="h-4 w-4" /> {{ __('Export list (CSV)') }}
             </button>
           </div>
         @endif
@@ -353,11 +353,11 @@
                 <div class="flex items-center gap-2">
                   <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $recipient->recipient_name }}</p>
                   @if ($recipient->revoked_at)
-                    <span class="text-[11px] font-bold text-red-600 dark:text-red-400">Paused</span>
+                    <span class="text-[11px] font-bold text-red-600 dark:text-red-400">{{ __('Paused') }}</span>
                   @endif
                   @if ($recipient->viewed_at)
                     <span class="flex items-center gap-1 text-[11px] font-semibold text-brand-600 dark:text-brand-400">
-                      <x-app-icon name="eye" class="h-3.5 w-3.5" /> Opened
+                      <x-app-icon name="eye" class="h-3.5 w-3.5" /> {{ __('Opened') }}
                     </span>
                   @endif
                 </div>
@@ -366,43 +366,43 @@
               <div class="flex shrink-0 items-center gap-2">
                 <button type="button" x-data="{ copied: false }"
                   @click="navigator.clipboard.writeText({{ \Illuminate\Support\Js::from($this->shareCaption($recipient->recipient_name, $link)) }})
-                    .then(() => { copied = true; setTimeout(() => copied = false, 1500); window.toast('success', 'បានចម្លងតំណរបស់ «' + {{ \Illuminate\Support\Js::from($recipient->recipient_name) }} + '» — ឥឡូវផ្ញើទៅគេបាន។') })
-                    .catch(() => window.toast('error', 'ចម្លងមិនបាន — សូមចុចសង្កត់លើតំណ ហើយចម្លងដោយដៃ។'))"
+                    .then(() => { copied = true; setTimeout(() => copied = false, 1500); window.toast('success', @js(__("Copied «:name»'s link — you can send it now.", ['name' => $recipient->recipient_name]))) })
+                    .catch(() => window.toast('error', @js(__("Couldn't copy — press and hold the link and copy it by hand."))))"
                   class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
-                  <span x-show="!copied">Copy link</span>
-                  <span x-cloak x-show="copied" class="text-green-600 dark:text-green-400">Copied!</span>
+                  <span x-show="!copied">{{ __('Copy link') }}</span>
+                  <span x-cloak x-show="copied" class="text-green-600 dark:text-green-400">{{ __('Copied!') }}</span>
                 </button>
                 <button type="button" wire:click="toggleRecipient({{ $recipient->id }})"
                   class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
-                  {{ $recipient->revoked_at ? 'Restore link' : 'Pause link' }}
+                  {{ $recipient->revoked_at ? __('Restore link') : __('Pause link') }}
                 </button>
-                <button type="button" wire:click="rotateRecipient({{ $recipient->id }})" wire:confirm="Create a new link for {{ $recipient->recipient_name }}? The old link will stop working."
+                <button type="button" wire:click="rotateRecipient({{ $recipient->id }})" wire:confirm="{{ __('Create a new link for :name? The old link will stop working.', ['name' => $recipient->recipient_name]) }}"
                   class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
-                  New link
+                  {{ __('New link') }}
                 </button>
-                <button type="button" wire:click="removeRecipient({{ $recipient->id }})" wire:confirm="Remove {{ $recipient->recipient_name }}? Their link will stop working."
+                <button type="button" wire:click="removeRecipient({{ $recipient->id }})" wire:confirm="{{ __('Remove :name? Their link will stop working.', ['name' => $recipient->recipient_name]) }}"
                   class="text-plum-400 hover:text-red-600">
                   <x-app-icon name="trash" class="h-4 w-4" />
                 </button>
               </div>
             </div>
           @empty
-            <p class="rounded-xl border border-dashed border-plum-300 py-10 text-center text-sm text-plum-500 dark:border-plum-700 dark:text-plum-400">No recipients yet — add one above.</p>
+            <p class="rounded-xl border border-dashed border-plum-300 py-10 text-center text-sm text-plum-500 dark:border-plum-700 dark:text-plum-400">{{ __('No guests yet — add one above.') }}</p>
           @endforelse
         </div>
 
       @elseif ($section === 'responses')
         @unless ($invitation->fieldUnlocked('rsvp_enabled'))
           <p class="mt-4 flex items-center gap-2 rounded-lg bg-gold-500/10 px-4 py-3 text-sm text-gold-700 dark:text-gold-400">
-            <x-app-icon name="lock-closed" class="h-4 w-4" /> RSVP isn't included in your plan, so guests can't respond yet.
+            <x-app-icon name="lock-closed" class="h-4 w-4" /> {{ __("RSVP isn't included in your plan, so guests can't respond yet.") }}
           </p>
         @endunless
 
         <div class="mt-6 grid grid-cols-3 gap-3">
           @foreach ([
-            ['label' => 'ចូលរួម', 'value' => $stats['attending'], 'class' => 'text-green-600 dark:text-green-400'],
-            ['label' => 'មិនចូលរួម', 'value' => $stats['declined'], 'class' => 'text-red-600 dark:text-red-400'],
-            ['label' => 'មិនទាន់ឆ្លើយ', 'value' => $stats['recipients'] - $stats['attending'] - $stats['declined'], 'class' => 'text-plum-900 dark:text-white'],
+            ['label' => __('Attending'), 'value' => $stats['attending'], 'class' => 'text-green-600 dark:text-green-400'],
+            ['label' => __('Not attending'), 'value' => $stats['declined'], 'class' => 'text-red-600 dark:text-red-400'],
+            ['label' => __('No answer yet'), 'value' => $stats['recipients'] - $stats['attending'] - $stats['declined'], 'class' => 'text-plum-900 dark:text-white'],
           ] as $tile)
             <div class="rounded-xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
               <p class="text-xs font-semibold text-plum-500 dark:text-plum-400">{{ $tile['label'] }}</p>
@@ -421,15 +421,15 @@
                 @endif
               </div>
               @if ($recipient->rsvp_status === 'yes')
-                <span class="shrink-0 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">ចូលរួម</span>
+                <span class="shrink-0 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">{{ __('Attending') }}</span>
               @elseif ($recipient->rsvp_status === 'no')
-                <span class="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">មិនចូលរួម</span>
+                <span class="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">{{ __('Not attending') }}</span>
               @else
-                <span class="shrink-0 rounded-full bg-plum-100 px-2.5 py-1 text-[11px] font-bold text-plum-500 dark:bg-plum-800 dark:text-plum-400">មិនទាន់ឆ្លើយ</span>
+                <span class="shrink-0 rounded-full bg-plum-100 px-2.5 py-1 text-[11px] font-bold text-plum-500 dark:bg-plum-800 dark:text-plum-400">{{ __('No answer yet') }}</span>
               @endif
             </div>
           @empty
-            <p class="py-10 text-center text-sm text-plum-500 dark:text-plum-400">No guests yet.</p>
+            <p class="py-10 text-center text-sm text-plum-500 dark:text-plum-400">{{ __('No guests yet.') }}</p>
           @endforelse
         </div>
       @endif
