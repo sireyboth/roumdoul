@@ -6,11 +6,9 @@ use App\Models\Category;
 use App\Models\Review;
 use App\Models\Service;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('ROUMDOUL | Premium Digital Services')]
 class HomePage extends Component
 {
     public function render()
@@ -29,6 +27,6 @@ class HomePage extends Component
                 ->limit(20)
                 ->get(),
             'totalActiveServices' => Service::where('is_active', true)->count(),
-        ]);
+        ])->title(__('ROUMDOUL | Premium Digital Services'));
     }
 }

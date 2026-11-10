@@ -30,67 +30,67 @@
         <div class="hero-slide-content absolute inset-0 flex flex-col items-center justify-center">
           <span class="mb-5 flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300 backdrop-blur animate-invite-glow" style="--accent:#d9b66a">
             <x-app-icon name="bolt" class="h-3.5 w-3.5" />
-            ហាងសេវាកម្មឌីជីថលកម្រិតខ្ពស់
+            {{ __('Premium digital services store') }}
           </span>
           <h1 class="max-w-3xl text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl lg:text-6xl">
-            ROUMDOUL &mdash; សេវាកម្មឌីជីថលពិសេស
-            <span class="block bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">តម្លៃសមរម្យ</span>
+            ROUMDOUL &mdash; {{ __('premium digital services') }}
+            <span class="block bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">{{ __('at fair prices') }}</span>
           </h1>
           <p class="mt-5 max-w-xl text-sm text-plum-300 sm:text-base">
-            Gemini Pro, ChatGPT Plus, Envato, Netflix, Canva Pro និងកម្មវិធីល្បីៗជាច្រើនទៀត ដឹកជញ្ជូនភ្លាមៗ ដោយសុវត្ថិភាព ១០០%។
+            {{ __('Gemini Pro, ChatGPT Plus, Envato, Netflix, Canva Pro and many more popular apps — delivered instantly and 100% securely.') }}
           </p>
         </div>
         <div class="hero-slide-content absolute inset-0 flex flex-col items-center justify-center">
           <span class="mb-5 flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300 backdrop-blur animate-invite-glow" style="--accent:#d9b66a">
             <x-app-icon name="bolt" class="h-3.5 w-3.5" />
-            ដឹកជញ្ជូនភ្លាមៗ
+            {{ __('Instant delivery') }}
           </span>
           <h1 class="max-w-3xl text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl lg:text-6xl">
-            បញ្ជាទិញរួច ទទួលបានគណនីភ្លាមៗ
-            <span class="block bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">មិនចាំបាច់រង់ចាំយូរឡើយ</span>
+            {{ __('Order and get your account instantly') }}
+            <span class="block bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">{{ __('no long waits') }}</span>
           </h1>
           <p class="mt-5 max-w-xl text-sm text-plum-300 sm:text-base">
-            ទទួលបានគណនី/លេខកូដភ្លាមៗក្រោយបញ្ជាទិញជោគជ័យ — សម្រាប់សេវាកម្មឌីជីថលគ្រប់ប្រភេទ។
+            {{ __('Receive your account or code the moment your order goes through — for every kind of digital service.') }}
           </p>
         </div>
         <div class="hero-slide-content absolute inset-0 flex flex-col items-center justify-center">
           <span class="mb-5 flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300 backdrop-blur animate-invite-glow" style="--accent:#d9b66a">
             <x-app-icon name="shield-check" class="h-3.5 w-3.5" />
-            សុវត្ថិភាព ១០០%
+            {{ __('100% secure') }}
           </span>
           <h1 class="max-w-3xl text-4xl font-extrabold leading-[1.1] text-white sm:text-5xl lg:text-6xl">
-            គណនីស្របច្បាប់ ធានាដោយ
-            <span class="block bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">ក្រុមការងាររបស់យើង</span>
+            {{ __('Genuine accounts, guaranteed by') }}
+            <span class="block bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 bg-clip-text text-transparent">{{ __('our own team') }}</span>
           </h1>
           <p class="mt-5 max-w-xl text-sm text-plum-300 sm:text-base">
-            គាំទ្រ ២៤/៧ ជាមួយតម្លៃប្រកួតប្រជែង និងការធានាគុណភាពគ្រប់ការបញ្ជាទិញ។
+            {{ __('24/7 support, competitive prices and a quality guarantee on every order.') }}
           </p>
         </div>
       </div>
       <div data-reveal class="mt-9 flex flex-wrap items-center justify-center gap-3">
         <a href="/shop" wire:navigate
           class="rounded-md bg-gold-500 px-7 py-3.5 text-sm font-bold text-brand-950 shadow-lg shadow-gold-500/20 transition-all hover:-translate-y-0.5 hover:bg-gold-400 hover:shadow-xl hover:shadow-gold-500/30">
-          ចាប់ផ្តើមទិញឥឡូវនេះ
+          {{ __('Start shopping now') }}
         </a>
         <a href="#categories"
           class="rounded-md border border-white/25 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur transition-all hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10">
-          មើលប្រភេទទាំងអស់
+          {{ __('Browse all categories') }}
         </a>
       </div>
     </div>
 
-    <a href="#stats" aria-label="Scroll down"
+    <a href="#stats" aria-label="{{ __('Scroll down') }}"
       class="absolute inset-x-0 bottom-16 mx-auto flex h-9 w-9 animate-bounce items-center justify-center rounded-full border border-white/20 text-white/60 transition-colors hover:text-white sm:bottom-20">
       <x-app-icon name="chevron-down" class="h-4 w-4" />
     </a>
 
     <div class="absolute inset-x-0 bottom-5 flex items-center justify-center gap-4">
-      <button id="hero-prev" type="button" aria-label="Previous"
+      <button id="hero-prev" type="button" aria-label="{{ __('Previous') }}"
         class="flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white">
         <x-app-icon name="chevron-left" class="h-5 w-5" />
       </button>
       <div id="hero-dots" class="flex items-center gap-2"></div>
-      <button id="hero-next" type="button" aria-label="Next"
+      <button id="hero-next" type="button" aria-label="{{ __('Next') }}"
         class="flex h-9 w-9 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white">
         <x-app-icon name="chevron-right" class="h-5 w-5" />
       </button>
@@ -104,21 +104,21 @@
         <span class="text-2xl font-extrabold text-brand-700 dark:text-brand-300 sm:text-3xl">
           <span data-counter data-counter-target="{{ $categories->count() }}">0</span><span>+</span>
         </span>
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">ប្រភេទសេវាកម្ម</span>
+        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('Service categories') }}</span>
       </div>
       <div class="flex flex-col items-center gap-1 text-center sm:items-start sm:text-left">
         <span class="text-2xl font-extrabold text-brand-700 dark:text-brand-300 sm:text-3xl">
           <span data-counter data-counter-target="{{ $totalActiveServices }}">0</span><span>+</span>
         </span>
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">ផលិតផលឌីជីថល</span>
+        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('Digital products') }}</span>
       </div>
       <div class="flex flex-col items-center gap-1.5 text-center sm:items-start sm:text-left">
         <x-app-icon name="truck" class="h-6 w-6 text-brand-700 dark:text-brand-300" />
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">ដឹកជញ្ជូនភ្លាមៗ</span>
+        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('Instant delivery') }}</span>
       </div>
       <div class="flex flex-col items-center gap-1.5 text-center sm:items-start sm:text-left">
         <x-app-icon name="clock" class="h-6 w-6 text-brand-700 dark:text-brand-300" />
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">គាំទ្រ ២៤/៧</span>
+        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('24/7 support') }}</span>
       </div>
     </div>
   </section>
@@ -145,12 +145,12 @@
           <div>
             <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold-600 dark:text-gold-400">
               <x-app-icon name="sparkles" class="h-3.5 w-3.5" />
-              ពេញនិយមបំផុត
+              {{ __('Most popular') }}
             </span>
-            <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">សេវាកម្មពិសេស</h2>
+            <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">{{ __('Featured services') }}</h2>
           </div>
           <a href="/shop" wire:navigate class="group hidden items-center gap-1 text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300 sm:flex">
-            មើលទាំងអស់
+            {{ __('View all') }}
             <x-app-icon name="chevron-right" class="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
           </a>
         </div>
@@ -167,8 +167,8 @@
   {{-- Category quick links --}}
   <section id="categories" class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
     <div data-reveal class="mb-8">
-      <h2 class="text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">ស្វែងរកតាមប្រភេទ</h2>
-      <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">ជ្រើសរើសប្រភេទសេវាកម្មដែលអ្នកត្រូវការ</p>
+      <h2 class="text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">{{ __('Browse by category') }}</h2>
+      <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">{{ __('Choose the type of service you need') }}</p>
     </div>
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       {{-- Staggered offsets (nth position, wraps every 3) on a wrapper div — the
@@ -199,15 +199,15 @@
 
     <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div data-reveal class="mb-10 text-center">
-        <h2 class="text-xl font-bold text-white sm:text-2xl">ហេតុអ្វីជ្រើសរើស ROUMDOUL?</h2>
+        <h2 class="text-xl font-bold text-white sm:text-2xl">{{ __('Why choose ROUMDOUL?') }}</h2>
       </div>
       {{-- Bento: the first reason runs as a wide banner, the rest sit three-up below it --}}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-6">
         @foreach ([
-            ['icon' => 'bolt', 'title' => 'ដឹកជញ្ជូនភ្លាមៗ', 'desc' => 'ទទួលបានគណនី/លេខកូដភ្លាមៗក្រោយបញ្ជាទិញជោគជ័យ — មិនចាំបាច់រង់ចាំយូរឡើយ'],
-            ['icon' => 'shield-check', 'title' => 'សុវត្ថិភាព ១០០%', 'desc' => 'គណនីស្របច្បាប់ ធានាដោយក្រុមការងាររបស់យើង'],
-            ['icon' => 'chat', 'title' => 'គាំទ្រ ២៤/៧', 'desc' => 'ក្រុមការងារយើងខ្ញុំរួចរាល់ជួយឆ្លើយរាល់ពេលវេលា'],
-            ['icon' => 'heart', 'title' => 'តម្លៃសមរម្យបំផុត', 'desc' => 'តម្លៃប្រកួតប្រជែង ជាមួយការធានាគុណភាព'],
+            ['icon' => 'bolt', 'title' => __('Instant delivery'), 'desc' => __('Get your account or code right after a successful order — no long waits')],
+            ['icon' => 'shield-check', 'title' => __('100% secure'), 'desc' => __('Genuine accounts, guaranteed by our team')],
+            ['icon' => 'chat', 'title' => __('24/7 support'), 'desc' => __('Our team is ready to help at any hour')],
+            ['icon' => 'heart', 'title' => __('Unbeatable prices'), 'desc' => __('Competitive prices with a quality guarantee')],
         ] as $item)
           <div data-reveal @class([
             'group col-span-2 rounded-xl border border-white/10 p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-gold-400/30 hover:bg-white/5',
@@ -236,9 +236,9 @@
       <div data-reveal class="mb-10 text-center">
         <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold-600 dark:text-gold-400">
           <x-app-icon name="sparkles" class="h-3.5 w-3.5" />
-          ការវាយតម្លៃ
+          {{ __('Reviews') }}
         </span>
-        <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">អតិថិជនរបស់យើងនិយាយអ្វី</h2>
+        <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">{{ __('What our customers say') }}</h2>
       </div>
     </div>
 
@@ -247,9 +247,9 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           @foreach ([
-              ['name' => 'សុខា', 'text' => 'ទិញ Gemini Pro នៅទីនេះ ដឹកជញ្ជូនលឿនណាស់ ក្នុងរយៈពេលតែប៉ុន្មាននាទី!'],
-              ['name' => 'ដារា', 'text' => 'តម្លៃសមរម្យ សេវាកម្មល្អ ខ្ញុំណែនាំមិត្តភក្តិទាំងអស់ឱ្យមកទិញនៅទីនេះ។'],
-              ['name' => 'ចន្ទថា', 'text' => 'ក្រុមការងារឆ្លើយតបលឿន និងមានភាពរួសរាយ។ ជឿជាក់បាន ១០០%!'],
+              ['name' => __('Sokha'), 'text' => __('Bought Gemini Pro here and it was delivered in just a few minutes. Super fast!')],
+              ['name' => __('Dara'), 'text' => __('Fair prices and great service. I tell all my friends to buy here.')],
+              ['name' => __('Chantha'), 'text' => __('The team replies quickly and is so friendly. 100% trustworthy!')],
           ] as $t)
             <div @class(['sm:-translate-y-3' => $loop->iteration === 2])>
               <div data-reveal class="h-full rounded-lg border border-plum-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-plum-900/5 dark:border-plum-800 dark:bg-plum-900">
@@ -284,7 +284,7 @@
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-plum-100 text-brand-700 ring-2 ring-plum-100 dark:bg-plum-800 dark:text-brand-300 dark:ring-plum-800">
                   <x-app-icon name="check-circle" class="h-4.5 w-4.5" />
                 </span>
-                <p class="text-sm font-semibold text-plum-900 dark:text-white">អតិថិជនដែលបានផ្ទៀងផ្ទាត់</p>
+                <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ __('Verified customer') }}</p>
               </div>
             </div>
           @endforeach
@@ -307,7 +307,7 @@
                   <span class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-brand-700 ring-2 ring-plum-100 dark:bg-plum-800 dark:text-brand-300 dark:ring-plum-800">
                     <x-app-icon name="check-circle" class="h-4.5 w-4.5" />
                   </span>
-                  <p class="text-sm font-semibold text-plum-900 dark:text-white">អតិថិជនដែលបានផ្ទៀងផ្ទាត់</p>
+                  <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ __('Verified customer') }}</p>
                 </div>
               </div>
             </div>
@@ -322,12 +322,12 @@
     <div data-reveal class="relative flex flex-col items-center gap-5 overflow-hidden rounded-lg bg-gradient-to-r from-brand-700 via-brand-600 to-brand-700 bg-[length:200%_200%] px-6 py-12 text-center shadow-lg shadow-brand-700/20 animate-invite-gradient sm:flex-row sm:justify-between sm:text-left">
       <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gold-400/20 blur-3xl"></div>
       <div class="relative">
-        <h2 class="text-xl font-bold text-white sm:text-2xl">ត្រៀមខ្លួនរួចរាល់ហើយឬនៅ?</h2>
-        <p class="mt-1 text-sm text-brand-100">ចាប់ផ្តើមទិញសេវាកម្មឌីជីថលដែលអ្នកចង់បានឥឡូវនេះ</p>
+        <h2 class="text-xl font-bold text-white sm:text-2xl">{{ __('Ready to get started?') }}</h2>
+        <p class="mt-1 text-sm text-brand-100">{{ __('Get the digital services you want, starting today') }}</p>
       </div>
       <a href="/shop" wire:navigate
         class="relative shrink-0 rounded-md bg-white px-6 py-3 text-sm font-bold text-brand-700 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-plum-100 hover:shadow-xl">
-        ចាប់ផ្តើមទិញ
+        {{ __('Start shopping') }}
       </a>
     </div>
   </section>
