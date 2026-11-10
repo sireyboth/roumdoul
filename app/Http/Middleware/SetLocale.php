@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SetLocale
 {
-    public const DEFAULT = 'km';
+    public const DEFAULT = 'en';
 
     public const SUPPORTED = ['km', 'en'];
 

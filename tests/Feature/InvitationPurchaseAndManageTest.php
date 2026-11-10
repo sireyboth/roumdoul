@@ -501,7 +501,7 @@ class InvitationPurchaseAndManageTest extends TestCase
 
         $csv = base64_decode($component->effects['download']['content']);
         $this->assertStringStartsWith("\xEF\xBB\xBF".implode(',', [__('Name'), __('Link'), __('Opened'), __('RSVP')]), $csv);
-        $this->assertStringContainsString('"សុខ សុភា",'.route('invitation.show', [$invitation, $recipient]).',,មក', $csv);
+        $this->assertStringContainsString('"សុខ សុភា",'.route('invitation.show', [$invitation, $recipient]).',,'.__('Coming'), $csv);
     }
 
     public function test_removing_a_recipient_deletes_it(): void

@@ -19,20 +19,20 @@ class LocalizationTest extends TestCase
 
     private const KHMER_GUEST = 'ឯកឧត្តម ស៊ុន វណ្ណារិទ្ធ';
 
-    public function test_the_default_locale_is_khmer(): void
+    public function test_the_default_locale_is_english(): void
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('<html lang="km">', false);
+            ->assertSee('<html lang="en">', false);
 
-        $this->assertSame('km', App::getLocale());
+        $this->assertSame('en', App::getLocale());
     }
 
-    public function test_an_unsupported_session_locale_falls_back_to_khmer(): void
+    public function test_an_unsupported_session_locale_falls_back_to_english(): void
     {
         $this->withSession([SetLocale::SESSION_KEY => 'fr'])
             ->get('/')
-            ->assertSee('<html lang="km">', false);
+            ->assertSee('<html lang="en">', false);
     }
 
     public function test_switching_language_stores_it_in_the_session_and_redirects_back(): void
@@ -245,17 +245,18 @@ class LocalizationTest extends TestCase
         $customer = Customer::factory()->create();
         $invitation = Invitation::factory()->create(['customer_id' => $customer->id]);
 
+        // default (English) owner: English placeholder, but the page itself stays Khmer
         $this->actingAs($customer, 'customer')
             ->get(route('dashboard.invitations.preview', $invitation))
             ->assertOk()
             ->assertSee('<html lang="km">', false)
-            ->assertSee('ភ្ញៀវកិត្តិយស');
+            ->assertSee('Honored guest');
 
-        $this->withSession([SetLocale::SESSION_KEY => 'en'])
+        $this->withSession([SetLocale::SESSION_KEY => 'km'])
             ->actingAs($customer, 'customer')
             ->get(route('dashboard.invitations.preview', $invitation))
             ->assertSee('<html lang="km">', false)
-            ->assertSee('Honored guest');
+            ->assertSee('ភ្ញៀវកិត្តិយស');
     }
 
     public function test_every_translation_key_exists_in_both_languages(): void
