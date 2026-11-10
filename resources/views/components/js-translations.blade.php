@@ -1,7 +1,7 @@
 {{-- Strings used by resources/js (see resources/js/modules/i18n.js). Listed here explicitly so
      `php artisan lang:missing` sees every key. --}}
-<script>
-  window.__i18n = @json([
+@php
+  $strings = [
     'Your session has expired. Please reload the page (unsaved changes may be lost).' => __('Your session has expired. Please reload the page (unsaved changes may be lost).'),
     'Reload' => __('Reload'),
     "You can't do this — the invitation may have expired or not been paid yet." => __("You can't do this — the invitation may have expired or not been paid yet."),
@@ -19,5 +19,8 @@
     '":name" is not an MP3 or M4A audio file.' => __('":name" is not an MP3 or M4A audio file.'),
     '":name" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.' => __('":name" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.'),
     'Slide :number' => __('Slide :number'),
-  ]);
+  ];
+@endphp
+<script>
+  window.__i18n = {{ \Illuminate\Support\Js::from($strings) }};
 </script>
