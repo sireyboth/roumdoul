@@ -32,11 +32,11 @@ class ContactPageForm extends Component
     public function services(): array
     {
         return [
-            'order' => 'ជំនួយអំពីការបញ្ជាទិញ',
-            'payment' => 'សំណួរអំពីការទូទាត់ប្រាក់',
-            'product' => 'សំណួរអំពីផលិតផល',
-            'partnership' => 'ភាពជាដៃគូ / ភ្នាក់ងារចែកចាយ',
-            'other' => 'ផ្សេងៗ',
+            'order' => __('Help with an order'),
+            'payment' => __('Payment question'),
+            'product' => __('Product question'),
+            'partnership' => __('Partnership / Reseller'),
+            'other' => __('Other'),
         ];
     }
 

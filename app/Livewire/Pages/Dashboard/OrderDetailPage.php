@@ -2,15 +2,12 @@
 
 namespace App\Livewire\Pages\Dashboard;
 
-use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('លម្អិតការបញ្ជាទិញ | ROUMDOUL')]
 class OrderDetailPage extends Component
 {
     public Order $order;
@@ -26,7 +23,12 @@ class OrderDetailPage extends Component
     public function render()
     {
         return view('livewire.pages.dashboard.order-detail-page', [
-            'statusLabels' => OrderForm::STATUSES,
-        ]);
+            'statusLabels' => [
+                'pending_payment' => __('Pending payment'),
+                'paid' => __('Paid'),
+                'fulfilled' => __('Fulfilled'),
+                'cancelled' => __('Cancelled'),
+            ],
+        ])->title(__('Order details | ROUMDOUL'));
     }
 }

@@ -45,7 +45,7 @@ class PublicFeedbackForm extends Component
 
         $limiterKey = 'feedback|'.request()->ip();
         if (RateLimiter::tooManyAttempts($limiterKey, (int) config('moderation.feedback_per_hour_per_ip', 5))) {
-            $this->addError('comment', 'សូមព្យាយាមម្ដងទៀតនៅពេលក្រោយ។ / Too many submissions — please try again later.');
+            $this->addError('comment', __('Too many submissions — please try again later.'));
 
             return;
         }
@@ -58,7 +58,7 @@ class PublicFeedbackForm extends Component
 
         if ($validated['comment'] === '' || $moderator->isRecentDuplicateReview($validated['comment'])) {
             ModerationLog::record('review_rejected', 'review', null, ['duplicate_or_empty'], $moderator->fingerprint($validated['comment']));
-            $this->addError('comment', 'មតិនេះត្រូវបានផ្ញើរួចហើយ។ / This comment has already been submitted.');
+            $this->addError('comment', __('This comment has already been submitted.'));
 
             return;
         }

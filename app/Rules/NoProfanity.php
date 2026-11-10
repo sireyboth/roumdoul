@@ -25,9 +25,9 @@ class NoProfanity implements ValidationRule
         }
 
         $fail(match (true) {
-            in_array(ContentModerator::REASON_LINK, $result['reasons'], true) => 'សូមកុំដាក់តំណភ្ជាប់ក្នុងមតិយោបល់។ / Please don\'t include links in your message.',
-            in_array(ContentModerator::REASON_BANNED, $result['reasons'], true) => 'សូមកែសម្រួលមតិយោបល់របស់អ្នក — មានពាក្យមិនសមរម្យ។ / Please revise your comment — it contains inappropriate language.',
-            default => 'សូមកែសម្រួលមតិយោបល់របស់អ្នក។ / Please revise your message — it could not be accepted.',
+            in_array(ContentModerator::REASON_LINK, $result['reasons'], true) => __("Please don't include links in your message."),
+            in_array(ContentModerator::REASON_BANNED, $result['reasons'], true) => __('Please revise your comment — it contains inappropriate language.'),
+            default => __('Please revise your message — it could not be accepted.'),
         });
     }
 }

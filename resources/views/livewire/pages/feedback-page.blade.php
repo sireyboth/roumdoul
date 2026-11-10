@@ -6,11 +6,10 @@
           ROUMDOUL
         </span>
         <h1 class="text-2xl font-bold leading-tight text-white drop-shadow-sm sm:text-3xl md:text-4xl">
-          មតិយោបល់របស់អ្នកមានតម្លៃសម្រាប់យើង
+          {{ __('Your feedback matters to us') }}
         </h1>
         <p class="max-w-2xl text-sm leading-relaxed text-brand-100 sm:text-base">
-          សូមចំណាយពេលពីរបីនាទី ដើម្បីចែករំលែកបទពិសោធន៍របស់អ្នកជាមួយ ROUMDOUL។ មិនចាំបាច់ចុះឈ្មោះ ឬចូលគណនីទេ —
-          គ្រាន់តែបំពេញទម្រង់ខាងក្រោម។
+          {{ __('Please take a few minutes to share your experience with ROUMDOUL. No need to sign up or log in — just fill in the form below.') }}
         </p>
       </div>
     </section>
@@ -18,9 +17,9 @@
     <section class="bg-white py-16 transition-colors dark:bg-plum-950 sm:py-20">
       <div class="mx-auto max-w-xl px-4 sm:px-6 lg:px-8">
         <div class="rounded-lg border border-plum-200 bg-white p-6 shadow-sm transition-colors dark:border-plum-800 dark:bg-plum-900 sm:p-8">
-          <h2 class="mb-1 text-lg font-bold text-plum-900 dark:text-white">ផ្ញើមតិយោបល់របស់អ្នក</h2>
+          <h2 class="mb-1 text-lg font-bold text-plum-900 dark:text-white">{{ __('Send your feedback') }}</h2>
           <p class="mb-6 text-sm text-plum-500 dark:text-plum-400">
-            មតិយោបល់ដែលបានអនុម័តអាចនឹងបង្ហាញនៅលើទំព័រដើមរបស់យើងជាសាធារណៈ។
+            {{ __('Approved feedback may be shown publicly on our home page.') }}
           </p>
           <livewire:components.public-feedback-form />
         </div>

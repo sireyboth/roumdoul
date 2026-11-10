@@ -6,11 +6,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('ចូលគណនី | ROUMDOUL')]
 class LoginPage extends Component
 {
     public string $email = '';
@@ -32,7 +30,7 @@ class LoginPage extends Component
 
     protected function messages(): array
     {
-        return ['terms.accepted' => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់ ដើម្បីបន្ត។'];
+        return ['terms.accepted' => __('Please accept the Terms of Use to continue.')];
     }
 
     /**
@@ -52,14 +50,14 @@ class LoginPage extends Component
 
         if (RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             $seconds = RateLimiter::availableIn($this->throttleKey());
-            $this->addError('email', "ការសាកល្បងចូលច្រើនពេក។ សូមព្យាយាមម្តងទៀតក្នុងរយៈពេល {$seconds} វិនាទី។");
+            $this->addError('email', __('auth.throttle', ['seconds' => $seconds]));
 
             return;
         }
 
         if (! Auth::guard('customer')->attempt($credentials, $this->remember)) {
             RateLimiter::hit($this->throttleKey(), 60);
-            $this->addError('email', 'អ៊ីមែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។');
+            $this->addError('email', __('auth.failed'));
 
             return;
         }
@@ -75,6 +73,6 @@ class LoginPage extends Component
 
     public function render()
     {
-        return view('livewire.pages.auth.login-page');
+        return view('livewire.pages.auth.login-page')->title(__('Log in | ROUMDOUL'));
     }
 }
