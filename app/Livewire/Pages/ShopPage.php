@@ -5,7 +5,6 @@ namespace App\Livewire\Pages;
 use App\Models\Category;
 use App\Models\Service;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -33,7 +32,6 @@ class ShopPage extends Component
         $this->resetPage();
     }
 
-    #[Title('ហាង | ROUMDOUL')]
     public function render()
     {
         $query = Service::query()->with(['category', 'plans'])->where('is_active', true);
@@ -60,6 +58,6 @@ class ShopPage extends Component
         return view('livewire.pages.shop-page', [
             'services' => $query->paginate(12),
             'categories' => Category::orderBy('sort_order')->get(),
-        ]);
+        ])->title(__('Shop').' | ROUMDOUL');
     }
 }

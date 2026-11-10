@@ -130,12 +130,12 @@ class CartService
         $promoCode = PromoCode::where('code', strtoupper(trim($code)))->first();
 
         if (! $promoCode || ! $promoCode->isValid()) {
-            return ['success' => false, 'message' => 'លេខកូដមិនត្រឹមត្រូវ ឬផុតកំណត់ហើយ។'];
+            return ['success' => false, 'message' => __('This code is invalid or has expired.')];
         }
 
         Session::put(self::PROMO_SESSION_KEY, $promoCode->code);
 
-        return ['success' => true, 'message' => 'បានប្រើប្រាស់លេខកូដដោយជោគជ័យ! ('.$promoCode->label().')'];
+        return ['success' => true, 'message' => __('Code applied successfully! (:label)', ['label' => $promoCode->label()])];
     }
 
     public function removePromoCode(): void

@@ -1,7 +1,7 @@
 @props(['class' => ''])
 
 <button type="button" @click="$store.theme.set($store.theme.current === 'dark' ? 'light' : 'dark')" role="switch"
-  :aria-checked="($store.theme.current === 'dark').toString()" aria-label="Toggle dark mode"
+  :aria-checked="($store.theme.current === 'dark').toString()" aria-label="{{ __('Toggle dark mode') }}"
   {{ $attributes->merge(['class' => 'relative h-7 w-14 shrink-0 items-center rounded-full p-1 transition-colors duration-300 ease-in-out '.$class]) }}
   :class="$store.theme.current === 'dark' ? 'bg-plum-800' : 'bg-brand-100'">
   <span
