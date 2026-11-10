@@ -35,7 +35,7 @@
         </template>
       </div>
 
-      <button type="button" @click="$store.toasts.dismiss(toast.id)" aria-label="Close"
+      <button type="button" @click="$store.toasts.dismiss(toast.id)" aria-label="{{ __('Close') }}"
         class="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-plum-400 hover:bg-plum-100 hover:text-plum-700 dark:hover:bg-plum-800 dark:hover:text-plum-200">
         <x-app-icon name="x-mark" class="h-4 w-4" />
       </button>

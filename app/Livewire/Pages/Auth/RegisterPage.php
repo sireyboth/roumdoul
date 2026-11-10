@@ -7,11 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('បង្កើតគណនី | ROUMDOUL')]
 class RegisterPage extends Component
 {
     public string $name = '';
@@ -36,7 +34,7 @@ class RegisterPage extends Component
 
     protected function messages(): array
     {
-        return ['terms.accepted' => 'សូមយល់ព្រមតាមលក្ខខណ្ឌប្រើប្រាស់ ដើម្បីបន្ត។'];
+        return ['terms.accepted' => __('Please accept the Terms of Use to continue.')];
     }
 
     public function register(): void
@@ -47,7 +45,7 @@ class RegisterPage extends Component
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
-            $this->addError('email', "សំណើច្រើនពេក។ សូមព្យាយាមម្តងទៀតក្នុងរយៈពេល {$seconds} វិនាទី។");
+            $this->addError('email', __('Too many requests. Please try again in :seconds seconds.', ['seconds' => $seconds]));
 
             return;
         }
@@ -69,6 +67,6 @@ class RegisterPage extends Component
 
     public function render()
     {
-        return view('livewire.pages.auth.register-page');
+        return view('livewire.pages.auth.register-page')->title(__('Create an account | ROUMDOUL'));
     }
 }

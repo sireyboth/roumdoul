@@ -1,10 +1,11 @@
+{{-- LEGAL REVIEW PENDING: Khmer-only for now; an English version needs legal review before it is published. --}}
 <div>
     <section class="bg-brand-950 py-16 sm:py-24">
       <div class="mx-auto flex max-w-4xl flex-col items-center gap-5 px-4 text-center sm:gap-6 sm:px-6 lg:px-8">
         <span class="rounded-full border border-gold-400/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300">
           ROUMDOUL
         </span>
-        <h1 class="text-2xl font-bold leading-tight text-white drop-shadow-sm sm:text-3xl md:text-4xl">
+        <h1 lang="km" class="text-2xl font-bold leading-tight text-white drop-shadow-sm sm:text-3xl md:text-4xl">
           លក្ខខណ្ឌប្រើប្រាស់
         </h1>
         <p class="max-w-2xl text-sm leading-relaxed text-brand-100 sm:text-base">
@@ -15,11 +16,17 @@
 
     <section class="bg-white py-16 transition-colors dark:bg-plum-950 sm:py-20">
       <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        @if (app()->getLocale() !== 'km')
+          <div lang="en" class="mb-8 rounded-lg border border-gold-300 bg-gold-500/10 px-4 py-3 text-sm text-plum-700 dark:text-plum-200">
+            {{ __('This page is currently available in Khmer only.') }}
+          </div>
+        @endif
+
         <p class="mb-10 text-xs font-semibold uppercase tracking-wide text-plum-400 dark:text-plum-500">
           ធ្វើបច្ចុប្បន្នភាពចុងក្រោយ / Last updated: {{ now()->format('F j, Y') }}
         </p>
 
-        <div class="flex flex-col gap-10 text-sm leading-relaxed text-plum-700 dark:text-plum-300">
+        <div lang="km" class="flex flex-col gap-10 text-sm leading-relaxed text-plum-700 dark:text-plum-300">
           <div>
             <h2 class="mb-2 text-lg font-bold text-plum-900 dark:text-white">១. អំពីសេវាកម្ម</h2>
             <p class="text-plum-500 dark:text-plum-400">1. About the service</p>

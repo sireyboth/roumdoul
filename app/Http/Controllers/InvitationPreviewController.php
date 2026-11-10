@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\SetLocale;
 use App\Models\Invitation;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,7 +20,9 @@ class InvitationPreviewController extends Controller
 
         return view('invitations.show', [
             'view' => $invitation->template->view,
-            'recipientName' => 'Guest',
+            // Placeholder for "this guest's name". The page itself is forced to Khmer
+            // (guest.locale), so read the owner's own site language from the session.
+            'recipientName' => __('Honored guest', locale: session(SetLocale::SESSION_KEY, SetLocale::DEFAULT)),
             'recipient' => null,
             'fields' => $invitation->field_values ?? [],
             'invitation' => $invitation,

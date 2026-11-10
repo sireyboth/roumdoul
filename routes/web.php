@@ -20,12 +20,14 @@ use App\Http\Controllers\InvitationPreviewController;
 use App\Http\Controllers\InvitationRsvpController;
 use App\Http\Controllers\InvitationShowController;
 use App\Http\Controllers\InvitationTemplateDemoController;
+use App\Http\Controllers\LocaleSwitchController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomePage::class)->name('home');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/lang/{locale}', LocaleSwitchController::class)->whereIn('locale', ['km', 'en'])->name('locale.switch');
 
 Route::get('/shop', ShopPage::class)->name('shop');
 Route::get('/shop/{category:slug}', ShopPage::class)->name('shop.category');
@@ -39,11 +41,14 @@ Route::get('/feedback', FeedbackPage::class)->middleware('throttle:20,1')->name(
 Route::get('/privacy', PrivacyPolicyPage::class)->name('privacy');
 Route::get('/terms', TermsPage::class)->name('terms');
 
-Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
-Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
-Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpController::class)
-    ->middleware('throttle:20,1')
-    ->name('invitation.rsvp');
+// Guest-facing invitation pages are always Khmer, whatever language the visitor chose.
+Route::middleware('guest.locale')->group(function () {
+    Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
+    Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
+    Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpController::class)
+        ->middleware('throttle:20,1')
+        ->name('invitation.rsvp');
+});
 
 Route::middleware('guest:customer')->group(function () {
     Route::get('/register', RegisterPage::class)->name('register');
@@ -53,7 +58,7 @@ Route::middleware('guest:customer')->group(function () {
 Route::middleware('auth:customer')->group(function () {
     Route::get('/dashboard', DashboardPage::class)->name('dashboard');
     Route::get('/dashboard/invitations/{invitation}', InvitationManagePage::class)->name('dashboard.invitations.show');
-    Route::get('/dashboard/invitations/{invitation}/preview', InvitationPreviewController::class)->name('dashboard.invitations.preview');
+    Route::get('/dashboard/invitations/{invitation}/preview', InvitationPreviewController::class)->middleware('guest.locale')->name('dashboard.invitations.preview');
     Route::get('/dashboard/orders/{order}', OrderDetailPage::class)->name('dashboard.orders.show');
     Route::get('/checkout', CheckoutPage::class)->name('checkout');
     Route::get('/order/{order}/confirmation', OrderConfirmationPage::class)->name('order.confirmation');

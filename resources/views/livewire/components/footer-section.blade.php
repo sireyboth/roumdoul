@@ -4,19 +4,19 @@
       <div class="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-6 text-center sm:px-6 lg:grid-cols-4 lg:px-8">
         <div class="flex flex-col items-center gap-2">
           <x-app-icon name="bolt" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
-          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">ដឹកជញ្ជូនភ្លាមៗ</span>
+          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ __('Instant delivery') }}</span>
         </div>
         <div class="flex flex-col items-center gap-2">
           <x-app-icon name="shield-check" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
-          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">ការទូទាត់ដោយសុវត្ថិភាព</span>
+          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ __('Secure payment') }}</span>
         </div>
         <div class="flex flex-col items-center gap-2">
           <x-app-icon name="chat" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
-          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">គាំទ្រអតិថិជន ២៤/៧</span>
+          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ __('24/7 customer support') }}</span>
         </div>
         <div class="flex flex-col items-center gap-2">
           <x-app-icon name="heart" class="h-6 w-6 text-brand-600 dark:text-brand-300" />
-          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">ទុកចិត្តដោយអតិថិជនរាប់ពាន់នាក់</span>
+          <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ __('Trusted by thousands of customers') }}</span>
         </div>
       </div>
     </div>
@@ -29,7 +29,7 @@
             <span class="text-lg font-extrabold tracking-tight text-brand-800 dark:text-white">ROUMDOUL</span>
           </a>
           <p class="text-sm leading-relaxed text-plum-600 dark:text-plum-400">
-            រំដួល &mdash; ហាងសេវាកម្មឌីជីថលកម្រិតខ្ពស់ និងកម្មវិធីល្បីៗជាច្រើនទៀត ដោយសុវត្ថិភាព និងតម្លៃសមរម្យ។
+            {{ __('Roumdoul — a premium digital services shop, plus many other popular apps, safe and affordable.') }}
           </p>
           <div class="flex items-center gap-3">
             <a data-social="facebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
@@ -61,7 +61,7 @@
         </div>
 
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">ប្រភេទផលិតផល</h3>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">{{ __('Product categories') }}</h3>
           <ul class="flex flex-col gap-2 text-sm">
             @foreach ($categories as $category)
               <li>
@@ -75,12 +75,12 @@
         </div>
 
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">ក្រុមហ៊ុន</h3>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">{{ __('Company') }}</h3>
           <ul class="flex flex-col gap-3 text-sm">
-            <li><a href="/" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">ទំព័រដើម</a></li>
-            <li><a href="/shop" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">ហាង</a></li>
-            <li><a href="/about" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">អំពីយើង</a></li>
-            <li><a href="/contact" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">ទំនាក់ទំនង</a></li>
+            <li><a href="/" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Home') }}</a></li>
+            <li><a href="/shop" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Shop') }}</a></li>
+            <li><a href="/about" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('About us') }}</a></li>
+            <li><a href="/contact" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Contact') }}</a></li>
             <li class="flex items-start gap-2 pt-2">
               <x-app-icon name="envelope" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
               <a id="footer-email-link" href="#" target="_blank" rel="noopener noreferrer"
@@ -99,27 +99,27 @@
         </div>
 
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">ជំនួយរហ័ស</h3>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">{{ __('Quick help') }}</h3>
           <div class="flex items-start gap-2">
             <x-app-icon name="clock" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
-            <p class="text-sm text-plum-600 dark:text-plum-400">គាំទ្រអតិថិជន ២៤ម៉ោង / ៧ថ្ងៃ</p>
+            <p class="text-sm text-plum-600 dark:text-plum-400">{{ __('Customer support 24 hours / 7 days') }}</p>
           </div>
-          <p class="text-sm text-plum-600 dark:text-plum-400">មានសំណួរ? ជជែកជាមួយយើងភ្លាមៗតាម Telegram។</p>
+          <p class="text-sm text-plum-600 dark:text-plum-400">{{ __('Have a question? Chat with us instantly on Telegram.') }}</p>
           <a id="footer-telegram-chat-link" href="#" target="_blank" rel="noopener noreferrer"
             class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
             <x-app-icon name="chat" class="h-4 w-4 shrink-0" />
-            ជជែកតាម Telegram
+            {{ __('Chat on Telegram') }}
           </a>
         </div>
       </div>
 
       <div class="mt-12 flex flex-col items-center gap-4 border-t border-plum-200 pt-8 text-center dark:border-plum-800">
         <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs">
-          <a href="/privacy" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">គោលការណ៍ភាពឯកជន</a>
-          <a href="/terms" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">លក្ខខណ្ឌប្រើប្រាស់</a>
-          <a href="/feedback" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">ផ្ញើមតិយោបល់</a>
+          <a href="/privacy" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Privacy policy') }}</a>
+          <a href="/terms" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Terms of use') }}</a>
+          <a href="/feedback" wire:navigate class="text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Send feedback') }}</a>
         </div>
-        <p class="text-xs text-plum-500 dark:text-plum-400">&copy; <span id="footer-year"></span> ROUMDOUL. រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
+        <p class="text-xs text-plum-500 dark:text-plum-400">&copy; <span id="footer-year"></span> ROUMDOUL. {{ __('All rights reserved.') }}</p>
       </div>
     </div>
   </footer>

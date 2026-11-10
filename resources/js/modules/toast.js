@@ -9,6 +9,8 @@
 // and going offline/online into toasts — but only on pages that render the toast root, so other
 // pages keep Livewire's own error handling.
 
+import { t } from './i18n.js'
+
 const DURATION = { success: 3500, info: 4500, warning: 6000, error: 7000 }
 let nextId = 1
 
@@ -74,23 +76,23 @@ document.addEventListener('livewire:init', () => {
       if (status === 419) {
         push({
           type: 'warning',
-          message: 'វគ្គរបស់អ្នកបានផុតកំណត់។ សូមផ្ទុកទំព័រឡើងវិញ (ការកែប្រែដែលមិនទាន់ Save អាចបាត់)។',
-          action: { label: 'ផ្ទុកឡើងវិញ', run: () => window.location.reload() },
+          message: t('Your session has expired. Please reload the page (unsaved changes may be lost).'),
+          action: { label: t('Reload'), run: () => window.location.reload() },
           duration: 20000,
         })
       } else if (status === 403) {
-        push({ type: 'error', message: 'អ្នកមិនអាចធ្វើសកម្មភាពនេះបានទេ — ធៀបអាចផុតកំណត់ ឬមិនទាន់បានទូទាត់។' })
+        push({ type: 'error', message: t("You can't do this — the invitation may have expired or not been paid yet.") })
       } else if (status === 404) {
-        push({ type: 'error', message: 'រកមិនឃើញ — វាប្រហែលជាត្រូវបានលុបរួចហើយ។ សូមផ្ទុកទំព័រឡើងវិញ។' })
+        push({ type: 'error', message: t('Not found — it may already have been deleted. Please reload the page.') })
       } else if (status === 413) {
-        push({ type: 'error', message: 'ឯកសារធំពេក។ សូមប្រើរូបតូចជាងនេះ។' })
+        push({ type: 'error', message: t('The file is too large. Please use a smaller photo.') })
       } else if (!status || !navigator.onLine) {
-        push({ type: 'error', message: 'មិនអាចភ្ជាប់អ៊ីនធឺណិតបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។' })
+        push({ type: 'error', message: t("Can't connect to the internet. Please check your connection and try again.") })
       } else {
         push({
           type: 'error',
-          message: 'មានបញ្ហាអ្វីមួយ។ សូមព្យាយាមម្ដងទៀតបន្តិចក្រោយ។',
-          action: { label: 'ផ្ទុកឡើងវិញ', run: () => window.location.reload() },
+          message: t('Something went wrong. Please try again in a moment.'),
+          action: { label: t('Reload'), run: () => window.location.reload() },
         })
       }
     })
@@ -98,9 +100,9 @@ document.addEventListener('livewire:init', () => {
 })
 
 window.addEventListener('offline', () => {
-  if (hasToastRoot()) push({ type: 'warning', message: 'អ្នកកំពុងគ្មានអ៊ីនធឺណិត — ការកែប្រែនឹងមិនអាចរក្សាទុកបានទេ រហូតដល់ភ្ជាប់វិញ។', duration: 10000 })
+  if (hasToastRoot()) push({ type: 'warning', message: t("You're offline — changes can't be saved until you reconnect."), duration: 10000 })
 })
 
 window.addEventListener('online', () => {
-  if (hasToastRoot()) push({ type: 'success', message: 'បានភ្ជាប់អ៊ីនធឺណិតវិញហើយ។' })
+  if (hasToastRoot()) push({ type: 'success', message: t('Back online.') })
 })

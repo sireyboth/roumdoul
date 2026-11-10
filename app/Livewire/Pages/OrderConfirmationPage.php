@@ -9,11 +9,9 @@ use App\Rules\NoProfanity;
 use App\Services\ContentModerator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('បញ្ជាក់ការបញ្ជាទិញ | ROUMDOUL')]
 class OrderConfirmationPage extends Component
 {
     public Order $order;
@@ -50,7 +48,7 @@ class OrderConfirmationPage extends Component
 
         if ($comment !== null && $moderator->isRecentDuplicateReview($comment)) {
             ModerationLog::record('review_rejected', 'review', null, ['duplicate'], $moderator->fingerprint($comment));
-            $this->addError('comment', 'មតិនេះត្រូវបានផ្ញើរួចហើយ។ / This comment has already been submitted.');
+            $this->addError('comment', __('This comment has already been submitted.'));
 
             return;
         }
@@ -68,6 +66,6 @@ class OrderConfirmationPage extends Component
 
     public function render()
     {
-        return view('livewire.pages.order-confirmation-page');
+        return view('livewire.pages.order-confirmation-page')->title(__('Order confirmation | ROUMDOUL'));
     }
 }

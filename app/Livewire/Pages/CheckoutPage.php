@@ -10,11 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('ទូទាត់ប្រាក់ | ROUMDOUL')]
 class CheckoutPage extends Component
 {
     public string $customer_name = '';
@@ -51,7 +49,7 @@ class CheckoutPage extends Component
         $throttleKey = 'place-order|'.Auth::guard('customer')->id();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
-            $this->addError('notes', 'អ្នកបានព្យាយាមបញ្ជាទិញច្រើនដងពេក។ សូមរង់ចាំបន្តិច។');
+            $this->addError('notes', __('You have tried to place an order too many times. Please wait a moment.'));
 
             return;
         }
@@ -120,6 +118,6 @@ class CheckoutPage extends Component
             'total' => $cart->total(),
             'appliedPromoCode' => $cart->appliedPromoCode(),
             'hasOutOfStock' => $items->contains(fn ($item) => ! $item->in_stock),
-        ]);
+        ])->title(__('Checkout | ROUMDOUL'));
     }
 }

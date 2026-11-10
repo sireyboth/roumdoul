@@ -7,6 +7,8 @@
 //  - locks the picker (and the form's Save button) while an upload runs, so it can't be spammed,
 //  - shows progress, can be cancelled, and gives up with a message if the upload stalls.
 
+import { t } from './i18n.js'
+
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_EDGE = 2560
 const SHRINK_ABOVE_BYTES = 1.5 * 1024 * 1024
@@ -56,18 +58,18 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
       const room = Number(this.$root.dataset.room ?? Infinity)
       if (multiple && files.length > room) {
         this.reject(room > 0
-          ? `You picked ${files.length} photos, but only ${room} more fit in the gallery.`
-          : 'The gallery is full — remove a photo first.')
+          ? t('You picked :count photos, but only :room more fit in the gallery.', { count: files.length, room })
+          : t('The gallery is full — remove a photo first.'))
         return
       }
 
       for (const file of files) {
         if (!ACCEPTED.includes(file.type)) {
-          this.reject(`"${file.name}" is not a JPG, PNG, WebP or GIF photo.`)
+          this.reject(t('":name" is not a JPG, PNG, WebP or GIF photo.', { name: file.name }))
           return
         }
         if (file.type === 'image/gif' && file.size > gifMb * 1024 * 1024) {
-          this.reject(`"${file.name}" is too big. GIFs can be at most ${gifMb} MB.`)
+          this.reject(t('":name" is too big. GIFs can be at most :max MB.', { name: file.name, max: gifMb }))
           return
         }
       }
@@ -131,7 +133,7 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
       clearTimeout(this.stallTimer)
       this.stallTimer = setTimeout(() => {
         this.$wire.$cancelUpload(name)
-        this.finish('The upload is taking too long. Please try again on a better connection, or use a smaller photo.')
+        this.finish(t('The upload is taking too long. Please try again on a better connection, or use a smaller photo.'))
       }, STALL_MS)
     },
 
@@ -159,12 +161,12 @@ export function audioUploader({ name, maxMb = 10 }) {
       this.error = ''
       // some phones report m4a with an empty type, so the extension counts too
       if (!AUDIO_TYPES.includes(file.type) && !AUDIO_EXTENSIONS.test(file.name)) {
-        this.reject(`"${file.name}" មិនមែនជាឯកសារភ្លេង MP3 ឬ M4A ទេ។`)
+        this.reject(t('":name" is not an MP3 or M4A audio file.', { name: file.name }))
         return
       }
       if (file.size > maxMb * 1024 * 1024) {
         const mb = (file.size / 1024 / 1024).toFixed(file.size > 100 * 1024 * 1024 ? 0 : 1)
-        this.reject(`"${file.name}" ធំ ${mb} MB — ឯកសារភ្លេងធំបំផុត ${maxMb} MB (≈ បទ ១០ នាទី)។ សូមប្រើបទខ្លីជាងនេះ ឬ MP3 គុណភាព 128 kbps។`)
+        this.reject(t('":name" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.', { name: file.name, mb, max: maxMb }))
         return
       }
 

@@ -1,7 +1,7 @@
 import { initTheme, getStoredTheme, setStoredTheme } from './modules/theme.js'
 import { initNav } from './modules/nav.js'
 import { initMobileMenu } from './modules/menu.js'
-import { initLangToggle, restorePersistedLanguage, preloadTranslateWidget } from './modules/lang.js'
+import { initLangToggle } from './modules/lang.js'
 import { initHeroSlider } from './modules/heroSlider.js'
 import { initFooter } from './modules/footer.js'
 import { initScrollReveal } from './modules/scrollReveal.js'
@@ -66,7 +66,6 @@ function mountApp() {
   initNav()
   initMobileMenu()
   initLangToggle()
-  restorePersistedLanguage()
   initHeroSlider()
   initFooter()
   scrollToHash()
@@ -77,8 +76,5 @@ function mountApp() {
 }
 
 mountApp()
-
-const warmOnIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 300))
-warmOnIdle(() => preloadTranslateWidget())
 
 document.addEventListener('livewire:navigated', mountApp)

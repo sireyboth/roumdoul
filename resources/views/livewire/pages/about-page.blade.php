@@ -24,21 +24,23 @@
     <div class="pointer-events-none absolute -left-24 top-1/4 h-96 w-96 rounded-full bg-brand-600/10 blur-[100px] dark:bg-brand-600/30"></div>
     <div class="pointer-events-none absolute -right-24 bottom-1/4 h-96 w-96 rounded-full bg-gold-500/10 blur-[100px] dark:bg-gold-500/20"></div>
 
-    <span translate="no" class="about-eyebrow notranslate relative text-[11px] font-semibold uppercase tracking-[0.5em] text-gold-600 dark:text-gold-300">
+    <span class="about-eyebrow relative text-[11px] font-semibold uppercase tracking-[0.5em] text-gold-600 dark:text-gold-300">
       រំដួល
     </span>
 
-    <h1 translate="no" class="about-title notranslate relative mt-6 flex select-none flex-wrap items-center justify-center text-[15vw] font-black leading-[0.85] tracking-tight sm:text-[11vw] lg:text-[9vw]">
+    <h1 class="about-title relative mt-6 flex select-none flex-wrap items-center justify-center text-[15vw] font-black leading-[0.85] tracking-tight sm:text-[11vw] lg:text-[9vw]">
       <span class="about-letter inline-block">R</span><span class="about-letter inline-block">O</span><span class="about-letter inline-block">U</span><span class="about-letter inline-block">M</span><span class="about-letter inline-block">D</span><span class="about-letter inline-block">O</span><span class="about-letter inline-block">U</span><span class="about-letter inline-block">L</span>
     </h1>
 
     <p class="about-tagline relative mt-8 max-w-xl text-sm leading-relaxed text-plum-600 dark:text-plum-300 sm:text-base">
-      យើងមិនគ្រាន់តែជាហាងឌីជីថលទេ — យើងជាស្ពានតភ្ជាប់អ្នកទៅកាន់ពិភពឌីជីថលដ៏ធំទូលាយ
-      <span class="block text-plum-500 dark:text-plum-400">We're not just a digital shop — we're the bridge to the wider digital world.</span>
+      {{ __('We\'re not just a digital shop — we\'re the bridge to the wider digital world.') }}
+      @if (app()->isLocale('km'))
+        <span class="block text-plum-500 dark:text-plum-400">We're not just a digital shop — we're the bridge to the wider digital world.</span>
+      @endif
     </p>
 
     <div class="about-scrollcue relative mt-16 flex flex-col items-center gap-2 text-plum-500 dark:text-plum-500">
-      <span class="text-[10px] font-semibold uppercase tracking-[0.3em]">Scroll</span>
+      <span class="text-[10px] font-semibold uppercase tracking-[0.3em]">{{ __('Scroll') }}</span>
       <span class="h-10 w-px bg-gradient-to-b from-gold-400 to-transparent"></span>
     </div>
   </section>
@@ -52,17 +54,21 @@
         <img src="/images/Roumdoul_Logo.png" alt="" aria-hidden="true"
           class="pointer-events-none absolute -left-10 top-0 -z-10 w-64 opacity-[0.04] dark:opacity-[0.06] lg:w-80" />
 
-        <span class="text-[11px] font-semibold uppercase tracking-[0.4em] text-gold-600 dark:text-gold-300">The story behind the name</span>
-        <h2 class="mt-4 text-3xl font-extrabold sm:text-5xl">ហេតុអ្វីជា "រំដួល"?</h2>
+        <span class="text-[11px] font-semibold uppercase tracking-[0.4em] text-gold-600 dark:text-gold-300">{{ __('The story behind the name') }}</span>
+        <h2 class="mt-4 text-3xl font-extrabold sm:text-5xl">{{ __('Why "Roumdoul"?') }}</h2>
 
         <p class="mt-6 max-w-lg text-sm leading-relaxed text-plum-600 dark:text-plum-300 sm:text-base">
-          <span class="font-semibold text-plum-900 dark:text-white">រំដួល</span> គឺជាផ្កាជាតិរបស់កម្ពុជា — ផ្កាតូចមួយដែលរីកចេញយឺតៗ ស្ងាត់ស្ងៀម ក៏ប៉ុន្តែក្រអូបនិងមិនងាយភ្លេច។ យើងជ្រើសរើសឈ្មោះនេះ ព្រោះនោះជាវិធីដែលយើងចង់លូតលាស់៖ មិនប្រញាប់ មិនក្លែងបន្លំ ហើយចាក់ឬសនៅលើទំនុកចិត្ត។
-          <span class="mt-4 block text-plum-500 dark:text-plum-400">Roumdoul is Cambodia's national flower — small, unhurried in bloom, quiet, yet impossible to forget. We chose the name because that is exactly how we want to grow: unrushed, genuine, and rooted in trust.</span>
+          <span class="font-semibold text-plum-900 dark:text-white">{{ __('Roumdoul') }}</span> {{ __('is Cambodia\'s national flower — small, unhurried in bloom, quiet, yet impossible to forget. We chose the name because that is exactly how we want to grow: unrushed, genuine, and rooted in trust.') }}
+          @if (app()->isLocale('km'))
+            <span class="mt-4 block text-plum-500 dark:text-plum-400">Roumdoul is Cambodia's national flower — small, unhurried in bloom, quiet, yet impossible to forget. We chose the name because that is exactly how we want to grow: unrushed, genuine, and rooted in trust.</span>
+          @endif
         </p>
 
         <p class="mt-6 max-w-lg text-sm leading-relaxed text-plum-600 dark:text-plum-300 sm:text-base">
-          សូម្បីតែនិមិត្តសញ្ញារបស់យើង ក៏ជាកាយវិការនៃដៃដែលកំពុងបើកចេញយឺតៗ ដូចផ្កាកំពុងចាប់ផ្ដើមរីក។
-          <span class="mt-2 block text-plum-500 dark:text-plum-400">Even our mark is a hand caught mid-gesture — opening the way a flower does.</span>
+          {{ __('Even our mark is a hand caught mid-gesture — opening the way a flower does.') }}
+          @if (app()->isLocale('km'))
+            <span class="mt-2 block text-plum-500 dark:text-plum-400">Even our mark is a hand caught mid-gesture — opening the way a flower does.</span>
+          @endif
         </p>
       </div>
 
@@ -73,7 +79,7 @@
           <canvas id="about-bloom" class="relative z-10 h-full w-full" aria-hidden="true"></canvas>
         </div>
         <p class="mt-4 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-plum-400 dark:text-plum-500">
-          Scroll to watch it bloom
+          {{ __('Scroll to watch it bloom') }}
         </p>
       </div>
     </div>
@@ -82,13 +88,13 @@
   {{-- ============ MANIFESTO — massive pinned line-by-line reveal ============ --}}
   <section class="about-manifesto-pin relative flex h-screen flex-col items-center justify-center gap-4 px-4 text-center sm:gap-6">
     <p class="about-manifesto-line text-[9vw] font-black uppercase leading-[1.05] tracking-tight sm:text-[6vw] lg:text-[5vw]">
-      We don't just sell software.
+      {{ __('We don\'t just sell software.') }}
     </p>
     <p class="about-manifesto-line about-glow text-[9vw] font-black uppercase leading-[1.05] tracking-tight text-transparent sm:text-[6vw] lg:text-[5vw]">
-      We engineer trust.
+      {{ __('We engineer trust.') }}
     </p>
     <p class="about-manifesto-line text-[9vw] font-black uppercase leading-[1.05] tracking-tight sm:text-[6vw] lg:text-[5vw]">
-      At the speed of one click.
+      {{ __('At the speed of one click.') }}
     </p>
   </section>
 
@@ -96,16 +102,18 @@
   <section class="about-story-pin relative h-screen overflow-hidden">
     <div class="about-story-track flex h-full items-center gap-10 pl-[10vw] will-change-transform">
       @foreach ([
-          ['no' => '01', 'kh' => 'ចាប់ផ្តើម', 'en' => 'The Beginning', 'desc' => 'ចាប់ផ្តើមពីគំនិតសាមញ្ញមួយ៖ នាំកម្មវិធីឌីជីថលកម្រិតពិភពលោក មកកាន់អ្នកប្រើប្រាស់កម្ពុជា ដោយមិនចាំបាច់ស្មុគស្មាញ។'],
-          ['no' => '02', 'kh' => 'កំណើន', 'en' => 'Growth', 'desc' => 'ពីអតិថិជនដំបូងម្នាក់ រហូតដល់ពាន់នាក់ដែលទុកចិត្ត — ការលក់រាល់ដងគឺជាការសន្យាថ្មីមួយដែលយើងគោរព។'],
-          ['no' => '03', 'kh' => 'ជំនឿទុកចិត្ត', 'en' => 'Trust', 'desc' => 'រាល់គណនីត្រូវបានផ្ទៀងផ្ទាត់។ រាល់ការទូទាត់ត្រូវបានការពារ។ រាល់ការបញ្ជូនគឺភ្លាមៗ — គ្មានករណីលើកលែង។'],
-          ['no' => '04', 'kh' => 'អនាគត', 'en' => 'What\'s Next', 'desc' => 'យើងកំពុងពង្រីកជានិច្ច — នាំមកនូវឧបករណ៍ថ្មីៗ បទពិសោធន៍ថ្មីៗ ដើម្បីអោយអ្នកនៅមុខគេជានិច្ច។'],
-          ['no' => '05', 'kh' => 'សហគមន៍', 'en' => 'Community', 'desc' => 'ថ្ងៃនេះ យើងលែងជាគ្រាន់តែហាងទៀតហើយ — យើងជាសហគមន៍អតិថិជនរាប់ពាន់នាក់ដែលរីកចម្រើនទៅជាមួយគ្នា។'],
+          ['no' => '01', 'kh' => __('The Beginning'), 'en' => 'The Beginning', 'desc' => __('It started with a simple idea: bring world-class digital apps to people in Cambodia, without the hassle.')],
+          ['no' => '02', 'kh' => __('Growth'), 'en' => 'Growth', 'desc' => __('From our very first customer to thousands who trust us — every sale is a new promise we keep.')],
+          ['no' => '03', 'kh' => __('Trust'), 'en' => 'Trust', 'desc' => __('Every account is verified. Every payment is protected. Every delivery is instant — no exceptions.')],
+          ['no' => '04', 'kh' => __('What\'s Next'), 'en' => 'What\'s Next', 'desc' => __('We\'re always growing — bringing you new tools and new experiences so you stay one step ahead.')],
+          ['no' => '05', 'kh' => __('Community'), 'en' => 'Community', 'desc' => __('Today we\'re more than just a shop — we\'re a community of thousands of customers growing together.')],
       ] as $beat)
         <article class="about-beat flex h-[70vh] w-[85vw] shrink-0 flex-col justify-center rounded-3xl border border-plum-200 bg-white p-10 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none sm:w-[60vw] sm:p-16 lg:w-[38vw]">
           <span class="text-8xl font-black text-plum-900/5 dark:text-white/5 sm:text-9xl">{{ $beat['no'] }}</span>
           <h2 class="-mt-8 text-3xl font-extrabold text-plum-900 dark:text-white sm:text-4xl">{{ $beat['kh'] }}</h2>
-          <p class="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-gold-600 dark:text-gold-400">{{ $beat['en'] }}</p>
+          @if (app()->isLocale('km'))
+            <p class="mt-1 text-xs font-semibold uppercase tracking-[0.3em] text-gold-600 dark:text-gold-400">{{ $beat['en'] }}</p>
+          @endif
           <p class="mt-5 max-w-md text-sm leading-relaxed text-plum-600 dark:text-plum-300 sm:text-base">{{ $beat['desc'] }}</p>
         </article>
       @endforeach
@@ -116,9 +124,9 @@
   {{-- ============ PROCESS — from click to delivery ============ --}}
   <section class="about-process relative px-4 py-28 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-6xl text-center">
-      <span class="about-reveal text-[11px] font-semibold uppercase tracking-[0.4em] text-gold-600 dark:text-gold-300">From click to delivery</span>
-      <h2 class="about-reveal mt-4 text-3xl font-extrabold sm:text-5xl">របៀបដែលយើងធ្វើការ</h2>
-      <p class="about-reveal mx-auto mt-3 max-w-md text-sm text-plum-500 dark:text-plum-400">How we work — four steps, zero friction.</p>
+      <span class="about-reveal text-[11px] font-semibold uppercase tracking-[0.4em] text-gold-600 dark:text-gold-300">{{ __('From click to delivery') }}</span>
+      <h2 class="about-reveal mt-4 text-3xl font-extrabold sm:text-5xl">{{ __('How we work') }}</h2>
+      <p class="about-reveal mx-auto mt-3 max-w-md text-sm text-plum-500 dark:text-plum-400">{{ __('Four steps, zero friction.') }}</p>
     </div>
 
     <div class="relative mx-auto mt-20 max-w-5xl">
@@ -128,18 +136,22 @@
 
       <div class="grid grid-cols-1 gap-12 sm:grid-cols-4 sm:gap-6">
         @foreach ([
-            ['no' => '01', 'kh' => 'ជ្រើសរើស', 'en' => 'Choose', 'desc' => 'ជ្រើសរើសសេវាកម្មដែលអ្នកត្រូវការ ក្នុងប៉ុន្មានវិនាទី។', 'desc_en' => 'Pick the service you need in seconds.'],
-            ['no' => '02', 'kh' => 'ទូទាត់', 'en' => 'Pay', 'desc' => 'ទូទាត់ដោយសុវត្ថិភាព តាមវិធីដែលអ្នកទុកចិត្ត។', 'desc_en' => 'Pay securely, your way.'],
-            ['no' => '03', 'kh' => 'ផ្ទៀងផ្ទាត់', 'en' => 'Verify', 'desc' => 'ក្រុមរបស់យើងផ្ទៀងផ្ទាត់ និងរៀបចំការបញ្ជូនភ្លាមៗ។', 'desc_en' => 'Our team verifies and prepares delivery.'],
-            ['no' => '04', 'kh' => 'ទទួល', 'en' => 'Receive', 'desc' => 'ទទួលបានក្នុងប៉ុន្មាននាទី មិនមែនប៉ុន្មានថ្ងៃ។', 'desc_en' => 'Receive in minutes, not days.'],
+            ['no' => '01', 'kh' => __('Choose'), 'en' => 'Choose', 'desc' => __('Pick the service you need in seconds.'), 'desc_en' => 'Pick the service you need in seconds.'],
+            ['no' => '02', 'kh' => __('Pay'), 'en' => 'Pay', 'desc' => __('Pay securely, your way.'), 'desc_en' => 'Pay securely, your way.'],
+            ['no' => '03', 'kh' => __('Verify'), 'en' => 'Verify', 'desc' => __('Our team verifies and prepares delivery.'), 'desc_en' => 'Our team verifies and prepares delivery.'],
+            ['no' => '04', 'kh' => __('Receive'), 'en' => 'Receive', 'desc' => __('Receive in minutes, not days.'), 'desc_en' => 'Receive in minutes, not days.'],
         ] as $step)
           <div class="about-reveal relative flex flex-col items-center text-center">
             <span class="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-plum-200 bg-plum-50 text-sm font-black text-brand-600 shadow-sm dark:border-white/10 dark:bg-[#0a0610] dark:text-brand-300">{{ $step['no'] }}</span>
             <h3 class="mt-5 text-lg font-bold">{{ $step['kh'] }}</h3>
-            <p class="text-xs font-semibold uppercase tracking-[0.25em] text-plum-500 dark:text-plum-500">{{ $step['en'] }}</p>
+            @if (app()->isLocale('km'))
+              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-plum-500 dark:text-plum-500">{{ $step['en'] }}</p>
+            @endif
             <p class="mt-3 max-w-[24ch] text-sm leading-relaxed text-plum-600 dark:text-plum-300">
               {{ $step['desc'] }}
-              <span class="mt-1 block text-xs text-plum-500 dark:text-plum-500">{{ $step['desc_en'] }}</span>
+              @if (app()->isLocale('km'))
+                <span class="mt-1 block text-xs text-plum-500 dark:text-plum-500">{{ $step['desc_en'] }}</span>
+              @endif
             </p>
           </div>
         @endforeach
@@ -150,25 +162,27 @@
   {{-- ============ VALUES — 3D flip cards ============ --}}
   <section class="relative px-4 py-32 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-6xl text-center">
-      <span class="text-[11px] font-semibold uppercase tracking-[0.4em] text-gold-600 dark:text-gold-300">What we stand for</span>
-      <h2 class="about-reveal mt-4 text-3xl font-extrabold sm:text-5xl">ហេតុអ្វីជាទីទុកចិត្ត</h2>
+      <span class="text-[11px] font-semibold uppercase tracking-[0.4em] text-gold-600 dark:text-gold-300">{{ __('What we stand for') }}</span>
+      <h2 class="about-reveal mt-4 text-3xl font-extrabold sm:text-5xl">{{ __('Why people trust us') }}</h2>
     </div>
 
     <div class="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" style="perspective: 1200px;">
       @foreach ([
-          ['icon' => 'bolt', 'title' => 'ល្បឿនលឿន', 'en' => 'Speed'],
-          ['icon' => 'shield-check', 'title' => 'សុវត្ថិភាព', 'en' => 'Security'],
-          ['icon' => 'chat', 'title' => 'គាំទ្រ ២៤/៧', 'en' => 'Support'],
-          ['icon' => 'heart', 'title' => 'តម្លៃសមរម្យ', 'en' => 'Fair Pricing'],
-          ['icon' => 'sparkles', 'title' => 'គុណភាព', 'en' => 'Quality'],
-          ['icon' => 'lock-closed', 'title' => 'ឯកជនភាព', 'en' => 'Privacy'],
+          ['icon' => 'bolt', 'title' => __('Speed'), 'en' => 'Speed'],
+          ['icon' => 'shield-check', 'title' => __('Security'), 'en' => 'Security'],
+          ['icon' => 'chat', 'title' => __('24/7 support'), 'en' => 'Support'],
+          ['icon' => 'heart', 'title' => __('Fair pricing'), 'en' => 'Fair Pricing'],
+          ['icon' => 'sparkles', 'title' => __('Quality'), 'en' => 'Quality'],
+          ['icon' => 'lock-closed', 'title' => __('Privacy'), 'en' => 'Privacy'],
       ] as $value)
         <div class="about-flip-card group relative rounded-2xl border border-plum-200 bg-white p-8 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
           <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-gold-500 text-white">
             <x-app-icon name="{{ $value['icon'] }}" class="h-7 w-7" />
           </div>
           <h3 class="mt-5 text-lg font-bold">{{ $value['title'] }}</h3>
-          <p class="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-plum-500 dark:text-plum-500">{{ $value['en'] }}</p>
+          @if (app()->isLocale('km'))
+            <p class="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-plum-500 dark:text-plum-500">{{ $value['en'] }}</p>
+          @endif
         </div>
       @endforeach
     </div>
@@ -197,10 +211,10 @@
     <div class="pointer-events-none absolute inset-0 about-mesh opacity-20 dark:opacity-40"></div>
     <div class="relative mx-auto grid max-w-5xl grid-cols-2 gap-10 text-center lg:grid-cols-4">
       @foreach ([
-          ['target' => 5000, 'suffix' => '+', 'label' => 'អតិថិជនពេញចិត្ត'],
-          ['target' => 20, 'suffix' => '+', 'label' => 'សេវាកម្មឌីជីថល'],
-          ['target' => 24, 'suffix' => '/7', 'label' => 'គាំទ្រអតិថិជន'],
-          ['target' => 100, 'suffix' => '%', 'label' => 'ដឹកជញ្ជូនភ្លាមៗ'],
+          ['target' => 5000, 'suffix' => '+', 'label' => __('Happy customers')],
+          ['target' => 20, 'suffix' => '+', 'label' => __('Digital services')],
+          ['target' => 24, 'suffix' => '/7', 'label' => __('Customer support')],
+          ['target' => 100, 'suffix' => '%', 'label' => __('Instant delivery')],
       ] as $stat)
         <div>
           <p class="about-stat-number bg-gradient-to-br from-plum-900 to-brand-600 bg-clip-text text-4xl font-black text-transparent dark:from-white dark:to-gold-300 sm:text-6xl"
@@ -216,28 +230,37 @@
     <div class="mx-auto max-w-3xl">
       <x-app-icon name="sparkles" class="mx-auto h-8 w-8 text-gold-600 dark:text-gold-400" />
       <blockquote class="mt-6 text-2xl font-light leading-snug text-plum-800 dark:text-white/90 sm:text-4xl">
-        &ldquo;រាល់ការទិញមួយដង គឺជាការចាប់ផ្តើមនៃទំនុកចិត្តមួយថ្មី។&rdquo;
-        <span class="mt-3 block text-lg text-plum-500 dark:text-plum-400 sm:text-xl">&ldquo;Every purchase is the start of a new trust.&rdquo;</span>
+        &ldquo;{{ __('Every purchase is the start of a new trust.') }}&rdquo;
+        @if (app()->isLocale('km'))
+          <span class="mt-3 block text-lg text-plum-500 dark:text-plum-400 sm:text-xl">&ldquo;Every purchase is the start of a new trust.&rdquo;</span>
+        @endif
       </blockquote>
-      <p class="mt-6 text-xs font-semibold uppercase tracking-[0.3em] text-plum-400 dark:text-plum-500">— ក្រុមរំដួល · The Roumdoul Team</p>
+      <p class="mt-6 text-xs font-semibold uppercase tracking-[0.3em] text-plum-400 dark:text-plum-500">
+        — {{ __('The Roumdoul Team') }}
+        @if (app()->isLocale('km'))
+          · The Roumdoul Team
+        @endif
+      </p>
     </div>
   </section>
 
   {{-- ============ CLOSING — quiet, editorial, not a shouty ecommerce banner ============ --}}
   <section class="about-reveal relative flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
     <p class="max-w-2xl text-2xl font-light leading-relaxed text-plum-800 dark:text-white/90 sm:text-4xl">
-      រាល់ចុចមួយដង គឺជាការសន្យាមួយ។
-      <span class="mt-2 block text-plum-500 dark:text-plum-400">Every click is a promise we intend to keep.</span>
+      {{ __('Every click is a promise we intend to keep.') }}
+      @if (app()->isLocale('km'))
+        <span class="mt-2 block text-plum-500 dark:text-plum-400">Every click is a promise we intend to keep.</span>
+      @endif
     </p>
     <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
       <a href="/shop" wire:navigate
         class="group inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-brand-600 to-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.15em] text-white shadow-sm transition-transform hover:scale-[1.03]">
-        មើលសេវាកម្មរបស់យើង
+        {{ __('Explore our services') }}
         <x-app-icon name="chevron-right" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </a>
       <a href="/contact" wire:navigate
         class="group inline-flex items-center gap-2 border-b border-gold-500/40 pb-1 text-sm font-semibold uppercase tracking-[0.2em] text-gold-600 transition-colors hover:border-gold-600 hover:text-gold-700 dark:border-gold-400/40 dark:text-gold-300 dark:hover:border-gold-300 dark:hover:text-gold-200">
-        ទាក់ទងមកយើង
+        {{ __('Contact us') }}
         <x-app-icon name="chevron-right" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </a>
     </div>

@@ -55,42 +55,8 @@ html {
     }
 }
 
-/* Suppress Google Translate's default banner/toolbar and "rate this translation" popup; we drive it with our own toggle button. */
-.goog-te-banner-frame,
-.goog-te-balloon-frame,
-.skiptranslate > iframe {
-    display: none !important;
-}
-
-.goog-text-highlight {
-    background: none !important;
-    box-shadow: none !important;
-}
-
-body {
-    top: 0 !important;
-}
-
 [x-persist="header"] {
     display: contents;
-}
-
-/* Hides the app shell behind a loader while the persisted English translation is
-   being re-applied on load/navigation, instead of flashing the Khmer source text. */
-#app {
-    transition: opacity 0.2s ease;
-}
-
-html.translating #app {
-    opacity: 0;
-}
-
-.translate-loader {
-    display: none;
-}
-
-html.translating .translate-loader {
-    display: flex;
 }
 
 /* Scroll-reveal: elements start hidden/offset, JS (scrollReveal.js) flips [data-revealed] as they enter the viewport */

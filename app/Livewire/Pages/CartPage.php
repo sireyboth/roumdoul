@@ -4,11 +4,9 @@ namespace App\Livewire\Pages;
 
 use App\Services\CartService;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('components.layouts.app')]
-#[Title('កន្ត្រករបស់អ្នក | ROUMDOUL')]
 class CartPage extends Component
 {
     public string $promoCodeInput = '';
@@ -61,6 +59,6 @@ class CartPage extends Component
             'total' => $cart->total(),
             'appliedPromoCode' => $cart->appliedPromoCode(),
             'hasOutOfStock' => $items->contains(fn ($item) => ! $item->in_stock),
-        ]);
+        ])->title(__('Your cart | ROUMDOUL'));
     }
 }

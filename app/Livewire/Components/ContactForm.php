@@ -25,7 +25,7 @@ class ContactForm extends Component
             // closure instead of the 'email' rule.
             'email' => ['nullable', 'max:255', function ($attribute, $value, $fail) {
                 if ($value !== '' && ! filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                    $fail('សូមបញ្ចូលអ៊ីមែលដែលត្រឹមត្រូវ។');
+                    $fail(__('Please enter a valid email address.'));
                 }
             }],
             'phone' => ['required', 'string', 'max:50'],

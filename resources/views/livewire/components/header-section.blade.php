@@ -6,14 +6,14 @@
           <img src="/images/Roumdoul_Logo.png" alt="ROUMDOUL" class="h-10 w-10 shrink-0 rounded-full object-contain" />
           <span class="flex flex-col leading-tight">
             <span class="text-lg font-extrabold tracking-tight text-brand-800 dark:text-white sm:text-xl">ROUMDOUL</span>
-            <span class="hidden text-[11px] font-medium text-plum-500 dark:text-plum-400 sm:block">រំដួល &middot; Premium Services</span>
+            <span class="hidden text-[11px] font-medium text-plum-500 dark:text-plum-400 sm:block">{{ __('Premium Services') }}</span>
           </span>
         </a>
 
         <form action="/shop" method="GET" class="hidden flex-1 items-center md:flex">
           <div class="relative w-full max-w-lg">
             <x-app-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
-            <input type="text" name="search" placeholder="ស្វែងរកសេវាកម្ម ឬផលិតផលឌីជីថល..."
+            <input type="text" name="search" placeholder="{{ __('Search services or digital products...') }}"
               class="w-full rounded-full border border-plum-200 bg-plum-50 py-2 pl-10 pr-4 text-sm text-plum-900 outline-none transition-colors placeholder:text-plum-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:text-white dark:placeholder:text-plum-400 dark:focus:bg-plum-800" />
           </div>
         </form>
@@ -31,14 +31,14 @@
 
           <a href="{{ $customer ? '/dashboard' : '/login' }}" wire:navigate
             class="flex h-9 w-9 items-center justify-center rounded-full text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white"
-            aria-label="{{ $customer ? 'ផ្ទាំងគ្រប់គ្រង' : 'ចូលគណនី' }}" title="{{ $customer ? $customer->name : 'ចូលគណនី' }}">
+            aria-label="{{ $customer ? __('Dashboard') : __('Log in') }}" title="{{ $customer ? $customer->name : __('Log in') }}">
             <x-app-icon name="user" class="h-5.5 w-5.5" />
           </a>
 
           <x-theme-toggle class="hidden md:inline-flex" />
 
           <div class="relative" data-lang-dropdown>
-            <button type="button" data-lang-toggle aria-haspopup="menu" aria-expanded="false" aria-label="ជ្រើសរើសភាសា"
+            <button type="button" data-lang-toggle aria-haspopup="menu" aria-expanded="false" aria-label="{{ __('Choose language') }}"
               class="flex h-9 items-center gap-1 rounded-full px-2.5 text-plum-600 transition-colors hover:bg-brand-50 dark:text-plum-300 dark:hover:bg-plum-800">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
@@ -46,25 +46,24 @@
                 <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
                 <path d="M2 12h20"></path>
               </svg>
-              <span data-lang-label class="text-xs font-semibold uppercase">ខ្មែរ</span>
+              <span class="text-xs font-semibold uppercase">{{ app()->getLocale() === 'en' ? 'EN' : 'ខ្មែរ' }}</span>
             </button>
 
             <div data-lang-menu role="menu"
               class="pointer-events-none absolute right-0 z-50 mt-2 w-32 origin-top-right scale-95 rounded-md border border-plum-200 bg-white py-1 opacity-0 shadow-lg transition-[opacity,transform] duration-150 ease-out dark:border-plum-700 dark:bg-plum-800">
-              <button type="button" role="menuitem" data-lang-option="km"
-                class="flex w-full items-center justify-between px-3 py-2 text-sm text-plum-700 transition-colors hover:bg-brand-50 dark:text-plum-200 dark:hover:bg-plum-700">
-                ខ្មែរ
-                <x-app-icon name="check-circle" data-lang-check-km class="h-4 w-4 text-brand-700 dark:text-gold-400" />
-              </button>
-              <button type="button" role="menuitem" data-lang-option="en"
-                class="flex w-full items-center justify-between px-3 py-2 text-sm text-plum-700 transition-colors hover:bg-brand-50 dark:text-plum-200 dark:hover:bg-plum-700">
-                English
-                <x-app-icon name="check-circle" data-lang-check-en class="hidden h-4 w-4 text-brand-700 dark:text-gold-400" />
-              </button>
+              {{-- Plain links (no wire:navigate): the switch reloads the page in the new language. --}}
+              @foreach (['km' => 'ខ្មែរ', 'en' => 'English'] as $code => $name)
+                <a href="{{ route('locale.switch', $code) }}" role="menuitem" rel="nofollow" lang="{{ $code }}" data-lang-option="{{ $code }}"
+                  @if (app()->getLocale() === $code) aria-current="true" @endif
+                  class="flex w-full items-center justify-between px-3 py-2 text-sm text-plum-700 transition-colors hover:bg-brand-50 dark:text-plum-200 dark:hover:bg-plum-700">
+                  {{ $name }}
+                  <x-app-icon name="check-circle" @class(['h-4 w-4 text-brand-700 dark:text-gold-400', 'hidden' => app()->getLocale() !== $code]) />
+                </a>
+              @endforeach
             </div>
           </div>
 
-          <button type="button" id="menu-toggle" aria-label="បើកម៉ឺនុយ" aria-expanded="false" aria-controls="mobile-menu"
+          <button type="button" id="menu-toggle" aria-label="{{ __('Open menu') }}" aria-expanded="false" aria-controls="mobile-menu"
             class="flex h-9 w-9 items-center justify-center rounded-full text-plum-600 transition-colors hover:bg-brand-50 dark:text-plum-300 dark:hover:bg-plum-800 md:hidden">
             <x-app-icon id="menu-icon-open" name="bars" class="h-6 w-6" />
             <x-app-icon id="menu-icon-close" name="x-mark" class="hidden h-6 w-6" />
@@ -81,7 +80,7 @@
         <div class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-1.5 sm:px-6 lg:px-8">
           <a href="/shop" wire:navigate
             class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
-            គ្រប់ប្រភេទទាំងអស់
+            {{ __('All categories') }}
           </a>
 
           <span class="h-4 w-px shrink-0 bg-white/20"></span>
@@ -89,7 +88,7 @@
           <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
             <button type="button" @click="open = !open" :aria-expanded="open.toString()"
               class="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
-              សេវាកម្ម
+              {{ __('Services') }}
               <x-app-icon name="chevron-down" class="h-3.5 w-3.5 transition-transform duration-200" x-bind:class="open ? 'rotate-180' : ''" />
             </button>
 
@@ -102,7 +101,7 @@
                   {{ $category->name_km }}
                 </a>
               @empty
-                <p class="px-3 py-2 text-sm text-plum-400">No categories yet.</p>
+                <p class="px-3 py-2 text-sm text-plum-400">{{ __('No categories yet.') }}</p>
               @endforelse
             </div>
           </div>
@@ -111,21 +110,21 @@
 
           <a href="/about" wire:navigate
             class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
-            អំពីយើង
+            {{ __('About us') }}
           </a>
           <a href="/contact" wire:navigate
             class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
-            ទំនាក់ទំនង
+            {{ __('Contact') }}
           </a>
           <a href="/terms" wire:navigate
             class="shrink-0 rounded-full px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-white/15">
-            លក្ខខណ្ឌប្រើប្រាស់
+            {{ __('Terms of use') }}
           </a>
 
           <a href="/shop" wire:navigate
             class="ml-auto hidden shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-4 py-2 text-sm font-bold text-brand-950 shadow-sm transition-colors hover:bg-gold-400 lg:flex">
             <x-app-icon name="bolt" class="h-4 w-4" />
-            ទិញឥឡូវនេះ
+            {{ __('Buy now') }}
           </a>
         </div>
       </nav>
@@ -137,18 +136,18 @@
             <form action="/shop" method="GET" class="mb-1">
               <div class="relative">
                 <x-app-icon name="search" class="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
-                <input type="text" name="search" placeholder="ស្វែងរកសេវាកម្ម..."
+                <input type="text" name="search" placeholder="{{ __('Search services...') }}"
                   class="w-full rounded-full border border-plum-200 bg-plum-50 py-2 pl-10 pr-4 text-sm outline-none focus:border-brand-500 dark:border-plum-700 dark:bg-plum-800" />
               </div>
             </form>
 
             <a href="/" wire:navigate data-nav-link data-nav-exact
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-              ទំព័រដើម
+              {{ __('Home') }}
             </a>
             <a href="/shop" wire:navigate data-nav-link
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-              ហាង
+              {{ __('Shop') }}
             </a>
 
             {{-- Categories collapse into their own "Service" toggle here too, matching
@@ -156,7 +155,7 @@
             <div x-data="{ open: false }">
               <button type="button" @click="open = !open" :aria-expanded="open.toString()"
                 class="flex w-full items-center justify-between rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-                សេវាកម្ម
+                {{ __('Services') }}
                 <x-app-icon name="chevron-down" class="h-4 w-4 transition-transform duration-200" x-bind:class="open ? 'rotate-180' : ''" />
               </button>
               <div x-show="open" x-collapse x-cloak class="ml-2 flex flex-col gap-1 border-l border-plum-200 pl-2 dark:border-plum-700">
@@ -167,27 +166,27 @@
                     {{ $category->name_km }}
                   </a>
                 @empty
-                  <p class="px-3 py-2 text-sm text-plum-400">No categories yet.</p>
+                  <p class="px-3 py-2 text-sm text-plum-400">{{ __('No categories yet.') }}</p>
                 @endforelse
               </div>
             </div>
 
             <a href="/about" wire:navigate data-nav-link
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-              អំពីយើង
+              {{ __('About us') }}
             </a>
             <a href="/contact" wire:navigate data-nav-link
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-              ទំនាក់ទំនង
+              {{ __('Contact') }}
             </a>
             <a href="/terms" wire:navigate data-nav-link
               class="rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
-              លក្ខខណ្ឌប្រើប្រាស់
+              {{ __('Terms of use') }}
             </a>
             <a href="{{ $customer ? '/dashboard' : '/login' }}" wire:navigate data-nav-link
               class="flex items-center gap-2 rounded-md px-3 py-2 font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
               <x-app-icon name="user" class="h-4 w-4" />
-              {{ $customer ? 'ផ្ទាំងគ្រប់គ្រង' : 'ចូលគណនី' }}
+              {{ $customer ? __('Dashboard') : __('Log in') }}
             </a>
 
             <div class="mt-1 flex items-center justify-between border-t border-plum-200 px-3 pb-2 pt-3 dark:border-plum-800">
@@ -204,7 +203,7 @@
                     d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"
                     clip-rule="evenodd" />
                 </svg>
-                <span x-text="$store.theme.current === 'dark' ? 'ងងឹត' : 'ភ្លឺ'"></span>
+                <span x-text="$store.theme.current === 'dark' ? @js(__('Dark')) : @js(__('Light'))"></span>
               </span>
 
               <x-theme-toggle />

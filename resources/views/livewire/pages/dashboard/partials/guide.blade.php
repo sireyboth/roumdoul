@@ -1,21 +1,21 @@
 {{-- "How to use" guide for the invitation workspace. Expects $invitation, $navItems, $fieldCatalog, $isPaid. --}}
 @php
   $flow = [
-    ['icon' => 'pencil', 'title' => 'បំពេញព័ត៌មាន', 'text' => 'ឈ្មោះ ថ្ងៃ ទីកន្លែង → Save'],
-    ['icon' => 'photo', 'title' => 'ដាក់រូបភាព', 'text' => 'ចុចប្រអប់ ជ្រើសរូប'],
-    ['icon' => 'eye', 'title' => 'មើលជាមុន', 'text' => 'ឃើញដូចភ្ញៀវឃើញ'],
-    ['icon' => 'user-plus', 'title' => 'បន្ថែមភ្ញៀវ', 'text' => 'ម្នាក់ = តំណមួយ'],
-    ['icon' => 'paper-airplane', 'title' => 'ផ្ញើតំណ', 'text' => 'Telegram · Messenger'],
-    ['icon' => 'chat', 'title' => 'មើលចម្លើយ', 'text' => 'អ្នកណាចូលរួម'],
+    ['icon' => 'pencil', 'title' => __('Fill in the details'), 'text' => __('Names, date, venue → Save')],
+    ['icon' => 'photo', 'title' => __('Add images'), 'text' => __('Tap a box, pick a photo')],
+    ['icon' => 'eye', 'title' => __('Preview'), 'text' => __('See it as guests will')],
+    ['icon' => 'user-plus', 'title' => __('Add guests'), 'text' => __('One guest = one link')],
+    ['icon' => 'paper-airplane', 'title' => __('Send the links'), 'text' => 'Telegram · Messenger'],
+    ['icon' => 'chat', 'title' => __('See the answers'), 'text' => __("Who's coming")],
   ];
 
   $sectionHelp = [
-    'overview' => 'ស្ថិតិ និងជំហានបន្ទាប់',
-    'details' => 'ឈ្មោះ សារ ថ្ងៃ ទីកន្លែង',
-    'media' => 'រូបគម្រប និងរូបថត',
-    'program' => 'របៀបវារៈ និងរឿងរ៉ាវ',
-    'guests' => 'បន្ថែមភ្ញៀវ និង Copy link',
-    'responses' => 'អ្នកចូលរួម / មិនចូលរួម',
+    'overview' => __('Stats and next steps'),
+    'details' => __('Names, message, date, venue'),
+    'media' => __('Cover image and photos'),
+    'program' => __('Schedule and story'),
+    'guests' => __('Add guests and Copy link'),
+    'responses' => __("Who's coming / not coming"),
   ];
 
   $fieldGroups = collect(['details', 'media', 'program'])
@@ -28,13 +28,13 @@
 <div x-data="{ zoom: null }">
 @include('livewire.pages.dashboard.partials.field-help-zoom', ['zoomFields' => $fieldGroups->flatten()->all()])
 
-<p class="mt-1 text-base text-plum-500 dark:text-plum-400">របៀបប្រើប្រាស់ ក្នុង ៦ ជំហាន</p>
+<p class="mt-1 text-base text-plum-500 dark:text-plum-400">{{ __('How it works, in 6 steps') }}</p>
 
 {{-- Step by step, as icons --}}
 @include('livewire.pages.dashboard.partials.flow-steps', ['flow' => $flow])
 
 {{-- The sidebar menu, as tiles that go straight there --}}
-<h2 class="mt-10 text-xl font-bold text-plum-900 dark:text-white">ម៉ឺនុយនៅខាងឆ្វេង</h2>
+<h2 class="mt-10 text-xl font-bold text-plum-900 dark:text-white">{{ __('The menu on the left') }}</h2>
 <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
   @foreach ($this->availableSections() as $key)
     @continue(! isset($sectionHelp[$key]))
@@ -53,9 +53,9 @@
 
 {{-- Every field on this template, with where it shows on the invitation --}}
 @if ($fieldGroups->isNotEmpty())
-  <h2 class="mt-10 text-xl font-bold text-plum-900 dark:text-white">ប្រអប់នីមួយៗ បង្ហាញនៅកន្លែងណា?</h2>
+  <h2 class="mt-10 text-xl font-bold text-plum-900 dark:text-white">{{ __('Where does each field show up?') }}</h2>
   <p class="mt-2 flex items-center gap-2 text-sm text-plum-600 dark:text-plum-300">
-    <span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span> ពណ៌ផ្កាឈូក = កន្លែងដែលប្រអប់នោះបង្ហាញលើធៀប · ប្រអប់ទទេមិនបង្ហាញ
+    <span class="h-2.5 w-2.5 rounded-sm bg-brand-500"></span> {{ __('Pink = where that field appears on the invitation · empty fields are not shown') }}
   </p>
 
   @foreach ($fieldGroups as $group => $keys)
@@ -65,7 +65,7 @@
     <div class="mt-3 grid gap-3 lg:grid-cols-2">
       @foreach ($keys as $key)
         <div wire:key="guide-{{ $key }}" class="flex gap-4 rounded-xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
-          <button type="button" @click="zoom = '{{ $key }}'" title="មើលពេញអេក្រង់" class="shrink-0 self-start rounded-lg transition hover:ring-2 hover:ring-brand-300"><x-invite-diagram :field="$key" class="w-24" /></button>
+          <button type="button" @click="zoom = '{{ $key }}'" title="{{ __('View full screen') }}" class="shrink-0 self-start rounded-lg transition hover:ring-2 hover:ring-brand-300"><x-invite-diagram :field="$key" class="w-24" /></button>
           <div class="flex min-w-0 flex-1 flex-col">
             <p class="flex flex-wrap items-center gap-1.5 text-base font-semibold text-plum-900 dark:text-white">
               {{ $fieldCatalog[$key]['label'] }}
@@ -77,12 +77,12 @@
             </p>
             <p class="mt-1.5 text-sm leading-relaxed text-plum-700 dark:text-plum-200">{{ $fieldCatalog[$key]['hint'] ?? '' }}</p>
             @if (! empty($fieldCatalog[$key]['example']))
-              <p class="mt-2 truncate text-sm text-plum-500 dark:text-plum-400"><span class="font-bold">ឧ.</span> {{ $fieldCatalog[$key]['example'] }}</p>
+              <p class="mt-2 truncate text-sm text-plum-500 dark:text-plum-400"><span class="font-bold">{{ __('e.g.') }}</span> {{ $fieldCatalog[$key]['example'] }}</p>
             @endif
             <div class="mt-auto flex flex-wrap gap-2 pt-3">
-              <button type="button" @click="zoom = '{{ $key }}'" class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">មើលពេញអេក្រង់</button>
+              <button type="button" @click="zoom = '{{ $key }}'" class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">{{ __('View full screen') }}</button>
               @if ($isPaid)
-                <button type="button" wire:click="editField('{{ $key }}')" class="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">បំពេញឥឡូវ →</button>
+                <button type="button" wire:click="editField('{{ $key }}')" class="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">{{ __('Fill it in now →') }}</button>
               @endif
             </div>
           </div>
@@ -93,14 +93,14 @@
 @endif
 
 {{-- Good to know, one icon per point --}}
-<h2 class="mt-10 text-xl font-bold text-plum-900 dark:text-white">គួរដឹង</h2>
+<h2 class="mt-10 text-xl font-bold text-plum-900 dark:text-white">{{ __('Good to know') }}</h2>
 <div class="mt-3 grid gap-2 sm:grid-cols-2">
   @foreach (array_filter([
-    ['icon' => 'lock-closed', 'text' => 'ផ្លាក Premium = មិននៅក្នុងគម្រោងរបស់អ្នក ភ្ញៀវមើលមិនឃើញ។'],
-    ['icon' => 'check-circle', 'text' => 'ចុច Save ទើបរក្សាទុក។ ភ្ញៀវឃើញការកែភ្លាមៗ មិនបាច់ផ្ញើតំណថ្មី។'],
-    ['icon' => 'users', 'text' => 'ភ្ញៀវបានរហូតដល់ '.$invitation->max_recipients.' នាក់។ លុបភ្ញៀវ = តំណគេលែងដំណើរការ។'],
-    $invitation->expires_at ? ['icon' => 'clock', 'text' => 'ដំណើរការដល់ '.$invitation->expires_at->format('d M Y').'។ ក្រោយនោះតំណបិទ។'] : null,
-    ['icon' => 'photo', 'text' => 'រូប JPG/PNG/WebP ≤ 20 MB · GIF ≤ 5 MB។'],
+    ['icon' => 'lock-closed', 'text' => __('Premium badge = not in your plan, guests won’t see it.')],
+    ['icon' => 'check-circle', 'text' => __('Press Save to keep your changes. Guests see edits right away — no need to send new links.')],
+    ['icon' => 'users', 'text' => __('Up to :max guests. Removing a guest = their link stops working.', ['max' => $invitation->max_recipients])],
+    $invitation->expires_at ? ['icon' => 'clock', 'text' => __('Active until :date. After that, the links close.', ['date' => $invitation->expires_at->format('d M Y')])] : null,
+    ['icon' => 'photo', 'text' => __('JPG/PNG/WebP photos ≤ 20 MB · GIF ≤ 5 MB.')],
   ]) as $note)
     <div class="flex items-start gap-3 rounded-xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
       <x-app-icon :name="$note['icon']" class="mt-0.5 h-5 w-5 shrink-0 text-brand-600 dark:text-brand-400" />

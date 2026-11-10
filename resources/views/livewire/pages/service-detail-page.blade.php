@@ -3,10 +3,10 @@
     <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 text-sm sm:px-6 lg:px-8">
       <button type="button" onclick="window.history.length > 1 ? window.history.back() : (window.location = '/shop')"
         class="flex shrink-0 items-center gap-1 font-semibold text-plum-500 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
-        <x-app-icon name="chevron-left" class="h-4 w-4" /> ត្រឡប់ក្រោយ
+        <x-app-icon name="chevron-left" class="h-4 w-4" /> {{ __('Back') }}
       </button>
       <nav class="flex items-center gap-1.5 text-plum-500 dark:text-plum-400">
-        <a href="/shop" wire:navigate class="hover:text-brand-700 dark:hover:text-white">ហាង</a>
+        <a href="/shop" wire:navigate class="hover:text-brand-700 dark:hover:text-white">{{ __('Shop') }}</a>
         <x-app-icon name="chevron-right" class="h-3.5 w-3.5" />
         <a href="/shop/{{ $service->category->slug }}" wire:navigate class="hover:text-brand-700 dark:hover:text-white">{{ $service->category->name_km }}</a>
         <x-app-icon name="chevron-right" class="h-3.5 w-3.5" />
@@ -51,16 +51,16 @@
         <div class="mb-3 flex flex-wrap items-center gap-2">
           @if ($service->is_featured)
             <span class="inline-flex items-center gap-1 rounded-full bg-gold-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-950">
-              <x-app-icon name="star" class="h-3 w-3" /> Featured
+              <x-app-icon name="star" class="h-3 w-3" /> {{ __('Featured') }}
             </span>
           @endif
           @if ($service->in_stock)
             <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-green-700 dark:bg-green-900/30 dark:text-green-400">
-              <x-app-icon name="check-circle" class="h-3 w-3" /> In Stock
+              <x-app-icon name="check-circle" class="h-3 w-3" /> {{ __('In Stock') }}
             </span>
           @else
             <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-red-700 dark:bg-red-900/30 dark:text-red-400">
-              <x-app-icon name="x-circle" class="h-3 w-3" /> Out of Stock
+              <x-app-icon name="x-circle" class="h-3 w-3" /> {{ __('Out of Stock') }}
             </span>
           @endif
         </div>
@@ -71,7 +71,7 @@
 
         @if ($service->plans->isNotEmpty())
           <div class="mt-6">
-            <p class="mb-2.5 text-sm font-semibold text-plum-800 dark:text-plum-100">ជ្រើសរើសគម្រោង</p>
+            <p class="mb-2.5 text-sm font-semibold text-plum-800 dark:text-plum-100">{{ __('Choose a plan') }}</p>
             <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               @foreach ($service->plans as $plan)
                 <label wire:key="plan-{{ $plan->id }}"
@@ -79,7 +79,7 @@
                   <input type="radio" wire:model.live="selectedPlanId" value="{{ $plan->id }}" class="sr-only" @disabled(! $plan->in_stock) />
                   <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ $plan->label }}</span>
                   @if (! $plan->in_stock)
-                    <span class="text-[11px] font-bold uppercase tracking-wide text-red-600 dark:text-red-400">អស់ស្តុក</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wide text-red-600 dark:text-red-400">{{ __('Out of Stock') }}</span>
                   @elseif ($service->hasDiscount())
                     <span class="flex items-baseline gap-1">
                       <span class="text-sm font-bold text-red-600 dark:text-red-400">${{ number_format($service->discountedPrice((float) $plan->price), 2) }}</span>
@@ -101,7 +101,7 @@
         @endphp
         <div class="mt-6 flex items-end gap-4">
           <div>
-            <span class="text-xs uppercase text-plum-400">តម្លៃ</span>
+            <span class="text-xs uppercase text-plum-400">{{ __('Price') }}</span>
             @if ($service->hasDiscount())
               <div class="flex items-baseline gap-2">
                 <p class="text-3xl font-extrabold text-red-600 dark:text-red-400">${{ number_format($discountedDisplayPrice, 2) }}</p>
@@ -127,19 +127,19 @@
           <button type="button" wire:click="addToCart"
             class="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700 sm:w-auto sm:px-10">
             <x-app-icon name="cart" class="h-5 w-5" />
-            <span wire:loading.remove wire:target="addToCart">បន្ថែមទៅកន្ត្រក</span>
-            <span wire:loading wire:target="addToCart">កំពុងបន្ថែម...</span>
+            <span wire:loading.remove wire:target="addToCart">{{ __('Add to cart') }}</span>
+            <span wire:loading wire:target="addToCart">{{ __('Adding...') }}</span>
           </button>
         @else
           <button type="button" disabled
             class="mt-6 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-plum-200 px-6 py-3.5 text-sm font-bold text-plum-500 sm:w-auto sm:px-10 dark:bg-plum-800 dark:text-plum-500">
             <x-app-icon name="x-circle" class="h-5 w-5" />
-            អស់ពីស្តុក
+            {{ __('Sold out') }}
           </button>
         @endif
         @if ($added)
           <p class="mt-2 flex items-center gap-1.5 text-sm font-semibold text-green-600 dark:text-green-400">
-            <x-app-icon name="check-circle" class="h-4 w-4" /> បានបន្ថែមទៅកន្ត្រកដោយជោគជ័យ!
+            <x-app-icon name="check-circle" class="h-4 w-4" /> {{ __('Added to cart successfully!') }}
           </p>
         @endif
 
@@ -147,22 +147,22 @@
           <a href="{{ $service->demo_url }}" target="_blank" rel="noopener noreferrer"
             class="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-brand-300 px-6 py-3 text-sm font-bold text-brand-700 transition-colors hover:bg-brand-50 sm:w-auto sm:px-10 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-plum-800">
             <x-app-icon name="bolt" class="h-5 w-5" />
-            មើលគេហទំព័រសាកល្បង &mdash; View Live Demo
+            {{ __('View live demo') }}
           </a>
         @endif
 
         <div class="mt-6 grid grid-cols-3 gap-2 rounded-xl border border-plum-200 p-3 text-center dark:border-plum-800">
           <div class="flex flex-col items-center gap-1">
             <x-app-icon name="bolt" class="h-5 w-5 text-brand-600 dark:text-brand-300" />
-            <span class="text-[11px] font-medium text-plum-500 dark:text-plum-400">ដឹកជញ្ជូនភ្លាមៗ</span>
+            <span class="text-[11px] font-medium text-plum-500 dark:text-plum-400">{{ __('Instant delivery') }}</span>
           </div>
           <div class="flex flex-col items-center gap-1">
             <x-app-icon name="shield-check" class="h-5 w-5 text-brand-600 dark:text-brand-300" />
-            <span class="text-[11px] font-medium text-plum-500 dark:text-plum-400">សុវត្ថិភាព ១០០%</span>
+            <span class="text-[11px] font-medium text-plum-500 dark:text-plum-400">{{ __('100% secure') }}</span>
           </div>
           <div class="flex flex-col items-center gap-1">
             <x-app-icon name="chat" class="h-5 w-5 text-brand-600 dark:text-brand-300" />
-            <span class="text-[11px] font-medium text-plum-500 dark:text-plum-400">គាំទ្រ ២៤/៧</span>
+            <span class="text-[11px] font-medium text-plum-500 dark:text-plum-400">{{ __('24/7 support') }}</span>
           </div>
         </div>
       </div>
@@ -174,9 +174,9 @@
       $faqs = collect($service->faqs ?? [])
         ->filter(fn ($faq) => filled($faq['question'] ?? null))
         ->values();
-      $tabs = collect(['details' => 'ព័ត៌មានលម្អិត'])
-        ->when($howToUseSteps->isNotEmpty(), fn ($tabs) => $tabs->put('how', 'របៀបប្រើប្រាស់'))
-        ->when($faqs->isNotEmpty(), fn ($tabs) => $tabs->put('faq', 'សំណួរញឹកញាប់'));
+      $tabs = collect(['details' => __('Details')])
+        ->when($howToUseSteps->isNotEmpty(), fn ($tabs) => $tabs->put('how', __('How to use')))
+        ->when($faqs->isNotEmpty(), fn ($tabs) => $tabs->put('faq', __('FAQ')));
     @endphp
     <div class="mt-14" x-data="{ tab: 'details' }">
       <div class="flex gap-2 border-b border-plum-200 dark:border-plum-800">
@@ -214,7 +214,7 @@
     {{-- Related services --}}
     @if ($relatedServices->isNotEmpty())
       <div class="mt-16">
-        <h2 class="mb-6 text-xl font-extrabold text-plum-900 dark:text-white">ផលិតផលពាក់ព័ន្ធ</h2>
+        <h2 class="mb-6 text-xl font-extrabold text-plum-900 dark:text-white">{{ __('Related products') }}</h2>
         <div class="grid grid-cols-2 gap-5 sm:grid-cols-4">
           @foreach ($relatedServices as $related)
             <x-shop.product-card :service="$related" wire:key="related-{{ $related->id }}" />

@@ -16,7 +16,7 @@ $isLarge = $size === 'large';
   ])>
   @if ($service->is_featured)
     <span class="absolute left-3 top-3 z-10 rounded bg-gold-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-950">
-      Featured
+      {{ __('Featured') }}
     </span>
   @endif
   @if ($service->hasDiscount())
@@ -49,7 +49,7 @@ $isLarge = $size === 'large';
     @unless ($service->in_stock)
       <div class="absolute inset-0 flex items-center justify-center bg-plum-950/40">
         <span class="rounded-full bg-plum-950/80 px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest text-white">
-          Out of Stock
+          {{ __('Out of Stock') }}
         </span>
       </div>
     @endunless
@@ -75,7 +75,7 @@ $isLarge = $size === 'large';
 
     <div class="mt-2 flex items-center justify-between border-t border-plum-100 pt-3 dark:border-plum-800">
       <div>
-        <span class="text-[11px] uppercase text-plum-400">ចាប់ផ្តើមពី</span>
+        <span class="text-[11px] uppercase text-plum-400">{{ __('Starting from') }}</span>
         @if ($service->hasDiscount())
           <p class="flex items-baseline gap-1.5">
             <span @class(['font-bold text-red-600 dark:text-red-400', 'text-lg' => ! $isLarge, 'text-2xl' => $isLarge])>${{ number_format($discountedFromPrice, 2) }}</span>
