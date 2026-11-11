@@ -44,6 +44,10 @@ Route::get('/terms', TermsPage::class)->name('terms');
 // Guest-facing invitation pages are always Khmer, whatever language the visitor chose.
 Route::middleware('guest.locale')->group(function () {
     Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
+    // review any template file without an admin row: /demo/wedding/{name}, /demo/birthday ...
+    Route::get('/demo/{path}', [InvitationTemplateDemoController::class, 'file'])
+        ->where('path', '[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*')
+        ->name('templates.demo.file');
     Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
     Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpController::class)
         ->middleware('throttle:20,1')

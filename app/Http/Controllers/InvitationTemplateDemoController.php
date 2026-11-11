@@ -53,6 +53,55 @@ class InvitationTemplateDemoController extends Controller
     }
 
     /**
+     * Review link for any template file, straight from disk — no InvitationTemplate row needed.
+     * /demo/{path} renders resources/views/invitations/templates/{path}.blade.php, e.g.
+     * /demo/wedding/{name} or /demo/birthday. ?to=Name sets the guest name.
+     * Sample data is picked by folder/name so every section of the design shows.
+     */
+    public function file(string $path)
+    {
+        $view = 'invitations.templates.'.str_replace('/', '.', trim($path, '/'));
+        abort_unless(view()->exists($view), 404);
+
+        $kind = strtolower(strtok(trim($path, '/'), '/'));
+        $fields = match (true) {
+            str_contains($kind, 'wedding') => $this->khmerWeddingDemoFields() + [
+                'contact_phone' => '012 345 678',
+                'host_names' => "លោក ហេង ឌី និងលោកស្រី សុខ ជា\nលោក ឈិន សារ៉ាត និងលោកស្រី ពិស្ណុ សារ៉ាត",
+            ],
+            str_contains($kind, 'kathin') || str_contains($kind, 'kak-thern') || str_contains($kind, 'ceremony') => $this->kathinaDemoFields(),
+            default => $this->khmerWeddingDemoFields() + $this->kathinaDemoFields() + [
+                'sender_name' => 'Alex',
+                'celebrant_name' => 'Bella',
+                'turning_age' => '25',
+                'headline' => 'You are invited',
+                'message' => 'We would love to celebrate this special day with you.',
+            ],
+        };
+
+        // the template's own pictures in public/images/invitations/{file name}/ replace the sample
+        // photos: the first is the cover picture, all of them fill the gallery. Only for templates in
+        // a subfolder (wedding/{name}) — older top-level ones keep design artwork in that folder
+        $ownDir = 'images/invitations/'.basename($path);
+        $ownImages = collect(str_contains(trim($path, '/'), '/') && is_dir(public_path($ownDir)) ? scandir(public_path($ownDir)) : [])
+            ->filter(fn ($f) => preg_match('/\.(png|jpe?g|webp|gif)$/i', $f))
+            ->sort()
+            ->map(fn ($f) => asset($ownDir.'/'.rawurlencode($f)))
+            ->values();
+        if ($ownImages->isNotEmpty()) {
+            $fields['cover_image'] = $ownImages->first();
+            $fields['photo_gallery'] = $ownImages->all();
+        }
+
+        return view('invitations.show', [
+            'view' => $view,
+            'recipientName' => request('to', 'ភ្ញៀវកិត្តិយស'),
+            'invitation' => null,
+            'fields' => $fields,
+        ]);
+    }
+
+    /**
      * Realistic sample content for the Khmer Traditional Wedding preview — the same field keys
      * a real customer fills in through the dashboard form, so the demo exercises every section.
      */
