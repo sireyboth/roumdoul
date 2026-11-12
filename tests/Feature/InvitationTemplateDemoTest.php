@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Invitation;
+use App\Models\InvitationRecipient;
 use App\Models\InvitationTemplate;
+use App\Models\Service;
+use App\Models\ServicePlan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class InvitationTemplateDemoTest extends TestCase
@@ -37,7 +42,7 @@ class InvitationTemplateDemoTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Bella');
-        $response->assertSee("let&#039;s play a game", false);
+        $response->assertSee('let&#039;s play a game', false);
     }
 
     public function test_the_khmer_traditional_wedding_demo_renders_every_section(): void
@@ -62,16 +67,59 @@ class InvitationTemplateDemoTest extends TestCase
         $response->assertSee('+855 12 345 678');
     }
 
+    public function test_the_khmer_traditional_2_demo_renders_the_cover_and_every_section(): void
+    {
+        $response = $this->get('/demo/khmer-traditional-2?to=Guest+Test');
+
+        $response->assertOk();
+        // cover: the couple's initials in the gold frame, the guest in the band
+        $response->assertSee('class="k2-initials k2-kh"', false);
+        $response->assertSee('ស&amp;ស', false);
+        $response->assertSee('Guest Test');
+        $response->assertSee('khmer-traditional-2/portrait/cover.mp4', false);
+        $response->assertSee('khmer-traditional-2/landscape/background.mp4', false);
+        $response->assertSee('SOKHA');
+        $response->assertSee('លោក ហេង ឌី');
+        $response->assertSee('ដំណើរជីវិតរបស់យើង');
+        $response->assertSee('ពិធីបង្វិលពពិល');
+        $response->assertSee('THE GRAND BALLROOM');
+        $response->assertSee('ចំណងដៃ');
+        $response->assertSee('សូមអញ្ជើញបញ្ជាក់ការចូលរួម');
+        $response->assertSee('+855 12 345 678');
+        $response->assertSee('លិខិតសូមអភ័យទោស');
+    }
+
+    public function test_the_khmer_traditional_2_initials_fall_back_to_the_names_and_empty_sections_hide(): void
+    {
+        $template = InvitationTemplate::factory()->create([
+            'view' => 'invitations.templates.khmer-traditional-2',
+        ]);
+        $invitation = Invitation::factory()->create([
+            'invitation_template_id' => $template->id,
+            'field_values' => ['groom_name' => 'Dara', 'bride_name' => 'Maly'],
+        ]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+
+        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+
+        $response->assertOk();
+        $response->assertSee('<span>D</span><span class="amp" aria-hidden="true">&amp;</span><span>M</span>', false);
+        $response->assertSee('DARA');
+        $response->assertDontSee('កម្មវិធីអាពាហ៍ពិពាហ៍');
+        $response->assertDontSee('ទីតាំងប្រារព្ធពិធី');
+        $response->assertDontSee('សូមអញ្ជើញបញ្ជាក់ការចូលរួម');
+    }
+
     public function test_the_khmer_wedding_hides_sections_with_no_customer_data(): void
     {
         $template = InvitationTemplate::factory()->create([
             'view' => 'invitations.templates.khmer-traditional-wedding',
         ]);
-        $invitation = \App\Models\Invitation::factory()->create([
+        $invitation = Invitation::factory()->create([
             'invitation_template_id' => $template->id,
             'field_values' => ['groom_name' => 'Dara', 'bride_name' => 'Maly'],
         ]);
-        $recipient = \App\Models\InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
         $response = $this->get(route('invitation.show', [$invitation, $recipient]));
 
@@ -85,15 +133,15 @@ class InvitationTemplateDemoTest extends TestCase
 
     public function test_the_khmer_wedding_shows_a_schedule_image_instead_of_the_typed_schedule(): void
     {
-        \Illuminate\Support\Facades\Storage::fake('s3');
+        Storage::fake('s3');
         $template = InvitationTemplate::factory()->create([
             'view' => 'invitations.templates.khmer-traditional-wedding',
         ]);
-        $plan = \App\Models\ServicePlan::factory()->create([
-            'service_id' => \App\Models\Service::factory()->create()->id,
+        $plan = ServicePlan::factory()->create([
+            'service_id' => Service::factory()->create()->id,
             'features' => ['event_schedule'],
         ]);
-        $invitation = \App\Models\Invitation::factory()->create([
+        $invitation = Invitation::factory()->create([
             'invitation_template_id' => $template->id,
             'service_plan_id' => $plan->id,
             'field_values' => [
@@ -102,7 +150,7 @@ class InvitationTemplateDemoTest extends TestCase
                 'schedule_image' => 'invitations/1/kbach-schedule.jpg',
             ],
         ]);
-        $recipient = \App\Models\InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
         $response = $this->get(route('invitation.show', [$invitation, $recipient]));
 
@@ -141,11 +189,11 @@ class InvitationTemplateDemoTest extends TestCase
         $template = InvitationTemplate::factory()->create([
             'view' => 'invitations.templates.kak-thern',
         ]);
-        $invitation = \App\Models\Invitation::factory()->create([
+        $invitation = Invitation::factory()->create([
             'invitation_template_id' => $template->id,
             'field_values' => ['venue_name' => 'វត្តបទុមវតី'],
         ]);
-        $recipient = \App\Models\InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
         $response = $this->get(route('invitation.show', [$invitation, $recipient]));
 
@@ -163,11 +211,11 @@ class InvitationTemplateDemoTest extends TestCase
             'view' => 'invitations.templates.kak-thern',
         ]);
         $render = function (array $fields) use ($template) {
-            $invitation = \App\Models\Invitation::factory()->create([
+            $invitation = Invitation::factory()->create([
                 'invitation_template_id' => $template->id,
                 'field_values' => $fields,
             ]);
-            $recipient = \App\Models\InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+            $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
             return $this->get(route('invitation.show', [$invitation, $recipient]))->assertOk();
         };
@@ -189,11 +237,11 @@ class InvitationTemplateDemoTest extends TestCase
         $template = InvitationTemplate::factory()->create([
             'view' => 'invitations.templates.kak-thern',
         ]);
-        $plan = \App\Models\ServicePlan::factory()->create([
-            'service_id' => \App\Models\Service::factory()->create()->id,
+        $plan = ServicePlan::factory()->create([
+            'service_id' => Service::factory()->create()->id,
             'features' => ['qr_code', 'rsvp_enabled'],
         ]);
-        $invitation = \App\Models\Invitation::factory()->create([
+        $invitation = Invitation::factory()->create([
             'invitation_template_id' => $template->id,
             'service_plan_id' => $plan->id,
             'field_values' => [
@@ -207,7 +255,7 @@ class InvitationTemplateDemoTest extends TestCase
                 'thanks_message' => 'សូមឲ្យលោកអ្នកមានសុខភាពល្អ',
             ],
         ]);
-        $recipient = \App\Models\InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
         $response = $this->get(route('invitation.show', [$invitation, $recipient]))->assertOk();
 
@@ -222,17 +270,17 @@ class InvitationTemplateDemoTest extends TestCase
 
     public function test_an_uploaded_song_plays_instead_of_the_youtube_link_and_loads_only_on_play(): void
     {
-        \Illuminate\Support\Facades\Storage::fake('s3');
+        Storage::fake('s3');
         foreach (['kak-thern', 'khmer-traditional-wedding', 'admire', 'date-asking'] as $view) {
             $template = InvitationTemplate::factory()->create(['view' => 'invitations.templates.'.$view]);
-            $invitation = \App\Models\Invitation::factory()->create([
+            $invitation = Invitation::factory()->create([
                 'invitation_template_id' => $template->id,
                 'field_values' => [
                     'music_file' => 'invitations/1/song.mp3',
                     'music_url' => 'https://www.youtube.com/watch?v=lTRiuFIWV54',
                 ],
             ]);
-            $recipient = \App\Models\InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+            $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
             $this->get(route('invitation.show', [$invitation, $recipient]))
                 ->assertOk()

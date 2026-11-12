@@ -38,6 +38,7 @@ add/remove), `boolean`, `datetime`, `color`.
 |---|---|---|
 | `sender_name` | text | Generic "who it's from" (date-asking, breakup, etc.) |
 | `groom_name` / `bride_name` | text | Wedding-specific names |
+| `couple_initials` | text | The couple's initials, e.g. «ប&ម» (Khmer Traditional Wedding II: inside the gold frame on the cover and on the closing seal); empty = first letter of each name |
 | `groom_father` / `groom_mother` / `bride_father` / `bride_mother` | text | Wedding-specific parents' names (top of the card, above the title; "លោក"/"លោកស្រី" added automatically) |
 | `celebrant_name` | text | Birthday-specific name |
 | `turning_age` | text | Birthday-specific "turning ___" |

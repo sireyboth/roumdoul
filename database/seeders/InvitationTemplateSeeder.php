@@ -164,5 +164,49 @@ class InvitationTemplateSeeder extends Seeder
                 'view' => 'invitations.templates.khmer-traditional-wedding',
             ]
         );
+
+        // Khmer Traditional Wedding II — gold on maroon, same fields as the first one plus the
+        // couple's initials in the cover's gold frame. Demo: /templates/khmer-traditional-2/demo
+        $khmer2Service = Service::updateOrCreate(
+            ['slug' => 'khmer-traditional-2'],
+            [
+                'category_id' => $category->id,
+                'name_en' => 'Khmer Traditional Wedding II',
+                'name_km' => 'លិខិតអញ្ជើញមង្គលការបែបប្រពៃណីខ្មែរ ២',
+                'short_description' => 'A gold-on-maroon Cambodian wedding invitation with your initials on the cover, ceremony schedule, story, gallery, map and RSVP.',
+                'description' => 'Fill in your names, initials, photos, ceremony program and venue, then send a personal link to each guest. Includes countdown, map, RSVP and background music.',
+                'base_price' => 9.99,
+                'demo_url' => '/templates/khmer-traditional-2/demo',
+                'is_active' => true,
+            ]
+        );
+
+        ServicePlan::updateOrCreate(
+            ['service_id' => $khmer2Service->id, 'label' => 'Essential — 50 recipients, 6 months'],
+            ['price' => 9.99, 'max_recipients' => 50, 'retention_months' => 6, 'features' => ['venue_address', 'map_url', 'event_schedule', 'qr_code'], 'sort_order' => 0]
+        );
+
+        ServicePlan::updateOrCreate(
+            ['service_id' => $khmer2Service->id, 'label' => 'Premium — 200 recipients, 1 year'],
+            ['price' => 19.99, 'max_recipients' => 200, 'retention_months' => 12, 'features' => ['venue_address', 'map_url', 'event_schedule', 'qr_code', 'story_chapters', 'photo_gallery', 'countdown_enabled', 'rsvp_enabled', 'khmer_date'], 'sort_order' => 1]
+        );
+
+        InvitationTemplate::updateOrCreate(
+            ['slug' => 'khmer-traditional-2'],
+            [
+                'service_id' => $khmer2Service->id,
+                'name' => 'Khmer Traditional Wedding II',
+                'category' => 'wedding',
+                'is_premium' => true,
+                'is_active' => true,
+                'fields' => [
+                    'groom_name', 'bride_name', 'couple_initials', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'cover_image',
+                    'message', 'reception_message', 'thanks_message', 'apology_message', 'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
+                    'qr_code', 'gift_account', 'story_chapters', 'event_schedule', 'schedule_image', 'photo_gallery', 'gallery_feed', 'rsvp_enabled',
+                    'countdown_enabled', 'music_url', 'music_file', 'groom_phone', 'bride_phone',
+                ],
+                'view' => 'invitations.templates.khmer-traditional-2',
+            ]
+        );
     }
 }
