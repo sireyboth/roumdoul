@@ -10,7 +10,7 @@ class InvitationTemplateDemoController extends Controller
     {
         abort_unless($template->is_active, 404);
 
-        if ($template->slug === 'khmer-traditional-wedding') {
+        if (in_array($template->slug, ['khmer-traditional-wedding', 'khmer-traditional-2'], true)) {
             return view('invitations.show', [
                 'view' => $template->view,
                 'recipientName' => 'ភ្ញៀវកិត្តិយស',
@@ -65,7 +65,7 @@ class InvitationTemplateDemoController extends Controller
 
         $kind = strtolower(strtok(trim($path, '/'), '/'));
         $fields = match (true) {
-            str_contains($kind, 'wedding') => $this->khmerWeddingDemoFields() + [
+            str_contains($kind, 'wedding') || str_contains($kind, 'khmer-traditional') => $this->khmerWeddingDemoFields() + [
                 'contact_phone' => '012 345 678',
                 'host_names' => "លោក ហេង ឌី និងលោកស្រី សុខ ជា\nលោក ឈិន សារ៉ាត និងលោកស្រី ពិស្ណុ សារ៉ាត",
             ],
@@ -110,6 +110,7 @@ class InvitationTemplateDemoController extends Controller
         return [
             'groom_name' => 'SOKHA',
             'bride_name' => 'SREYNEANG',
+            'couple_initials' => 'ស&ស',
             'groom_father' => 'ហេង ឌី',
             'groom_mother' => 'សុខ ជា',
             'bride_father' => 'ឈិន សារ៉ាត',

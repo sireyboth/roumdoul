@@ -34,6 +34,7 @@ class InvitationTemplate extends Model
         'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text', 'hint' => 'Your name — guests will see who is inviting them.', 'example' => 'សុខា'],
         'groom_name' => ['label' => "Groom's name", 'type' => 'text', 'hint' => "The groom's name, as you want it to appear on the invitation.", 'example' => 'សុខ សុខា'],
         'bride_name' => ['label' => "Bride's name", 'type' => 'text', 'hint' => "The bride's name, as you want it to appear on the invitation.", 'example' => 'ចាន់ ស្រីនាង'],
+        'couple_initials' => ['label' => "Couple's initials", 'type' => 'text', 'hint' => "The couple's initials, shown large inside the gold frame on the cover, e.g. «ប&ម». Leave empty to use the first letters of the groom's and bride's names.", 'example' => 'ប&ម'],
         'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text', 'hint' => 'The name of the person whose birthday it is.', 'example' => 'ស្រីពៅ'],
         'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'The age they are turning, e.g. 25.', 'example' => '25'],
         'headline' => ['label' => 'Headline', 'type' => 'text', 'hint' => 'The big title at the top of the invitation, e.g. «សូមគោរពអញ្ជើញ».', 'example' => 'សូមគោរពអញ្ជើញ'],
@@ -97,6 +98,7 @@ class InvitationTemplate extends Model
         'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
         'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'thanks_message', 'apology_message', 'reception_message', 'gallery_feed', 'gift_account',
         'contact_phone', 'host_names', 'title_image', 'opening_line', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
+        'couple_initials',
     ];
 
     /**
@@ -124,7 +126,7 @@ class InvitationTemplate extends Model
             'contact_phone', 'title_image', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
         ],
         'wedding' => [
-            'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
+            'groom_name', 'bride_name', 'couple_initials', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
             'khmer_date', 'story_chapters', 'thanks_message', 'apology_message', 'reception_message',
         ],
         'birthday' => ['celebrant_name', 'turning_age'],
