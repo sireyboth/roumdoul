@@ -1,7 +1,16 @@
 {{-- LEGAL REVIEW PENDING: Khmer-only for now; an English version needs legal review before it is published. --}}
 <div>
-    <section class="bg-brand-950 py-16 sm:py-24">
-      <div class="mx-auto flex max-w-4xl flex-col items-center gap-5 px-4 text-center sm:gap-6 sm:px-6 lg:px-8">
+    <section class="relative overflow-hidden bg-brand-950 py-16 sm:py-24">
+      {{-- Khmer kbach decoration: pattern around the edges (clear behind the title), lotus cropped at each side --}}
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 invert"
+        style="opacity: .07; background-image: url('{{ asset('images/kbach-pattern.webp') }}'); background-size: 220px auto; -webkit-mask-image: radial-gradient(ellipse at center, transparent 30%, #000 85%); mask-image: radial-gradient(ellipse at center, transparent 30%, #000 85%);"></div>
+      <img src="{{ asset('images/roumdolkbach.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async"
+        class="pointer-events-none absolute top-1/2 hidden -translate-y-1/2 sm:block"
+        style="right: -5rem; width: 15rem; height: auto; opacity: .18;" />
+      <img src="{{ asset('images/roumdolkbach.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async"
+        class="pointer-events-none absolute top-1/2 -translate-y-1/2"
+        style="left: -5rem; width: 15rem; height: auto; opacity: .18;" />
+      <div class="relative mx-auto flex max-w-4xl flex-col items-center gap-5 px-4 text-center sm:gap-6 sm:px-6 lg:px-8">
         <span class="rounded-full border border-gold-400/30 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-300">
           ROUMDOUL
         </span>

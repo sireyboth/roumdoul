@@ -21,6 +21,7 @@ class CustomerAuthTest extends TestCase
         Livewire::test(RegisterPage::class)
             ->set('name', 'Sok Dara')
             ->set('email', 'dara@example.com')
+            ->set('phone', '012 345 678')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')
             ->set('terms', true)
@@ -28,7 +29,21 @@ class CustomerAuthTest extends TestCase
             ->assertRedirect('/dashboard');
 
         $this->assertTrue(Auth::guard('customer')->check());
-        $this->assertDatabaseHas('customers', ['email' => 'dara@example.com']);
+        $this->assertDatabaseHas('customers', ['email' => 'dara@example.com', 'phone' => '012 345 678']);
+    }
+
+    public function test_registration_requires_a_phone_number(): void
+    {
+        Livewire::test(RegisterPage::class)
+            ->set('name', 'Sok Dara')
+            ->set('email', 'dara@example.com')
+            ->set('password', 'password123')
+            ->set('password_confirmation', 'password123')
+            ->set('terms', true)
+            ->call('register')
+            ->assertHasErrors(['phone' => 'required']);
+
+        $this->assertDatabaseCount('customers', 0);
     }
 
     public function test_registration_requires_accepting_the_terms(): void
@@ -36,6 +51,7 @@ class CustomerAuthTest extends TestCase
         Livewire::test(RegisterPage::class)
             ->set('name', 'Sok Dara')
             ->set('email', 'dara@example.com')
+            ->set('phone', '012 345 678')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')
             ->call('register')
@@ -49,6 +65,7 @@ class CustomerAuthTest extends TestCase
         Livewire::test(RegisterPage::class)
             ->set('name', 'Sok Dara')
             ->set('email', 'dara@example.com')
+            ->set('phone', '012 345 678')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')
             ->set('terms', true)
@@ -57,7 +74,7 @@ class CustomerAuthTest extends TestCase
         $this->assertNotNull(Customer::where('email', 'dara@example.com')->first()->terms_accepted_at);
     }
 
-    public function test_login_requires_accepting_the_terms(): void
+    public function test_login_does_not_ask_for_the_terms_again(): void
     {
         Customer::factory()->create([
             'email' => 'dara@example.com',
@@ -65,28 +82,13 @@ class CustomerAuthTest extends TestCase
         ]);
 
         Livewire::test(LoginPage::class)
+            ->assertDontSee(__('I agree to the'))
             ->set('email', 'dara@example.com')
             ->set('password', 'password123')
             ->call('login')
-            ->assertHasErrors(['terms' => 'accepted']);
+            ->assertHasNoErrors();
 
-        $this->assertFalse(Auth::guard('customer')->check());
-    }
-
-    public function test_logging_in_records_when_the_terms_were_accepted(): void
-    {
-        $customer = Customer::factory()->create([
-            'email' => 'dara@example.com',
-            'password' => Hash::make('password123'),
-        ]);
-
-        Livewire::test(LoginPage::class)
-            ->set('email', 'dara@example.com')
-            ->set('password', 'password123')
-            ->set('terms', true)
-            ->call('login');
-
-        $this->assertNotNull($customer->fresh()->terms_accepted_at);
+        $this->assertTrue(Auth::guard('customer')->check());
     }
 
     public function test_registration_requires_a_unique_email(): void
@@ -96,6 +98,7 @@ class CustomerAuthTest extends TestCase
         Livewire::test(RegisterPage::class)
             ->set('name', 'Sok Dara')
             ->set('email', 'dara@example.com')
+            ->set('phone', '012 345 678')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')
             ->set('terms', true)
@@ -113,7 +116,6 @@ class CustomerAuthTest extends TestCase
         Livewire::test(LoginPage::class)
             ->set('email', 'dara@example.com')
             ->set('password', 'password123')
-            ->set('terms', true)
             ->call('login')
             ->assertRedirect('/dashboard');
 
@@ -130,7 +132,6 @@ class CustomerAuthTest extends TestCase
         Livewire::test(LoginPage::class)
             ->set('email', 'dara@example.com')
             ->set('password', 'wrong-password')
-            ->set('terms', true)
             ->call('login')
             ->assertHasErrors(['email']);
 
@@ -148,7 +149,6 @@ class CustomerAuthTest extends TestCase
             Livewire::test(LoginPage::class)
                 ->set('email', 'dara@example.com')
                 ->set('password', 'wrong-password')
-                ->set('terms', true)
                 ->call('login');
         }
 
@@ -157,7 +157,6 @@ class CustomerAuthTest extends TestCase
         Livewire::test(LoginPage::class)
             ->set('email', 'dara@example.com')
             ->set('password', 'password123')
-            ->set('terms', true)
             ->call('login')
             ->assertHasErrors(['email']);
 

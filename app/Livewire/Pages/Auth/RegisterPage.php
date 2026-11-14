@@ -16,6 +16,8 @@ class RegisterPage extends Component
 
     public string $email = '';
 
+    public string $phone = '';
+
     public string $password = '';
 
     public string $password_confirmation = '';
@@ -27,6 +29,7 @@ class RegisterPage extends Component
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:customers,email'],
+            'phone' => ['required', 'string', 'max:50'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'terms' => ['accepted'],
         ];
@@ -56,6 +59,7 @@ class RegisterPage extends Component
         $customer = Customer::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
             'terms_accepted_at' => now(),
         ]);

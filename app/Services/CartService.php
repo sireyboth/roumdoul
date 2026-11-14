@@ -127,10 +127,14 @@ class CartService
      */
     public function applyPromoCode(string $code): array
     {
-        $promoCode = PromoCode::where('code', strtoupper(trim($code)))->first();
+        $promoCode = PromoCode::with('services')->where('code', strtoupper(trim($code)))->first();
 
         if (! $promoCode || ! $promoCode->isValid()) {
             return ['success' => false, 'message' => __('This code is invalid or has expired.')];
+        }
+
+        if ($this->eligibleSubtotal($promoCode) <= 0) {
+            return ['success' => false, 'message' => __('This code only works for: :items', ['items' => $promoCode->serviceNames()])];
         }
 
         Session::put(self::PROMO_SESSION_KEY, $promoCode->code);
@@ -151,7 +155,7 @@ class CartService
             return null;
         }
 
-        $promoCode = PromoCode::where('code', $code)->first();
+        $promoCode = PromoCode::with('services')->where('code', $code)->first();
 
         if (! $promoCode || ! $promoCode->isValid()) {
             $this->removePromoCode();
@@ -166,7 +170,18 @@ class CartService
     {
         $promoCode = $this->appliedPromoCode();
 
-        return $promoCode ? $promoCode->discountFor($this->subtotal()) : 0.0;
+        return $promoCode ? $promoCode->discountFor($this->eligibleSubtotal($promoCode)) : 0.0;
+    }
+
+    /**
+     * Total of the cart lines a code applies to: every line for a whole-order code, otherwise
+     * only the lines for the products the code was limited to in admin.
+     */
+    public function eligibleSubtotal(PromoCode $promoCode): float
+    {
+        return (float) $this->items()
+            ->filter(fn ($item) => $promoCode->appliesToService($item->service->id))
+            ->sum('line_total');
     }
 
     public function total(): float

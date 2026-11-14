@@ -24,6 +24,14 @@
       </div>
 
       <div>
+        <label class="mb-1.5 block text-sm font-semibold text-plum-800 dark:text-plum-100">{{ __('Phone number / Telegram') }}</label>
+        <input type="tel" wire:model="phone" autocomplete="tel" placeholder="012 345 678"
+          class="w-full rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />
+        <p class="mt-1 text-xs text-plum-500 dark:text-plum-400">{{ __('We use it to confirm your orders.') }}</p>
+        @error('phone') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
+      </div>
+
+      <div>
         <label class="mb-1.5 block text-sm font-semibold text-plum-800 dark:text-plum-100">{{ __('Password') }}</label>
         <input type="password" wire:model="password"
           class="w-full rounded-lg border border-plum-200 bg-transparent px-3.5 py-2.5 text-sm focus:border-brand-500 focus:outline-none dark:border-plum-700" />

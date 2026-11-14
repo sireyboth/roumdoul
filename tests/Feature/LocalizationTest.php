@@ -68,9 +68,9 @@ class LocalizationTest extends TestCase
 
         $domains = $expired->map(fn ($cookie) => $cookie->getDomain())->all();
 
-        // the test host is "localhost": host-only plus the host itself
+        // host-only plus the test host itself (whatever APP_URL points at)
         $this->assertContains(null, $domains);
-        $this->assertContains('localhost', $domains);
+        $this->assertContains(parse_url(config('app.url'), PHP_URL_HOST), $domains);
     }
 
     public function test_google_translate_cookie_domains_cover_the_apex_domain(): void

@@ -18,6 +18,7 @@ class PromoCodesTable
     {
         return $table
             ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(fn ($query) => $query->with('services'))
             ->columns([
                 TextColumn::make('code')
                     ->weight('bold')
@@ -26,6 +27,12 @@ class PromoCodesTable
                 TextColumn::make('value')
                     ->label('Discount')
                     ->formatStateUsing(fn (PromoCode $record) => $record->label()),
+                TextColumn::make('services.name_en')
+                    ->label('Applies to')
+                    ->badge()
+                    ->placeholder('Whole order')
+                    ->limitList(2)
+                    ->expandableLimitedList(),
                 TextColumn::make('usage')
                     ->label('Used')
                     ->state(fn (PromoCode $record) => $record->usage_limit

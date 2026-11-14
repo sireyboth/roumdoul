@@ -18,26 +18,36 @@
 <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8" x-data="{ tab: $wire.entangle('tab').live }">
 
   {{-- ───────── Header ───────── --}}
-  <div class="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 p-6 text-white shadow-xl shadow-brand-900/10 sm:p-8">
+  <div class="group/header relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 p-6 text-white shadow-xl shadow-brand-900/10 sm:p-8">
+    {{-- Khmer kbach texture, faded out towards the left so the name stays readable --}}
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 opacity-[0.09] mix-blend-soft-light"
+      style="background-image: url('{{ asset('images/kbach-pattern.webp') }}'); background-size: 240px auto; -webkit-mask-image: linear-gradient(to right, transparent 10%, #000 70%); mask-image: linear-gradient(to right, transparent 10%, #000 70%);"></div>
     <div class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl"></div>
     <div class="pointer-events-none absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-gold-400/20 blur-2xl"></div>
+    {{-- Roumdoul lotus, cropped off the right edge --}}
+    <img src="{{ asset('images/roumdolkbach.png') }}" alt="" aria-hidden="true" loading="lazy" decoding="async"
+      class="pointer-events-none absolute -right-14 top-1/2 h-48 w-auto -translate-y-1/2 opacity-30 transition-transform duration-[1200ms] ease-out group-hover/header:rotate-45 motion-reduce:transition-none sm:-right-10 sm:h-64 sm:opacity-40" />
 
     <div class="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-center gap-4">
-        <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-xl font-extrabold uppercase ring-1 ring-white/25 backdrop-blur">
+      {{-- the whole name card opens the customer's profile --}}
+      <a href="/dashboard/profile" wire:navigate title="{{ __('My account') }}"
+        class="group -m-2 flex items-center gap-4 rounded-2xl p-2 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
+        <div class="relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-xl font-extrabold uppercase ring-1 ring-white/25 backdrop-blur transition group-hover:bg-white/25">
           {{ mb_substr($customer->name ?? 'R', 0, 1) }}
+          <span class="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-700 shadow-sm">
+            <x-app-icon name="pencil" class="h-3.5 w-3.5" />
+          </span>
         </div>
         <div>
           <p class="text-sm font-medium text-white/75">{{ __('Welcome back,') }}</p>
-          <h1 class="text-2xl font-extrabold sm:text-3xl">{{ $customer->name }}</h1>
+          <h1 class="flex items-center gap-1.5 text-2xl font-extrabold sm:text-3xl">
+            {{ $customer->name }}
+            <x-app-icon name="chevron-right" class="h-5 w-5 opacity-60 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+          </h1>
           <p class="mt-0.5 text-sm text-white/75">{{ __('Manage your orders and digital invitations') }}</p>
         </div>
-      </div>
+      </a>
       <div class="flex items-center gap-2">
-        <a href="/shop" wire:navigate
-          class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-brand-700 shadow-sm transition hover:bg-brand-50">
-          <x-app-icon name="sparkles" class="h-4 w-4" /> {{ __('Choose a template') }}
-        </a>
         <form method="POST" action="/logout">
           @csrf
           <button type="submit" title="{{ __('Log out') }}"

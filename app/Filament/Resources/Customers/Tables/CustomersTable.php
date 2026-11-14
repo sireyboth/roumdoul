@@ -21,6 +21,11 @@ class CustomersTable
                 TextColumn::make('email')
                     ->searchable()
                     ->copyable(),
+                TextColumn::make('phone')
+                    ->label('Phone / Telegram')
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('—'),
                 IconColumn::make('email_verified_at')
                     ->label('Verified')
                     ->boolean(),

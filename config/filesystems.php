@@ -52,7 +52,8 @@ return [
         // usually aren't configured, this same disk name quietly falls back to writing to
         // the local 'public' disk instead — no code anywhere has to know which one it's
         // actually using. Set AWS_BUCKET in .env to opt back into real S3/R2 locally.
-        's3' => empty(env('AWS_BUCKET')) ? [
+        // Production never falls back: media must always live in S3/R2 there.
+        's3' => empty(env('AWS_BUCKET')) && env('APP_ENV') !== 'production' ? [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',

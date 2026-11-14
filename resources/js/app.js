@@ -77,4 +77,19 @@ function mountApp() {
 
 mountApp()
 
+// Page transition for wire:navigate. A full page load already animates through the browser's
+// view transition (@view-transition in the layouts), so only SPA swaps get the class here —
+// otherwise a normal load would animate twice.
+let spaNavigation = false
+document.addEventListener('livewire:navigate', () => { spaNavigation = true })
+document.addEventListener('livewire:navigated', () => {
+  if (!spaNavigation) return
+  spaNavigation = false
+  const main = document.querySelector('[data-page-transition]')
+  if (!main) return
+  main.classList.remove('page-enter')
+  void main.offsetWidth // restart the animation
+  main.classList.add('page-enter')
+})
+
 document.addEventListener('livewire:navigated', mountApp)
