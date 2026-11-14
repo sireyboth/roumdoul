@@ -5,6 +5,8 @@ namespace App\Livewire\Pages\Dashboard;
 use App\Models\Invitation;
 use App\Models\InvitationTemplate;
 use App\Services\ImageOptimizer;
+use Carbon\Carbon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.workspace')]
 class InvitationManagePage extends Component
@@ -21,6 +24,15 @@ class InvitationManagePage extends Component
     use WithFileUploads {
         _uploadErrored as livewireUploadErrored;
     }
+    use WithPagination;
+
+    public const GUEST_FILTERS = ['opened', 'not_opened', 'paused'];
+
+    public const RESPONSE_FILTERS = ['yes', 'no', 'none'];
+
+    public const GUEST_SORTS = ['newest', 'oldest', 'name', 'opened'];
+
+    public const GUEST_PER_PAGE = [10, 25, 50, 100];
 
     /**
      * Which FIELD_CATALOG field types are edited under which sidebar section. A section only
@@ -94,6 +106,22 @@ class InvitationManagePage extends Component
     #[Url(as: 'tab')]
     public string $section = 'overview';
 
+    /** Guest / response list controls — kept in the URL so a refresh keeps the same view. */
+    #[Url(as: 'q', except: '')]
+    public string $guestSearch = '';
+
+    #[Url(as: 'show', except: '')]
+    public string $guestFilter = '';
+
+    #[Url(as: 'rsvp', except: '')]
+    public string $responseFilter = '';
+
+    #[Url(as: 'sort', except: 'newest')]
+    public string $guestSort = 'newest';
+
+    #[Url(as: 'per', except: 25)]
+    public int $guestPerPage = 25;
+
     public Invitation $invitation;
 
     public array $fieldValues = [];
@@ -120,6 +148,7 @@ class InvitationManagePage extends Component
     public function mount(Invitation $invitation): void
     {
         abort_unless($invitation->customer_id === Auth::guard('customer')->id(), 403);
+        $this->sanitizeGuestControls();
 
         $invitation->load(['template', 'recipients', 'order', 'plan']);
         $this->invitation = $invitation;
@@ -587,6 +616,14 @@ class InvitationManagePage extends Component
      */
     public function updated(string $property): void
     {
+        if (in_array($property, ['guestSearch', 'guestFilter', 'responseFilter', 'guestSort', 'guestPerPage'], true)) {
+            $this->sanitizeGuestControls();
+            $this->resetPage('guestsPage');
+            $this->resetPage('responsesPage');
+
+            return;
+        }
+
         if (! preg_match('/^(imageUploads|galleryUploads|audioUploads)\.([^.]+)/', $property, $m)) {
             return;
         }
@@ -815,6 +852,70 @@ class InvitationManagePage extends Component
         $this->toast('success', __("Made a new link for «:name» — the old link no longer works. Don't forget to send the new one.", ['name' => $recipient->recipient_name]));
     }
 
+    public function clearGuestFilters(): void
+    {
+        $this->reset('guestSearch', 'guestFilter', 'responseFilter', 'guestSort');
+        $this->resetPage('guestsPage');
+        $this->resetPage('responsesPage');
+    }
+
+    /** Query-string values are user input — snap anything unexpected back to a default. */
+    protected function sanitizeGuestControls(): void
+    {
+        $this->guestSearch = mb_substr(trim($this->guestSearch), 0, 100);
+        $this->guestFilter = in_array($this->guestFilter, self::GUEST_FILTERS, true) ? $this->guestFilter : '';
+        $this->responseFilter = in_array($this->responseFilter, self::RESPONSE_FILTERS, true) ? $this->responseFilter : '';
+        $this->guestSort = in_array($this->guestSort, self::GUEST_SORTS, true) ? $this->guestSort : 'newest';
+        $this->guestPerPage = in_array($this->guestPerPage, self::GUEST_PER_PAGE, true) ? $this->guestPerPage : 25;
+    }
+
+    /**
+     * One page of this invitation's guests, searched/filtered/sorted. The Guests section filters
+     * by link state (opened / not opened / paused), the Responses section by RSVP answer.
+     */
+    protected function guestPage(string $pageName): LengthAwarePaginator
+    {
+        $query = $this->invitation->recipients()->getQuery();
+
+        if ($this->guestSearch !== '') {
+            $term = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $this->guestSearch).'%';
+            $query->where(fn ($q) => $q->where('recipient_name', 'like', $term)->orWhere('rsvp_note', 'like', $term));
+        }
+
+        if ($pageName === 'guestsPage') {
+            match ($this->guestFilter) {
+                'opened' => $query->whereNotNull('viewed_at'),
+                'not_opened' => $query->whereNull('viewed_at'),
+                'paused' => $query->whereNotNull('revoked_at'),
+                default => null,
+            };
+        } else {
+            match ($this->responseFilter) {
+                'yes', 'no' => $query->where('rsvp_status', $this->responseFilter),
+                'none' => $query->where(fn ($q) => $q->whereNull('rsvp_status')->orWhereNotIn('rsvp_status', ['yes', 'no'])),
+                default => null,
+            };
+        }
+
+        match ($this->guestSort) {
+            'oldest' => $query->oldest('id'),
+            'name' => $query->orderBy('recipient_name')->orderBy('id'),
+            // Recently opened first; never-opened guests last.
+            'opened' => $query->orderByRaw('viewed_at is null')->orderByDesc('viewed_at')->latest('id'),
+            default => $query->latest('id'),
+        };
+
+        $page = $query->paginate($this->guestPerPage, pageName: $pageName);
+
+        // Removing the last guest on the last page would otherwise leave an empty page.
+        if ($page->isEmpty() && $page->currentPage() > 1) {
+            $this->setPage($page->lastPage(), $pageName);
+            $page = $query->paginate($this->guestPerPage, pageName: $pageName, page: $page->lastPage());
+        }
+
+        return $page;
+    }
+
     /**
      * Ready-to-send message that "Copy link" puts on the clipboard: a short invite
      * addressed to the guest, built from the saved fields, with their link at the end.
@@ -828,7 +929,7 @@ class InvitationManagePage extends Component
         $celebrant = trim($f['celebrant_name'] ?? '');
 
         try {
-            $date = ! empty($f['event_date']) ? \Carbon\Carbon::parse($f['event_date']) : null;
+            $date = ! empty($f['event_date']) ? Carbon::parse($f['event_date']) : null;
         } catch (\Throwable) {
             $date = null;
         }
@@ -859,11 +960,15 @@ class InvitationManagePage extends Component
         return view('livewire.pages.dashboard.invitation-manage-page', [
             'fieldCatalog' => InvitationTemplate::localizedCatalog(),
             'sections' => $this->visibleSections(),
+            'guestList' => $this->section === 'guests' ? $this->guestPage('guestsPage') : null,
+            'responseList' => $this->section === 'responses' ? $this->guestPage('responsesPage') : null,
+            'hasGuestFilters' => $this->guestSearch !== '' || $this->guestFilter !== '' || $this->responseFilter !== '' || $this->guestSort !== 'newest',
             'stats' => [
                 'recipients' => $recipients->count(),
                 'viewed' => $recipients->whereNotNull('viewed_at')->count(),
                 'attending' => $recipients->where('rsvp_status', 'yes')->count(),
                 'declined' => $recipients->where('rsvp_status', 'no')->count(),
+                'paused' => $recipients->whereNotNull('revoked_at')->count(),
                 'fields' => count($templateFields),
                 'filled' => collect($templateFields)
                     ->filter(fn (string $key) => filled($this->invitation->field_values[$key] ?? null))

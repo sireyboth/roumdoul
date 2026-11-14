@@ -7,6 +7,14 @@
     (function () {
       var stored = localStorage.getItem('theme');
       document.documentElement.classList.toggle('dark', stored === 'dark');
+      // Just switched language? Fade the page in (browsers with cross-page view transitions
+      // animate it themselves — see resources/js/modules/lang.js).
+      try {
+        if (sessionStorage.getItem('roumdoul:lang-switch')) {
+          sessionStorage.removeItem('roumdoul:lang-switch');
+          if (!window.CSSViewTransitionRule) document.documentElement.classList.add('lang-entering');
+        }
+      } catch (e) {}
     })();
   </script>
   <link rel="icon" type="image/png" href="/favicon.png" />
@@ -19,6 +27,7 @@
   <title>{{ $title ?? 'ROUMDOUL | Premium Digital Services' }}</title>
   <x-js-translations />
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  <style>@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }</style>
   @livewireStyles
 </head>
 

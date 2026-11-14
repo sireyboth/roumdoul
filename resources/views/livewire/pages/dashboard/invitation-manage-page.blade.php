@@ -94,6 +94,15 @@
         <x-app-icon name="chevron-left" class="h-5 w-5" /> {{ __('Back to dashboard') }}
       </a>
       <div class="flex items-center justify-between px-3 py-2">
+        <span class="flex items-center gap-2 text-sm font-semibold text-plum-500 dark:text-plum-400">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle><path d="M12 3a13 13 0 0 0 0 18 13 13 0 0 0 0-18"></path><path d="M3 12h18"></path>
+          </svg>
+          {{ __('Language') }}
+        </span>
+        <x-language-toggle />
+      </div>
+      <div class="flex items-center justify-between px-3 py-2">
         <form method="POST" action="/logout">
           @csrf
           <button type="submit" class="flex items-center gap-2 text-sm font-semibold text-plum-500 hover:text-red-600 dark:text-plum-400 dark:hover:text-red-400">
@@ -106,9 +115,16 @@
   </aside>
 
   {{-- Main content --}}
+  {{-- Thin progress bar while another section loads (only shows if it takes > 200ms) --}}
+  <div wire:loading.delay wire:target="showSection" class="ws-progress" aria-hidden="true"></div>
+
   <main class="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-10">
-    @php $wide = $section === 'guide' || ($isPaid && in_array($section, ['details', 'media', 'program'], true)); @endphp
-    <div @class(['mx-auto', 'max-w-none' => $wide, 'max-w-3xl' => ! $wide])>
+    @php
+      $wide = $section === 'guide' || ($isPaid && in_array($section, ['details', 'media', 'program'], true));
+      $roomy = in_array($section, ['guests', 'responses'], true);
+    @endphp
+    {{-- Keyed by section: a new section is a new element, so the enter animation replays --}}
+    <div wire:key="section-{{ $section }}" @class(['ws-enter mx-auto', 'max-w-none' => $wide, 'max-w-6xl' => $roomy && ! $wide, 'max-w-3xl' => ! $wide && ! $roomy])>
       <h1 class="text-2xl font-extrabold text-plum-900 dark:text-white">{{ $navItems[$section]['label'] }}</h1>
 
       @if ($section === 'guide')
@@ -336,59 +352,185 @@
           @endif
         </div>
 
-        @if ($invitation->recipients->isNotEmpty())
-          <div class="mt-4 flex justify-end">
-            <button type="button" wire:click="exportGuests"
-              class="inline-flex items-center gap-1.5 rounded-full border border-plum-200 px-4 py-2 text-sm font-semibold text-plum-700 hover:border-brand-500 hover:text-brand-600 dark:border-plum-700 dark:text-plum-200">
-              <x-app-icon name="upload" class="h-4 w-4" /> {{ __('Export list (CSV)') }}
-            </button>
-          </div>
-        @endif
-
-        <div class="mt-4 flex flex-col gap-2">
-          @forelse ($invitation->recipients as $recipient)
-            @php $link = route('invitation.show', [$invitation, $recipient]); @endphp
-            <div wire:key="recipient-{{ $recipient->id }}" class="flex items-center justify-between gap-3 rounded-xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
-              <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $recipient->recipient_name }}</p>
-                  @if ($recipient->revoked_at)
-                    <span class="text-[11px] font-bold text-red-600 dark:text-red-400">{{ __('Paused') }}</span>
-                  @endif
-                  @if ($recipient->viewed_at)
-                    <span class="flex items-center gap-1 text-[11px] font-semibold text-brand-600 dark:text-brand-400">
-                      <x-app-icon name="eye" class="h-3.5 w-3.5" /> {{ __('Opened') }}
-                    </span>
-                  @endif
-                </div>
-                <p class="truncate text-xs text-plum-400">{{ $link }}</p>
+        @if ($stats['recipients'] > 0)
+          {{-- Toolbar: search · filter · sort · export --}}
+          <div class="mt-6 flex flex-col gap-3">
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <div class="relative flex-1">
+                <x-app-icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
+                <input type="search" wire:model.live.debounce.350ms="guestSearch" placeholder="{{ __('Search guests…') }}"
+                  class="w-full rounded-xl border border-plum-200 bg-white py-2.5 pl-10 pr-3 text-sm text-plum-800 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-plum-700 dark:bg-plum-900 dark:text-plum-100" />
               </div>
-              <div class="flex shrink-0 items-center gap-2">
-                <button type="button" x-data="{ copied: false }"
-                  @click="navigator.clipboard.writeText({{ \Illuminate\Support\Js::from($this->shareCaption($recipient->recipient_name, $link)) }})
-                    .then(() => { copied = true; setTimeout(() => copied = false, 1500); window.toast('success', @js(__("Copied «:name»'s link — you can send it now.", ['name' => $recipient->recipient_name]))) })
-                    .catch(() => window.toast('error', @js(__("Couldn't copy — press and hold the link and copy it by hand."))))"
-                  class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
-                  <span x-show="!copied">{{ __('Copy link') }}</span>
-                  <span x-cloak x-show="copied" class="text-green-600 dark:text-green-400">{{ __('Copied!') }}</span>
-                </button>
-                <button type="button" wire:click="toggleRecipient({{ $recipient->id }})"
-                  class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
-                  {{ $recipient->revoked_at ? __('Restore link') : __('Pause link') }}
-                </button>
-                <button type="button" wire:click="rotateRecipient({{ $recipient->id }})" wire:confirm="{{ __('Create a new link for :name? The old link will stop working.', ['name' => $recipient->recipient_name]) }}"
-                  class="rounded-full border border-plum-200 px-3 py-1.5 text-xs font-semibold text-plum-600 hover:border-brand-400 dark:border-plum-700 dark:text-plum-300">
-                  {{ __('New link') }}
-                </button>
-                <button type="button" wire:click="removeRecipient({{ $recipient->id }})" wire:confirm="{{ __('Remove :name? Their link will stop working.', ['name' => $recipient->recipient_name]) }}"
-                  class="text-plum-400 hover:text-red-600">
-                  <x-app-icon name="trash" class="h-4 w-4" />
+              <div class="flex gap-2">
+                <select wire:model.live="guestSort" aria-label="{{ __('Sort by') }}"
+                  class="flex-1 rounded-xl border border-plum-200 bg-white py-2.5 pl-3 pr-8 text-sm font-medium text-plum-700 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-plum-700 dark:bg-plum-900 dark:text-plum-200 sm:flex-none">
+                  <option value="newest">{{ __('Newest first') }}</option>
+                  <option value="oldest">{{ __('Oldest first') }}</option>
+                  <option value="name">{{ __('Name A–Z') }}</option>
+                  <option value="opened">{{ __('Recently opened') }}</option>
+                </select>
+                <button type="button" wire:click="exportGuests" title="{{ __('Export list (CSV)') }}"
+                  class="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-plum-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-plum-700 hover:border-brand-500 hover:text-brand-600 dark:border-plum-700 dark:bg-plum-900 dark:text-plum-200">
+                  <x-app-icon name="upload" class="h-4 w-4" /> <span class="hidden sm:inline">{{ __('Export list (CSV)') }}</span>
                 </button>
               </div>
             </div>
-          @empty
+
+            <div class="flex flex-wrap items-center gap-2">
+              @foreach ([
+                '' => [__('All'), $stats['recipients']],
+                'opened' => [__('Opened'), $stats['viewed']],
+                'not_opened' => [__('Not opened yet'), $stats['recipients'] - $stats['viewed']],
+                'paused' => [__('Paused'), $stats['paused']],
+              ] as $value => [$label, $count])
+                <button type="button" wire:click="$set('guestFilter', '{{ $value }}')" wire:key="gfilter-{{ $value ?: 'all' }}"
+                  @class([
+                    'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset transition',
+                    'bg-brand-600 text-white ring-brand-600' => $guestFilter === $value,
+                    'bg-white text-plum-600 ring-plum-200 hover:ring-brand-400 dark:bg-plum-900 dark:text-plum-300 dark:ring-plum-700' => $guestFilter !== $value,
+                  ])>
+                  {{ $label }}
+                  <span @class(['rounded-full px-1.5 text-[10px] font-bold', 'bg-white/20' => $guestFilter === $value, 'bg-plum-100 dark:bg-plum-800' => $guestFilter !== $value])>{{ $count }}</span>
+                </button>
+              @endforeach
+              @if ($hasGuestFilters)
+                <button type="button" wire:click="clearGuestFilters" class="inline-flex items-center gap-1 px-2 text-xs font-semibold text-plum-500 hover:text-brand-600 dark:text-plum-400">
+                  <x-app-icon name="x-mark" class="h-3.5 w-3.5" /> {{ __('Clear filters') }}
+                </button>
+              @endif
+            </div>
+          </div>
+        @endif
+
+        <div class="mt-4" wire:loading.class="pointer-events-none opacity-50"
+          wire:target="guestSearch,guestFilter,guestSort,guestPerPage,clearGuestFilters,gotoPage,nextPage,previousPage">
+          @if ($stats['recipients'] === 0)
             <p class="rounded-xl border border-dashed border-plum-300 py-10 text-center text-sm text-plum-500 dark:border-plum-700 dark:text-plum-400">{{ __('No guests yet — add one above.') }}</p>
-          @endforelse
+          @elseif ($guestList->isEmpty())
+            <div class="flex flex-col items-center gap-2 rounded-xl border border-dashed border-plum-300 py-10 text-center dark:border-plum-700">
+              <p class="text-sm text-plum-500 dark:text-plum-400">{{ __('No guests match your search.') }}</p>
+              <button type="button" wire:click="clearGuestFilters" class="text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400">{{ __('Clear filters') }}</button>
+            </div>
+          @else
+            @php $cols = 'md:grid md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto] md:items-center md:gap-4'; @endphp
+            <div class="rounded-2xl border border-plum-200 bg-white shadow-sm dark:border-plum-800 dark:bg-plum-900">
+              {{-- Column headings (desktop) --}}
+              <div class="hidden rounded-t-2xl border-b border-plum-200 bg-plum-50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-plum-500 dark:border-plum-800 dark:bg-plum-800/50 dark:text-plum-400 {{ $cols }}">
+                <span>{{ __('Guest') }}</span>
+                <span>{{ __('Link') }}</span>
+                <span>{{ __('RSVP') }}</span>
+                <span>{{ __('Added') }}</span>
+                <span class="w-[8.5rem] text-right">{{ __('Actions') }}</span>
+              </div>
+            <ul class="divide-y divide-plum-100 dark:divide-plum-800">
+              @foreach ($guestList as $recipient)
+                @php $link = route('invitation.show', [$invitation, $recipient]); @endphp
+                <li wire:key="recipient-{{ $recipient->id }}" @class(['flex flex-wrap items-center gap-3 px-5 py-4 transition last:rounded-b-2xl hover:bg-plum-50/70 dark:hover:bg-plum-800/40', $cols, 'opacity-60' => $recipient->revoked_at])>
+                  {{-- Guest --}}
+                  <div class="flex min-w-0 flex-1 items-center gap-3">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-50 text-base font-bold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                      {{ mb_substr($recipient->recipient_name, 0, 1) }}
+                    </span>
+                    <div class="min-w-0">
+                      <p class="truncate text-[15px] font-semibold text-plum-900 dark:text-white">{{ $recipient->recipient_name }}</p>
+                      <p class="truncate text-xs text-plum-400" title="{{ $link }}">{{ \Illuminate\Support\Str::after($link, '://') }}</p>
+                    </div>
+                  </div>
+
+                  {{-- Link status --}}
+                  <div class="order-last basis-full md:order-none md:basis-auto">
+                    @if ($recipient->revoked_at)
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                        <x-app-icon name="pause" class="h-3.5 w-3.5" /> {{ __('Paused') }}
+                      </span>
+                    @elseif ($recipient->viewed_at)
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400" title="{{ $recipient->viewed_at->format('d M Y H:i') }}">
+                        <x-app-icon name="eye" class="h-3.5 w-3.5" /> {{ __('Opened') }} · {{ $recipient->viewed_at->diffForHumans(short: true) }}
+                      </span>
+                    @else
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-plum-100 px-2.5 py-1 text-xs font-semibold text-plum-500 dark:bg-plum-800 dark:text-plum-400">
+                        <span class="h-1.5 w-1.5 rounded-full bg-plum-400"></span> {{ __('Not opened yet') }}
+                      </span>
+                    @endif
+                    {{-- RSVP + date inline on phones --}}
+                    <span class="ml-1 md:hidden">
+                      @if ($recipient->rsvp_status === 'yes')
+                        <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">{{ __('Attending') }}</span>
+                      @elseif ($recipient->rsvp_status === 'no')
+                        <span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 dark:bg-red-500/10 dark:text-red-400">{{ __('Not attending') }}</span>
+                      @endif
+                    </span>
+                  </div>
+
+                  {{-- RSVP --}}
+                  <div class="hidden md:block">
+                    @if ($recipient->rsvp_status === 'yes')
+                      <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-green-700 dark:text-green-400"><x-app-icon name="check-circle" class="h-4 w-4" /> {{ __('Attending') }}</span>
+                    @elseif ($recipient->rsvp_status === 'no')
+                      <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-red-600 dark:text-red-400"><x-app-icon name="x-circle" class="h-4 w-4" /> {{ __('Not attending') }}</span>
+                    @else
+                      <span class="text-sm text-plum-400">—</span>
+                    @endif
+                  </div>
+
+                  {{-- Added --}}
+                  <div class="hidden text-sm text-plum-500 dark:text-plum-400 md:block" title="{{ $recipient->created_at?->format('d M Y H:i') }}">
+                    {{ $recipient->created_at?->format('d M Y') }}
+                  </div>
+
+                  <div class="flex shrink-0 items-center justify-end gap-1 md:w-[8.5rem]">
+                    <button type="button" x-data="{ copied: false }"
+                      @click="navigator.clipboard.writeText({{ \Illuminate\Support\Js::from($this->shareCaption($recipient->recipient_name, $link)) }})
+                        .then(() => { copied = true; setTimeout(() => copied = false, 1500); window.toast('success', @js(__("Copied «:name»'s link — you can send it now.", ['name' => $recipient->recipient_name]))) })
+                        .catch(() => window.toast('error', @js(__("Couldn't copy — press and hold the link and copy it by hand."))))"
+                      class="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-brand-700">
+                      <x-app-icon name="link" class="h-3.5 w-3.5" />
+                      <span x-show="!copied">{{ __('Copy link') }}</span>
+                      <span x-cloak x-show="copied" style="display: none">{{ __('Copied!') }}</span>
+                    </button>
+
+                    {{-- Less common actions live in a menu, so each row stays calm --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                      <button type="button" @click="open = !open" aria-label="{{ __('More actions') }}"
+                        class="grid h-8 w-8 place-items-center rounded-full text-plum-500 hover:bg-plum-100 hover:text-plum-800 dark:text-plum-400 dark:hover:bg-plum-800 dark:hover:text-white">
+                        <x-app-icon name="ellipsis" class="h-5 w-5" />
+                      </button>
+                      <div x-show="open" x-transition.origin.top.right style="display: none"
+                        class="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-xl border border-plum-200 bg-white py-1 text-sm shadow-lg dark:border-plum-700 dark:bg-plum-900">
+                        <a href="{{ $link }}" target="_blank" class="flex items-center gap-2 px-3 py-2 text-plum-700 hover:bg-plum-50 dark:text-plum-200 dark:hover:bg-plum-800">
+                          <x-app-icon name="external" class="h-4 w-4" /> {{ __('Open link') }}
+                        </a>
+                        <button type="button" wire:click="toggleRecipient({{ $recipient->id }})" @click="open = false"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-plum-700 hover:bg-plum-50 dark:text-plum-200 dark:hover:bg-plum-800">
+                          <x-app-icon :name="$recipient->revoked_at ? 'play' : 'pause'" class="h-4 w-4" />
+                          {{ $recipient->revoked_at ? __('Restore link') : __('Pause link') }}
+                        </button>
+                        <button type="button" wire:click="rotateRecipient({{ $recipient->id }})" @click="open = false"
+                          wire:confirm="{{ __('Create a new link for :name? The old link will stop working.', ['name' => $recipient->recipient_name]) }}"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-plum-700 hover:bg-plum-50 dark:text-plum-200 dark:hover:bg-plum-800">
+                          <x-app-icon name="arrow-path" class="h-4 w-4" /> {{ __('New link') }}
+                        </button>
+                        <div class="my-1 border-t border-plum-100 dark:border-plum-800"></div>
+                        <button type="button" wire:click="removeRecipient({{ $recipient->id }})" @click="open = false"
+                          wire:confirm="{{ __('Remove :name? Their link will stop working.', ['name' => $recipient->recipient_name]) }}"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
+                          <x-app-icon name="trash" class="h-4 w-4" /> {{ __('Remove') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              @endforeach
+            </ul>
+            </div>
+
+            @include('livewire.pages.dashboard.partials.pagination', [
+              'paginator' => $guestList,
+              'pageName' => 'guestsPage',
+              'perPageModel' => 'guestPerPage',
+              'perPageOptions' => \App\Livewire\Pages\Dashboard\InvitationManagePage::GUEST_PER_PAGE,
+            ])
+          @endif
         </div>
 
       @elseif ($section === 'responses')
@@ -398,39 +540,84 @@
           </p>
         @endunless
 
+        {{-- The tiles double as filters --}}
         <div class="mt-6 grid grid-cols-3 gap-3">
           @foreach ([
-            ['label' => __('Attending'), 'value' => $stats['attending'], 'class' => 'text-green-600 dark:text-green-400'],
-            ['label' => __('Not attending'), 'value' => $stats['declined'], 'class' => 'text-red-600 dark:text-red-400'],
-            ['label' => __('No answer yet'), 'value' => $stats['recipients'] - $stats['attending'] - $stats['declined'], 'class' => 'text-plum-900 dark:text-white'],
+            ['filter' => 'yes', 'label' => __('Attending'), 'value' => $stats['attending'], 'class' => 'text-green-600 dark:text-green-400'],
+            ['filter' => 'no', 'label' => __('Not attending'), 'value' => $stats['declined'], 'class' => 'text-red-600 dark:text-red-400'],
+            ['filter' => 'none', 'label' => __('No answer yet'), 'value' => $stats['recipients'] - $stats['attending'] - $stats['declined'], 'class' => 'text-plum-900 dark:text-white'],
           ] as $tile)
-            <div class="rounded-xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
+            <button type="button" wire:click="$set('responseFilter', '{{ $responseFilter === $tile['filter'] ? '' : $tile['filter'] }}')"
+              @class([
+                'rounded-xl border bg-white p-4 text-left transition hover:border-brand-400 dark:bg-plum-900',
+                'border-brand-500 ring-2 ring-brand-500/20' => $responseFilter === $tile['filter'],
+                'border-plum-200 dark:border-plum-800' => $responseFilter !== $tile['filter'],
+              ])>
               <p class="text-xs font-semibold text-plum-500 dark:text-plum-400">{{ $tile['label'] }}</p>
               <p class="mt-1 text-2xl font-extrabold {{ $tile['class'] }}">{{ $tile['value'] }}</p>
-            </div>
+            </button>
           @endforeach
         </div>
 
-        <div class="mt-4 overflow-hidden rounded-xl border border-plum-200 bg-white dark:border-plum-800 dark:bg-plum-900">
-          @forelse ($invitation->recipients as $recipient)
-            <div wire:key="response-{{ $recipient->id }}" class="flex items-start justify-between gap-3 border-b border-plum-100 p-4 last:border-0 dark:border-plum-800">
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $recipient->recipient_name }}</p>
-                @if ($recipient->rsvp_note)
-                  <p class="mt-1 text-sm text-plum-600 dark:text-plum-300">“{{ $recipient->rsvp_note }}”</p>
+        @if ($stats['recipients'] > 0)
+          <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div class="relative flex-1">
+              <x-app-icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-plum-400" />
+              <input type="search" wire:model.live.debounce.350ms="guestSearch" placeholder="{{ __('Search names or notes…') }}"
+                class="w-full rounded-xl border border-plum-200 bg-white py-2.5 pl-10 pr-3 text-sm text-plum-800 placeholder:text-plum-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-plum-700 dark:bg-plum-900 dark:text-plum-100" />
+            </div>
+            <select wire:model.live="guestSort" aria-label="{{ __('Sort by') }}"
+              class="rounded-xl border border-plum-200 bg-white py-2.5 pl-3 pr-8 text-sm font-medium text-plum-700 focus:border-brand-500 focus:outline-none dark:border-plum-700 dark:bg-plum-900 dark:text-plum-200">
+              <option value="newest">{{ __('Newest first') }}</option>
+              <option value="oldest">{{ __('Oldest first') }}</option>
+              <option value="name">{{ __('Name A–Z') }}</option>
+              <option value="opened">{{ __('Recently opened') }}</option>
+            </select>
+            @if ($hasGuestFilters)
+              <button type="button" wire:click="clearGuestFilters" class="inline-flex items-center gap-1 px-2 text-xs font-semibold text-plum-500 hover:text-brand-600 dark:text-plum-400">
+                <x-app-icon name="x-mark" class="h-3.5 w-3.5" /> {{ __('Clear filters') }}
+              </button>
+            @endif
+          </div>
+        @endif
+
+        <div class="mt-4" wire:loading.class="pointer-events-none opacity-50"
+          wire:target="guestSearch,responseFilter,guestSort,guestPerPage,clearGuestFilters,gotoPage,nextPage,previousPage">
+          <div class="overflow-hidden rounded-xl border border-plum-200 bg-white dark:border-plum-800 dark:bg-plum-900">
+            @forelse ($responseList as $recipient)
+              <div wire:key="response-{{ $recipient->id }}" class="flex items-start justify-between gap-3 border-b border-plum-100 p-4 last:border-0 dark:border-plum-800">
+                <div class="flex min-w-0 items-start gap-3">
+                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-bold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                    {{ mb_substr($recipient->recipient_name, 0, 1) }}
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-plum-900 dark:text-white">{{ $recipient->recipient_name }}</p>
+                    @if ($recipient->rsvp_note)
+                      <p class="mt-1 text-sm text-plum-600 dark:text-plum-300">“{{ $recipient->rsvp_note }}”</p>
+                    @endif
+                  </div>
+                </div>
+                @if ($recipient->rsvp_status === 'yes')
+                  <span class="shrink-0 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">{{ __('Attending') }}</span>
+                @elseif ($recipient->rsvp_status === 'no')
+                  <span class="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">{{ __('Not attending') }}</span>
+                @else
+                  <span class="shrink-0 rounded-full bg-plum-100 px-2.5 py-1 text-[11px] font-bold text-plum-500 dark:bg-plum-800 dark:text-plum-400">{{ __('No answer yet') }}</span>
                 @endif
               </div>
-              @if ($recipient->rsvp_status === 'yes')
-                <span class="shrink-0 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">{{ __('Attending') }}</span>
-              @elseif ($recipient->rsvp_status === 'no')
-                <span class="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">{{ __('Not attending') }}</span>
-              @else
-                <span class="shrink-0 rounded-full bg-plum-100 px-2.5 py-1 text-[11px] font-bold text-plum-500 dark:bg-plum-800 dark:text-plum-400">{{ __('No answer yet') }}</span>
-              @endif
-            </div>
-          @empty
-            <p class="py-10 text-center text-sm text-plum-500 dark:text-plum-400">{{ __('No guests yet.') }}</p>
-          @endforelse
+            @empty
+              <p class="py-10 text-center text-sm text-plum-500 dark:text-plum-400">{{ $stats['recipients'] === 0 ? __('No guests yet.') : __('No guests match your search.') }}</p>
+            @endforelse
+          </div>
+
+          @if ($responseList->total() > 0)
+            @include('livewire.pages.dashboard.partials.pagination', [
+              'paginator' => $responseList,
+              'pageName' => 'responsesPage',
+              'perPageModel' => 'guestPerPage',
+              'perPageOptions' => \App\Livewire\Pages\Dashboard\InvitationManagePage::GUEST_PER_PAGE,
+            ])
+          @endif
         </div>
       @endif
     </div>
