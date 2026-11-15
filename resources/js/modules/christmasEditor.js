@@ -5,7 +5,11 @@
 //   Start time inputs, and `dress_code` with the dress-code select (+ "Other" text box)
 // - sends the form's current values to the live preview iframe (public/js/invitations/christmas.js)
 //   with postMessage whenever something changes — nothing is saved until Save
-// - "Download as PNG": asks the preview to draw cover.png and details.png and downloads them
+// - the invitation is two pages (two routes): the Cover / Details tabs load either one into the
+//   iframe; the iframe also moves by itself when the gift box or "Back to cover" is tapped, and
+//   says which page it is on with 'xm:ready'
+// - "Download as PNG": loads each page in turn, asks it to draw itself (cover.png, details.png),
+//   then returns to the page that was showing
 
 const toast = (type, message) => window.dispatchEvent(new CustomEvent('toast', { detail: { type, message } }))
 
@@ -38,9 +42,11 @@ function xmEditor(config) {
     moreOpen: !!config.moreOpen,
     extrasOpen: !!config.extrasOpen,
     ready: false,
+    page: 'cover',
     downloading: false,
+    pageWaiters: [],
     frameTimer: null,
-    captureTimer: null,
+    captureDone: null,
 
     init() {
       this.load()
@@ -58,6 +64,7 @@ function xmEditor(config) {
       const frame = this.$refs.frame
       const markReady = () => {
         this.ready = true
+        this.page = this.framePage() ?? this.page
         this.push()
       }
       frame.addEventListener('load', markReady)
@@ -66,6 +73,38 @@ function xmEditor(config) {
       } catch {
         // not loaded yet (or not same-origin): wait for 'load' / 'xm:ready'
       }
+    },
+
+    /** Which page the iframe shows, from its URL (null while it isn't readable yet). */
+    framePage() {
+      try {
+        const path = new URL(this.$refs.frame.contentWindow.location.href).pathname
+        return /\/details\/?$/.test(path) ? 'details' : 'cover'
+      } catch {
+        return null
+      }
+    },
+
+    /** Loads a page into the preview; resolves once that page has said it is ready. */
+    showPage(page) {
+      const frame = this.$refs.frame
+      if (!frame?.contentWindow) return Promise.reject(new Error('no preview'))
+      if (this.page === page && this.ready) return Promise.resolve()
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('preview timeout')), 30000)
+        this.pageWaiters.push({ page, done: () => { clearTimeout(timer); resolve() } })
+        this.ready = false
+        this.page = page
+        frame.contentWindow.location.replace(config.pages[page])
+      })
+    },
+
+    /** Sends the form to the preview right away (not batched): a capture must see it first. */
+    pushNow() {
+      const frame = this.$refs.frame
+      if (!frame?.contentWindow) return
+      const fields = JSON.parse(JSON.stringify(this.$wire.fieldValues ?? {}))
+      frame.contentWindow.postMessage({ type: 'xm:update', fields, guest: this.guestName }, window.location.origin)
     },
 
     destroy() {
@@ -123,18 +162,32 @@ function xmEditor(config) {
 
       if (e.data.type === 'xm:ready') {
         this.ready = true
-        this.push()
+        if (e.data.page) this.page = e.data.page
+        this.pushNow()
+        this.pageWaiters = this.pageWaiters.filter((w) => (w.page === this.page ? (w.done(), false) : true))
       } else if (e.data.type === 'xm:captured') {
-        clearTimeout(this.captureTimer)
-        this.downloading = false
-        e.data.files.forEach((file, i) => setTimeout(() => saveFile(file.name, file.blob), i * 400))
-        toast('success', config.strings.downloaded)
+        this.captureDone?.(e.data.files)
       } else if (e.data.type === 'xm:capture-failed') {
-        this.captureFailed()
+        this.captureDone?.(null)
       }
     },
 
-    download() {
+    /** Asks the page in the preview for its PNG. */
+    captureOne() {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('capture timeout')), 45000)
+        this.captureDone = (files) => {
+          clearTimeout(timer)
+          this.captureDone = null
+          if (files) resolve(files)
+          else reject(new Error('capture failed'))
+        }
+        this.pushNow()
+        this.$refs.frame.contentWindow.postMessage({ type: 'xm:capture' }, window.location.origin)
+      })
+    },
+
+    async download() {
       const frame = this.$refs.frame
       if (this.downloading) return
       if (!this.ready || !frame?.contentWindow) {
@@ -142,15 +195,21 @@ function xmEditor(config) {
         return
       }
       this.downloading = true
-      this.push()
-      frame.contentWindow.postMessage({ type: 'xm:capture' }, window.location.origin)
-      this.captureTimer = setTimeout(() => this.captureFailed(), 45000)
-    },
-
-    captureFailed() {
-      clearTimeout(this.captureTimer)
-      this.downloading = false
-      toast('error', config.strings.downloadFailed)
+      const startPage = this.page
+      try {
+        const files = []
+        for (const page of ['cover', 'details']) {
+          await this.showPage(page)
+          files.push(...(await this.captureOne()))
+        }
+        files.forEach((file, i) => setTimeout(() => saveFile(file.name, file.blob), i * 400))
+        toast('success', config.strings.downloaded)
+      } catch {
+        toast('error', config.strings.downloadFailed)
+      } finally {
+        this.downloading = false
+        if (this.page !== startPage) this.showPage(startPage).catch(() => {})
+      }
     },
 
     /** A failed save names its first field: open the card it's in and bring it into view. */

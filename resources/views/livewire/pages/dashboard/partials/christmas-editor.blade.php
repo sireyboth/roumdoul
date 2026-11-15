@@ -31,8 +31,13 @@
     'moreOpen' => $openWhen($moreFields),
     'extrasOpen' => $openWhen(array_diff($extraFields, ['rsvp_enabled'])) || ! empty($fieldValues['rsvp_enabled']),
     'strings' => ['downloaded' => $t('editor.download_done'), 'downloadFailed' => $t('editor.download_failed')],
+    // the template's two pages, each its own route; ?editor=1 keeps the preview in editor mode
+    'pages' => [
+      'cover' => route('dashboard.invitations.preview', ['invitation' => $invitation, 'editor' => 1]),
+      'details' => route('dashboard.invitations.preview.details', ['invitation' => $invitation, 'editor' => 1]),
+    ],
   ];
-  $previewSrc = route('dashboard.invitations.preview', ['invitation' => $invitation, 'editor' => 1]);
+  $previewSrc = $config['pages']['cover'];
 @endphp
 
 <form wire:submit="save" lang="en-GB" novalidate x-data="xmEditor(@js($config))"
@@ -227,6 +232,14 @@
       <div class="mb-2 flex items-center justify-between gap-2">
         <h2 class="text-sm font-bold uppercase tracking-wide text-plum-500 dark:text-plum-400">{{ $t('editor.preview') }}</h2>
         <span x-show="! ready" class="h-4 w-4 animate-spin rounded-full border-2 border-plum-300 border-t-brand-500" aria-hidden="true"></span>
+      </div>
+      {{-- the invitation is two pages: switch the preview between them --}}
+      <div role="tablist" aria-label="{{ $t('editor.preview_pages') }}" class="mb-3 grid grid-cols-2 gap-1 rounded-full border border-plum-200 bg-white p-1 dark:border-plum-700 dark:bg-plum-900">
+        @foreach (['cover' => $t('editor.preview_cover'), 'details' => $t('editor.preview_details')] as $key => $tabLabel)
+          <button type="button" role="tab" @click="showPage('{{ $key }}')" :aria-selected="page === '{{ $key }}'" :disabled="downloading"
+            :class="page === '{{ $key }}' ? 'bg-brand-600 text-white shadow-sm' : 'text-plum-600 hover:bg-plum-50 dark:text-plum-300 dark:hover:bg-plum-800'"
+            class="rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-wait">{{ $tabLabel }}</button>
+        @endforeach
       </div>
       <div wire:ignore class="overflow-hidden rounded-[1.75rem] border-[6px] border-plum-900 bg-plum-900 shadow-xl dark:border-plum-700">
         <iframe x-ref="frame" src="{{ $previewSrc }}" title="{{ $t('editor.preview') }}"

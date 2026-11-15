@@ -4,10 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Invitation;
 use App\Models\InvitationRecipient;
+use App\Support\Invitations\ChristmasTemplate;
 
 class InvitationShowController extends Controller
 {
     public function __invoke(Invitation $invitation, InvitationRecipient $recipient)
+    {
+        return $this->render($invitation, $recipient, 'cover');
+    }
+
+    /** Page 2 of the two-page Christmas template; other templates are one page. */
+    public function details(Invitation $invitation, InvitationRecipient $recipient)
+    {
+        return $this->render($invitation, $recipient, 'details');
+    }
+
+    private function render(Invitation $invitation, InvitationRecipient $recipient, string $page)
     {
         abort_unless($recipient->invitation_id === $invitation->id, 404);
 
@@ -20,6 +32,15 @@ class InvitationShowController extends Controller
             return response()->view('invitations.expired', status: 410);
         }
 
+        $isChristmas = ChristmasTemplate::is($invitation->template->view);
+        $fields = $invitation->field_values ?? [];
+        abort_if($page === 'details' && ! $isChristmas, 404);
+
+        $coverUrl = route('invitation.show', [$invitation, $recipient]);
+        if ($page === 'details' && ! ChristmasTemplate::hasDetails($fields)) {
+            return redirect($coverUrl);
+        }
+
         if (! $recipient->viewed_at) {
             $recipient->update(['viewed_at' => now()]);
         }
@@ -28,8 +49,9 @@ class InvitationShowController extends Controller
             'view' => $invitation->template->view,
             'recipientName' => $recipient->recipient_name,
             'recipient' => $recipient,
-            'fields' => $invitation->field_values ?? [],
+            'fields' => $fields,
             'invitation' => $invitation,
+            ...($isChristmas ? ChristmasTemplate::pageData($page, $coverUrl, route('invitation.show.details', [$invitation, $recipient])) : []),
         ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InvitationTemplate;
+use App\Support\Invitations\ChristmasTemplate;
 
 class InvitationTemplateDemoController extends Controller
 {
@@ -20,13 +21,8 @@ class InvitationTemplateDemoController extends Controller
         }
 
         // matched by design file, not slug — admin picks the slug
-        if ($template->view === 'invitations.templates.christmas') {
-            return view('invitations.show', [
-                'view' => $template->view,
-                'recipientName' => 'Sophea',
-                'invitation' => null,
-                'fields' => $this->christmasDemoFields(),
-            ]);
+        if (ChristmasTemplate::is($template->view)) {
+            return $this->christmasTemplateDemo($template, 'cover');
         }
 
         if ($template->slug === 'kak-thern') {
@@ -62,13 +58,41 @@ class InvitationTemplateDemoController extends Controller
         ]);
     }
 
+    /** Page 2 (event details) of a two-page template's demo — only the Christmas template has one. */
+    public function details(InvitationTemplate $template)
+    {
+        abort_unless($template->is_active && ChristmasTemplate::is($template->view), 404);
+
+        return $this->christmasTemplateDemo($template, 'details');
+    }
+
+    private function christmasTemplateDemo(InvitationTemplate $template, string $page)
+    {
+        return view('invitations.show', [
+            'view' => $template->view,
+            'recipientName' => 'Sophea',
+            'invitation' => null,
+            'fields' => $this->christmasDemoFields(),
+            ...ChristmasTemplate::pageData($page, route('templates.demo', $template), route('templates.demo.details', $template)),
+        ]);
+    }
+
+    /** /demo/{path}/details — page 2 of a two-page template file (Christmas). */
+    public function fileDetails(string $path)
+    {
+        $view = 'invitations.templates.'.str_replace('/', '.', trim($path, '/'));
+        abort_unless(ChristmasTemplate::is($view), 404);
+
+        return $this->file($path, 'details');
+    }
+
     /**
      * Review link for any template file, straight from disk — no InvitationTemplate row needed.
      * /demo/{path} renders resources/views/invitations/templates/{path}.blade.php, e.g.
      * /demo/wedding/{name} or /demo/birthday. ?to=Name sets the guest name.
      * Sample data is picked by folder/name so every section of the design shows.
      */
-    public function file(string $path)
+    public function file(string $path, string $page = 'cover')
     {
         $view = 'invitations.templates.'.str_replace('/', '.', trim($path, '/'));
         abort_unless(view()->exists($view), 404);
@@ -104,12 +128,18 @@ class InvitationTemplateDemoController extends Controller
             $fields['photo_gallery'] = $ownImages->all();
         }
 
+        // the Christmas template is two pages; ?to= (the sample guest name) only matters on the cover
+        $pages = ChristmasTemplate::is($view)
+            ? ChristmasTemplate::pageData($page, route('templates.demo.file', ['path' => $path, 'to' => request('to')]), route('templates.demo.file.details', ['path' => $path]))
+            : [];
+
         return view('invitations.show', [
             'view' => $view,
             // the Christmas template is English-only
             'recipientName' => request('to', str_contains($kind, 'christmas') ? 'Sophea' : 'ភ្ញៀវកិត្តិយស'),
             'invitation' => null,
             'fields' => $fields,
+            ...$pages,
         ]);
     }
 

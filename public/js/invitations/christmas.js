@@ -1,121 +1,186 @@
 /* Christmas party invitation — resources/views/invitations/templates/christmas.blade.php
-   Browser-only (the server sends the page without flakes or video sources, so nothing here runs
-   during rendering):
-   - <Invitation>        open / back-to-cover state of the two sections
-   - backgrounds         portrait or landscape video per screen shape; section 2's only loads on open
-   - <SnowFall>          snowflake.svg flakes over the whole invitation height
+   Two separate pages (cfg.page = 'cover' | 'details', cfg.urls = both page URLs). Browser-only
+   (the server sends the page without flakes or video sources, so nothing here runs during
+   rendering):
+   - background          portrait or landscape video per screen shape
+   - <SnowFall>          snowflake.svg flakes over the whole page
+   - cover               «Dear …,» + gift box fade in once the background loads; opening the box
+                         plays its animation (~1.2s), then navigates to page 2 in the same tab
+   - details             card + staggered entrance; «Back to cover»
    - live preview        the dashboard editor (?editor=1 iframe) sends form values with postMessage
-   - PNG download        the editor asks for cover.png + details.png, drawn here on a canvas
+   - PNG download        the editor asks each page for its PNG (cover.png, details.png)
    - music, RSVP */
 (function () {
   'use strict';
 
   var root = document.getElementById('xm');
   if (!root) return;
+  root.classList.add('js');
 
   var cfg = {};
   try { cfg = JSON.parse(root.getAttribute('data-config') || '{}'); } catch (e) { cfg = {}; }
 
+  var page = cfg.page === 'details' ? 'details' : 'cover';
+  var urls = cfg.urls || {};
+  var inEditor = !!cfg.editor && window.parent !== window;
   var noop = function () {};
   var reducedMq = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var cover = document.getElementById('xm-cover');
-  var details = document.getElementById('xm-details');
-  var openBtn = document.getElementById('xm-open');
-  var backBtn = document.getElementById('xm-back');
+  var section = document.getElementById(page === 'cover' ? 'xm-cover' : 'xm-details');
   var snow = document.getElementById('xm-snow');
+  var veil = document.getElementById('xm-veil');
   var debounce = function (fn, ms) {
     var t = null;
     return function () { clearTimeout(t); t = setTimeout(fn, ms); };
   };
+  var store = {
+    get: function (k) { try { return window.sessionStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.sessionStorage.setItem(k, v); } catch (e) { /* private mode */ } },
+  };
 
-  /* --- backgrounds ---------------------------------------------------------------------------
-     Same breakpoint as the CSS (min-aspect-ratio: 5/4). The cover video gets its source right
-     away; section 2's (preload="none", no src) only when the invitation is opened. */
-  var coverVideo = cover.querySelector('video[data-bg]');
-  var detailsVideo = details.querySelector('video[data-bg]');
+  // Same tab, real navigation. In the dashboard's preview iframe, replace() so the dashboard's
+  // own Back button never steps through the preview's pages.
+  var go = function (url) {
+    if (!url) return;
+    if (inEditor) window.location.replace(url); else window.location.assign(url);
+  };
+
+  /* --- background ------------------------------------------------------------------------------
+     Same breakpoint as the CSS (min-aspect-ratio: 5/4). */
+  var video = section.querySelector('video[data-bg]');
   var isLandscape = function () { return window.innerWidth >= window.innerHeight * 1.25; };
 
-  var loadBg = function (video) {
+  var loadBg = function () {
     if (!video) return;
     var src = video.getAttribute(isLandscape() ? 'data-landscape' : 'data-portrait');
     video.muted = true;
     if (video.getAttribute('src') !== src) {
       video.preload = 'auto';
       video.src = src;
-      video.setAttribute('data-loaded', '');
     }
     if (reducedMq.matches) { video.pause(); return; } // reduced motion: a still first frame
     var p = video.play();
     if (p && p.catch) p.catch(noop);
   };
 
-  loadBg(coverVideo);
+  loadBg();
 
   var wasLandscape = isLandscape();
   window.addEventListener('resize', debounce(function () {
     if (isLandscape() === wasLandscape) return;
     wasLandscape = isLandscape();
-    [coverVideo, detailsVideo].forEach(function (v) { if (v && v.hasAttribute('data-loaded')) loadBg(v); });
+    loadBg();
   }, 200));
 
   document.addEventListener('visibilitychange', function () {
-    [coverVideo, detailsVideo].forEach(function (v) {
-      if (!v || !v.hasAttribute('data-loaded')) return;
-      if (document.hidden || reducedMq.matches || (v === detailsVideo && details.hidden)) v.pause();
-      else { var p = v.play(); if (p && p.catch) p.catch(noop); }
-    });
+    if (!video) return;
+    if (document.hidden || reducedMq.matches) video.pause();
+    else { var p = video.play(); if (p && p.catch) p.catch(noop); }
   });
 
-  /* --- <Invitation>: cover → details ------------------------------------------------------------
-     Scrolls with window.scrollTo, not scrollIntoView, so inside the dashboard's preview iframe
-     only the iframe scrolls, never the dashboard page around it. */
-  var behavior = function () { return reducedMq.matches ? 'auto' : 'smooth'; };
-  var pageTop = function (el) { return el.getBoundingClientRect().top + window.scrollY; };
+  /* --- page 1: cover + gift box ------------------------------------------------------------------ */
+  var gift = document.getElementById('xm-open');
 
-  var reveal = function (animate) {
-    if (!details.hidden) return;
-    details.hidden = false;
-    loadBg(detailsVideo);
-    details.classList.remove('is-entering');
-    if (animate) {
-      void details.offsetWidth; // restart the fade-up
-      details.classList.add('is-entering');
+  if (page === 'cover') {
+    // «Dear …,» and the gift box fade in once the background has its first frame (or after 1.5s,
+    // whichever comes first, so a slow connection never hides the button)
+    var ready = function () { section.classList.add('is-ready'); };
+    if (!video || video.readyState >= 2 || reducedMq.matches) ready();
+    else {
+      video.addEventListener('loadeddata', ready, { once: true });
+      setTimeout(ready, 1500);
     }
-    openBtn.setAttribute('aria-expanded', 'true');
-  };
 
-  var collapse = function () {
-    details.hidden = true;
-    details.classList.remove('is-entering');
-    openBtn.setAttribute('aria-expanded', 'false');
-    if (detailsVideo) detailsVideo.pause();
-  };
+    var burst = gift ? gift.querySelector('.xm-burst') : null;
+    var leaving = false;
 
-  openBtn.addEventListener('click', function () {
-    reveal(true);
-    window.scrollTo({ top: pageTop(details), behavior: behavior() });
-  });
-
-  var hideTimer = null;
-  backBtn.addEventListener('click', function () {
-    var top = pageTop(cover);
-    window.scrollTo({ top: top, behavior: behavior() });
-    var done = function () {
-      window.removeEventListener('scrollend', done);
-      clearTimeout(hideTimer);
-      if (Math.abs(window.scrollY - top) < 4) {
-        collapse();
-        openBtn.focus({ preventScroll: true });
+    var sparkle = function () {
+      if (!burst) return;
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < 22; i++) {
+        var flake = i % 3 === 2;
+        var angle = (-90 + (Math.random() - 0.5) * 220) * Math.PI / 180; // mostly upwards
+        var dist = 55 + Math.random() * 85;
+        var s = document.createElement('span');
+        s.className = 'xm-spark ' + (flake ? 'xm-spark-flake' : 'xm-spark-gold');
+        s.style.setProperty('--s', (flake ? 9 + Math.random() * 7 : 8 + Math.random() * 10).toFixed(1) + 'px');
+        s.style.setProperty('--x', (Math.cos(angle) * dist).toFixed(1) + 'px');
+        s.style.setProperty('--y', (Math.sin(angle) * dist).toFixed(1) + 'px');
+        s.style.setProperty('--r', ((Math.random() - 0.5) * 300).toFixed(0) + 'deg');
+        s.style.setProperty('--d', (0.18 + Math.random() * 0.12).toFixed(2) + 's');
+        frag.appendChild(s);
       }
+      burst.replaceChildren(frag);
     };
-    if ('onscrollend' in window) window.addEventListener('scrollend', done);
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(done, 900); // no scrollend support, or already at the top
-  });
+
+    // after the veil has faded in — never before the animation is over
+    var leave = function () {
+      var done = false;
+      var navigate = function () {
+        if (done) return;
+        done = true;
+        go(urls.details);
+      };
+      veil.addEventListener('animationend', navigate, { once: true });
+      veil.classList.add('is-on');
+      setTimeout(navigate, reducedMq.matches ? 450 : 700); // in case animationend never fires
+    };
+
+    if (gift) {
+      if (snow && burst) burst.style.setProperty('--flake-src', 'url("' + snow.getAttribute('data-src') + '")');
+      gift.addEventListener('click', function () {
+        if (leaving) return;
+        leaving = true;
+        if (reducedMq.matches) { leave(); return; } // just the fade
+        gift.classList.add('is-opening');
+        sparkle();
+        setTimeout(leave, 750); // bow 0–0.4s, lid 0.12–0.72s, sparkles 0.18–1.05s; veil 0.75–1.2s
+      });
+    }
+
+    // Back from page 2 restores this page from the back/forward cache exactly as it was left —
+    // box open, veil down. Close it again.
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      leaving = false;
+      if (gift) gift.classList.remove('is-opening');
+      if (burst) burst.replaceChildren();
+      veil.classList.remove('is-on');
+      ready();
+      if (video) loadBg();
+    });
+  }
+
+  /* --- page 2: details ------------------------------------------------------------------------------
+     Numbers the visible groups for the staggered entrance (CSS: delay .45s + i × 80ms), and
+     switches the entrance off once it has played, so the editor's live updates don't replay it. */
+  var stagger = function () {
+    var i = 0;
+    Array.prototype.forEach.call(root.querySelectorAll('.xm-rise'), function (el) {
+      if (el.closest('[hidden]')) return;
+      el.style.setProperty('--i', i++);
+    });
+    return i;
+  };
+
+  if (page === 'details') {
+    var count = stagger();
+    setTimeout(function () { root.classList.add('is-settled'); }, reducedMq.matches ? 0 : 1100 + count * 80);
+
+    // «Back to cover»: when the cover is the page we came from, step back in history (so the
+    // browser's Back button and this link agree); otherwise load the cover
+    var back = document.getElementById('xm-back');
+    if (back) {
+      back.addEventListener('click', function (e) {
+        e.preventDefault();
+        var cameFromCover = !inEditor && document.referrer && document.referrer.split('#')[0] === urls.cover && window.history.length > 1;
+        if (cameFromCover) window.history.back(); else go(urls.cover);
+      });
+    }
+  }
 
   /* --- <SnowFall> --------------------------------------------------------------------------------
-     - the layer is as tall as the whole invitation (both sections once opened), so it is snowing
-       wherever the guest scrolls; it is rebuilt when that height changes
+     - the layer is as tall as the page, so it is snowing wherever the guest scrolls; it is rebuilt
+       when that height changes
      - heavy: one flake per 5px of height, capped at 300, about half on phones
      - random depth per flake: small = slower and fainter, big = faster and brighter (8–28px,
        opacity 0.4–1), each with its own sway and slow spin
@@ -194,7 +259,8 @@
 
   /* --- live preview (dashboard editor) --------------------------------------------------------
      Mirrors the PHP at the top of christmas.blade.php: same defaults, same hidden lines, same
-     en-GB formatting («Saturday, 19 December 2026», «6:30 PM»). */
+     en-GB formatting («Saturday, 19 December 2026», «6:30 PM») and curly quotes. Only the
+     elements on this page exist; the rest are simply not found. */
   var all = function (sel) { return Array.prototype.slice.call(root.querySelectorAll(sel)); };
   var setText = function (name, value) { all('[data-xm="' + name + '"]').forEach(function (el) { el.textContent = value; }); };
   var showLine = function (name, on) { all('[data-xm-line="' + name + '"]').forEach(function (el) { el.hidden = !on; }); };
@@ -206,6 +272,13 @@
   var dateFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   var timeFmt = new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true });
   var validTime = function (hi) { return /^([01]\d|2[0-3]):[0-5]\d$/.test(hi || ''); };
+
+  // ChristmasTemplate::typo(): straight quotes → curly
+  var typo = function (s) {
+    return String(s)
+      .replace(/(^|[\s(\[{“‘—–-])"/g, '$1“').replace(/"/g, '”')
+      .replace(/(^|[\s(\[{“‘—–-])'/g, '$1‘').replace(/'/g, '’');
+  };
 
   var formatDate = function (ymd) {
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || '');
@@ -229,15 +302,16 @@
   var apply = function (fields, guest) {
     fields = fields || {};
     var f = function (k) { return String(fields[k] == null ? '' : fields[k]).trim(); };
+    var q = function (k) { return typo(f(k)); };
     var locked = function (k) { return (cfg.locked || []).indexOf(k) !== -1; };
 
-    setText('title', f('headline') || cfg.defaultTitle || '');
+    setText('title', q('headline') || cfg.defaultTitle || '');
 
     guest = String(guest || '').trim().slice(0, 30);
     setText('dear', String(cfg.dear || ':name').replace(':name', guest));
     showLine('dear', guest !== '');
 
-    setText('host', f('sender_name'));
+    setText('host', q('sender_name'));
     showLine('host', f('sender_name') !== '');
 
     var start = splitStart(fields.event_date);
@@ -251,37 +325,38 @@
     var mapLink = !locked('map_url') && /^https?:\/\//i.test(f('map_url')) ? f('map_url') : '';
     if (address && /^https?:\/\/\S+$/i.test(address)) { mapLink = mapLink || address; address = ''; }
     var mapUrl = mapLink || (address ? 'https://maps.google.com/?q=' + encodeURIComponent(address) : '');
-    setText('venue', f('venue_name')); showLine('venue', f('venue_name') !== '');
-    setText('address', address); showLine('address', address !== '');
+    setText('venue', q('venue_name')); showLine('venue', f('venue_name') !== '');
+    setText('address', typo(address)); showLine('address', address !== '');
     all('[data-xm="map"]').forEach(function (a) { a.href = mapUrl || '#'; });
     showLine('map', mapUrl !== '');
 
-    setText('message', f('message')); showLine('message', f('message') !== '');
-    setText('dress', f('dress_code')); showLine('dress', f('dress_code') !== '');
-    setText('bring', f('what_to_bring')); showLine('bring', f('what_to_bring') !== '');
+    setText('message', q('message')); showLine('message', f('message') !== '');
+    setText('dress', q('dress_code')); showLine('dress', f('dress_code') !== '');
+    setText('bring', q('what_to_bring')); showLine('bring', f('what_to_bring') !== '');
 
     var rsvpBy = formatDate(f('rsvp_deadline'));
     setText('rsvpby', rsvpBy); showLine('rsvpby', rsvpBy !== '');
 
     var contact = f('contact_phone');
+    var tel = /^\+?[\d\s().-]{6,}$/.test(contact) ? contact.replace(/[^\d+]/g, '') : '';
     setText('contact', contact); showLine('contact', contact !== '');
-    all('[data-xm="contact"]').forEach(function (a) {
-      if (/^\+?[\d\s().-]{6,}$/.test(contact)) a.href = 'tel:' + contact.replace(/[^\d+]/g, '');
-      else a.removeAttribute('href');
-    });
+    all('[data-xm="call"]').forEach(function (a) { a.href = 'tel:' + tel; });
+    showLine('call', tel !== '');
 
     var rsvpOn = [true, 1, '1', 'true'].indexOf(fields.rsvp_enabled) !== -1 && !locked('rsvp_enabled');
-    setText('rsvpq', f('rsvp_message') || cfg.rsvpQuestion || '');
+    setText('rsvpq', q('rsvp_message') || cfg.rsvpQuestion || '');
     showLine('rsvp', rsvpOn);
 
     // a heading whose lines are all empty hides with them
     all('[data-xm-group]').forEach(function (g) { g.hidden = !g.querySelector('[data-xm-line]:not([hidden])'); });
+    if (page === 'details') stagger();
   };
 
   /* --- PNG download (dashboard editor) -----------------------------------------------------------
-     Each section is drawn on its own canvas from what is on screen right now, bottom to top like
-     the page: background video frame (cover-fit) → cover PNG (contain) → snow → panels/buttons →
-     text, word by word at its laid-out position in the page's own fonts. */
+     The page is drawn on a canvas from what is on screen right now, bottom to top like the page:
+     background video frame (cover-fit) → cover PNG (contain) → snow → panels/buttons → the inline
+     SVGs (gift box, ornaments, icons) → text, word by word at its laid-out position in the page's
+     own fonts. */
   var visible = function (el) {
     return el.getClientRects().length > 0 && !el.closest('[data-capture-skip]') && getComputedStyle(el).visibility !== 'hidden';
   };
@@ -312,6 +387,27 @@
     });
   };
 
+  // each visible inline SVG as a standalone image (currentColor resolved to its computed colour)
+  var svgImages = function (scope) {
+    var list = Array.prototype.filter.call(scope.querySelectorAll('svg'), function (svg) {
+      return !svg.parentElement.closest('svg') && visible(svg);
+    });
+    return Promise.all(list.map(function (svg) {
+      return new Promise(function (resolve) {
+        var box = svg.getBoundingClientRect();
+        var clone = svg.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        clone.setAttribute('width', box.width);
+        clone.setAttribute('height', box.height);
+        var markup = new XMLSerializer().serializeToString(clone).replace(/currentColor/g, getComputedStyle(svg).color);
+        var img = new Image();
+        img.onload = function () { resolve({ img: img, box: box }); };
+        img.onerror = function () { resolve(null); };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(markup);
+      });
+    }));
+  };
+
   var roundRect = function (ctx, x, y, w, h, r) {
     r = Math.max(0, Math.min(r, w / 2, h / 2));
     ctx.beginPath();
@@ -340,8 +436,20 @@
   var drawBox = function (ctx, el) {
     var cs = getComputedStyle(el), b = el.getBoundingClientRect();
     var radius = parseFloat(cs.borderTopLeftRadius) || 0;
+    var shadow = /(rgba?\([^)]*\))\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+([\d.]+)px/.exec(cs.boxShadow || '');
     roundRect(ctx, b.left, b.top, b.width, b.height, radius);
-    if (!transparent(cs.backgroundColor)) { ctx.fillStyle = cs.backgroundColor; ctx.fill(); }
+    if (!transparent(cs.backgroundColor)) {
+      if (shadow) {
+        ctx.save();
+        ctx.shadowColor = shadow[1];
+        ctx.shadowOffsetX = +shadow[2];
+        ctx.shadowOffsetY = +shadow[3];
+        ctx.shadowBlur = +shadow[4];
+      }
+      ctx.fillStyle = cs.backgroundColor;
+      ctx.fill();
+      if (shadow) ctx.restore();
+    }
     var bw = parseFloat(cs.borderTopWidth) || 0;
     if (bw > 0 && cs.borderTopStyle !== 'none' && !transparent(cs.borderTopColor)) {
       roundRect(ctx, b.left + bw / 2, b.top + bw / 2, b.width - bw, b.height - bw, radius - bw / 2);
@@ -351,13 +459,13 @@
     }
   };
 
-  var drawText = function (ctx, section) {
-    var walker = document.createTreeWalker(section, NodeFilter.SHOW_TEXT);
+  var drawText = function (ctx, scope) {
+    var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
     var range = document.createRange();
     var node;
     while ((node = walker.nextNode())) {
       var el = node.parentElement;
-      if (!el || !node.nodeValue.trim() || el.closest('video, script, style, form') || !visible(el)) continue;
+      if (!el || !node.nodeValue.trim() || el.closest('video, script, style, form, svg') || !visible(el)) continue;
       var cs = getComputedStyle(el);
       ctx.font = [cs.fontStyle, cs.fontWeight, cs.fontSize, cs.fontFamily].join(' ');
       ctx.fillStyle = cs.color;
@@ -392,7 +500,7 @@
     ctx.shadowColor = 'transparent';
   };
 
-  var renderSection = function (section, flake) {
+  var renderPage = function (flake, svgs) {
     var r = section.getBoundingClientRect();
     var scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
     var canvas = document.createElement('canvas');
@@ -408,7 +516,6 @@
     ctx.fillStyle = getComputedStyle(root).backgroundColor;
     ctx.fillRect(r.left, r.top, r.width, r.height);
 
-    var video = section.querySelector('video[data-bg]');
     if (video && video.readyState >= 2) drawFit(ctx, video, video.videoWidth, video.videoHeight, video.getBoundingClientRect(), 'cover');
 
     section.querySelectorAll('.xm-cover-art').forEach(function (img) {
@@ -427,6 +534,9 @@
     }
 
     section.querySelectorAll('[data-capture-box]').forEach(function (el) { if (visible(el)) drawBox(ctx, el); });
+    svgs.forEach(function (s) { if (s) ctx.drawImage(s.img, s.box.left, s.box.top, s.box.width, s.box.height); });
+    // the gift tag sits over the box: draw its label again on top of the box SVG
+    section.querySelectorAll('.xm-gift-tag').forEach(function (el) { if (visible(el)) drawBox(ctx, el); });
     drawText(ctx, section);
 
     return new Promise(function (resolve, reject) {
@@ -435,40 +545,42 @@
   };
 
   var capture = function () {
-    var wasHidden = details.hidden, y = window.scrollY;
-    reveal(false);
-    var settle = new Promise(function (r) { setTimeout(r, 400); }); // snow re-spreads over section 2
-    return Promise.all([waitForVideo(coverVideo), waitForVideo(detailsVideo), document.fonts ? document.fonts.ready : null, tintedFlake(), settle])
+    var y = window.scrollY;
+    root.classList.add('is-capturing');
+    if (page === 'cover') section.classList.add('is-ready');
+    var settle = new Promise(function (r) { setTimeout(r, 300); });
+    return Promise.all([waitForVideo(video), document.fonts ? document.fonts.ready : null, tintedFlake(), settle])
       .then(function (res) {
-        return Promise.all([renderSection(cover, res[3]), renderSection(details, res[3])]);
+        return svgImages(section).then(function (svgs) { return renderPage(res[2], svgs); });
       })
-      .then(function (blobs) {
-        return [{ name: 'cover.png', blob: blobs[0] }, { name: 'details.png', blob: blobs[1] }];
-      })
+      .then(function (blob) { return [{ name: page + '.png', blob: blob }]; })
       .finally(function () {
-        if (wasHidden) collapse();
+        root.classList.remove('is-capturing');
         window.scrollTo(0, y);
       });
   };
 
-  if (cfg.editor && window.parent !== window) {
+  if (inEditor) {
     var origin = window.location.origin;
     window.addEventListener('message', function (e) {
       if (e.origin !== origin || e.source !== window.parent || !e.data) return;
       if (e.data.type === 'xm:update') apply(e.data.fields, e.data.guest);
       if (e.data.type === 'xm:capture') {
         capture()
-          .then(function (files) { window.parent.postMessage({ type: 'xm:captured', files: files }, origin); })
-          .catch(function () { window.parent.postMessage({ type: 'xm:capture-failed' }, origin); });
+          .then(function (files) { window.parent.postMessage({ type: 'xm:captured', page: page, files: files }, origin); })
+          .catch(function () { window.parent.postMessage({ type: 'xm:capture-failed', page: page }, origin); });
       }
     });
-    window.parent.postMessage({ type: 'xm:ready' }, origin);
+    window.parent.postMessage({ type: 'xm:ready', page: page }, origin);
   }
 
   /* --- music: an uploaded song (<audio preload="none">, nothing downloads until it plays) or a
      YouTube iframe primed muted; the guest's first tap anywhere is the gesture that lets it play.
-     Not in the editor preview — the dashboard shouldn't start singing while you type. --- */
+     The song can't carry over a page load, so an uploaded one resumes where it was on the next
+     page (if the browser allows it without a new tap). Not in the editor preview — the dashboard
+     shouldn't start singing while you type. --- */
   var yt = document.getElementById('xm-yt'), audio = document.getElementById('xm-audio'), musicBtn = document.getElementById('xm-music'), playing = false;
+  var musicKey = 'xm:music:' + (urls.cover || location.pathname);
   var ytCmd = function (fn) { if (yt && yt.contentWindow) yt.contentWindow.postMessage(JSON.stringify({ event: 'command', func: fn, args: [] }), '*'); };
   var setPlaying = function (on) {
     playing = on;
@@ -492,6 +604,16 @@
         play();
       };
       document.addEventListener('pointerdown', firstTap, true);
+
+      if (audio) {
+        var saved = (store.get(musicKey) || '').split('|');
+        if (saved[0] === 'on') {
+          audio.currentTime = parseFloat(saved[1]) || 0;
+          var p = audio.play();
+          if (p) p.then(function () { setPlaying(true); document.removeEventListener('pointerdown', firstTap, true); }).catch(noop);
+        }
+        window.addEventListener('pagehide', function () { store.set(musicKey, (playing ? 'on' : 'off') + '|' + audio.currentTime); });
+      }
     }
   }
 

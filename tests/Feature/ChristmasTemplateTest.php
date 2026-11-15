@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Pages\Dashboard\InvitationManagePage;
 use App\Models\Customer;
 use App\Models\Invitation;
+use App\Models\InvitationRecipient;
 use App\Models\InvitationTemplate;
 use App\Models\ServicePlan;
 use App\Support\Invitations\ChristmasTemplate;
@@ -30,12 +31,13 @@ class ChristmasTemplateTest extends TestCase
         Date::setTestNow('2026-11-15 10:00:00');
     }
 
-    private function render(array $fields, ?Invitation $invitation = null, string $to = 'Dara'): string
+    private function render(array $fields, ?Invitation $invitation = null, string $to = 'Dara', string $page = 'details'): string
     {
         return view('invitations.templates.christmas', [
             'recipientName' => $to,
             'fields' => $fields,
             'invitation' => $invitation,
+            ...ChristmasTemplate::pageData($page, '/cover', '/cover/details'),
         ])->render();
     }
 
@@ -45,28 +47,83 @@ class ChristmasTemplateTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/[\x{1780}-\x{17FF}\x{19E0}-\x{19FF}]/u', $html, 'Khmer text found');
     }
 
-    public function test_the_file_demo_shows_every_section_in_english(): void
+    public function test_the_file_demo_cover_is_its_own_page_with_the_gift_box(): void
     {
         $response = $this->get('/demo/christmas?to=Dara')
             ->assertOk()
             ->assertSee('<html lang="en">', false)
             ->assertSee('Dear Dara,')
             ->assertSee('Christmas Party')
-            ->assertSee('Open Invitation')
-            ->assertSee('Back to cover')
+            ->assertSee('aria-label="Open invitation"', false)
+            ->assertSee('Open me')
+            ->assertSee('data-href="'.url('/demo/christmas/details').'"', false)
+            ->assertSee('id="xm-snow"', false)
+            ->assertSee('snowflake.svg', false)
+            ->assertSee('Portrait-session1.mp4', false)
+            ->assertSee('cistmas%20Text.png', false)
+            // page 2 is not on this page
+            ->assertDontSee('id="xm-details"', false)
+            ->assertDontSee('Saturday, 19 December 2026');
+
+        $this->assertNoKhmer($response->getContent());
+    }
+
+    public function test_the_file_demo_details_page_shows_every_section_in_english(): void
+    {
+        $response = $this->get('/demo/christmas/details')
+            ->assertOk()
+            ->assertSee('<html lang="en">', false)
+            ->assertSee('You are warmly invited to')
+            ->assertSee('Christmas Party')
+            ->assertSee('hosted by')
             ->assertSee('Saturday, 19 December 2026')
             ->assertSee('6:30 PM – 10:00 PM')
             ->assertSee('View map')
             ->assertSee('Red &amp; Green', false)
             ->assertSee('Saturday, 12 December 2026')
-            ->assertSee('tel:012345678', false)
-            ->assertSee('id="xm-details" hidden', false)
+            ->assertSee('href="tel:012345678"', false)
+            ->assertSee('Call to RSVP')
+            ->assertSee('Back to cover')
+            ->assertSee('href="'.url('/demo/christmas').'"', false)
+            ->assertSee('Portrait-session2.mp4', false)
             ->assertSee('id="xm-snow"', false)
-            ->assertSee('snowflake.svg', false)
-            ->assertSee('Portrait-session1.mp4', false)
-            ->assertSee('cistmas%20Text.png', false);
+            ->assertDontSee('id="xm-cover"', false)
+            ->assertDontSee('cistmas%20Text.png', false);
 
         $this->assertNoKhmer($response->getContent());
+    }
+
+    public function test_only_the_christmas_template_has_a_details_page(): void
+    {
+        $this->get('/demo/birthday/details')->assertNotFound();
+    }
+
+    public function test_guest_links_have_a_details_route_that_needs_saved_details(): void
+    {
+        $invitation = Invitation::factory()->create(['field_values' => ['headline' => 'Office Party', 'venue_name' => 'Riverside Hall']]);
+        $invitation->template->update(['view' => ChristmasTemplate::VIEW]);
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id, 'recipient_name' => 'Dara']);
+
+        $this->get(route('invitation.show', [$invitation, $recipient]))
+            ->assertOk()
+            ->assertSee('Dear Dara,')
+            ->assertSee('data-href="'.route('invitation.show.details', [$invitation, $recipient]).'"', false);
+
+        $this->get(route('invitation.show.details', [$invitation, $recipient]))
+            ->assertOk()
+            ->assertSee('Office Party')
+            ->assertSee('Riverside Hall');
+
+        // nothing to show on page 2 yet: back to the cover
+        $invitation->update(['field_values' => []]);
+        $this->get(route('invitation.show.details', [$invitation, $recipient]))
+            ->assertRedirect(route('invitation.show', [$invitation, $recipient]));
+    }
+
+    public function test_curly_quotes_replace_straight_ones(): void
+    {
+        $this->assertSame('“Ho ho” it’s ‘fun’', ChristmasTemplate::typo('"Ho ho" it\'s \'fun\''));
+        $this->assertStringContainsString('Bring your “best” sweater', $this->render(['what_to_bring' => 'Bring your "best" sweater']));
     }
 
     public function test_the_admin_demo_uses_the_english_sample_data(): void
@@ -77,8 +134,13 @@ class ChristmasTemplateTest extends TestCase
 
         $response = $this->get("/templates/{$template->slug}/demo")
             ->assertOk()
-            ->assertSee('Dear Sophea,')
-            ->assertSee('The Sok Family');
+            ->assertSee('Dear Sophea,');
+        $this->assertNoKhmer($response->getContent());
+
+        $response = $this->get("/templates/{$template->slug}/demo/details")
+            ->assertOk()
+            ->assertSee('The Sok Family')
+            ->assertSee('href="'.url("/templates/{$template->slug}/demo").'"', false);
         $this->assertNoKhmer($response->getContent());
     }
 
@@ -90,20 +152,23 @@ class ChristmasTemplateTest extends TestCase
 
         $this->assertStringContainsString('Saturday, 19 December 2026', $html);
         $this->assertStringContainsString('6:30 PM', $html);
-        $this->assertStringContainsString('Open Invitation', $html);
         $this->assertStringContainsString('Dress code', $html);
         $this->assertNoKhmer($html);
+        $cover = $this->render([], page: 'cover');
+        $this->assertStringContainsString('Open invitation', $cover);
+        $this->assertNoKhmer($cover);
     }
 
     public function test_empty_optional_fields_hide_their_lines_and_the_title_has_a_default(): void
     {
         $html = $this->render(['event_date' => '2026-12-19T18:30'], to: '');
+        $cover = $this->render(['event_date' => '2026-12-19T18:30'], to: '', page: 'cover');
 
         $this->assertStringContainsString('Christmas Party', $html);
         $this->assertStringContainsString('6:30 PM', $html);
         $this->assertStringNotContainsString(' – ', $html);
-        $this->assertMatchesRegularExpression('/data-xm-line="dear"\s+hidden/', $html);
-        foreach (['host', 'venue', 'address', 'map', 'message', 'dress', 'bring', 'rsvpby', 'contact'] as $line) {
+        $this->assertMatchesRegularExpression('/data-xm-line="dear"\s+hidden/', $cover);
+        foreach (['host', 'venue', 'address', 'map', 'message', 'dress', 'bring', 'rsvpby', 'contact', 'call'] as $line) {
             $this->assertMatchesRegularExpression('/data-xm-line="'.$line.'"[^>]*\shidden/', $html, "[{$line}] should be hidden");
         }
         $this->assertStringNotContainsString('id="xm-music"', $html);
@@ -183,6 +248,8 @@ class ChristmasTemplateTest extends TestCase
             ->assertSee('Event title')
             ->assertSee('Add more details')
             ->assertSee('Download as PNG')
+            ->assertSeeHtml('role="tablist"')
+            ->assertSeeHtml('details?editor=1')
             ->assertSee('Reset')
             ->assertSee('Ugly Sweater');
     }
@@ -321,6 +388,12 @@ class ChristmasTemplateTest extends TestCase
             ->assertOk()
             ->assertSee('&quot;editor&quot;:true', false)
             ->assertDontSee('Honored Guest');
+
+        // page 2 in editor mode: the editor sends the (maybe unsaved) details, so no bounce back
+        $this->actingAs($customer, 'customer')
+            ->get(route('dashboard.invitations.preview.details', ['invitation' => $invitation, 'editor' => 1]))
+            ->assertOk()
+            ->assertSee('id="xm-details"', false);
 
         $this->actingAs($customer, 'customer')
             ->get(route('dashboard.invitations.preview', $invitation))
