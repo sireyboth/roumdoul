@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +22,25 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->seedEphemeralSqliteDatabase();
+        $this->fixWindowsServeEnvironment();
+    }
+
+    /**
+     * `php artisan serve` only forwards whitelisted env vars to the child server,
+     * matched case-sensitively. Windows spells them `Path` / `SystemRoot`, so they
+     * were dropped and PHP's curl extension failed to load ("Unable to start curl
+     * module"). Whitelist the Windows spellings too.
+     */
+    private function fixWindowsServeEnvironment(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows' || ! $this->app->runningInConsole()) {
+            return;
+        }
+
+        ServeCommand::$passthroughVariables = array_values(array_unique(array_merge(
+            ServeCommand::$passthroughVariables,
+            ['Path', 'SystemRoot', 'SYSTEMROOT', 'PATH', 'TEMP', 'TMP', 'windir'],
+        )));
     }
 
     /**
