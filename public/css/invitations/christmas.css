@@ -1,0 +1,469 @@
+/* Christmas party invitation — resources/views/invitations/templates/christmas.blade.php
+   Two sections, each one screen tall: #xm-cover, then #xm-details (hidden until opened).
+   Layers, bottom to top, in one stacking context (.xm): background video (z0) → cover PNG (z1)
+   → snow (z2) → text and buttons (z3). Sections themselves must not create a stacking context
+   (no transform/opacity/filter/z-index on .xm-section), or the snow can't sit between their layers. */
+
+.xm {
+    --xm-green: #1f4a32;
+    --xm-red: #a3192f;
+    --xm-ink: #2b3a30;
+    --xm-muted: #55645a;
+    --xm-cream: #f5f0e6;
+    --xm-flake: #9fb5c6;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: var(--xm-ink);
+    background: var(--xm-cream);
+    font-family: "Lora", Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.xm *,
+.xm *::before,
+.xm *::after {
+    box-sizing: border-box;
+}
+
+.xm [hidden] {
+    display: none !important;
+}
+
+.xm-section {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* background video, covering the whole section */
+.xm-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--xm-cream);
+    pointer-events: none;
+}
+
+.xm-layer-text {
+    position: relative;
+    z-index: 3;
+}
+
+/* ---------- section 1: cover ---------- */
+.xm-cover-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: max(1.25rem, 4svh) 1.25rem max(1.5rem, 7svh);
+    text-align: center;
+}
+
+/* letter-style, top left: the plain corner of both background videos (a bauble hangs top centre) */
+.xm-dear {
+    align-self: stretch;
+    margin: 0;
+    text-align: left;
+    text-shadow: 0 1px 10px rgba(245, 240, 230, .95), 0 0 2px rgba(245, 240, 230, .9);
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(1.05rem, 2.6svh, 1.35rem);
+    color: var(--xm-green);
+    overflow-wrap: anywhere;
+}
+
+/* the cover PNG: centred, scaled to fit (never stretched or cropped), in the plain upper part of
+   the background so the text above and below it never covers the lettering */
+.xm-cover-art {
+    position: relative;
+    z-index: 1;
+    display: block;
+    flex: 0 1 auto;
+    width: min(88%, 28rem);
+    height: auto;
+    max-height: 42svh;
+    min-height: 0;
+    margin-top: 2svh;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
+}
+
+.xm-cover-title {
+    max-width: 36rem;
+    margin: 0 0 1.25rem;
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4.6svh, 2.4rem);
+    line-height: 1.15;
+    color: var(--xm-green);
+    text-shadow: 0 1px 14px rgba(245, 240, 230, .95), 0 0 2px rgba(245, 240, 230, .9);
+    overflow-wrap: anywhere;
+}
+
+.xm-cover-spacer {
+    flex: 1 1 auto;
+    min-height: 1rem;
+}
+
+.xm-open,
+.xm-btn {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    background: var(--xm-red);
+    color: #fff;
+    font: 600 1rem/1 "Lora", Georgia, serif;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: background-color .2s, transform .2s;
+}
+
+.xm-open {
+    padding: 1rem 2.25rem;
+    font-size: 1.05rem;
+    box-shadow: 0 8px 24px rgba(163, 25, 47, .28);
+}
+
+.xm-open:hover,
+.xm-btn:hover {
+    background: #8a1427;
+}
+
+.xm-open:focus-visible,
+.xm-btn:focus-visible,
+.xm-btn-ghost:focus-visible,
+.xm-back:focus-visible {
+    outline: 3px solid var(--xm-green);
+    outline-offset: 3px;
+}
+
+/* ---------- section 2: details ---------- */
+.xm-details {
+    justify-content: flex-start;
+    padding: max(1.25rem, 5svh) 1rem max(1.25rem, 5svh);
+}
+
+/* subtle see-through panel so the text stays readable on the background */
+.xm-panel {
+    width: 100%;
+    max-width: 30rem;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.25rem;
+    border: 1px solid rgba(31, 74, 50, .14);
+    border-radius: 20px;
+    background: rgba(255, 252, 246, .8);
+    box-shadow: 0 10px 40px rgba(43, 58, 48, .10);
+    text-align: center;
+}
+
+.xm-panel p,
+.xm-panel h2,
+.xm-panel h3 {
+    margin: 0;
+}
+
+.xm-kicker {
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--xm-red);
+}
+
+.xm-title {
+    margin-top: .35rem !important;
+    font-family: "Playfair Display", Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 6vw, 2.1rem);
+    line-height: 1.2;
+    color: var(--xm-green);
+    overflow-wrap: anywhere;
+}
+
+.xm-host {
+    margin-top: .5rem !important;
+    color: var(--xm-muted);
+}
+
+.xm-host strong {
+    color: var(--xm-ink);
+    font-weight: 600;
+}
+
+.xm-rule {
+    width: 4rem;
+    margin: 1.1rem auto;
+    border: 0;
+    border-top: 1px solid rgba(163, 25, 47, .45);
+}
+
+.xm-group {
+    margin-top: 1.1rem;
+}
+
+.xm-group:first-of-type {
+    margin-top: 0;
+}
+
+.xm-label {
+    margin-bottom: .2rem !important;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--xm-red);
+}
+
+.xm-strong {
+    font-weight: 600;
+    font-size: 1.08rem;
+    color: var(--xm-green);
+}
+
+.xm-pre {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.xm-message {
+    margin-top: 1.2rem !important;
+    font-style: italic;
+    color: var(--xm-ink);
+}
+
+.xm-panel a[data-xm="contact"] {
+    color: var(--xm-green);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.xm-panel a[data-xm="contact"][href] {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.xm-btn-ghost {
+    display: inline-block;
+    margin-top: .5rem;
+    padding: .55rem 1.25rem;
+    border: 1.5px solid var(--xm-green);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--xm-green);
+    font: 600 .9rem/1.2 "Lora", Georgia, serif;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.xm-btn-ghost:hover {
+    background: rgba(31, 74, 50, .08);
+}
+
+.xm-rsvp {
+    margin-top: .9rem;
+}
+
+.xm-rsvp-q {
+    font-weight: 600;
+}
+
+.xm-rsvp-opts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .5rem;
+    margin-top: .4rem;
+}
+
+.xm-btn {
+    padding: .65rem 1.3rem;
+    font-size: .9rem;
+}
+
+.xm-rsvp-opts .xm-btn-ghost {
+    margin-top: 0;
+}
+
+.xm-rsvp [aria-pressed="true"] {
+    box-shadow: 0 0 0 3px rgba(31, 74, 50, .35);
+}
+
+.xm-rsvp-form {
+    display: flex;
+    gap: .5rem;
+    margin-top: .6rem;
+}
+
+.xm-rsvp-form input {
+    flex: 1;
+    min-width: 0;
+    padding: .6rem .9rem;
+    border: 1px solid rgba(31, 74, 50, .3);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--xm-ink);
+    font: inherit;
+    font-size: .9rem;
+}
+
+.xm-rsvp-thanks {
+    margin-top: .6rem !important;
+    color: var(--xm-green);
+    font-weight: 600;
+}
+
+.xm-rsvp-error {
+    margin-top: .6rem !important;
+    color: var(--xm-red);
+}
+
+.xm-back {
+    display: inline-block;
+    margin-top: 1.4rem;
+    padding: .25rem .5rem;
+    border: 0;
+    background: none;
+    color: var(--xm-muted);
+    font: 500 .85rem/1.4 "Lora", Georgia, serif;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+/* reveal: animate the section's layers, never the section itself (it must stay out of the
+   stacking context business, see top) */
+.xm-details.is-entering .xm-panel {
+    animation: xm-fade-up .6s cubic-bezier(.2, .7, .2, 1) both;
+}
+
+.xm-details.is-entering .xm-bg {
+    animation: xm-fade-in .6s ease-out both;
+}
+
+@keyframes xm-fade-up {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes xm-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ---------- snow: over both sections ---------- */
+.xm-snow {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* three nested elements, each animating one transform: fall (Y), sway (X), spin (rotate) */
+.xm-flake {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    animation: xm-fall var(--dur) linear var(--delay) infinite;
+    will-change: transform;
+}
+
+.xm-flake-sway {
+    display: block;
+    animation: xm-sway var(--sway-dur) ease-in-out var(--sway-delay) infinite alternate;
+}
+
+/* the snowflake.svg shape, tinted icy blue-grey so it shows on the light backgrounds */
+.xm-flake-shape {
+    display: block;
+    background-color: var(--xm-flake);
+    -webkit-mask: var(--flake-src) center / contain no-repeat;
+    mask: var(--flake-src) center / contain no-repeat;
+    animation: xm-spin var(--spin-dur) linear infinite var(--spin-dir);
+}
+
+.xm-snow.is-paused *,
+.xm-snow.is-still * {
+    animation-play-state: paused;
+}
+
+.xm-snow.is-still .xm-flake {
+    animation: none;
+}
+
+@keyframes xm-fall {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(0, var(--fall), 0); }
+}
+
+@keyframes xm-sway {
+    from { transform: translateX(calc(-1 * var(--sway))); }
+    to { transform: translateX(var(--sway)); }
+}
+
+@keyframes xm-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- music toggle ---------- */
+.xm-music {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid rgba(31, 74, 50, .25);
+    border-radius: 50%;
+    background: rgba(255, 252, 246, .9);
+    color: var(--xm-green);
+    font-size: 1.2rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.xm-music.playing {
+    background: var(--xm-green);
+    color: #fff;
+}
+
+/* ---------- wide screens: landscape backgrounds ---------- */
+@media (min-aspect-ratio: 5/4) {
+    .xm-cover-art {
+        max-height: 38svh;
+    }
+
+    .xm-details {
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .xm-snow * {
+        animation: none !important;
+    }
+
+    .xm-details.is-entering .xm-panel,
+    .xm-details.is-entering .xm-bg {
+        animation: none;
+    }
+
+    .xm-open,
+    .xm-btn {
+        transition: none;
+    }
+}

@@ -5,6 +5,7 @@ namespace App\Livewire\Pages\Dashboard;
 use App\Models\Invitation;
 use App\Models\InvitationTemplate;
 use App\Services\ImageOptimizer;
+use App\Support\Invitations\ChristmasTemplate;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
@@ -40,7 +41,7 @@ class InvitationManagePage extends Component
      * A catalog entry's own `section` overrides this (e.g. schedule_image sits under program).
      */
     public const SECTION_FIELD_TYPES = [
-        'details' => ['text', 'textarea', 'datetime', 'color', 'boolean'],
+        'details' => ['text', 'textarea', 'datetime', 'date', 'time', 'color', 'boolean'],
         'media' => ['image', 'gallery'],
         'program' => ['schedule', 'story'],
     ];
@@ -58,8 +59,9 @@ class InvitationManagePage extends Component
             'host_names', 'contact_phone',
         ]],
         'when_where' => ['label' => 'When and where', 'icon' => 'calendar', 'fields' => [
-            'event_date', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
+            'event_date', 'end_time', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
         ]],
+        'guest_notes' => ['label' => 'Notes for guests', 'icon' => 'light-bulb', 'fields' => ['dress_code', 'what_to_bring', 'rsvp_deadline']],
         'words' => ['label' => 'Invitation wording', 'icon' => 'pencil', 'fields' => ['headline', 'opening_line', 'message', 'reception_message', 'rsvp_message', 'thanks_message', 'apology_message']],
         'options' => ['label' => 'On/off features', 'icon' => 'bolt', 'fields' => [
             'rsvp_enabled', 'countdown_enabled', 'gallery_feed',
@@ -159,9 +161,20 @@ class InvitationManagePage extends Component
             $this->fieldValues += ['gallery_feed' => true];
         }
 
+        // The Christmas editor starts with its default title filled in.
+        if ($this->isChristmas() && blank($this->fieldValues['headline'] ?? null)) {
+            $this->fieldValues['headline'] = ChristmasTemplate::t('default_title');
+        }
+
         if (! in_array($this->section, $this->visibleSections(), true)) {
             $this->section = 'overview';
         }
+    }
+
+    /** The Christmas template has its own English editor with a live preview on the Details tab. */
+    public function isChristmas(): bool
+    {
+        return ChristmasTemplate::is($this->invitation->template->view);
     }
 
     public function showSection(string $section): void
@@ -424,7 +437,23 @@ class InvitationManagePage extends Component
         $this->invitation->update(['field_values' => $this->fieldValues]);
         $this->saved = true;
         $this->dispatch('invitation-saved');
-        $this->toast('success', __('Saved! Guests will see the changes immediately.'));
+        $this->toast('success', $this->isChristmas() ? ChristmasTemplate::t('editor.saved_toast') : __('Saved! Guests will see the changes immediately.'));
+    }
+
+    /** Christmas editor's Reset (confirmed in the browser first): clears its form, not saved until Save. */
+    public function resetChristmasForm(): void
+    {
+        abort_unless($this->invitation->isPaid() && $this->isChristmas(), 403);
+
+        foreach (ChristmasTemplate::FORM_FIELDS as $key) {
+            if (in_array($key, $this->invitation->template->fields ?? [], true)) {
+                $this->fieldValues[$key] = '';
+            }
+        }
+        $this->fieldValues['headline'] = ChristmasTemplate::t('default_title');
+        $this->resetErrorBag();
+        $this->dispatch('xm-form-reset');
+        $this->toast('info', ChristmasTemplate::t('editor.reset_done'));
     }
 
     /** Shows a toast in the workspace (see resources/js/modules/toast.js). */
@@ -451,6 +480,13 @@ class InvitationManagePage extends Component
                 $this->section = $section;
             }
             $this->dispatch('field-error', key: $first);
+        }
+
+        if ($this->isChristmas()) {
+            $label = $first ? ChristmasTemplate::label($first) : null;
+            $this->toast('error', ChristmasTemplate::t($keys->count() > 1 ? 'editor.fix_many' : 'editor.fix_one', ['count' => $keys->count(), 'field' => $label]));
+
+            return;
         }
 
         $label = $first ? (InvitationTemplate::localizedCatalog()[$first]['label'] ?? $first) : null;
@@ -487,6 +523,8 @@ class InvitationManagePage extends Component
                 $type === 'text' => ['nullable', 'string', 'max:255'],
                 $type === 'boolean' => ['nullable', 'boolean'],
                 $type === 'datetime' => ['nullable', 'date'],
+                $type === 'date' => ['nullable', 'date_format:Y-m-d'],
+                $type === 'time' => ['nullable', 'date_format:H:i'],
                 $type === 'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
                 $type === 'schedule' => ['nullable', 'array', 'max:20'],
                 $type === 'story' => ['nullable', 'array', 'max:8'],
@@ -510,7 +548,52 @@ class InvitationManagePage extends Component
             }
         }
 
+        // the Christmas template has its own limits, required fields and English messages
+        if ($this->isChristmas()) {
+            $rules = array_replace($rules, ChristmasTemplate::rules(
+                $this->fieldValues, $this->invitation->template->fields ?? [], fn (string $key) => $this->invitation->fieldUnlocked($key),
+            ));
+
+            return array_filter([...$rules, ...$this->uploadRules()]);
+        }
+
+        foreach ($this->eventDateRules() as $key => $rule) {
+            if (isset($rules["fieldValues.{$key}"])) {
+                $rules["fieldValues.{$key}"][] = $rule;
+            }
+        }
+
         return array_filter([...$rules, ...$this->uploadRules()]);
+    }
+
+    /**
+     * Fields that must fit around the event's own date and start time (`event_date`): the end
+     * time comes after the start, and the reply-by date is on or before the event day. Only
+     * checked when both values are filled in.
+     *
+     * @return array<string, \Closure>
+     */
+    protected function eventDateRules(): array
+    {
+        $start = null;
+        try {
+            $start = filled($this->fieldValues['event_date'] ?? null) ? Carbon::parse($this->fieldValues['event_date']) : null;
+        } catch (\Throwable) {
+            // an unparseable event date already fails its own rule
+        }
+
+        return [
+            'end_time' => function (string $attribute, mixed $value, \Closure $fail) use ($start) {
+                if ($start && is_string($value) && preg_match('/^\d{2}:\d{2}$/', $value) && $value <= $start->format('H:i')) {
+                    $fail(__('The end time must be after the start time (:time).', ['time' => $start->format('g:i A')]));
+                }
+            },
+            'rsvp_deadline' => function (string $attribute, mixed $value, \Closure $fail) use ($start) {
+                if ($start && is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) && $value > $start->toDateString()) {
+                    $fail(__('The reply-by date must be on or before the event date.'));
+                }
+            },
+        ];
     }
 
     /**
@@ -578,6 +661,7 @@ class InvitationManagePage extends Component
             '*.dimensions' => 'This photo is too large (max 8000 × 8000 pixels).',
             'audioUploads.*.max' => __('The music file is too big — at most :mb MB (≈ a 10-minute song).', ['mb' => self::MAX_AUDIO_KB / 1024]),
             'audioUploads.*.mimetypes' => __('Please use an MP3 or M4A music file only.'),
+            ...($this->isChristmas() ? ChristmasTemplate::messages() : []),
         ];
     }
 

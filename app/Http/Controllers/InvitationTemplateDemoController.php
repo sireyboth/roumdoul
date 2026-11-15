@@ -19,6 +19,16 @@ class InvitationTemplateDemoController extends Controller
             ]);
         }
 
+        // matched by design file, not slug — admin picks the slug
+        if ($template->view === 'invitations.templates.christmas') {
+            return view('invitations.show', [
+                'view' => $template->view,
+                'recipientName' => 'Sophea',
+                'invitation' => null,
+                'fields' => $this->christmasDemoFields(),
+            ]);
+        }
+
         if ($template->slug === 'kak-thern') {
             return view('invitations.show', [
                 'view' => $template->view,
@@ -70,6 +80,7 @@ class InvitationTemplateDemoController extends Controller
                 'host_names' => "លោក ហេង ឌី និងលោកស្រី សុខ ជា\nលោក ឈិន សារ៉ាត និងលោកស្រី ពិស្ណុ សារ៉ាត",
             ],
             str_contains($kind, 'kathin') || str_contains($kind, 'kak-thern') || str_contains($kind, 'ceremony') => $this->kathinaDemoFields(),
+            str_contains($kind, 'christmas') => $this->christmasDemoFields(),
             default => $this->khmerWeddingDemoFields() + $this->kathinaDemoFields() + [
                 'sender_name' => 'Alex',
                 'celebrant_name' => 'Bella',
@@ -95,7 +106,8 @@ class InvitationTemplateDemoController extends Controller
 
         return view('invitations.show', [
             'view' => $view,
-            'recipientName' => request('to', 'ភ្ញៀវកិត្តិយស'),
+            // the Christmas template is English-only
+            'recipientName' => request('to', str_contains($kind, 'christmas') ? 'Sophea' : 'ភ្ញៀវកិត្តិយស'),
             'invitation' => null,
             'fields' => $fields,
         ]);
@@ -151,6 +163,35 @@ class InvitationTemplateDemoController extends Controller
             'photo_gallery' => collect(range(1, max(1, min(30, (int) request('photos', 6)))))
                 ->map(fn ($i) => "https://picsum.photos/seed/khmerwed{$i}/".($i % 3 === 0 ? '1000/700' : ($i % 2 ? '700/900' : '700/700')))
                 ->all(),
+        ];
+    }
+
+    /**
+     * Sample content for the Christmas party preview (English, like the template) — every
+     * optional line filled in so the demo shows each one. The date is always next 19 December,
+     * so the sample never sits in the past.
+     */
+    private function christmasDemoFields(): array
+    {
+        $day = now()->setDate(now()->year, 12, 19)->startOfDay();
+        if (now()->toDateString() > $day->toDateString()) {
+            $day->addYear();
+        }
+
+        return [
+            'headline' => 'Christmas Party',
+            'sender_name' => 'The Sok Family',
+            'event_date' => $day->format('Y-m-d').'T18:30',
+            'end_time' => '22:00',
+            'venue_name' => 'Riverside Hall',
+            'venue_address' => '12 Sisowath Quay, Phnom Penh',
+            'map_url' => 'https://www.google.com/maps/@11.5682,104.9306,17z',
+            'message' => 'Join us for dinner, carols and a gift exchange. We would love to celebrate with you!',
+            'dress_code' => 'Red & Green',
+            'what_to_bring' => 'A small gift for the gift exchange',
+            'rsvp_deadline' => $day->copy()->subWeek()->format('Y-m-d'),
+            'contact_phone' => '012 345 678',
+            'rsvp_enabled' => true,
         ];
     }
 

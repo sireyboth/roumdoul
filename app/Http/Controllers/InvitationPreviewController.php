@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\SetLocale;
 use App\Models\Invitation;
+use App\Support\Invitations\ChristmasTemplate;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -13,10 +15,25 @@ use Illuminate\Support\Facades\Auth;
  */
 class InvitationPreviewController extends Controller
 {
-    public function __invoke(Invitation $invitation)
+    public function __invoke(Request $request, Invitation $invitation)
     {
         abort_unless($invitation->customer_id === Auth::guard('customer')->id(), 403);
         abort_unless($invitation->isPaid(), 403);
+
+        // The Christmas template is English-only. ?editor=1 is the dashboard editor's live preview
+        // iframe: the guest name comes from the editor's own (unsaved) "Guest name" box instead.
+        if (ChristmasTemplate::is($invitation->template->view)) {
+            $editor = $request->boolean('editor');
+
+            return view('invitations.show', [
+                'view' => $invitation->template->view,
+                'recipientName' => $editor ? '' : ChristmasTemplate::t('page.honored_guest'),
+                'recipient' => null,
+                'fields' => $invitation->field_values ?? [],
+                'invitation' => $invitation,
+                'editorPreview' => $editor,
+            ]);
+        }
 
         return view('invitations.show', [
             'view' => $invitation->template->view,

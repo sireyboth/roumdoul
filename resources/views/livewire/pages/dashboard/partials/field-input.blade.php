@@ -197,6 +197,16 @@
       class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
     @break
 
+  @case('date')
+    <input id="input-{{ $key }}" type="date" wire:model="fieldValues.{{ $key }}"
+      class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
+    @break
+
+  @case('time')
+    <input id="input-{{ $key }}" type="time" wire:model="fieldValues.{{ $key }}"
+      class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
+    @break
+
   @case('color')
     <input id="input-{{ $key }}" type="color" wire:model="fieldValues.{{ $key }}" class="h-12 w-full cursor-pointer rounded-lg border border-plum-200 bg-transparent p-1 dark:border-plum-700" />
     @break

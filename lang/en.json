@@ -607,5 +607,16 @@
     "or": "or",
     "our own team": "our own team",
     "premium digital services": "premium digital services",
-    "press Save": "press Save"
+    "press Save": "press Save",
+    "The end time must be after the start time (:time).": "The end time must be after the start time (:time).",
+    "The reply-by date must be on or before the event date.": "The reply-by date must be on or before the event date.",
+    "End time": "End time",
+    "When the event ends (optional) — shown after the start time from «Event date», e.g. «6:30 PM – 10:00 PM». Must be later than the start time.": "When the event ends (optional) — shown after the start time from «Event date», e.g. «6:30 PM – 10:00 PM». Must be later than the start time.",
+    "Reply by (date)": "Reply by (date)",
+    "The last day guests should let you know if they are coming — must be on or before the event date. Leave empty to hide it.": "The last day guests should let you know if they are coming — must be on or before the event date. Leave empty to hide it.",
+    "Dress code": "Dress code",
+    "What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.": "What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.",
+    "What to bring": "What to bring",
+    "Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.": "Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.",
+    "Notes for guests": "Notes for guests"
 }
