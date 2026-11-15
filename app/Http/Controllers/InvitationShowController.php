@@ -15,7 +15,8 @@ class InvitationShowController extends Controller
             return response()->view('invitations.expired', status: 410);
         }
 
-        if ($invitation->isExpired()) {
+        // An order moved back from paid (refund, mistake) takes the guest links down with it.
+        if ($invitation->isExpired() || ! $invitation->isPaid()) {
             return response()->view('invitations.expired', status: 410);
         }
 

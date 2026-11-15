@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Invitation;
 use App\Models\InvitationTemplate;
 use App\Models\Order;
+use App\Models\ServicePlan;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -43,6 +44,14 @@ class InvitationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'order_id' => Order::factory(['status' => 'pending_payment']),
+        ]);
+    }
+
+    /** Bought under a plan that unlocks these premium field keys (e.g. 'rsvp_enabled'). */
+    public function withFeatures(array $features): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'service_plan_id' => ServicePlan::factory(['features' => $features]),
         ]);
     }
 }
