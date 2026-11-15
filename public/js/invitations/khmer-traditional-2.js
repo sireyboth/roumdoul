@@ -44,6 +44,23 @@
       var size = parseFloat(getComputedStyle(el).fontSize);
       if (el.scrollWidth > w) el.style.fontSize = Math.max(size * w / el.scrollWidth - 0.5, 8) + 'px';
     });
+    centreInitials();
+  }
+
+  /* --- the initials' ink sits on the frame's centre: flexbox centres each letter's line box, but caps,
+         Moul's tall marks and ♡ don't fill it evenly, so each span is moved by its measured ink offset.
+         In em, so the fit-to-width above scales it without moving anything. --- */
+  var measureCtx = document.createElement('canvas').getContext('2d');
+  function centreInitials() {
+    document.querySelectorAll('.k2-initials span').forEach(function (s) {
+      var cs = getComputedStyle(s), fs = parseFloat(cs.fontSize);
+      measureCtx.font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+      var m = measureCtx.measureText(s.textContent);
+      if (!fs || m.fontBoundingBoxAscent == null || !(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent)) { s.style.translate = ''; return; }
+      // ink centre vs line-box centre (both relative to the baseline), as a fraction of the font size
+      var dy = ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) - (m.fontBoundingBoxAscent - m.fontBoundingBoxDescent)) / 2 / fs;
+      s.style.translate = '0 ' + dy.toFixed(3) + 'em';
+    });
   }
 
   /* --- cover --- */
@@ -116,6 +133,56 @@
       revs.forEach(function (el) { io.observe(el); });
     } else {
       revs.forEach(function (el) { el.classList.add('in'); });
+    }
+  }
+
+  /* --- photo feed (#k2-gallery, the shared photo-feed partial): this template's own entrance and
+         parallax, styled in khmer-traditional-2.css. The partial keeps its lightbox and Auto scroll. --- */
+  var gal = document.getElementById('k2-gallery');
+  var feed = gal ? [].slice.call(gal.querySelectorAll('.pf-item')) : [];
+  if (feed.length) {
+    if (reduced || !('IntersectionObserver' in window)) {
+      feed.forEach(function (li) { li.classList.add('k2-pf-in'); });
+    } else {
+      var pfIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          var li = e.target;
+          pfIo.unobserve(li);
+          li.classList.add('k2-pf-anim');   // will-change only for the length of the entrance
+          requestAnimationFrame(function () { li.classList.add('k2-pf-in'); });
+          setTimeout(function () { li.classList.remove('k2-pf-anim'); }, 1500);
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -4% 0px' });
+      feed.forEach(function (li) { pfIo.observe(li); });
+    }
+
+    // parallax where CSS scroll-driven animations aren't supported: one passive scroll listener, at
+    // most one rAF per frame; all rects are read first, then --k2-pf-y is written on the visible cards
+    if (!reduced && 'IntersectionObserver' in window && !(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'))) {
+      gal.classList.add('k2-pf-jsdrift');
+      var shown = [], queued = false;
+      var drift = function () {
+        queued = false;
+        var vh = window.innerHeight;
+        var rects = shown.map(function (li) { return li.getBoundingClientRect(); });
+        shown.forEach(function (li, i) {
+          var p = Math.min(1, Math.max(0, (vh - rects[i].top) / (vh + rects[i].height)));
+          li.style.setProperty('--k2-pf-y', (12 * p - 6).toFixed(2) + '%');
+        });
+      };
+      var queue = function () { if (!queued) { queued = true; requestAnimationFrame(drift); } };
+      var visIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          var i = shown.indexOf(e.target);
+          if (e.isIntersecting && i < 0) shown.push(e.target);
+          else if (!e.isIntersecting && i >= 0) shown.splice(i, 1);
+        });
+        queue();
+      });
+      feed.forEach(function (li) { visIo.observe(li); });
+      addEventListener('scroll', queue, { passive: true });
+      addEventListener('resize', queue, { passive: true });
     }
   }
 

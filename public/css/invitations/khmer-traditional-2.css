@@ -51,14 +51,19 @@ body.k2-locked{ overflow:hidden; height:100vh; }
 .k2-gate.ready .k2-cover-open{ animation:k2-in 1.6s var(--ease) .7s both, k2-call 2.6s ease-out 2.6s infinite; }
 .k2-gate.open .k2-cover-ui > *{ animation:none; opacity:0; transition:opacity .5s ease; }
 
-/* inside the gold teardrop: interior spans ~36–48% down, widest (37–63%) near the bottom, so the
-   letters sit a little below its middle */
-.k2-initials{ left:37%; width:26%; top:39.4%; height:8.6%; gap:.4cqw; padding:0 .5cqw;
+/* inside the gold teardrop. Measured on the cover.mp4 frame (720×1280): the opening spans x 36.67–63.06%,
+   y 36.64–49.92%; it is pointed at the top, so its visual centre (area centroid) is at 49.9% / 44.6%.
+   The box spans the opening's full width and is centred on that point (top 39.26% … bottom edge 49.92%).
+   Each span is a flex item centred on its own; the JS then nudges each one by its measured ink offset
+   (translate, in em) so caps, Moul ascenders and ♡ all land on the centre. Symmetric padding only. */
+.k2-initials{ left:36.67%; width:26.39%; top:39.26%; height:10.66%; gap:.4cqw; padding:0 1.5cqw;
+  justify-content:center; align-items:center; text-align:center;
   font-family:var(--f-names); font-weight:600; font-size:8.2cqw; line-height:1; letter-spacing:.02em;
   filter:drop-shadow(0 .35cqw .5cqw rgba(30,3,5,.65)); }
-.k2-initials span{ background:var(--gold-text); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; padding:.15em 0; }
-.k2-initials .amp{ font-family:var(--f-love); font-weight:400; font-size:.72em; margin:0 .02em; }
-.k2-initials.k2-kh{ font-family:var(--f-moul); font-weight:400; font-size:7.4cqw; line-height:1.5; }
+/* line-height gives background-clip:text room for tall glyphs (equal above and below, so it doesn't move them) */
+.k2-initials span{ display:block; line-height:1.5; background:var(--gold-text); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
+.k2-initials .amp{ font-family:var(--f-love); font-weight:400; font-size:.72em; }
+.k2-initials.k2-kh{ font-family:var(--f-moul); font-weight:400; font-size:7.4cqw; }
 /* the band between the two gold dividers (lines at ~71.8% and ~77.4%) */
 .k2-cover-guest{ left:max(20%,calc((100cqw - 100vw) / 2 + 14px)); right:max(20%,calc((100cqw - 100vw) / 2 + 14px)); top:71.95%; height:5.35%;
   font-family:var(--f-moul); font-size:4.3cqw; line-height:1.6; color:var(--k2-gold-hi); text-shadow:0 .3cqw .6cqw rgba(20,2,4,.7); }
@@ -211,6 +216,31 @@ body.k2-locked{ overflow:hidden; height:100vh; }
 #k2-gallery .pf-bg{ background:none; }
 #k2-gallery .pf-bg::after{ background:rgba(24,3,5,.3); }
 #k2-gallery .pf-bg i{ display:none; }
+/* Feed motion, this template only (the partial is shared, so everything is under #k2-gallery and the
+   JS in khmer-traditional-2.js). Entrance: each card fades, unblurs and settles from a slight tilt
+   (odd cards from the left, even from the right), then a soft gold sheen crosses it once. While
+   scrolling, the photo drifts inside its frame (scaled 1.15, moved -6% → +6%). Only transform,
+   opacity and filter animate; will-change is set by the JS only while a card animates. */
+.k2-js #k2-gallery .pf-item{ opacity:0; transform:translate3d(-22px,34px,0) scale(.92) rotate(-2.5deg); filter:blur(6px);
+  transition:opacity 1.1s var(--ease), transform 1.3s var(--ease), filter 1.1s var(--ease); }
+.k2-js #k2-gallery .pf-item:nth-child(even){ transform:translate3d(22px,34px,0) scale(.92) rotate(2.5deg); }
+.k2-js #k2-gallery .pf-item.k2-pf-in{ opacity:1; transform:none; filter:none; }
+.k2-js #k2-gallery .pf-item.k2-pf-anim{ will-change:transform,opacity,filter; }
+#k2-gallery .pf-ph::before{ content:""; position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,236,180,.07) 42%,rgba(255,241,200,.32) 50%,rgba(255,236,180,.07) 58%,transparent 70%);
+  transform:translate3d(-110%,0,0); }
+.k2-js #k2-gallery .pf-item.k2-pf-in .pf-ph::before{ animation:k2-pf-sheen 1.6s ease-in-out .75s both; }
+@keyframes k2-pf-sheen{ 0%{ opacity:0; transform:translate3d(-110%,0,0) } 15%,80%{ opacity:1 } 100%{ opacity:0; transform:translate3d(110%,0,0) } }
+/* parallax, scroll-driven where supported. The view timeline lives on the card; .k2-page clips instead of
+   hiding overflow so it isn't a scroll container (that would capture the timeline). */
+@keyframes k2-pf-drift{ from{ transform:translate3d(0,-6%,0) scale(1.15) } to{ transform:translate3d(0,6%,0) scale(1.15) } }
+@supports (animation-timeline:view()){
+  .k2-js .k2-page{ overflow:clip; }
+  .k2-js #k2-gallery .pf-item{ view-timeline:--k2-pf block; }
+  .k2-js #k2-gallery .pf-ph img{ animation:k2-pf-drift linear both; animation-timeline:--k2-pf; animation-range:cover 0% cover 100%; }
+}
+/* fallback: the JS writes --k2-pf-y from one passive scroll listener */
+#k2-gallery.k2-pf-jsdrift .pf-ph img{ transform:translate3d(0,var(--k2-pf-y,-6%),0) scale(1.15); }
 
 /* ============ venue ============ */
 .k2-venue-name{ font-family:var(--f-names); font-weight:500; font-size:clamp(1.4rem,7vw,2rem); letter-spacing:.1em; line-height:1.35; overflow-wrap:anywhere; }
@@ -307,6 +337,8 @@ body.k2-locked{ overflow:hidden; height:100vh; }
   .k2-js .k2-rev{ opacity:1; transform:none; filter:none; }
   .k2-heartline .ln{ stroke-dashoffset:0; }
   .k2-gate.ready .k2-cover-ui > *{ opacity:1; }
+  .k2-js #k2-gallery .pf-item,.k2-js #k2-gallery .pf-item:nth-child(even){ opacity:1; transform:none; filter:none; }
+  #k2-gallery .pf-ph img{ transform:none !important; }
 }
 @media (min-width:768px){
   .k2-sec{ padding:88px 40px; }
@@ -320,11 +352,12 @@ body.k2-locked{ overflow:hidden; height:100vh; }
 @media (min-width:900px) and (min-aspect-ratio:5/4){
   .k2-stage{ left:0; width:100%; transform:none; }
 
-  /* cover: the 16:9 card covers the screen. Left: the gold teardrop (interior ~24.5–36.6% across,
-     ~32–51% down); right: the title and the guest band (lines at ~55.3% and ~66.7%) */
+  /* cover: the 16:9 card covers the screen. Left: the gold teardrop (opening measured on the 1600×900
+     frame: x 23.56–37.56%, y 32.56–54.89%, visual centre 30.56% / 45.87%); right: the title and the
+     guest band (lines at ~55.3% and ~66.7%) */
   .k2-cover{ aspect-ratio:16/9; width:max(100vw,calc(100vh * 16 / 9)); width:max(100vw,calc(100svh * 16 / 9)); }
-  .k2-initials{ left:24.6%; width:12.2%; top:37.6%; height:11.6%; font-size:3.9cqw; }
-  .k2-initials.k2-kh{ font-size:3.5cqw; }
+  .k2-initials{ left:23.56%; width:14%; top:36.85%; height:18.04%; padding:0 1cqw; font-size:4.3cqw; }
+  .k2-initials.k2-kh{ font-size:3.9cqw; }
   .k2-cover-guest{ left:52%; right:auto; width:26%; top:55.5%; height:11%; font-size:2.1cqw; }
   .k2-cover-open{ left:57.5%; width:15%; top:77.8%; height:6.6%; font-size:1.35cqw; --k2-call:1.1cqw; box-shadow:0 .4cqw 1cqw rgba(0,0,0,.45); }
 
