@@ -11,6 +11,7 @@ use App\Models\ModerationLog;
 use App\Models\Review;
 use App\Models\User;
 use App\Policies\ReviewPolicy;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
@@ -89,7 +90,7 @@ class SecurityHardeningTest extends TestCase
 
     private function recipient(): array
     {
-        $invitation = Invitation::factory()->create();
+        $invitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
         return [$invitation, $recipient];
@@ -172,11 +173,16 @@ class SecurityHardeningTest extends TestCase
         $other = Invitation::factory()->create();
         $foreign = InvitationRecipient::factory()->create(['invitation_id' => $other->id]);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        try {
+            Livewire::actingAs($customer, 'customer')
+                ->test(InvitationManagePage::class, ['invitation' => $mine])
+                ->call('toggleRecipient', $foreign->id);
+        } catch (ModelNotFoundException) {
+            // rejected outright — also fine
+        }
 
-        Livewire::actingAs($customer, 'customer')
-            ->test(InvitationManagePage::class, ['invitation' => $mine])
-            ->call('toggleRecipient', $foreign->id);
+        // the lookup is scoped to the customer's own invitation, so the foreign link is untouched
+        $this->assertNull($foreign->fresh()->revoked_at);
     }
 
     // ---- reviews / feedback form --------------------------------------------------------

@@ -80,20 +80,10 @@
           </p>
         @endif
         <div class="flex flex-col gap-2">
-          @if ($hasOutOfStock)
-            <button type="button" disabled
-              class="block w-full cursor-not-allowed rounded-full bg-plum-200 px-4 py-2.5 text-center text-sm font-semibold text-plum-500 dark:bg-plum-800 dark:text-plum-500">
-              {{ __('Checkout') }}
-            </button>
-          @else
-            <a href="/checkout" wire:navigate @click="$store.cartDrawer.hide()"
-              class="block rounded-full bg-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-md shadow-brand-900/20 transition-colors hover:bg-brand-700">
-              {{ __('Checkout') }}
-            </a>
-          @endif
-          <a href="/cart" wire:navigate @click="$store.cartDrawer.hide()"
-            class="block rounded-full border border-plum-300 px-4 py-2.5 text-center text-sm font-semibold text-plum-700 transition-colors hover:bg-plum-50 dark:border-plum-600 dark:text-plum-200 dark:hover:bg-plum-800">
-            {{ __('View cart') }}
+          {{-- always open: sold-out items can be removed on the checkout page --}}
+          <a href="/checkout" wire:navigate @click="$store.cartDrawer.hide()"
+            class="block rounded-full bg-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-md shadow-brand-900/20 transition-colors hover:bg-brand-700">
+            {{ __('Checkout') }}
           </a>
         </div>
       </div>

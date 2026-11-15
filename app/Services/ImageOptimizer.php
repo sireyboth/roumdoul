@@ -56,7 +56,7 @@ class ImageOptimizer
             if ($quality > 50) {
                 $quality -= 10;
             } else {
-                $image = imagescale($image, (int) round(imagesx($image) * 0.8), -1, IMG_BICUBIC) ?: $image;
+                $image = $this->scale($image, (int) round(imagesx($image) * 0.8), (int) round(imagesy($image) * 0.8));
             }
         }
 
@@ -117,6 +117,18 @@ class ImageOptimizer
             return $image;
         }
 
-        return imagescale($image, (int) round($w * $scale), (int) round($h * $scale), IMG_BICUBIC) ?: $image;
+        return $this->scale($image, (int) round($w * $scale), (int) round($h * $scale));
+    }
+
+    /**
+     * Bicubic gives the sharpest result, but some GD builds (e.g. PHP 8.4 / GD 2.3.3 on macOS)
+     * return false for it — retry with GD's default mode so the photo is still shrunk instead
+     * of being stored at full size.
+     */
+    private function scale(\GdImage $image, int $w, int $h): \GdImage
+    {
+        return imagescale($image, $w, $h, IMG_BICUBIC)
+            ?: imagescale($image, $w, $h)
+            ?: $image;
     }
 }

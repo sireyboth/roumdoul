@@ -38,7 +38,7 @@
       <livewire:components.header-section />
     @endpersist
 
-    <main class="flex-1">
+    <main class="flex-1" data-page-transition>
       {{ $slot }}
     </main>
 

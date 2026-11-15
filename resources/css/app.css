@@ -357,7 +357,21 @@ button {
     to { transform: scaleX(0); }
 }
 
+/* Alpine: keep x-cloak'd elements (e.g. the checkout confirm dialog) hidden until Alpine starts. */
+[x-cloak] { display: none !important; }
+
 /* ── Page & language transitions ─────────────────────────────────────────── */
+
+/* Every new page shown with wire:navigate fades and rises in (class added in app.js).
+   Full page loads use the view transition below instead. */
+@keyframes page-enter {
+    from { opacity: 0; transform: translateY(8px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .page-enter {
+        animation: page-enter 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+}
 
 /* Invitation workspace: each sidebar section slides in (the wrapper is keyed by section). */
 @keyframes ws-enter {

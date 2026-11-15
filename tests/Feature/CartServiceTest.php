@@ -268,4 +268,79 @@ class CartServiceTest extends TestCase
 
         $this->assertTrue($this->cart->items()->first()->in_stock);
     }
+
+    // ---- promo codes: whole order vs. limited to products --------------------------------
+
+    public function test_a_code_with_no_products_discounts_the_whole_order(): void
+    {
+        $a = Service::factory()->create(['base_price' => 20]);
+        $b = Service::factory()->create(['base_price' => 30]);
+        $promo = PromoCode::factory()->percentage(10)->create();
+        $this->cart->add($a->id, null, 1);
+        $this->cart->add($b->id, null, 1);
+
+        $this->assertTrue($this->cart->applyPromoCode($promo->code)['success']);
+        $this->assertSame(5.0, $this->cart->discount());
+        $this->assertSame(45.0, $this->cart->total());
+    }
+
+    public function test_a_percentage_code_limited_to_one_product_only_discounts_that_product(): void
+    {
+        $a = Service::factory()->create(['base_price' => 20]);
+        $b = Service::factory()->create(['base_price' => 30]);
+        $promo = PromoCode::factory()->percentage(50)->create();
+        $promo->services()->attach($a);
+        $this->cart->add($a->id, null, 2);   // $40 eligible
+        $this->cart->add($b->id, null, 1);   // $30 not eligible
+
+        $this->assertTrue($this->cart->applyPromoCode($promo->code)['success']);
+        $this->assertSame(20.0, $this->cart->discount());
+        $this->assertSame(50.0, $this->cart->total());
+    }
+
+    public function test_a_fixed_code_limited_to_a_product_never_exceeds_that_products_total(): void
+    {
+        $a = Service::factory()->create(['base_price' => 3]);
+        $b = Service::factory()->create(['base_price' => 30]);
+        $promo = PromoCode::factory()->fixed(5)->create();
+        $promo->services()->attach($a);
+        $this->cart->add($a->id, null, 1);
+        $this->cart->add($b->id, null, 1);
+
+        $this->cart->applyPromoCode($promo->code);
+
+        $this->assertSame(3.0, $this->cart->discount());
+        $this->assertSame(30.0, $this->cart->total());
+    }
+
+    public function test_a_code_limited_to_products_not_in_the_cart_is_rejected_with_their_names(): void
+    {
+        $inCart = Service::factory()->create(['base_price' => 30]);
+        $other = Service::factory()->create(['name_en' => 'Canva Pro']);
+        $promo = PromoCode::factory()->create();
+        $promo->services()->attach($other);
+        $this->cart->add($inCart->id, null, 1);
+
+        $result = $this->cart->applyPromoCode($promo->code);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('Canva Pro', $result['message']);
+        $this->assertNull($this->cart->appliedPromoCode());
+    }
+
+    public function test_removing_the_eligible_product_drops_the_discount_to_zero(): void
+    {
+        $a = Service::factory()->create(['base_price' => 20]);
+        $b = Service::factory()->create(['base_price' => 30]);
+        $promo = PromoCode::factory()->percentage(50)->create();
+        $promo->services()->attach($a);
+        $this->cart->add($a->id, null, 1);
+        $this->cart->add($b->id, null, 1);
+        $this->cart->applyPromoCode($promo->code);
+
+        $this->cart->remove($this->cart->items()->firstWhere('service.id', $a->id)->key);
+
+        $this->assertSame(0.0, $this->cart->discount());
+        $this->assertSame(30.0, $this->cart->total());
+    }
 }

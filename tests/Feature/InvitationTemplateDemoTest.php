@@ -60,7 +60,7 @@ class InvitationTemplateDemoTest extends TestCase
         $response->assertSee('SREYNEANG');
         $response->assertSee('15 · 12 · 2026', false);
         $response->assertSee('ដំណើរជីវិតរបស់យើង');
-        $response->assertSee('កម្មវិធីពិធីមង្គលការ');
+        $response->assertSee('កម្មវិធីអាពាហ៍ពិពាហ៍');
         $response->assertSee('ពិធីបង្វិលពពិល');
         $response->assertSee('THE GRAND BALLROOM');
         $response->assertSee('សូមអញ្ជើញបញ្ជាក់ការចូលរួម');

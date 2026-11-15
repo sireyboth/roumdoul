@@ -37,6 +37,15 @@ class PromoCodeForm
                     ->maxValue(fn (callable $get) => $get('type') === 'percentage' ? 100 : null)
                     ->prefix(fn (callable $get) => $get('type') === 'fixed' ? '$' : null)
                     ->suffix(fn (callable $get) => $get('type') === 'percentage' ? '%' : null),
+                Select::make('services')
+                    ->label('Only for these products')
+                    ->relationship('services', 'name_en')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Whole order')
+                    ->helperText('Leave empty to discount the whole order. Pick one or more products to discount only those items in the cart.')
+                    ->columnSpanFull(),
                 DateTimePicker::make('expires_at')
                     ->label('Expires at')
                     ->helperText('Leave empty for no expiry.')

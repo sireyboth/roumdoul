@@ -24,11 +24,21 @@ template, fill in details in their dashboard, and send one personalized link per
 
 ## Rules
 
-- Local `.env` uses SQLite. Never re-enable the production database credentials locally.
-- Media goes through `Storage::disk('s3')` (falls back to local storage when no R2 keys are set);
-  never store files in the database.
+- Local `.env` uses MySQL (`DB_CONNECTION=mysql`, local server). Never put the production
+  database credentials in the local `.env`.
+- Media always goes to S3/R2 through `Storage::disk('s3')`. Never store files in the database or
+  write uploads to another disk. The local-folder fallback (when `AWS_BUCKET` is empty) is only
+  for local dev and tests; production never falls back (`config/filesystems.php`).
+- Payment is manual for now: checkout creates a `pending_payment` order and sends a Telegram
+  alert, then an admin confirms payment (ABA/Wing/QR) and marks the order `paid` in Filament,
+  which unlocks the invitation. Online automatic payment comes later. Don't build it unless asked.
 - Guest-facing invitation pages are always Khmer; the rest of the site defaults to English.
 - On demo pages `$invitation` is `null` — treat that as "every premium field unlocked".
+- Every move to a new page must have a transition. Internal links use `wire:navigate` (or
+  `$this->redirect(..., navigate: true)` from Livewire), which gets the fade-in from the
+  `[data-page-transition]` wrapper in the layout (`page-enter` in `resources/css/app.css`, added in
+  `resources/js/app.js`). Full page loads use the view transition in the layouts. A new layout must
+  include both; respect `prefers-reduced-motion`.
 - Khmer wedding template: the desktop layout is separate — don't change the mobile layout when
   working on desktop.
 

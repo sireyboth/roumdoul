@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PromoCode extends Model
 {
@@ -25,6 +26,29 @@ class PromoCode extends Model
         'is_active' => 'boolean',
     ];
 
+    /** Products this code is limited to. None selected = the code applies to the whole order. */
+    public function services(): BelongsToMany
+    {
+        return $this->belongsToMany(Service::class);
+    }
+
+    public function appliesToWholeOrder(): bool
+    {
+        return $this->services->isEmpty();
+    }
+
+    /** Whether a cart line for this service counts towards the discount. */
+    public function appliesToService(int $serviceId): bool
+    {
+        return $this->appliesToWholeOrder() || $this->services->contains('id', $serviceId);
+    }
+
+    /** "Gemini Pro, ChatGPT Plus" — the products a limited code works on. */
+    public function serviceNames(): string
+    {
+        return $this->services->pluck('name_en')->join(', ');
+    }
+
     public function isValid(): bool
     {
         if (! $this->is_active) {
@@ -42,6 +66,7 @@ class PromoCode extends Model
         return true;
     }
 
+    /** $subtotal is the total of the lines the code applies to (see CartService::eligibleSubtotal()). */
     public function discountFor(float $subtotal): float
     {
         $discount = $this->type === 'percentage'

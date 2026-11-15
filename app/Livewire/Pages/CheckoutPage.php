@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages;
 
+use App\Livewire\Concerns\HandlesPromoCode;
 use App\Models\Order;
 use App\Services\CartService;
 use App\Services\TelegramNotifier;
@@ -15,6 +16,8 @@ use Livewire\Component;
 #[Layout('components.layouts.app')]
 class CheckoutPage extends Component
 {
+    use HandlesPromoCode;
+
     public string $customer_name = '';
 
     public string $customer_email = '';
@@ -23,32 +26,86 @@ class CheckoutPage extends Component
 
     public string $notes = '';
 
+    /** True while the "Confirm your order" dialog is open. */
+    public bool $confirmingOrder = false;
+
     public function mount(): void
     {
-        $customer = Auth::guard('customer')->user();
+        // Guests can view and edit their cart here; they only need to log in to place the order.
+        if ($customer = Auth::guard('customer')->user()) {
+            $this->customer_name = $customer->name;
+            $this->customer_email = $customer->email;
+            $this->customer_phone = (string) $customer->phone;
+        }
+    }
 
-        $this->customer_name = $customer->name;
-        $this->customer_email = $customer->email;
+    public function updateQuantity(string $key, int $quantity, CartService $cart): void
+    {
+        $cart->updateQuantity($key, $quantity);
+        $this->dispatch('cart-updated');
+    }
+
+    public function removeItem(string $key, CartService $cart): void
+    {
+        $cart->remove($key);
+        $this->dispatch('cart-updated');
+    }
+
+    /** Sends a guest to log in / register, then straight back here with the cart intact. */
+    public function goToAuth(string $page): void
+    {
+        session()->put('url.intended', url('/checkout'));
+
+        $this->redirect($page === 'register' ? '/register' : '/login', navigate: true);
     }
 
     protected function rules(): array
     {
         return [
             'customer_name' => ['required', 'string', 'max:255'],
-            'customer_email' => [ 'email', 'max:255'],
+            'customer_email' => ['email', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
+    /**
+     * "Place order" button: check the form and the cart first, then ask the customer to confirm
+     * in a dialog. The order itself is only created by placeOrder() from that dialog.
+     */
+    public function reviewOrder(CartService $cart): void
+    {
+        if (! Auth::guard('customer')->check()) {
+            $this->goToAuth('login');
+
+            return;
+        }
+
+        $items = $cart->items();
+
+        if ($items->isEmpty() || $items->contains(fn ($item) => ! $item->in_stock)) {
+            return;   // the page already shows the empty / sold-out state
+        }
+
+        $this->validate();
+        $this->confirmingOrder = true;
+    }
+
     public function placeOrder(CartService $cart, TelegramNotifier $telegram)
     {
+        if (! Auth::guard('customer')->check()) {
+            $this->goToAuth('login');
+
+            return;
+        }
+
         // Authenticated customer, so keyed by customer_id rather than IP — mainly guards
         // against scripted order-spam/promo-code abuse, not price tampering (prices are
         // always recomputed server-side from CartService, never trusted from the client).
         $throttleKey = 'place-order|'.Auth::guard('customer')->id();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            $this->confirmingOrder = false;
             $this->addError('notes', __('You have tried to place an order too many times. Please wait a moment.'));
 
             return;
@@ -58,12 +115,19 @@ class CheckoutPage extends Component
         $items = $cart->items();
 
         if ($items->isEmpty() || $items->contains(fn ($item) => ! $item->in_stock)) {
-            $this->redirect('/cart', navigate: true);
+            $this->redirect('/checkout', navigate: true);
 
             return;
         }
 
+        $this->confirmingOrder = false;
         $validated = $this->validate();
+
+        // accounts made before sign-up asked for a phone: remember it for next time
+        $customer = Auth::guard('customer')->user();
+        if (! $customer->phone) {
+            $customer->update(['phone' => $validated['customer_phone']]);
+        }
 
         $order = DB::transaction(function () use ($validated, $items, $cart) {
             $promoCode = $cart->appliedPromoCode();
