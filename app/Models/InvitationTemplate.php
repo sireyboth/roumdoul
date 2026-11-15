@@ -18,7 +18,7 @@ class InvitationTemplate extends Model
      * field means adding one entry here, not touching the dashboard or any template file.
      * Field types the dashboard form renderer understands: text, textarea, image, gallery
      * (multiple images), schedule (repeatable time+label rows), story (repeatable title+text
-     * rows), boolean, datetime, color.
+     * rows), boolean, datetime, date, time, color.
      */
     public const FIELD_CATALOG = [
         // `hint` is the customer-facing explanation shown under each input in the dashboard
@@ -62,6 +62,11 @@ class InvitationTemplate extends Model
         'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => "A phone number on the groom's side that guests can call.", 'example' => '012 345 678'],
         'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => "A phone number on the bride's side that guests can call.", 'example' => '098 765 432'],
         'contact_phone' => ['label' => 'Contact phone number', 'type' => 'text', 'hint' => 'A phone number guests can call for more information.', 'example' => '012 345 678'],
+        // Parties (Christmas, ...): optional practical details for guests; each hides its line when empty.
+        'end_time' => ['label' => 'End time', 'type' => 'time', 'hint' => 'When the event ends (optional) — shown after the start time from «Event date», e.g. «6:30 PM – 10:00 PM». Must be later than the start time.'],
+        'rsvp_deadline' => ['label' => 'Reply by (date)', 'type' => 'date', 'hint' => 'The last day guests should let you know if they are coming — must be on or before the event date. Leave empty to hide it.'],
+        'dress_code' => ['label' => 'Dress code', 'type' => 'text', 'hint' => 'What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.', 'example' => 'Red & Green'],
+        'what_to_bring' => ['label' => 'What to bring', 'type' => 'text', 'hint' => 'Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.', 'example' => 'A small gift for the gift exchange'],
         'host_names' => ['label' => 'Hosts / organizers', 'type' => 'textarea', 'hint' => 'Names of the ceremony hosts or organizing committee — one name per line, e.g. «លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា».', 'example' => 'លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា'],
 
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
@@ -98,7 +103,7 @@ class InvitationTemplate extends Model
         'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
         'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'thanks_message', 'apology_message', 'reception_message', 'gallery_feed', 'gift_account',
         'contact_phone', 'host_names', 'title_image', 'opening_line', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
-        'couple_initials',
+        'couple_initials', 'end_time', 'rsvp_deadline', 'dress_code', 'what_to_bring',
     ];
 
     /**
@@ -124,6 +129,7 @@ class InvitationTemplate extends Model
             'music_url', 'accent_color', 'venue_address', 'map_url', 'rsvp_enabled', 'countdown_enabled',
             'photo_gallery', 'gallery_feed', 'event_schedule', 'schedule_image', 'qr_code', 'gift_account', 'cta_label', 'cta_url',
             'contact_phone', 'title_image', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
+            'end_time', 'rsvp_deadline', 'dress_code', 'what_to_bring',
         ],
         'wedding' => [
             'groom_name', 'bride_name', 'couple_initials', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',

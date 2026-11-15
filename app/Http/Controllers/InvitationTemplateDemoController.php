@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InvitationTemplate;
+use App\Support\Invitations\ChristmasTemplate;
 
 class InvitationTemplateDemoController extends Controller
 {
@@ -17,6 +18,11 @@ class InvitationTemplateDemoController extends Controller
                 'invitation' => null,
                 'fields' => $this->khmerWeddingDemoFields(),
             ]);
+        }
+
+        // matched by design file, not slug — admin picks the slug
+        if (ChristmasTemplate::is($template->view)) {
+            return $this->christmasTemplateDemo($template, 'cover');
         }
 
         if ($template->slug === 'kak-thern') {
@@ -52,13 +58,41 @@ class InvitationTemplateDemoController extends Controller
         ]);
     }
 
+    /** Page 2 (event details) of a two-page template's demo — only the Christmas template has one. */
+    public function details(InvitationTemplate $template)
+    {
+        abort_unless($template->is_active && ChristmasTemplate::is($template->view), 404);
+
+        return $this->christmasTemplateDemo($template, 'details');
+    }
+
+    private function christmasTemplateDemo(InvitationTemplate $template, string $page)
+    {
+        return view('invitations.show', [
+            'view' => $template->view,
+            'recipientName' => 'Sophea',
+            'invitation' => null,
+            'fields' => $this->christmasDemoFields(),
+            ...ChristmasTemplate::pageData($page, route('templates.demo', $template), route('templates.demo.details', $template)),
+        ]);
+    }
+
+    /** /demo/{path}/details — page 2 of a two-page template file (Christmas). */
+    public function fileDetails(string $path)
+    {
+        $view = 'invitations.templates.'.str_replace('/', '.', trim($path, '/'));
+        abort_unless(ChristmasTemplate::is($view), 404);
+
+        return $this->file($path, 'details');
+    }
+
     /**
      * Review link for any template file, straight from disk — no InvitationTemplate row needed.
      * /demo/{path} renders resources/views/invitations/templates/{path}.blade.php, e.g.
      * /demo/wedding/{name} or /demo/birthday. ?to=Name sets the guest name.
      * Sample data is picked by folder/name so every section of the design shows.
      */
-    public function file(string $path)
+    public function file(string $path, string $page = 'cover')
     {
         $view = 'invitations.templates.'.str_replace('/', '.', trim($path, '/'));
         abort_unless(view()->exists($view), 404);
@@ -70,6 +104,7 @@ class InvitationTemplateDemoController extends Controller
                 'host_names' => "លោក ហេង ឌី និងលោកស្រី សុខ ជា\nលោក ឈិន សារ៉ាត និងលោកស្រី ពិស្ណុ សារ៉ាត",
             ],
             str_contains($kind, 'kathin') || str_contains($kind, 'kak-thern') || str_contains($kind, 'ceremony') => $this->kathinaDemoFields(),
+            str_contains($kind, 'christmas') => $this->christmasDemoFields(),
             default => $this->khmerWeddingDemoFields() + $this->kathinaDemoFields() + [
                 'sender_name' => 'Alex',
                 'celebrant_name' => 'Bella',
@@ -93,11 +128,18 @@ class InvitationTemplateDemoController extends Controller
             $fields['photo_gallery'] = $ownImages->all();
         }
 
+        // the Christmas template is two pages; ?to= (the sample guest name) only matters on the cover
+        $pages = ChristmasTemplate::is($view)
+            ? ChristmasTemplate::pageData($page, route('templates.demo.file', ['path' => $path, 'to' => request('to')]), route('templates.demo.file.details', ['path' => $path]))
+            : [];
+
         return view('invitations.show', [
             'view' => $view,
-            'recipientName' => request('to', 'ភ្ញៀវកិត្តិយស'),
+            // the Christmas template is English-only
+            'recipientName' => request('to', str_contains($kind, 'christmas') ? 'Sophea' : 'ភ្ញៀវកិត្តិយស'),
             'invitation' => null,
             'fields' => $fields,
+            ...$pages,
         ]);
     }
 
@@ -151,6 +193,35 @@ class InvitationTemplateDemoController extends Controller
             'photo_gallery' => collect(range(1, max(1, min(30, (int) request('photos', 6)))))
                 ->map(fn ($i) => "https://picsum.photos/seed/khmerwed{$i}/".($i % 3 === 0 ? '1000/700' : ($i % 2 ? '700/900' : '700/700')))
                 ->all(),
+        ];
+    }
+
+    /**
+     * Sample content for the Christmas party preview (English, like the template) — every
+     * optional line filled in so the demo shows each one. The date is always next 19 December,
+     * so the sample never sits in the past.
+     */
+    private function christmasDemoFields(): array
+    {
+        $day = now()->setDate(now()->year, 12, 19)->startOfDay();
+        if (now()->toDateString() > $day->toDateString()) {
+            $day->addYear();
+        }
+
+        return [
+            'headline' => 'Christmas Party',
+            'sender_name' => 'The Sok Family',
+            'event_date' => $day->format('Y-m-d').'T18:30',
+            'end_time' => '22:00',
+            'venue_name' => 'Riverside Hall',
+            'venue_address' => '12 Sisowath Quay, Phnom Penh',
+            'map_url' => 'https://www.google.com/maps/@11.5682,104.9306,17z',
+            'message' => 'Join us for dinner, carols and a gift exchange. We would love to celebrate with you!',
+            'dress_code' => 'Red & Green',
+            'what_to_bring' => 'A small gift for the gift exchange',
+            'rsvp_deadline' => $day->copy()->subWeek()->format('Y-m-d'),
+            'contact_phone' => '012 345 678',
+            'rsvp_enabled' => true,
         ];
     }
 

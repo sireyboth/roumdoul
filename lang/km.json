@@ -609,6 +609,16 @@
     "or": "ឬ",
     "our own team": "ក្រុមការងារផ្ទាល់របស់យើងខ្ញុំ",
     "premium digital services": "សេវាកម្មឌីជីថលកម្រិតខ្ពស់",
-    "press Save": "រួចចុច 'រក្សាទុក'"
-
+    "press Save": "រួចចុច 'រក្សាទុក'",
+    "The end time must be after the start time (:time).": "ម៉ោងបញ្ចប់ត្រូវតែក្រោយម៉ោងចាប់ផ្តើម (:time)។",
+    "The reply-by date must be on or before the event date.": "ថ្ងៃឆ្លើយតបត្រូវតែនៅមុន ឬត្រូវនឹងថ្ងៃកម្មវិធី។",
+    "End time": "ម៉ោងបញ្ចប់",
+    "When the event ends (optional) — shown after the start time from «Event date», e.g. «6:30 PM – 10:00 PM». Must be later than the start time.": "ម៉ោងដែលកម្មវិធីបញ្ចប់ (មិនចាំបាច់) — បង្ហាញបន្ទាប់ពីម៉ោងចាប់ផ្តើមក្នុង «កាលបរិច្ឆេទកម្មវិធី» ឧ. «៦:៣០ ល្ងាច – ១០:០០ យប់»។ ត្រូវតែក្រោយម៉ោងចាប់ផ្តើម។",
+    "Reply by (date)": "ឆ្លើយតបត្រឹម (ថ្ងៃ)",
+    "The last day guests should let you know if they are coming — must be on or before the event date. Leave empty to hide it.": "ថ្ងៃចុងក្រោយដែលភ្ញៀវគួរប្រាប់អ្នកថាពួកគេនឹងមកឬអត់ — ត្រូវតែនៅមុន ឬត្រូវនឹងថ្ងៃកម្មវិធី។ ទុកទទេដើម្បីលាក់។",
+    "Dress code": "ការស្លៀកពាក់",
+    "What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.": "អ្វីដែលភ្ញៀវគួរស្លៀកពាក់ ឧ. ពណ៌ក្រហម និងបៃតង អាវយឺតណូអែល ឬផ្លូវការ។ ទុកទទេដើម្បីលាក់។",
+    "What to bring": "អ្វីដែលត្រូវយកមក",
+    "Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.": "អ្វីដែលភ្ញៀវគួរយកមក ឧ. កាដូតូចមួយសម្រាប់ផ្លាស់ប្តូរគ្នា។ ទុកទទេដើម្បីលាក់។",
+    "Notes for guests": "កំណត់ចំណាំសម្រាប់ភ្ញៀវ"
 }
