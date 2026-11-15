@@ -90,7 +90,7 @@ class SecurityHardeningTest extends TestCase
 
     private function recipient(): array
     {
-        $invitation = Invitation::factory()->create();
+        $invitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
         return [$invitation, $recipient];

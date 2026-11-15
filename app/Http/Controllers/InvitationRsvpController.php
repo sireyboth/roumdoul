@@ -17,6 +17,9 @@ class InvitationRsvpController extends Controller
         abort_unless($recipient->invitation_id === $invitation->id, 404);
         abort_if($recipient->revoked_at !== null, 404);
         abort_if($invitation->isExpired(), 410);
+        // The guest page hides the buttons in both cases; this stops a direct request too.
+        abort_unless($invitation->isPaid(), 404);
+        abort_unless($invitation->fieldUnlocked('rsvp_enabled'), 403);
 
         // Per-link cooldown: a leaked or abused link can't be used to flood the customer's
         // dashboard, whatever IP the requests come from.
