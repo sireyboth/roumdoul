@@ -50,15 +50,19 @@ add/remove), `boolean`, `datetime`, `color`.
 | `reception_message` | long text | Wording of the reception invitation card (replaces the default text under the guest name) |
 | `thanks_message` / `apology_message` | long text | Thank-you statement and apology letter (own sections before the closing seal). Kathina uses `thanks_message` as the closing blessing text; empty = the template's own blessing |
 | `title_image` | image | Optional picture of the big title (e.g. a transparent PNG of decorated lettering). Kathina: shown instead of the title; without it the typed `headline` becomes the title text, and with neither the template's own title artwork is used |
-| `cover_image` | image | Hero photo (Kathina: replaces the trai in the middle of the first screen and above the blessing) |
+| `cover_image` | image | Hero photo (Kathina: replaces the trai in the middle of the first screen and above the blessing; Rose Bloom: the poster photo — falls back to the first gallery photo) |
 | `background_image` | image | Optional full-screen background (Kathina: replaces the temple picture; portrait works best) |
 | `gift_message` | long text | Optional wording above the gift/donation QR; empty = the template's own text |
 | `rsvp_message` | text | Optional question above the RSVP buttons; empty = the template's own text |
-| `event_date` | datetime | The date being announced/proposed |
-| `venue_name` | text | Location name (plain text, not a map link) |
+| `event_date` | datetime | The date being announced/proposed (Rose Bloom: «together since» — the poster's date column and a days-together count) |
+| `venue_name` | text | Location name (plain text, not a map link). Rose Bloom: a short «where it began» line on the poster |
 | `music_url` | text | Background music — a YouTube/TikTok link |
 | `music_file` | audio | Background music uploaded as a file (MP3/M4A/AAC, at most `InvitationManagePage::MAX_AUDIO_KB` = 10 MB ≈ 10 min). Checked in the browser before anything is sent and again on the server (size + real content type); stored under a random name in the invitation's own folder, never re-encoded (no ffmpeg). Templates play it instead of `music_url` when both are set, with `preload="none"` so guests download nothing until it plays |
 | `accent_color` | color | Theme color |
+| `love_reasons` | long text | Anniversary / love letter: reasons you love them, one per line (Rose Bloom: the tap-through cards deck) |
+| `photo_captions` | long text | One caption per line, in photo-gallery order (Rose Bloom: lines 1–4 = scratch stamps, 5–9 = photo strip as «Title \| small line»). Shown in the dashboard's media tab |
+| `song_title` | text | Song name on the music card / record label (Rose Bloom: the “Now playing” card); the song itself is `music_file` / `music_url` |
+| `closing_line` | text | The last big line at the very end (Rose Bloom finale; `thanks_message` is the smaller line under it) |
 
 **Premium fields — the pricing upsell lever.** A template can still tick these into its schema,
 but they only actually render for a customer whose plan has that exact key in
@@ -70,7 +74,7 @@ but they only actually render for a customer whose plan has that exact key in
 | `khmer_date` | text | Lunar/Khmer calendar date, written as free text |
 | `rsvp_enabled` | boolean | Shows the RSVP yes/no buttons and persists responses |
 | `countdown_enabled` | boolean | Shows a live countdown timer |
-| `photo_gallery` | gallery | Multi-image gallery |
+| `photo_gallery` | gallery | Multi-image gallery. How many photos it holds is set per plan in admin (**Max gallery photos**, `service_plans.max_gallery_photos`); blank = 20 (`InvitationManagePage::MAX_GALLERY_PHOTOS`). Read via `$invitation->maxGalleryPhotos()` |
 | `event_schedule` | schedule | Repeatable time + item rows (e.g. "5:00 PM — Ceremony") |
 | `schedule_image` | image | Optional ready-made schedule picture (e.g. a kbach card). When set, templates show it **instead of** the typed `event_schedule` rows. Has no plan unlock of its own — it follows `event_schedule` via `InvitationTemplate::UNLOCKED_WITH`, and is edited in the dashboard's Program tab via the catalog entry's `section` override |
 | `qr_code` | image | A QR code image upload |
@@ -125,6 +129,26 @@ shows invitation products at all.
    Beyond that contract, the file is fully custom — any layout, colors, animation, fonts. The
    admin "Design (Blade view)" dropdown (step 2) only lists files that already exist here, so
    this has to happen first — you can't pick a file that isn't on disk yet.
+
+   **The one fixed part: every template ends with the shared footer**, never a hand-written one:
+
+   ```blade
+   <x-invitation-footer :names="$coupleTitle" :date="$dateNumeric"
+     style="--inv-footer-bg: #2a0606; --inv-footer-text: #f3ead6; --inv-footer-accent: #c9a24d;">
+     <x-slot:ornament><svg aria-hidden="true"><use href="#my-ornament"/></svg></x-slot:ornament>
+   </x-invitation-footer>
+   ```
+
+   It renders the back-to-top button, an ornament divider (default: a heart), the names and date
+   (left out when empty), «រៀបចំឡើងដោយក្តីស្រឡាញ់ ♥» (`love="…"` to change, e.g. English-only
+   templates), the ROUMDOUL social icons and `CRAFTED BY ROUMDOUL · {year}`. Anything inside the
+   tag (besides the ornament) is shown above the brand line. Theme it with the `--inv-footer-*`
+   variables (bg, text, muted, accent, ring, names-font, caps-font, kh-font), or pass
+   `prefix="xx"` to also give it the template's own classes (`xx-footer`, `xx-top` + id `xx-totop`,
+   `xx-divider`, `xx-footer-names`, `xx-footer-date`, `xx-footer-love`, `xx-brand`) and style those
+   in the template's CSS. Social links come from `config/roumdoul.php` (`ROUMDOUL_FACEBOOK_URL`,
+   `ROUMDOUL_INSTAGRAM_URL`, `ROUMDOUL_TIKTOK_URL`, `ROUMDOUL_TELEGRAM_URL` in `.env`); an empty
+   link isn't shown.
 2. **In admin**: Catalog → Invitation Templates → Create — one screen, everything on it:
    product name, category label, the design (from step 1), which catalog fields it uses (tick
    the checkboxes), and its pricing plans (label, price, **Max recipients**, **Retention

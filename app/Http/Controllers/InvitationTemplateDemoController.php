@@ -105,6 +105,7 @@ class InvitationTemplateDemoController extends Controller
             ],
             str_contains($kind, 'kathin') || str_contains($kind, 'kak-thern') || str_contains($kind, 'ceremony') => $this->kathinaDemoFields(),
             str_contains($kind, 'christmas') => $this->christmasDemoFields(),
+            str_contains($kind, 'anniversary') => $this->anniversaryDemoFields(),
             default => $this->khmerWeddingDemoFields() + $this->kathinaDemoFields() + [
                 'sender_name' => 'Alex',
                 'celebrant_name' => 'Bella',
@@ -136,7 +137,11 @@ class InvitationTemplateDemoController extends Controller
         return view('invitations.show', [
             'view' => $view,
             // the Christmas template is English-only
-            'recipientName' => request('to', str_contains($kind, 'christmas') ? 'Sophea' : 'ភ្ញៀវកិត្តិយស'),
+            'recipientName' => request('to', match (true) {
+                str_contains($kind, 'christmas') => 'Sophea',
+                str_contains($kind, 'anniversary') => 'My love',
+                default => 'ភ្ញៀវកិត្តិយស',
+            }),
             'invitation' => null,
             'fields' => $fields,
             ...$pages,
@@ -222,6 +227,50 @@ class InvitationTemplateDemoController extends Controller
             'rsvp_deadline' => $day->copy()->subWeek()->format('Y-m-d'),
             'contact_phone' => '012 345 678',
             'rsvp_enabled' => true,
+        ];
+    }
+
+    /**
+     * Sample content for the anniversary / love-letter templates (Rose Bloom): a letter, a gallery
+     * big enough for the stamps, the photo strip and every map memory, captions, reasons and a song.
+     */
+    private function anniversaryDemoFields(): array
+    {
+        return [
+            'sender_name' => 'Dara',
+            'headline' => 'You’re my favorite person',
+            'message' => "Happy anniversary. I wanted to give you something you could open slowly, so I made you this.\n\n"
+                .'Scratch the stamps, press play, open every little heart. Each part is something I love about you, and there were far too many to fit, so think of this as the short version.'."\n\n"
+                .'Thank you for every ordinary day that somehow turned into my favorite one.',
+            'photo_gallery' => collect(range(1, 13))
+                ->map(fn ($i) => "https://picsum.photos/seed/rosebloom{$i}/700/700")
+                ->all(),
+            'photo_captions' => implode("\n", [
+                'my favorite kind of day', 'right here, with you', 'that night we laughed', 'us, always',
+                'First photo together | the one you hate, I love', 'Late night drives | windows down, our song on',
+                'Sunday mornings | coffee and nowhere to be', 'Our trip to Kep | sandy, sunburnt, happy', 'Just us | my favorite place',
+            ]),
+            'story_chapters' => [
+                ['title' => 'Where we met | Spring 2022', 'text' => 'I almost didn’t go. Best decision I ever made.'],
+                ['title' => 'Our first date | A week later', 'text' => 'Two coffees, four hours, zero awkward silences.'],
+                ['title' => 'The beach trip | Summer', 'text' => 'Sunburnt, sandy, completely happy.'],
+                ['title' => 'Where you said it | That night', 'text' => 'You said it first. I’m still smiling about it.'],
+            ],
+            'love_reasons' => implode("\n", [
+                'The way you say my name when you’re half asleep.',
+                'You remember the small things I only mention once.',
+                'Your laugh, especially the one you try to hold in.',
+                'You make every plan feel like an adventure.',
+                'You’re my calm on loud days.',
+                'You still hold my hand like it’s the first time.',
+                'Because you’re you. That one covers the rest.',
+            ]),
+            'song_title' => 'Our song',
+            'closing_line' => 'I love you, always.',
+            'thanks_message' => 'Today, tomorrow, and on every ordinary day in between.',
+            'event_date' => '2022-03-14 19:00:00',
+            'venue_name' => 'Where it all began: Phnom Penh',
+            'accent_color' => '#d65f7f',
         ];
     }
 

@@ -17,6 +17,7 @@ class ServicePlan extends Model
         'in_stock',
         'retention_months',
         'max_recipients',
+        'max_gallery_photos',
         'features',
         'sort_order',
     ];
@@ -24,6 +25,7 @@ class ServicePlan extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'in_stock' => 'boolean',
+        'max_gallery_photos' => 'integer',
         'features' => 'array',
     ];
 

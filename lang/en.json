@@ -635,5 +635,13 @@
     "What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.": "What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.",
     "What to bring": "What to bring",
     "Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.": "Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.",
-    "Notes for guests": "Notes for guests"
+    "Notes for guests": "Notes for guests",
+    "Reasons I love you": "Reasons I love you",
+    "Little reasons you love them — one per line. Each line becomes a card they tap through. Leave empty to use a few gentle default reasons.": "Little reasons you love them — one per line. Each line becomes a card they tap through. Leave empty to use a few gentle default reasons.",
+    "Photo captions": "Photo captions",
+    "One short caption per line, in the same order as your photo gallery. The first 4 go on the scratch-off stamps; the next 5 go on the photo strip — write those as «Title | small line», e.g. «Our first trip | Kep, 2023».": "One short caption per line, in the same order as your photo gallery. The first 4 go on the scratch-off stamps; the next 5 go on the photo strip — write those as «Title | small line», e.g. «Our first trip | Kep, 2023».",
+    "Song title": "Song title",
+    "The name of your song, written on the cassette tape label. Add the song itself in the music fields.": "The name of your song, written on the cassette tape label. Add the song itself in the music fields.",
+    "Closing line": "Closing line",
+    "The last big line they see at the very end, e.g. «I love you, always.»": "The last big line they see at the very end, e.g. «I love you, always.»"
 }

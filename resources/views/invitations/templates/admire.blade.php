@@ -197,6 +197,11 @@
         @endif
       </div>
     </div>
+
+    {{-- footer (shared component) --}}
+    <x-invitation-footer class="relative z-20"
+      :names="trim(($senderName ? $senderName.' ♡ ' : '').($recipientName ?? ''), ' ♡')"
+      style="--inv-footer-bg: #0b0710; --inv-footer-text: #fff; --inv-footer-muted: rgba(255,255,255,.7); --inv-footer-accent: {{ $accent }}; --inv-footer-ring: #0b0710; --inv-footer-names-font: Georgia, 'Times New Roman', serif;" />
   </section>
 
   {{-- ambient music, primed muted, unlocked the instant the puzzle is solved --}}

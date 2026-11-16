@@ -62,7 +62,7 @@ class InvitationManagePage extends Component
             'event_date', 'end_time', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
         ]],
         'guest_notes' => ['label' => 'Notes for guests', 'icon' => 'light-bulb', 'fields' => ['dress_code', 'what_to_bring', 'rsvp_deadline']],
-        'words' => ['label' => 'Invitation wording', 'icon' => 'pencil', 'fields' => ['headline', 'opening_line', 'message', 'reception_message', 'rsvp_message', 'thanks_message', 'apology_message']],
+        'words' => ['label' => 'Invitation wording', 'icon' => 'pencil', 'fields' => ['headline', 'opening_line', 'message', 'love_reasons', 'closing_line', 'song_title', 'reception_message', 'rsvp_message', 'thanks_message', 'apology_message']],
         'options' => ['label' => 'On/off features', 'icon' => 'bolt', 'fields' => [
             'rsvp_enabled', 'countdown_enabled', 'gallery_feed',
         ]],
@@ -70,7 +70,7 @@ class InvitationManagePage extends Component
         'style' => ['label' => 'Color', 'icon' => 'paint-brush', 'fields' => ['accent_color']],
         'button' => ['label' => 'Your own button', 'icon' => 'link', 'fields' => ['cta_label', 'cta_url']],
         'portraits' => ['label' => 'Main photos', 'icon' => 'photo', 'cols' => 3, 'wide' => true, 'fields' => ['title_image', 'cover_image', 'background_image', 'groom_photo', 'bride_photo']],
-        'gallery' => ['label' => 'Photo gallery', 'icon' => 'squares', 'fields' => ['photo_gallery']],
+        'gallery' => ['label' => 'Photo gallery', 'icon' => 'squares', 'fields' => ['photo_gallery', 'photo_captions']],
         'gift' => ['label' => 'Wedding gifts', 'icon' => 'heart', 'fields' => ['qr_code', 'gift_account', 'gift_message']],
         'schedule' => ['label' => 'Schedule — type it in or add an image', 'icon' => 'clock', 'or' => true, 'fields' => ['event_schedule', 'schedule_image']],
         'story' => ['label' => 'Our story', 'icon' => 'heart', 'fields' => ['story_chapters']],
@@ -89,6 +89,7 @@ class InvitationManagePage extends Component
 
     public const MAX_GIF_KB = 5120;
 
+    /** Default gallery size when the invitation's plan leaves `max_gallery_photos` blank. */
     public const MAX_GALLERY_PHOTOS = 20;
 
     /**
@@ -528,7 +529,11 @@ class InvitationManagePage extends Component
                 $type === 'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
                 $type === 'schedule' => ['nullable', 'array', 'max:20'],
                 $type === 'story' => ['nullable', 'array', 'max:8'],
-                $type === 'gallery' => ['nullable', 'array', 'max:'.self::MAX_GALLERY_PHOTOS],
+                // photos saved before an admin lowered the plan's limit may stay; just no new ones
+                $type === 'gallery' => ['nullable', 'array', 'max:'.max(
+                    $this->invitation->maxGalleryPhotos(),
+                    count((array) ($this->invitation->field_values[$key] ?? [])),
+                )],
                 $type === 'image', $type === 'audio' => ['nullable', 'string', $this->ownStoragePathRule()],
                 default => null,
             };
@@ -617,7 +622,7 @@ class InvitationManagePage extends Component
      * Rules for pending photo uploads. Photos may be up to MAX_UPLOAD_KB (a full-resolution
      * phone photo) because ImageOptimizer shrinks them before storing; GIFs are stored as-is
      * to keep their animation, so they keep a tighter cap. A gallery's saved photos plus the
-     * new ones may not exceed MAX_GALLERY_PHOTOS.
+     * new ones may not exceed the plan's gallery limit (Invitation::maxGalleryPhotos()).
      */
     protected function uploadRules(): array
     {
@@ -643,7 +648,7 @@ class InvitationManagePage extends Component
 
         foreach ($this->galleryUploads as $key => $files) {
             if (! empty($files)) {
-                $room = max(0, self::MAX_GALLERY_PHOTOS - count($this->fieldValues[$key] ?? []));
+                $room = max(0, $this->invitation->maxGalleryPhotos() - count($this->fieldValues[$key] ?? []));
                 $rules["galleryUploads.{$key}"] = ['array', 'max:'.$room];
                 $rules["galleryUploads.{$key}.*"] = $photo;
             }
@@ -657,7 +662,7 @@ class InvitationManagePage extends Component
         return [
             'imageUploads.*.max' => 'Each photo can be at most '.(self::MAX_UPLOAD_KB / 1024).' MB.',
             'galleryUploads.*.*.max' => 'Each photo can be at most '.(self::MAX_UPLOAD_KB / 1024).' MB.',
-            'galleryUploads.*.max' => 'The gallery holds up to '.self::MAX_GALLERY_PHOTOS.' photos — remove some first.',
+            'galleryUploads.*.max' => 'Your plan allows up to '.$this->invitation->maxGalleryPhotos().' photos in the gallery — remove some first.',
             '*.dimensions' => 'This photo is too large (max 8000 × 8000 pixels).',
             'audioUploads.*.max' => __('The music file is too big — at most :mb MB (≈ a 10-minute song).', ['mb' => self::MAX_AUDIO_KB / 1024]),
             'audioUploads.*.mimetypes' => __('Please use an MP3 or M4A music file only.'),

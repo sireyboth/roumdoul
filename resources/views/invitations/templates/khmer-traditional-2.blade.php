@@ -560,16 +560,9 @@
     </section>
 
     {{-- ============ 12 · FOOTER ============ --}}
-    <footer class="k2-footer">
-      <button type="button" class="k2-top" id="k2-totop" aria-label="ត្រឡប់ទៅដើម · Back to top">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-      </button>
-      <div class="k2-divider"><i></i><svg aria-hidden="true"><use href="#k2-lotus"/></svg><i></i></div>
-      @if ($coupleTitle)<p class="k2-footer-names{{ $kh($coupleTitle) }}">{{ $coupleTitle }}</p>@endif
-      @if ($dateNumeric)<p class="k2-footer-date">{{ $dateNumeric }}</p>@endif
-      <p class="k2-footer-love">រៀបចំឡើងដោយក្តីស្រឡាញ់ <span class="hb" aria-hidden="true">♥</span></p>
-      <p class="k2-brand">CRAFTED BY <b>ROUMDOUL</b> · {{ now()->year }}</p>
-    </footer>
+    <x-invitation-footer prefix="k2" :names="$coupleTitle" :names-class="trim($kh($coupleTitle))" :date="$dateNumeric">
+      <x-slot:ornament><svg aria-hidden="true"><use href="#k2-lotus"/></svg></x-slot:ornament>
+    </x-invitation-footer>
   </main>
 
   {{-- ============ MUSIC ============ --}}

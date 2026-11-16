@@ -94,7 +94,8 @@
   @case('gallery')
     @php
       $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
-      $galleryRoom = max(0, $page::MAX_GALLERY_PHOTOS - count($fieldValues[$key] ?? []) - count($galleryUploads[$key] ?? []));
+      $galleryMax = $this->invitation->maxGalleryPhotos();
+      $galleryRoom = max(0, $galleryMax - count($fieldValues[$key] ?? []) - count($galleryUploads[$key] ?? []));
     @endphp
     <div data-room="{{ $galleryRoom }}"
       x-data="photoUploader({ name: 'galleryUploads.{{ $key }}', multiple: true, maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
@@ -134,7 +135,7 @@
       <button type="button" x-on:click="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">{{ __('Cancel') }}</button>
     </div>
     <p x-show="error" x-text="error" style="display: none" class="mt-1 text-xs text-red-600 dark:text-red-400"></p>
-    <p class="mt-1.5 text-[11px] text-plum-400">{{ $galleryRoom }} of {{ $page::MAX_GALLERY_PHOTOS }} spots left &middot; JPG, PNG or WebP &middot; big photos are shrunk automatically</p>
+    <p class="mt-1.5 text-[11px] text-plum-400">{{ $galleryRoom }} of {{ $galleryMax }} spots left &middot; JPG, PNG or WebP &middot; big photos are shrunk automatically</p>
     {{-- per-file errors land on galleryUploads.{key}.{n}; show each distinct message once --}}
     @foreach (collect([...$errors->get('galleryUploads.'.$key), ...\Illuminate\Support\Arr::flatten($errors->get('galleryUploads.'.$key.'.*'))])->unique() as $message)
       <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>

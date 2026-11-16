@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Livewire\Pages\Dashboard\InvitationManagePage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +47,16 @@ class Invitation extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(ServicePlan::class, 'service_plan_id');
+    }
+
+    /**
+     * How many photos this invitation's photo gallery may hold: the plan's `max_gallery_photos`
+     * (set by an admin per plan), or InvitationManagePage::MAX_GALLERY_PHOTOS when it's blank.
+     * Read live from the plan, so an admin change applies to existing invitations too.
+     */
+    public function maxGalleryPhotos(): int
+    {
+        return $this->plan?->max_gallery_photos ?: InvitationManagePage::MAX_GALLERY_PHOTOS;
     }
 
     public function recipients(): HasMany

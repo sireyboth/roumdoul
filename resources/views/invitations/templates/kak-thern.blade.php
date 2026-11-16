@@ -374,11 +374,9 @@
       </section>
     @endif
 
-    <footer class="kt-footer">
-      <div class="kt-divider"><i></i><svg aria-hidden="true"><use href="#kt-lotus"/></svg><i></i></div>
-      @if ($dateNumeric)<p class="kt-footer-date">{{ $dateNumeric }}</p>@endif
-      <p class="kt-brand">CRAFTED BY <b>ROUMDOUL</b> · {{ now()->year }}</p>
-    </footer>
+    <x-invitation-footer prefix="kt" :date="$dateNumeric" style="--inv-footer-accent: var(--red); --inv-footer-ring: var(--paper);">
+      <x-slot:ornament><svg aria-hidden="true"><use href="#kt-lotus"/></svg></x-slot:ornament>
+    </x-invitation-footer>
   </main>
 
   {{-- ============ MUSIC (an uploaded song, or a YouTube link primed muted; the guest's first tap anywhere starts it) ============ --}}

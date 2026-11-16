@@ -54,3 +54,9 @@ template, fill in details in their dashboard, and send one personalized link per
   `resources/views/invitations/templates/` without `.blade.php`, e.g. `/demo/birthday` or `/demo/wedding/{name}`).
   If the template uses a field the sample data in `InvitationTemplateDemoController::file()`
   doesn't fill, add sample data there so every section shows in the demo.
+- **Every invitation template always ends with the shared footer component** (no exceptions, never a
+  hand-written footer): `<x-invitation-footer>` (`resources/views/components/invitation-footer.blade.php`,
+  styles `public/css/invitations/shared/footer.css`). It has the back-to-top button, ornament divider,
+  names, date, «រៀបចំឡើងដោយក្តីស្រឡាញ់ ♥», the ROUMDOUL social icons and `CRAFTED BY ROUMDOUL · {year}`.
+  Pass `prefix` to reuse a template's own footer classes, or theme it with the `--inv-footer-*` variables.
+  Social links live in `config/roumdoul.php` (`ROUMDOUL_*_URL` in `.env`).

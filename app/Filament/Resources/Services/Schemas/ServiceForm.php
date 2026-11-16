@@ -7,8 +7,8 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
@@ -114,6 +114,13 @@ class ServiceForm
                                                 ->numeric()
                                                 ->minValue(1)
                                                 ->helperText('Digital Invitations only — how many shareable recipient links this plan allows.'),
+                                            TextInput::make('max_gallery_photos')
+                                                ->label('Max gallery photos')
+                                                ->numeric()
+                                                ->minValue(1)
+                                                ->maxValue(100)
+                                                ->placeholder('20')
+                                                ->helperText('Digital Invitations only — how many photos the customer can put in the photo gallery. Leave blank for the default (20).'),
                                             TextInput::make('retention_months')
                                                 ->label('Retention (months)')
                                                 ->numeric()

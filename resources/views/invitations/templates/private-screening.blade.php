@@ -656,6 +656,12 @@
     </div>
   </section>
 
+  {{-- footer (shared component) --}}
+  <x-invitation-footer
+    :names="mb_strtoupper($brideName).' ♥ '.mb_strtoupper($groomName)"
+    :date="$eventDate?->format('d · m · Y')"
+    style="--inv-footer-bg: var(--ink); --inv-footer-text: var(--bone); --inv-footer-muted: rgba(243,234,214,.65); --inv-footer-accent: #b8945a; --inv-footer-ring: var(--ink);" />
+
 </main>
 
 <script>

@@ -1,0 +1,43 @@
+/* Shared invitation footer (resources/views/components/invitation-footer.blade.php).
+   Every rule is wrapped in :where() (zero specificity) so a template's own footer styles always win.
+   (The back-to-top rule is written as button:where(...) so it beats a template's bare `button{}` reset, which
+   loads earlier, but still loses to a template's own class rule such as .kw-top.)
+   A template without its own footer CSS themes it with these variables (on the footer or any parent):
+     --inv-footer-bg, --inv-footer-text, --inv-footer-muted, --inv-footer-accent, --inv-footer-ring,
+     --inv-footer-names-font, --inv-footer-caps-font, --inv-footer-kh-font */
+:where(.inv-footer){
+  position:relative; z-index:2; margin:0; padding:58px 24px calc(30px + env(safe-area-inset-bottom)); text-align:center;
+  background:var(--inv-footer-bg, transparent); color:var(--inv-footer-text, inherit);
+  font-family:var(--inv-footer-caps-font, inherit);
+}
+:where(.inv-footer *){ box-sizing:border-box; }
+:where(.inv-footer p){ margin:0; }
+button:where(.inv-footer__top){
+  position:absolute; left:50%; top:-25px; width:50px; height:50px; margin-left:-25px; padding:0; border:0; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; background:var(--inv-footer-accent, #d65f7f); color:#fff;
+  box-shadow:0 0 0 5px var(--inv-footer-ring, rgba(255,255,255,.6)), 0 10px 22px -8px rgba(0,0,0,.45); transition:transform .25s ease;
+}
+button:where(.inv-footer__top):hover{ transform:translateY(-3px); }
+:where(.inv-footer__top) svg{ width:20px; height:20px; }
+:where(.inv-footer__divider){ display:flex; align-items:center; justify-content:center; gap:12px; max-width:220px; margin:0 auto 16px; color:var(--inv-footer-accent, #d65f7f); }
+:where(.inv-footer__divider) i{ flex:1; height:1px; background:linear-gradient(90deg, transparent, currentColor); opacity:.6; }
+:where(.inv-footer__divider) i:last-child{ transform:scaleX(-1); }
+:where(.inv-footer__divider) svg{ width:26px; height:26px; flex:none; }
+:where(.inv-footer__names){ font-family:var(--inv-footer-names-font, inherit); font-size:1.15rem; letter-spacing:.06em; overflow-wrap:anywhere; }
+:where(.inv-footer__date){ margin-top:8px; font-size:.9rem; font-weight:600; letter-spacing:.2em; color:var(--inv-footer-muted, currentColor); }
+:where(.inv-footer__love){ margin-top:20px; font-family:var(--inv-footer-kh-font, "Kantumruy Pro", sans-serif); font-size:1.02rem; line-height:1.9; color:var(--inv-footer-text, currentColor); }
+:where(.inv-footer__love) .hb{ display:inline-block; color:var(--inv-footer-accent, #e0575b); animation:inv-footer-beat 1.6s ease-in-out infinite; }
+@keyframes inv-footer-beat{ 0%,100%{ transform:scale(1); } 15%{ transform:scale(1.25); } 30%{ transform:scale(1); } 45%{ transform:scale(1.15); } }
+
+/* social icons: tinted from the footer's own text colour, so they suit light and dark footers alike */
+:where(.inv-footer__social){ display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-top:20px; }
+:where(.inv-footer__social) a{ display:grid; place-items:center; width:40px; height:40px; border-radius:50%; color:inherit; text-decoration:none;
+  background:color-mix(in srgb, currentColor 10%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
+  transition:transform .2s ease, background-color .2s ease, color .2s ease; }
+:where(.inv-footer__social) a:hover,:where(.inv-footer__social) a:focus-visible{ transform:translateY(-2px); background:var(--inv-footer-accent, #d65f7f); color:#fff; box-shadow:none; }
+:where(.inv-footer__social) svg{ width:18px; height:18px; }
+
+:where(.inv-footer__brand){ margin-top:20px; font-size:.76rem; font-weight:500; letter-spacing:.22em; color:var(--inv-footer-muted, currentColor); }
+:where(.inv-footer__brand) a{ color:inherit; text-decoration:none; }
+:where(.inv-footer__brand) b{ font-weight:700; }
+@media (prefers-reduced-motion: reduce){ :where(.inv-footer__love) .hb{ animation:none; } :where(.inv-footer__top){ transition:none; } }

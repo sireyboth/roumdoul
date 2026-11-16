@@ -35,110 +35,122 @@ class InvitationTemplateForm
     protected static function templateSection(): Section
     {
         return Section::make('Template')
-                    ->columns(2)
-                    ->components([
-                        TextInput::make('name')
-                            ->label('Product name')
-                            ->required()
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(fn (string $state, callable $set) => $set('slug', Str::slug($state))),
-                        TextInput::make('slug')
-                            ->required()
-                            ->unique(ignoreRecord: true)
-                            ->helperText('Used in the demo URL: /templates/{slug}/demo'),
-                        TextInput::make('category')
-                            ->required()
-                            ->helperText('A grouping label, e.g. "wedding", "date-asking", "breakup".'),
-                        Select::make('view')
-                            ->label('Design (Blade view)')
-                            ->options(self::availableViews())
-                            ->required()
-                            ->helperText('The Blade file that renders this design — a developer adds new options here by creating the file under resources/views/invitations/templates/.'),
-                        FileUpload::make('thumbnail')
-                            ->image()
-                            ->disk('s3')
-                            ->directory('invitation-templates')
-                            ->helperText('Optional preview thumbnail for the template picker.'),
-                        Toggle::make('is_premium')
-                            ->label('Premium')
-                            ->helperText('Only shown to customers with a plan that unlocks it.'),
-                        Toggle::make('is_active')
-                            ->label('Active')
-                            ->default(true)
-                            ->helperText('Off hides it from the template picker and demo page.'),
-                    ]);
+            ->columns(2)
+            ->components([
+                TextInput::make('name')
+                    ->label('Product name')
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn (string $state, callable $set) => $set('slug', Str::slug($state))),
+                TextInput::make('slug')
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->helperText('Used in the demo URL: /templates/{slug}/demo'),
+                TextInput::make('category')
+                    ->required()
+                    ->helperText('A grouping label, e.g. "wedding", "date-asking", "breakup".'),
+                Select::make('view')
+                    ->label('Design (Blade view)')
+                    ->options(self::availableViews())
+                    ->required()
+                    ->helperText('The Blade file that renders this design — a developer adds new options here by creating the file under resources/views/invitations/templates/.'),
+                FileUpload::make('thumbnail')
+                    ->image()
+                    ->disk('s3')
+                    ->directory('invitation-templates')
+                    ->helperText('Optional preview thumbnail for the template picker.'),
+                Toggle::make('is_premium')
+                    ->label('Premium')
+                    ->helperText('Only shown to customers with a plan that unlocks it.'),
+                Toggle::make('is_active')
+                    ->label('Active')
+                    ->default(true)
+                    ->helperText('Off hides it from the template picker and demo page.'),
+            ]);
     }
 
     protected static function pricingPlansSection(): Section
     {
         return Section::make('Pricing plans')
-                    ->description('What customers actually buy. Each plan sets how many recipient links they get, how long it stays active, and which extra features it unlocks.')
-                    ->visible(fn (string $operation) => $operation === 'create')
+            ->description('What customers actually buy. Each plan sets how many recipient links they get, how long it stays active, and which extra features it unlocks.')
+            ->visible(fn (string $operation) => $operation === 'create')
+            ->components([
+                Repeater::make('plans')
+                    ->label('')
+                    ->addActionLabel('Add plan')
+                    ->reorderableWithButtons()
+                    ->itemLabel(fn (array $state) => $state['label'] ?? 'New plan')
+                    ->columns(2)
                     ->components([
-                        Repeater::make('plans')
-                            ->label('')
-                            ->addActionLabel('Add plan')
-                            ->reorderableWithButtons()
-                            ->itemLabel(fn (array $state) => $state['label'] ?? 'New plan')
-                            ->columns(2)
-                            ->components([
-                                TextInput::make('label')
-                                    ->required()
-                                    ->placeholder('e.g. "Basic — 10 recipients, 3 months"'),
-                                TextInput::make('price')
-                                    ->required()
-                                    ->numeric()
-                                    ->prefix('$'),
-                                TextInput::make('max_recipients')
-                                    ->label('Max recipients')
-                                    ->numeric()
-                                    ->minValue(1)
-                                    ->required(),
-                                TextInput::make('retention_months')
-                                    ->label('Retention (months)')
-                                    ->numeric()
-                                    ->minValue(1)
-                                    ->helperText('Leave blank for no expiry.'),
-                                CheckboxList::make('features')
-                                    ->label('Unlocked fields (premium extras)')
-                                    ->helperText('The essentials (name, headline, message, date, venue name, music, photo, color) are always included on every plan. Tick which of these extras this plan also unlocks — a template can still include an extra field even if no plan unlocks it yet.')
-                                    ->options(InvitationTemplate::premiumFieldOptions())
-                                    ->columns(2)
-                                    ->columnSpanFull(),
-                            ])
-                            ->defaultItems(1)
-                            ->minItems(1)
+                        TextInput::make('label')
+                            ->required()
+                            ->placeholder('e.g. "Basic — 10 recipients, 3 months"'),
+                        TextInput::make('price')
+                            ->required()
+                            ->numeric()
+                            ->prefix('$'),
+                        TextInput::make('max_recipients')
+                            ->label('Max recipients')
+                            ->numeric()
+                            ->minValue(1)
                             ->required(),
-                    ]);
+                        TextInput::make('max_gallery_photos')
+                            ->label('Max gallery photos')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(100)
+                            ->placeholder('20')
+                            ->helperText('How many photos the customer can put in the photo gallery. Leave blank for the default (20).'),
+                        TextInput::make('retention_months')
+                            ->label('Retention (months)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->helperText('Leave blank for no expiry.'),
+                        CheckboxList::make('features')
+                            ->label('Unlocked fields (premium extras)')
+                            ->helperText('The essentials (name, headline, message, date, venue name, music, photo, color) are always included on every plan. Tick which of these extras this plan also unlocks — a template can still include an extra field even if no plan unlocks it yet.')
+                            ->options(InvitationTemplate::premiumFieldOptions())
+                            ->columns(2)
+                            ->columnSpanFull(),
+                    ])
+                    ->defaultItems(1)
+                    ->minItems(1)
+                    ->required(),
+            ]);
     }
 
     protected static function fieldsSection(): Section
     {
         return Section::make('Fields this design uses')
-                    ->description('Which of the standard fields this template asks the customer to fill in, grouped by which event type they apply to. Adding a genuinely new field means adding it to InvitationTemplate::FIELD_CATALOG (and FIELD_SECTIONS) in code first.')
-                    ->columnSpanFull()
-                    ->components([
-                        CheckboxList::make('fields_universal')
-                            ->label('Universal — works for any event')
-                            ->options(InvitationTemplate::sectionFieldOptions('universal'))
-                            ->columns(3)
-                            ->columnSpanFull(),
-                        CheckboxList::make('fields_wedding')
-                            ->label('Wedding-specific')
-                            ->options(InvitationTemplate::sectionFieldOptions('wedding'))
-                            ->columns(3)
-                            ->columnSpanFull(),
-                        CheckboxList::make('fields_birthday')
-                            ->label('Birthday-specific')
-                            ->options(InvitationTemplate::sectionFieldOptions('birthday'))
-                            ->columns(3)
-                            ->columnSpanFull(),
-                        CheckboxList::make('fields_ceremony')
-                            ->label('Buddhist ceremony-specific')
-                            ->options(InvitationTemplate::sectionFieldOptions('ceremony'))
-                            ->columns(3)
-                            ->columnSpanFull(),
-                    ]);
+            ->description('Which of the standard fields this template asks the customer to fill in, grouped by which event type they apply to. Adding a genuinely new field means adding it to InvitationTemplate::FIELD_CATALOG (and FIELD_SECTIONS) in code first.')
+            ->columnSpanFull()
+            ->components([
+                CheckboxList::make('fields_universal')
+                    ->label('Universal — works for any event')
+                    ->options(InvitationTemplate::sectionFieldOptions('universal'))
+                    ->columns(3)
+                    ->columnSpanFull(),
+                CheckboxList::make('fields_wedding')
+                    ->label('Wedding-specific')
+                    ->options(InvitationTemplate::sectionFieldOptions('wedding'))
+                    ->columns(3)
+                    ->columnSpanFull(),
+                CheckboxList::make('fields_birthday')
+                    ->label('Birthday-specific')
+                    ->options(InvitationTemplate::sectionFieldOptions('birthday'))
+                    ->columns(3)
+                    ->columnSpanFull(),
+                CheckboxList::make('fields_ceremony')
+                    ->label('Buddhist ceremony-specific')
+                    ->options(InvitationTemplate::sectionFieldOptions('ceremony'))
+                    ->columns(3)
+                    ->columnSpanFull(),
+                CheckboxList::make('fields_anniversary')
+                    ->label('Anniversary / love letter-specific')
+                    ->options(InvitationTemplate::sectionFieldOptions('anniversary'))
+                    ->columns(3)
+                    ->columnSpanFull(),
+            ]);
     }
 
     /**
@@ -153,10 +165,11 @@ class InvitationTemplateForm
             return [];
         }
 
-        return collect(File::files($path))
+        // subfolders too: anniversary-category/rose-bloom -> invitations.templates.anniversary-category.rose-bloom
+        return collect(File::allFiles($path))
             ->filter(fn ($file) => Str::endsWith($file->getFilename(), '.blade.php'))
             ->mapWithKeys(function ($file) {
-                $name = Str::before($file->getFilename(), '.blade.php');
+                $name = str_replace([DIRECTORY_SEPARATOR, '/'], '.', Str::before($file->getRelativePathname(), '.blade.php'));
 
                 return ["invitations.templates.{$name}" => $name];
             })

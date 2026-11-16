@@ -389,6 +389,46 @@ class InvitationPurchaseAndManageTest extends TestCase
         $this->assertCount(InvitationManagePage::MAX_GALLERY_PHOTOS - 1, $invitation->fresh()->field_values['photo_gallery']);
     }
 
+    public function test_the_plan_sets_how_many_photos_the_gallery_can_hold(): void
+    {
+        Storage::fake('s3');
+
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->withFeatures([])->create([
+            'customer_id' => $customer->id,
+            'field_values' => ['photo_gallery' => array_fill(0, 4, 'invitations/x.jpg')],
+        ]);
+        $invitation->template->update(['fields' => ['photo_gallery']]);
+        $invitation->plan->update(['max_gallery_photos' => 5]);
+
+        $this->assertSame(5, $invitation->fresh()->maxGalleryPhotos());
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->call('showSection', 'media')
+            ->assertSee('1 of 5 spots left')
+            ->set('galleryUploads.photo_gallery', [UploadedFile::fake()->image('a.jpg'), UploadedFile::fake()->image('b.jpg')])
+            ->assertHasErrors(['galleryUploads.photo_gallery' => 'max']);
+
+        $this->assertCount(4, $invitation->fresh()->field_values['photo_gallery']);
+    }
+
+    public function test_photos_saved_before_the_plan_limit_was_lowered_can_still_be_saved(): void
+    {
+        $customer = Customer::factory()->create();
+        $invitation = Invitation::factory()->withFeatures([])->create([
+            'customer_id' => $customer->id,
+            'field_values' => ['photo_gallery' => array_fill(0, 6, 'invitations/x.jpg')],
+        ]);
+        $invitation->template->update(['fields' => ['photo_gallery']]);
+        $invitation->plan->update(['max_gallery_photos' => 3]);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(InvitationManagePage::class, ['invitation' => $invitation])
+            ->call('save')
+            ->assertHasNoErrors(['fieldValues.photo_gallery']);
+    }
+
     public function test_a_javascript_uri_in_a_url_field_is_rejected(): void
     {
         $customer = Customer::factory()->create();

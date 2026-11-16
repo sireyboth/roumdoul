@@ -242,6 +242,11 @@
         </p>
       </article>
     </section>
+
+    {{-- footer (shared component) --}}
+    <x-invitation-footer love="Made with love" top-label="Back to top"
+      :names="$host !== '' ? $host : null" :date="$dateText !== '' ? $dateText : null"
+      style="--inv-footer-bg: var(--xm-green); --inv-footer-text: var(--xm-cream); --inv-footer-muted: rgba(245,240,230,.75); --inv-footer-accent: var(--xm-red); --inv-footer-ring: var(--xm-green); --inv-footer-names-font: var(--xm-script); --inv-footer-caps-font: var(--xm-display); --inv-footer-kh-font: var(--xm-body);" />
   @endif
 
   {{-- ===== snow over the page (flakes added by christmas.js; client-only) ===== --}}

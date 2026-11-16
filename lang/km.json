@@ -1,5 +1,4 @@
 {
-
     "\":name\" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.": "«:name» មានទំហំ :mb MB — ឯកសារសំឡេងអាចមានទំហំអតិបរមាត្រឹម :max MB (≈ បទចម្រៀង ១០ នាទី)។ សូមជ្រើសរើសបទចម្រៀងដែលខ្លីជាងនេះ ឬប្រើទម្រង់ MP3 គុណភាព 128 kbps។",
     "\":name\" is not a JPG, PNG, WebP or GIF photo.": "«:name» មិនមែនជាទម្រង់រូបភាព JPG, PNG, WebP ឬ GIF ឡើយ។",
     "\":name\" is not an MP3 or M4A audio file.": "«:name» មិនមែនជាទម្រង់ឯកសារសំឡេង MP3 ឬ M4A ឡើយ។",
@@ -620,5 +619,13 @@
     "What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.": "អ្វីដែលភ្ញៀវគួរស្លៀកពាក់ ឧ. ពណ៌ក្រហម និងបៃតង អាវយឺតណូអែល ឬផ្លូវការ។ ទុកទទេដើម្បីលាក់។",
     "What to bring": "អ្វីដែលត្រូវយកមក",
     "Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.": "អ្វីដែលភ្ញៀវគួរយកមក ឧ. កាដូតូចមួយសម្រាប់ផ្លាស់ប្តូរគ្នា។ ទុកទទេដើម្បីលាក់។",
-    "Notes for guests": "កំណត់ចំណាំសម្រាប់ភ្ញៀវ"
+    "Notes for guests": "កំណត់ចំណាំសម្រាប់ភ្ញៀវ",
+    "Reasons I love you": "ហេតុផលដែលខ្ញុំស្រលាញ់អ្នក",
+    "Little reasons you love them — one per line. Each line becomes a card they tap through. Leave empty to use a few gentle default reasons.": "ហេតុផលតូចៗដែលលោកអ្នកស្រលាញ់គាត់ — មួយបន្ទាត់មួយ។ បន្ទាត់នីមួយៗក្លាយជាកាតមួយដែលគាត់ចុចមើលម្ដងមួយៗ។ សូមទុកទទេ ដើម្បីប្រើហេតុផលលំនាំដើមខ្លះៗ។",
+    "Photo captions": "ចំណងជើងរូបថត",
+    "One short caption per line, in the same order as your photo gallery. The first 4 go on the scratch-off stamps; the next 5 go on the photo strip — write those as «Title | small line», e.g. «Our first trip | Kep, 2023».": "ចំណងជើងខ្លីមួយក្នុងមួយបន្ទាត់ តាមលំដាប់ដូចរូបថតក្នុងវិចិត្រសាល។ ៤ ដំបូងនៅលើតែមកោសបាន ហើយ ៥ បន្ទាប់នៅលើខ្សែរូបថត — សរសេរជា «ចំណងជើង | បន្ទាត់តូច» ឧ. «ដំណើរលើកដំបូង | កែប ២០២៣»។",
+    "Song title": "ចំណងជើងបទចម្រៀង",
+    "The name of your song, written on the cassette tape label. Add the song itself in the music fields.": "ឈ្មោះបទចម្រៀងរបស់អ្នក ដែលសរសេរលើស្លាកកាសែត។ សូមបញ្ចូលបទចម្រៀងផ្ទាល់នៅក្នុងប្រអប់តន្ត្រី។",
+    "Closing line": "ឃ្លាបញ្ចប់",
+    "The last big line they see at the very end, e.g. «I love you, always.»": "ឃ្លាធំចុងក្រោយដែលគាត់ឃើញនៅទីបញ្ចប់ ឧ. «ខ្ញុំស្រលាញ់អ្នកជានិច្ច»។"
 }

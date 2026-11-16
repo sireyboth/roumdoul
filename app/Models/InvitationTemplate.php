@@ -68,6 +68,11 @@ class InvitationTemplate extends Model
         'dress_code' => ['label' => 'Dress code', 'type' => 'text', 'hint' => 'What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.', 'example' => 'Red & Green'],
         'what_to_bring' => ['label' => 'What to bring', 'type' => 'text', 'hint' => 'Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.', 'example' => 'A small gift for the gift exchange'],
         'host_names' => ['label' => 'Hosts / organizers', 'type' => 'textarea', 'hint' => 'Names of the ceremony hosts or organizing committee — one name per line, e.g. «លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា».', 'example' => 'លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា'],
+        // Anniversary / love-letter pages (Rose Bloom, ...)
+        'love_reasons' => ['label' => 'Reasons I love you', 'type' => 'textarea', 'hint' => 'Little reasons you love them — one per line. Each line becomes a card they tap through. Leave empty to use a few gentle default reasons.', 'example' => 'The way you laugh at your own jokes.'],
+        'photo_captions' => ['label' => 'Photo captions', 'type' => 'textarea', 'section' => 'media', 'hint' => 'One short caption per line, in the same order as your photo gallery. The first 4 go on the scratch-off stamps; the next 5 go on the photo strip — write those as «Title | small line», e.g. «Our first trip | Kep, 2023».', 'example' => 'Our first trip | Kep, 2023'],
+        'song_title' => ['label' => 'Song title', 'type' => 'text', 'hint' => 'The name of your song, shown on the “Now playing” music card. Add the song itself in the music fields.', 'example' => 'Our song'],
+        'closing_line' => ['label' => 'Closing line', 'type' => 'text', 'hint' => 'The last big line they see at the very end, e.g. «I love you, always.»', 'example' => 'I love you, always.'],
 
         // Premium extras — the pricing upsell lever, see FREE_FIELDS below. A plan only
         // shows these to the recipient if the plan's `features` list includes the key.
@@ -104,6 +109,7 @@ class InvitationTemplate extends Model
         'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'thanks_message', 'apology_message', 'reception_message', 'gallery_feed', 'gift_account',
         'contact_phone', 'host_names', 'title_image', 'opening_line', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
         'couple_initials', 'end_time', 'rsvp_deadline', 'dress_code', 'what_to_bring',
+        'love_reasons', 'photo_captions', 'song_title', 'closing_line',
     ];
 
     /**
@@ -138,6 +144,8 @@ class InvitationTemplate extends Model
         'birthday' => ['celebrant_name', 'turning_age'],
         // Buddhist merit-making ceremonies (Kathina, Phka Prak, ...)
         'ceremony' => ['host_names', 'opening_line'],
+        // anniversaries / love letters (Rose Bloom, ...)
+        'anniversary' => ['love_reasons', 'photo_captions', 'song_title', 'closing_line'],
     ];
 
     protected $fillable = [
@@ -183,7 +191,7 @@ class InvitationTemplate extends Model
      * "Digital Invitations" category. Used on create, and to re-link a template whose
      * Service was deleted (service_id is nullOnDelete, which silently drops it from the shop).
      *
-     * @param  array<int, array{label: string, price: mixed, max_recipients?: mixed, retention_months?: mixed, features?: array}>  $plans
+     * @param  array<int, array{label: string, price: mixed, max_recipients?: mixed, max_gallery_photos?: mixed, retention_months?: mixed, features?: array}>  $plans
      */
     public static function createServiceFor(string $name, bool $isActive, array $plans): Service
     {
@@ -208,6 +216,7 @@ class InvitationTemplate extends Model
                 'label' => $plan['label'],
                 'price' => $plan['price'],
                 'max_recipients' => $plan['max_recipients'] ?? null,
+                'max_gallery_photos' => $plan['max_gallery_photos'] ?? null,
                 'retention_months' => $plan['retention_months'] ?? null,
                 'features' => $plan['features'] ?? [],
                 'sort_order' => $index,

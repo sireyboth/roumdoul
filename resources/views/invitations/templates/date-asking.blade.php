@@ -266,3 +266,9 @@
     @endif
   </div>
 </div>
+
+{{-- footer (shared component) --}}
+<x-invitation-footer
+  :names="trim(($senderName ? $senderName.' ♡ ' : '').($recipientName ?? ''), ' ♡')"
+  :date="$eventDate?->format('d · m · Y')"
+  style="--inv-footer-bg: linear-gradient(180deg, #fdf2f8, #fae8ff); --inv-footer-text: #4a2040; --inv-footer-muted: #8a5a7a; --inv-footer-accent: {{ $accent }}; --inv-footer-ring: #fdf2f8;" />
