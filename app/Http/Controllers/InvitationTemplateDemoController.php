@@ -129,6 +129,17 @@ class InvitationTemplateDemoController extends Controller
             $fields['photo_gallery'] = $ownImages->all();
         }
 
+        // sample wording for one template file only, when the folder's shared sample doesn't fit it
+        $fields = array_merge($fields, match (basename($path)) {
+            'river-love' => [
+                'headline' => 'The best part of my life | is in that letter',
+                'message' => "Happy anniversary. Some days I still can’t believe I get to love you.\n\n"
+                    .'You turned ordinary mornings into my favorite part of the day, and quiet evenings into a place I never want to leave. Like a river, I keep finding my way back to you.'."\n\n"
+                    .'Thank you for choosing me, again and again. From this moment on, and every one after it, I will love you.',
+            ],
+            default => [],
+        });
+
         // the Christmas template is two pages; ?to= (the sample guest name) only matters on the cover
         $pages = ChristmasTemplate::is($view)
             ? ChristmasTemplate::pageData($page, route('templates.demo.file', ['path' => $path, 'to' => request('to')]), route('templates.demo.file.details', ['path' => $path]))
@@ -266,6 +277,8 @@ class InvitationTemplateDemoController extends Controller
                 'Because you’re you. That one covers the rest.',
             ]),
             'song_title' => 'Our song',
+            // a local sample song so the music buttons (Rose Bloom card, River Love «Play our song») work in the demo
+            'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             'closing_line' => 'I love you, always.',
             'thanks_message' => 'Today, tomorrow, and on every ordinary day in between.',
             'event_date' => '2022-03-14 19:00:00',

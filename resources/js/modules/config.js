@@ -6,10 +6,10 @@ export const telegramLink = `https://t.me/${companyPhone.replace(/[^\d+]/g, '')}
 // Placeholder — replace with the real numbers.
 export const companyPhones = ['+855 15 57 87 07 ', '+855 71 26 000 78']
 
-// Placeholder — replace with the real profile links.
+// Social profiles in the site footer. An empty link hides that icon (keep in sync with config/roumdoul.php).
 export const socialLinks = {
-  facebook: '#',
-  instagram: '#',
-  tiktok: '#',
-  telegram: '#',
+  facebook: 'https://www.facebook.com/roumdoulofficial',
+  instagram: '',
+  tiktok: 'https://www.tiktok.com/@roumdoul1',
+  telegram: telegramLink,
 }
