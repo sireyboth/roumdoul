@@ -16,7 +16,7 @@ class InvitationRsvpTest extends TestCase
         $invitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), [
+        $response = $this->postJson(route('invitation.rsvp', $recipient), [
             'status' => 'yes',
             'note' => 'Can\'t wait!! 🥹',
         ]);
@@ -31,7 +31,7 @@ class InvitationRsvpTest extends TestCase
         $invitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), [
+        $response = $this->postJson(route('invitation.rsvp', $recipient), [
             'status' => 'no',
         ]);
 
@@ -45,20 +45,39 @@ class InvitationRsvpTest extends TestCase
         $invitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), [
+        $this->postJson(route('invitation.rsvp', $recipient), [
             'status' => 'maybe',
         ])->assertStatus(422);
     }
 
-    public function test_rsvp_404s_when_recipient_does_not_belong_to_the_invitation(): void
+    public function test_rsvp_404s_for_an_unknown_link_code(): void
     {
         $invitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->create();
-        $otherInvitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->create();
-        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $otherInvitation->id]);
+        InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), [
-            'status' => 'yes',
-        ])->assertNotFound();
+        $this->postJson('/i/NoSuchCode12/rsvp', ['status' => 'yes'])->assertNotFound();
+    }
+
+    public function test_guest_links_are_short(): void
+    {
+        $invitation = Invitation::factory()->create();
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+
+        $this->assertMatchesRegularExpression('#/i/[A-Za-z0-9]{12}$#', route('invitation.show', $recipient));
+        $this->get('/i/NoSuchCode12')->assertNotFound();
+    }
+
+    public function test_old_long_links_redirect_to_the_short_link(): void
+    {
+        $invitation = Invitation::factory()->create();
+        $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
+
+        $this->get("/invite/{$invitation->slug}/{$recipient->token}")
+            ->assertStatus(301)
+            ->assertRedirect(route('invitation.show', $recipient));
+
+        $other = Invitation::factory()->create();
+        $this->get("/invite/{$other->slug}/{$recipient->token}")->assertNotFound();
     }
 
     public function test_rsvp_is_blocked_once_the_invitation_has_expired(): void
@@ -66,7 +85,7 @@ class InvitationRsvpTest extends TestCase
         $invitation = Invitation::factory()->withFeatures(['rsvp_enabled'])->expired()->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), [
+        $this->postJson(route('invitation.rsvp', $recipient), [
             'status' => 'yes',
         ])->assertStatus(410);
     }
@@ -76,7 +95,7 @@ class InvitationRsvpTest extends TestCase
         $invitation = Invitation::factory()->withFeatures([])->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), [
+        $this->postJson(route('invitation.rsvp', $recipient), [
             'status' => 'yes',
         ])->assertForbidden();
 
@@ -89,7 +108,7 @@ class InvitationRsvpTest extends TestCase
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
         $invitation->order->update(['status' => 'pending_payment']);
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), [
+        $this->postJson(route('invitation.rsvp', $recipient), [
             'status' => 'yes',
         ])->assertNotFound();
 
@@ -100,10 +119,10 @@ class InvitationRsvpTest extends TestCase
     {
         $invitation = Invitation::factory()->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
-        $this->get(route('invitation.show', [$invitation, $recipient]))->assertOk();
+        $this->get(route('invitation.show', $recipient))->assertOk();
 
         $invitation->order->update(['status' => 'pending_payment']);
 
-        $this->get(route('invitation.show', [$invitation, $recipient]))->assertStatus(410);
+        $this->get(route('invitation.show', $recipient))->assertStatus(410);
     }
 }

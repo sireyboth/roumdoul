@@ -9,7 +9,7 @@ export const companyPhones = ['+855 15 57 87 07 ', '+855 71 26 000 78']
 // Social profiles in the site footer. An empty link hides that icon (keep in sync with config/roumdoul.php).
 export const socialLinks = {
   facebook: 'https://www.facebook.com/roumdoulofficial',
-  instagram: '',
+  instagram: 'https://www.instagram.com/roumd_oul/',
   tiktok: 'https://www.tiktok.com/@roumdoul1',
-  telegram: telegramLink,
+  telegram: 'https://t.me/roumdoul_official',
 }

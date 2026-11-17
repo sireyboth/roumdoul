@@ -95,7 +95,7 @@
 
     $showCountdown = $eventDate && ! empty($fields['countdown_enabled']) && $isUnlocked('countdown_enabled');
     $showRsvp = ! empty($fields['rsvp_enabled']) && $isUnlocked('rsvp_enabled');
-    $rsvpUrl = ($invitation && ($recipient ?? null)) ? route('invitation.rsvp', [$invitation, $recipient]) : null;
+    $rsvpUrl = ($invitation && ($recipient ?? null)) ? route('invitation.rsvp', $recipient) : null;
 
     $contactPhone = trim($fields['contact_phone'] ?? '');
     $ctaLabel = $fields['cta_label'] ?? null;

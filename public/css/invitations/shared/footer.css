@@ -37,7 +37,36 @@ button:where(.inv-footer__top):hover{ transform:translateY(-3px); }
 :where(.inv-footer__social) a:hover,:where(.inv-footer__social) a:focus-visible{ transform:translateY(-2px); background:var(--inv-footer-accent, #d65f7f); color:#fff; box-shadow:none; }
 :where(.inv-footer__social) svg{ width:18px; height:18px; }
 
-:where(.inv-footer__brand){ margin-top:20px; font-size:.76rem; font-weight:500; letter-spacing:.22em; color:var(--inv-footer-muted, currentColor); }
-:where(.inv-footer__brand) a{ color:inherit; text-decoration:none; }
-:where(.inv-footer__brand) b{ font-weight:700; }
-@media (prefers-reduced-motion: reduce){ :where(.inv-footer__love) .hb{ animation:none; } :where(.inv-footer__top){ transition:none; } }
+/* «Created with love by» label */
+:where(.inv-footer__brand){ margin-top:30px; font-size:.72rem; font-weight:600; letter-spacing:.24em; text-transform:uppercase; color:var(--inv-footer-muted, currentColor); }
+
+/* ROUMDOUL block — the site footer without Product categories / Company. Colours follow the footer's text colour,
+   so it suits light and dark footers alike. */
+:where(.inv-footer__rd){ max-width:880px; margin:0 auto; }
+:where(.inv-footer__rd-grid){ display:grid; gap:26px; margin-top:16px; padding:24px 20px; border-radius:18px; text-align:left;
+  background:color-mix(in srgb, currentColor 5%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 14%, transparent); }
+:where(.inv-footer__rd-about),:where(.inv-footer__rd-help){ display:flex; flex-direction:column; align-items:flex-start; gap:12px; min-width:0; }
+:where(.inv-footer__rd-logo){ display:inline-flex; align-items:center; gap:10px; color:inherit; text-decoration:none; }
+:where(.inv-footer__rd-logo) img{ width:40px; height:40px; flex:none; border-radius:50%; object-fit:contain; }
+:where(.inv-footer__rd-logo) span{ font-size:1.05rem; font-weight:800; letter-spacing:.04em; }
+:where(.inv-footer__rd-text),:where(.inv-footer__rd-row){ font-family:var(--inv-footer-kh-font, "Kantumruy Pro", sans-serif); font-size:.88rem; line-height:1.75; color:var(--inv-footer-muted, currentColor); }
+:where(.inv-footer__rd-row){ display:flex; align-items:flex-start; gap:8px; }
+:where(.inv-footer__rd-row) svg{ width:17px; height:17px; flex:none; margin-top:.3em; opacity:.8; }
+:where(.inv-footer__rd-title){ font-family:var(--inv-footer-kh-font, "Kantumruy Pro", sans-serif); font-size:.95rem; font-weight:700; color:var(--inv-footer-accent, #d65f7f); }
+:where(.inv-footer__rd .inv-footer__social){ justify-content:flex-start; margin-top:2px; gap:10px; }
+:where(.inv-footer__rd-btn){ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 20px; border-radius:999px;
+  font-family:var(--inv-footer-kh-font, "Kantumruy Pro", sans-serif); font-size:.9rem; font-weight:600; text-decoration:none;
+  background:var(--inv-footer-accent, #d65f7f); color:#fff; transition:transform .2s ease, filter .2s ease; }
+:where(.inv-footer__rd-btn):hover,:where(.inv-footer__rd-btn):focus-visible{ transform:translateY(-2px); filter:brightness(1.08); }
+:where(.inv-footer__rd-btn) svg{ width:17px; height:17px; flex:none; }
+:where(.inv-footer__rd-bottom){ display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:22px; padding-top:18px;
+  border-top:1px solid color-mix(in srgb, currentColor 16%, transparent); }
+:where(.inv-footer__rd-links){ display:flex; flex-wrap:wrap; justify-content:center; gap:6px 20px; }
+:where(.inv-footer__rd-links) a,:where(.inv-footer__rd-copy){ font-family:var(--inv-footer-kh-font, "Kantumruy Pro", sans-serif); font-size:.78rem; color:var(--inv-footer-muted, currentColor); text-decoration:none; }
+:where(.inv-footer__rd-links) a:hover,:where(.inv-footer__rd-links) a:focus-visible{ color:var(--inv-footer-accent, #d65f7f); }
+@media (min-width:640px){ :where(.inv-footer__rd-grid){ grid-template-columns:1.2fr 1fr; gap:36px; padding:28px 30px; } }
+
+@media (prefers-reduced-motion: reduce){
+  :where(.inv-footer__love) .hb{ animation:none; }
+  :where(.inv-footer__top),:where(.inv-footer__rd-btn),:where(.inv-footer__social) a{ transition:none; }
+}

@@ -541,7 +541,7 @@ class InvitationPurchaseAndManageTest extends TestCase
 
         $csv = base64_decode($component->effects['download']['content']);
         $this->assertStringStartsWith("\xEF\xBB\xBF".implode(',', [__('Name'), __('Link'), __('Opened'), __('RSVP')]), $csv);
-        $this->assertStringContainsString('"សុខ សុភា",'.route('invitation.show', [$invitation, $recipient]).',,'.__('Coming'), $csv);
+        $this->assertStringContainsString('"សុខ សុភា",'.route('invitation.show', $recipient).',,'.__('Coming'), $csv);
     }
 
     public function test_removing_a_recipient_deletes_it(): void
@@ -568,7 +568,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id, 'recipient_name' => 'Bella']);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertStatus(200);
         $response->assertSee('Bella');
@@ -586,7 +586,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id, 'recipient_name' => 'Bella']);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertSee('<meta property="og:title" content="Hey there!" />', false);
         $response->assertSee('<meta property="og:description" content="You got a surprise" />', false);
@@ -608,7 +608,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertSee(Storage::disk('s3')->url('invitations/cover.jpg'), false);
     }
@@ -619,7 +619,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         $invitationB = Invitation::factory()->create();
         $recipientOfB = InvitationRecipient::factory()->create(['invitation_id' => $invitationB->id]);
 
-        $this->get(route('invitation.show', [$invitationA, $recipientOfB]))->assertNotFound();
+        $this->get(route('invitation.show.legacy', [$invitationA, $recipientOfB]))->assertNotFound();
     }
 
     public function test_public_invitation_page_shows_expired_state_past_expiry(): void
@@ -627,7 +627,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         $invitation = Invitation::factory()->expired()->create();
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertStatus(410);
         $response->assertSee('expired');

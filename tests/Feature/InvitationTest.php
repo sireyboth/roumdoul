@@ -109,7 +109,7 @@ class InvitationTest extends TestCase
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
         $this->assertNotEmpty($recipient->token);
-        $this->assertSame(32, strlen($recipient->token));
+        $this->assertSame(InvitationRecipient::TOKEN_LENGTH, strlen($recipient->token));
     }
 
     public function test_invitation_recipient_route_key_is_the_token(): void

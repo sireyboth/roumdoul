@@ -428,7 +428,7 @@
               </div>
             <ul class="divide-y divide-plum-100 dark:divide-plum-800">
               @foreach ($guestList as $recipient)
-                @php $link = route('invitation.show', [$invitation, $recipient]); @endphp
+                @php $link = route('invitation.show', $recipient); @endphp
                 <li wire:key="recipient-{{ $recipient->id }}" @class(['flex flex-wrap items-center gap-3 px-5 py-4 transition last:rounded-b-2xl hover:bg-plum-50/70 dark:hover:bg-plum-800/40', $cols, 'opacity-60' => $recipient->revoked_at])>
                   {{-- Guest --}}
                   <div class="flex min-w-0 flex-1 items-center gap-3">

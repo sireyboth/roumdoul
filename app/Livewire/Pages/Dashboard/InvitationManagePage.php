@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages\Dashboard;
 
 use App\Models\Invitation;
+use App\Models\InvitationRecipient;
 use App\Models\InvitationTemplate;
 use App\Services\ImageOptimizer;
 use App\Support\Invitations\ChristmasTemplate;
@@ -889,7 +890,7 @@ class InvitationManagePage extends Component
             foreach ($invitation->recipients as $r) {
                 fputcsv($out, [
                     $r->recipient_name,
-                    route('invitation.show', [$invitation, $r]),
+                    route('invitation.show', $r),
                     $r->viewed_at?->format('Y-m-d H:i') ?? '',
                     $rsvp[$r->rsvp_status] ?? '',
                     $r->rsvp_note ?? '',
@@ -936,7 +937,7 @@ class InvitationManagePage extends Component
         abort_unless($this->invitation->isPaid(), 403);
 
         $recipient = $this->invitation->recipients()->whereKey($recipientId)->firstOrFail();
-        $recipient->update(['token' => Str::random(32), 'revoked_at' => null]);
+        $recipient->update(['token' => InvitationRecipient::newToken(), 'revoked_at' => null]);
         $this->invitation->load('recipients');
         $this->toast('success', __("Made a new link for «:name» — the old link no longer works. Don't forget to send the new one.", ['name' => $recipient->recipient_name]));
     }

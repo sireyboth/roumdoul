@@ -234,7 +234,7 @@ class LocalizationTest extends TestCase
         $recipient = $invitation->recipients()->create(['recipient_name' => self::KHMER_GUEST]);
 
         $this->withSession([SetLocale::SESSION_KEY => 'en'])
-            ->get(route('invitation.show', [$invitation->slug, $recipient->token]))
+            ->get(route('invitation.show', $recipient->token))
             ->assertOk()
             ->assertSee('<html lang="km">', false)
             ->assertSee(self::KHMER_GUEST);

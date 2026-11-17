@@ -55,9 +55,16 @@ Route::middleware('guest.locale')->group(function () {
     Route::get('/demo/{path}', [InvitationTemplateDemoController::class, 'file'])
         ->where('path', '[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*')
         ->name('templates.demo.file');
-    Route::get('/invite/{invitation:slug}/{recipient:token}', InvitationShowController::class)->name('invitation.show');
-    Route::get('/invite/{invitation:slug}/{recipient:token}/details', [InvitationShowController::class, 'details'])->name('invitation.show.details');
-    Route::post('/invite/{invitation:slug}/{recipient:token}/rsvp', InvitationRsvpController::class)
+    // A guest's link: /i/{code} — one short random code per guest (InvitationRecipient::newToken()).
+    // Throttled per IP so codes can't be guessed by trying many.
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::get('/i/{recipient:token}', InvitationShowController::class)->name('invitation.show');
+        Route::get('/i/{recipient:token}/details', [InvitationShowController::class, 'details'])->name('invitation.show.details');
+        // Links sent before the short URLs: /invite/{slug}/{code} redirects to /i/{code}.
+        Route::get('/invite/{invitation:slug}/{recipient:token}', [InvitationShowController::class, 'legacy'])->name('invitation.show.legacy');
+        Route::get('/invite/{invitation:slug}/{recipient:token}/details', [InvitationShowController::class, 'legacyDetails']);
+    });
+    Route::post('/i/{recipient:token}/rsvp', InvitationRsvpController::class)
         ->middleware('throttle:20,1')
         ->name('invitation.rsvp');
 });

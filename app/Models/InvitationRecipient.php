@@ -29,8 +29,21 @@ class InvitationRecipient extends Model
     protected static function booted(): void
     {
         static::creating(function (self $recipient) {
-            $recipient->token ??= Str::random(32);
+            $recipient->token ??= static::newToken();
         });
+    }
+
+    /** Length of a guest link code: /i/{code}. 62^12 ≈ 3·10^21 codes, so links can't be guessed. */
+    public const TOKEN_LENGTH = 12;
+
+    /** A fresh random code for a guest link (letters + digits, unique). */
+    public static function newToken(): string
+    {
+        do {
+            $token = Str::random(self::TOKEN_LENGTH);
+        } while (static::where('token', $token)->exists());
+
+        return $token;
     }
 
     public function invitation(): BelongsTo

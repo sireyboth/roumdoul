@@ -100,7 +100,7 @@ class SecurityHardeningTest extends TestCase
     {
         [$invitation, $recipient] = $this->recipient();
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), ['status' => 'yes', 'note' => 'you are a b!tch'])
+        $this->postJson(route('invitation.rsvp', $recipient), ['status' => 'yes', 'note' => 'you are a b!tch'])
             ->assertStatus(422);
 
         $this->assertNull($recipient->fresh()->rsvp_status);
@@ -110,7 +110,7 @@ class SecurityHardeningTest extends TestCase
     {
         [$invitation, $recipient] = $this->recipient();
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), ['status' => 'yes', 'note' => 'see https://scam.example.com'])
+        $this->postJson(route('invitation.rsvp', $recipient), ['status' => 'yes', 'note' => 'see https://scam.example.com'])
             ->assertStatus(422);
     }
 
@@ -118,7 +118,7 @@ class SecurityHardeningTest extends TestCase
     {
         [$invitation, $recipient] = $this->recipient();
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), ['status' => 'yes', 'note' => 'ខ្ញុំនឹងទៅ ក្តីរីករាយ'])
+        $this->postJson(route('invitation.rsvp', $recipient), ['status' => 'yes', 'note' => 'ខ្ញុំនឹងទៅ ក្តីរីករាយ'])
             ->assertOk();
 
         $this->assertSame('ខ្ញុំនឹងទៅ ក្តីរីករាយ', $recipient->fresh()->rsvp_note);
@@ -132,11 +132,11 @@ class SecurityHardeningTest extends TestCase
         RateLimiter::clear('rsvp-recipient:'.$recipient->id);
 
         for ($i = 0; $i < $limit; $i++) {
-            $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), ['status' => $i % 2 ? 'yes' : 'no', 'note' => "note {$i}"])
+            $this->postJson(route('invitation.rsvp', $recipient), ['status' => $i % 2 ? 'yes' : 'no', 'note' => "note {$i}"])
                 ->assertOk();
         }
 
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), ['status' => 'yes'])
+        $this->postJson(route('invitation.rsvp', $recipient), ['status' => 'yes'])
             ->assertStatus(429);
     }
 
@@ -147,8 +147,8 @@ class SecurityHardeningTest extends TestCase
         [$invitation, $recipient] = $this->recipient();
         $recipient->update(['revoked_at' => now()]);
 
-        $this->get(route('invitation.show', [$invitation, $recipient]))->assertStatus(410);
-        $this->postJson(route('invitation.rsvp', [$invitation, $recipient]), ['status' => 'yes'])->assertNotFound();
+        $this->get(route('invitation.show', $recipient))->assertStatus(410);
+        $this->postJson(route('invitation.rsvp', $recipient), ['status' => 'yes'])->assertNotFound();
     }
 
     public function test_rotating_a_link_invalidates_the_old_token(): void

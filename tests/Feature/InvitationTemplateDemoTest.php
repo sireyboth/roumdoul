@@ -100,7 +100,7 @@ class InvitationTemplateDemoTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertOk();
         $response->assertSee('<span>D</span><span class="amp" aria-hidden="true">&amp;</span><span>M</span>', false);
@@ -121,7 +121,7 @@ class InvitationTemplateDemoTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertOk();
         $response->assertSee('DARA');
@@ -152,7 +152,7 @@ class InvitationTemplateDemoTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertOk();
         $response->assertSee('kbach-schedule.jpg');
@@ -195,7 +195,7 @@ class InvitationTemplateDemoTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]));
+        $response = $this->get(route('invitation.show', $recipient));
 
         $response->assertOk();
         $response->assertSee('បុណ្យកឋិនទានសាមគ្គី');
@@ -217,7 +217,7 @@ class InvitationTemplateDemoTest extends TestCase
             ]);
             $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-            return $this->get(route('invitation.show', [$invitation, $recipient]))->assertOk();
+            return $this->get(route('invitation.show', $recipient))->assertOk();
         };
 
         $render(['headline' => 'បុណ្យកឋិនវត្តថ្មី', 'title_image' => 'https://example.com/my-title.png'])
@@ -257,7 +257,7 @@ class InvitationTemplateDemoTest extends TestCase
         ]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-        $response = $this->get(route('invitation.show', [$invitation, $recipient]))->assertOk();
+        $response = $this->get(route('invitation.show', $recipient))->assertOk();
 
         foreach (['សូមនមស្ការព្រះរតនត្រ័យ', 'https://example.com/my-trai.png', 'https://example.com/my-wat.jpg',
             'សូមចូលរួមកសាងព្រះវិហារ', 'តើលោកអ្នកមកដែរទេ?', 'សូមឲ្យលោកអ្នកមានសុខភាពល្អ'] as $own) {
@@ -282,7 +282,7 @@ class InvitationTemplateDemoTest extends TestCase
             ]);
             $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id]);
 
-            $this->get(route('invitation.show', [$invitation, $recipient]))
+            $this->get(route('invitation.show', $recipient))
                 ->assertOk()
                 ->assertSee('song.mp3', false)
                 ->assertSee('preload="none"', false)

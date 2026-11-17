@@ -61,7 +61,7 @@
     $contactTel = preg_match('/^\+?[\d\s().-]{6,}$/', $contact) ? preg_replace('/[^\d+]/', '', $contact) : '';
     $showRsvp = ! empty($fields['rsvp_enabled']) && $isUnlocked('rsvp_enabled');
     $rsvpQuestion = Xmas::typo($text('rsvp_message')) ?: $t('page.rsvp_question');
-    $rsvpUrl = ($invitation && ($recipient ?? null)) ? route('invitation.rsvp', [$invitation, $recipient]) : null;
+    $rsvpUrl = ($invitation && ($recipient ?? null)) ? route('invitation.rsvp', $recipient) : null;
 
     // an uploaded song wins over a link; it isn't fetched until the guest taps play (preload="none")
     $musicFile = (! empty($fields['music_file']) && $isUnlocked('music_file')) ? $resolveUrl($fields['music_file']) : null;
@@ -244,7 +244,7 @@
     </section>
 
     {{-- footer (shared component) --}}
-    <x-invitation-footer love="Made with love" top-label="Back to top"
+    <x-invitation-footer love="Made with love" top-label="Back to top" lang="en"
       :names="$host !== '' ? $host : null" :date="$dateText !== '' ? $dateText : null"
       style="--inv-footer-bg: var(--xm-green); --inv-footer-text: var(--xm-cream); --inv-footer-muted: rgba(245,240,230,.75); --inv-footer-accent: var(--xm-red); --inv-footer-ring: var(--xm-green); --inv-footer-names-font: var(--xm-script); --inv-footer-caps-font: var(--xm-display); --inv-footer-kh-font: var(--xm-body);" />
   @endif

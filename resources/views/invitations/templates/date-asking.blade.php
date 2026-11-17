@@ -34,7 +34,7 @@
         $youtubeId = $m[1];
     }
 
-    $rsvpUrl = ($invitation && $recipient) ? route('invitation.rsvp', [$invitation, $recipient]) : null;
+    $rsvpUrl = ($invitation && $recipient) ? route('invitation.rsvp', $recipient) : null;
 
     $decorations = ['💕', '✨', '🌸', '🩷', '💌', '🥹', '🌷', '💫', '⭐', '🎀'];
     $floaters = collect(range(1, 20))->map(fn ($i) => [

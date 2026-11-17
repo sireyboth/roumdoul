@@ -65,7 +65,7 @@
     $frameImg = fn (int $i) => $galleryUrls->isNotEmpty() ? $galleryUrls[$i % $galleryUrls->count()] : null;
 
     $trackRsvp = $isUnlocked('rsvp_enabled');
-    $rsvpUrl = ($invitation && $recipient) ? route('invitation.rsvp', [$invitation, $recipient]) : null;
+    $rsvpUrl = ($invitation && $recipient) ? route('invitation.rsvp', $recipient) : null;
 
     $dateSteps = $eventDate
         ? [(string) $eventDate->day, $eventDate->format('d / m'), $eventDate->format('d / m / Y')]

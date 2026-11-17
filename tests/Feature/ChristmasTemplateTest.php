@@ -104,20 +104,20 @@ class ChristmasTemplateTest extends TestCase
         $invitation->template->update(['view' => ChristmasTemplate::VIEW]);
         $recipient = InvitationRecipient::factory()->create(['invitation_id' => $invitation->id, 'recipient_name' => 'Dara']);
 
-        $this->get(route('invitation.show', [$invitation, $recipient]))
+        $this->get(route('invitation.show', $recipient))
             ->assertOk()
             ->assertSee('Dear Dara,')
-            ->assertSee('data-href="'.route('invitation.show.details', [$invitation, $recipient]).'"', false);
+            ->assertSee('data-href="'.route('invitation.show.details', $recipient).'"', false);
 
-        $this->get(route('invitation.show.details', [$invitation, $recipient]))
+        $this->get(route('invitation.show.details', $recipient))
             ->assertOk()
             ->assertSee('Office Party')
             ->assertSee('Riverside Hall');
 
         // nothing to show on page 2 yet: back to the cover
         $invitation->update(['field_values' => []]);
-        $this->get(route('invitation.show.details', [$invitation, $recipient]))
-            ->assertRedirect(route('invitation.show', [$invitation, $recipient]));
+        $this->get(route('invitation.show.details', $recipient))
+            ->assertRedirect(route('invitation.show', $recipient));
     }
 
     public function test_curly_quotes_replace_straight_ones(): void

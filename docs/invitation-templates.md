@@ -11,7 +11,7 @@ date-asking, birthday, etc.) to the system. Read this before building a new one.
 - An **invitation** (`Invitation`) is one customer's filled-in project: which template, their
   field values, how many recipients they're allowed, and when it expires.
 - A **recipient** (`InvitationRecipient`) is one shareable link: a name + an unguessable token.
-  Public URL: `/invite/{invitation-slug}/{token}`.
+  Public URL: `/i/{token}` (12 random letters/digits per guest, throttled; old `/invite/{slug}/{token}` links 301-redirect there).
 
 ## The standard field catalog
 
@@ -141,7 +141,7 @@ shows invitation products at all.
 
    It renders the back-to-top button, an ornament divider (default: a heart), the names and date
    (left out when empty), «រៀបចំឡើងដោយក្តីស្រឡាញ់ ♥» (`love="…"` to change, e.g. English-only
-   templates), the ROUMDOUL social icons and `CRAFTED BY ROUMDOUL · {year}`. Anything inside the
+   templates), «Created with love by» + the ROUMDOUL block (logo, description, social icons, quick help with a Telegram button, policy links, ©; `lang="en"` for an English template). Anything inside the
    tag (besides the ornament) is shown above the brand line. Theme it with the `--inv-footer-*`
    variables (bg, text, muted, accent, ring, names-font, caps-font, kh-font), or pass
    `prefix="xx"` to also give it the template's own classes (`xx-footer`, `xx-top` + id `xx-totop`,

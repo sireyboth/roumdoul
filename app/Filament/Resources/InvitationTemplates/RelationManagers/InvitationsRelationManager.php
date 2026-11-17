@@ -67,10 +67,7 @@ class InvitationsRelationManager extends RelationManager
                     ->label('Open')
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->visible(fn (Invitation $record) => $record->recipients()->exists())
-                    ->url(fn (Invitation $record) => route('invitation.show', [
-                        'invitation' => $record,
-                        'recipient' => $record->recipients()->oldest('id')->first(),
-                    ]))
+                    ->url(fn (Invitation $record) => route('invitation.show', $record->recipients()->oldest('id')->first()))
                     ->openUrlInNewTab(),
                 DeleteAction::make()
                     ->modalDescription('All guest links for this invitation will stop working. This can\'t be undone from the admin panel.'),

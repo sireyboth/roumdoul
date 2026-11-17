@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Invitation;
 use App\Models\InvitationRecipient;
-use App\Models\ModerationLog;
 use App\Rules\NoProfanity;
 use App\Services\ContentModerator;
 use Illuminate\Http\Request;
@@ -12,9 +10,10 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class InvitationRsvpController extends Controller
 {
-    public function __invoke(Request $request, Invitation $invitation, InvitationRecipient $recipient, ContentModerator $moderator)
+    public function __invoke(Request $request, InvitationRecipient $recipient, ContentModerator $moderator)
     {
-        abort_unless($recipient->invitation_id === $invitation->id, 404);
+        $invitation = $recipient->invitation;
+        abort_if($invitation === null, 404);
         abort_if($recipient->revoked_at !== null, 404);
         abort_if($invitation->isExpired(), 410);
         // The guest page hides the buttons in both cases; this stops a direct request too.

@@ -12,6 +12,9 @@
   names / date / love — empty names or date are left out; love defaults to the Khmer «made with love» line.
   Theme a footer without its own CSS with --inv-footer-bg / -text / -muted / -accent (see footer.css).
   Social links come from config/roumdoul.php (.env); empty ones aren't shown.
+  Below the love line: «Created with love by» (credit) and the ROUMDOUL block — the site footer without
+  Product categories / Company: logo, description, social icons, quick help + Telegram button, policy links, ©.
+  lang — language of that block's text (km by default; an English template passes lang="en").
 --}}
 @props([
     'prefix' => null,
@@ -20,9 +23,13 @@
     'date' => null,
     'love' => 'រៀបចំឡើងដោយក្តីស្រឡាញ់',
     'topLabel' => 'ត្រឡប់ទៅដើម · Back to top',
+    'credit' => 'Created with love by',
+    'lang' => 'km',
 ])
 @php
     $p = fn (string $part) => $prefix ? " {$prefix}-{$part}" : '';
+    $site = rtrim((string) config('roumdoul.site_url'), '/');
+    $telegram = config('roumdoul.telegram_chat') ?: config('roumdoul.social.telegram');
     $social = collect(config('roumdoul.social', []))->filter(fn ($url) => is_string($url) && trim($url) !== '' && trim($url) !== '#');
     $icons = [
         'facebook' => '<path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.02 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.631.772-1.631 1.563v1.877h2.773l-.443 2.91h-2.33V22c4.78-.756 8.438-4.92 8.438-9.94z"/>',
@@ -58,19 +65,55 @@
 
   {{ $slot }}
 
-  @if ($social->isNotEmpty())
-    <div class="inv-footer__social">
-      @foreach ($social as $network => $url)
-        @if (isset($icons[$network]))
-          <a href="{{ $url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ config('roumdoul.brand') }} on {{ $labels[$network] }}">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{!! $icons[$network] !!}</svg>
+  {{-- «Created with love by» + the ROUMDOUL block (site footer without Product categories / Company) --}}
+  <div class="inv-footer__rd">
+    <p class="inv-footer__brand{{ $p('brand') }}">{{ $credit }}</p>
+
+    <div class="inv-footer__rd-grid">
+      <div class="inv-footer__rd-about">
+        <a class="inv-footer__rd-logo" href="{{ $site }}" target="_blank" rel="noopener">
+          <img src="{{ asset('images/Roumdoul_Logo.png') }}" alt="" width="40" height="40" loading="lazy">
+          <span>{{ config('roumdoul.brand') }}</span>
+        </a>
+        <p class="inv-footer__rd-text">{{ __('Roumdoul — a premium digital services shop, plus many other popular apps, safe and affordable.', [], $lang) }}</p>
+        @if ($social->isNotEmpty())
+          <div class="inv-footer__social">
+            @foreach ($social as $network => $url)
+              @if (isset($icons[$network]))
+                <a href="{{ $url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ config('roumdoul.brand') }} on {{ $labels[$network] }}">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{!! $icons[$network] !!}</svg>
+                </a>
+              @endif
+            @endforeach
+          </div>
+        @endif
+      </div>
+
+      <div class="inv-footer__rd-help">
+        <p class="inv-footer__rd-title">{{ __('Quick help', [], $lang) }}</p>
+        <p class="inv-footer__rd-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span>{{ __('Customer support 24 hours / 7 days', [], $lang) }}</span>
+        </p>
+        <p class="inv-footer__rd-text">{{ __('Have a question? Chat with us instantly on Telegram.', [], $lang) }}</p>
+        @if (filled($telegram))
+          <a class="inv-footer__rd-btn" href="{{ $telegram }}" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{!! $icons['telegram'] !!}</svg>
+            {{ __('Chat on Telegram', [], $lang) }}
           </a>
         @endif
-      @endforeach
+      </div>
     </div>
-  @endif
 
-  <p class="inv-footer__brand{{ $p('brand') }}">CRAFTED BY <a href="{{ config('roumdoul.site_url') }}" target="_blank" rel="noopener"><b>{{ config('roumdoul.brand') }}</b></a> · {{ now()->year }}</p>
+    <div class="inv-footer__rd-bottom">
+      <nav class="inv-footer__rd-links" aria-label="{{ config('roumdoul.brand') }}">
+        <a href="{{ $site }}/privacy" target="_blank" rel="noopener">{{ __('Privacy policy', [], $lang) }}</a>
+        <a href="{{ $site }}/terms" target="_blank" rel="noopener">{{ __('Terms of use', [], $lang) }}</a>
+        <a href="{{ $site }}/feedback" target="_blank" rel="noopener">{{ __('Send feedback', [], $lang) }}</a>
+      </nav>
+      <p class="inv-footer__rd-copy">&copy; {{ now()->year }} {{ config('roumdoul.brand') }}. {{ __('All rights reserved.', [], $lang) }}</p>
+    </div>
+  </div>
 </footer>
 
 @once

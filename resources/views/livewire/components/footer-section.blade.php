@@ -32,26 +32,26 @@
             {{ __('Roumdoul — a premium digital services shop, plus many other popular apps, safe and affordable.') }}
           </p>
           <div class="flex items-center gap-3">
-            <a data-social="facebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
+            <a data-social="facebook" href="{{ config('roumdoul.social.facebook') }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
               class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-brand-700 transition-colors hover:bg-brand-700 hover:text-white dark:bg-plum-800 dark:text-brand-300 dark:hover:bg-brand-700 dark:hover:text-white">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4.5 w-4.5">
                 <path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.02 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.631.772-1.631 1.563v1.877h2.773l-.443 2.91h-2.33V22c4.78-.756 8.438-4.92 8.438-9.94z" />
               </svg>
             </a>
-            <a data-social="instagram" href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+            <a data-social="instagram" href="{{ config('roumdoul.social.instagram') }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
               class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-brand-700 transition-colors hover:bg-brand-700 hover:text-white dark:bg-plum-800 dark:text-brand-300 dark:hover:bg-brand-700 dark:hover:text-white">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4.5 w-4.5">
                 <path fill-rule="evenodd" clip-rule="evenodd"
                   d="M12 2c-2.716 0-3.056.012-4.123.06-1.064.05-1.79.218-2.427.465a4.9 4.9 0 00-1.771 1.153A4.9 4.9 0 002.525 5.45c-.247.637-.416 1.363-.465 2.427C2.012 8.944 2 9.284 2 12s.012 3.056.06 4.123c.05 1.064.218 1.79.465 2.427a4.9 4.9 0 001.153 1.771 4.9 4.9 0 001.771 1.153c.637.247 1.363.416 2.427.465C8.944 21.988 9.284 22 12 22s3.056-.012 4.123-.06c1.064-.05 1.79-.218 2.427-.465a4.9 4.9 0 001.771-1.153 4.9 4.9 0 001.153-1.771c.247-.637.416-1.363.465-2.427.048-1.067.06-1.407.06-4.123s-.012-3.056-.06-4.123c-.05-1.064-.218-1.79-.465-2.427a4.9 4.9 0 00-1.153-1.771A4.9 4.9 0 0018.55 2.525c-.637-.247-1.363-.416-2.427-.465C15.056 2.012 14.716 2 12 2zm0 1.802c2.67 0 2.986.01 4.04.059.976.045 1.505.207 1.858.344.467.182.8.399 1.15.748.35.35.566.683.748 1.15.137.353.3.882.344 1.858.048 1.054.059 1.37.059 4.04s-.01 2.986-.059 4.04c-.045.976-.207 1.505-.344 1.858a3.1 3.1 0 01-.748 1.15 3.1 3.1 0 01-1.15.748c-.353.137-.882.3-1.858.344-1.054.048-1.37.059-4.04.059s-2.987-.01-4.04-.059c-.976-.045-1.505-.207-1.858-.344a3.1 3.1 0 01-1.15-.748 3.1 3.1 0 01-.748-1.15c-.137-.353-.3-.882-.344-1.858-.048-1.054-.059-1.37-.059-4.04s.01-2.986.059-4.04c.045-.976.207-1.505.344-1.858.182-.467.399-.8.748-1.15a3.1 3.1 0 011.15-.748c.353-.137.882-.3 1.858-.344 1.054-.048 1.37-.059 4.04-.059zm0 3.064a5.135 5.135 0 100 10.269 5.135 5.135 0 000-10.27zm0 8.468a3.333 3.333 0 110-6.666 3.333 3.333 0 010 6.666zm6.538-8.671a1.2 1.2 0 11-2.4 0 1.2 1.2 0 012.4 0z" />
               </svg>
             </a>
-            <a data-social="tiktok" href="#" target="_blank" rel="noopener noreferrer" aria-label="TikTok"
+            <a data-social="tiktok" href="{{ config('roumdoul.social.tiktok') }}" target="_blank" rel="noopener noreferrer" aria-label="TikTok"
               class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-brand-700 transition-colors hover:bg-brand-700 hover:text-white dark:bg-plum-800 dark:text-brand-300 dark:hover:bg-brand-700 dark:hover:text-white">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4.5 w-4.5">
                 <path d="M16.5 2h-3.02v13.44a2.7 2.7 0 11-2.7-2.7c.157 0 .31.012.46.036V9.7a5.72 5.72 0 105.72 5.72V9.15a7.06 7.06 0 003.55 1.02V7.16a4.16 4.16 0 01-4.01-4.16V2z" />
               </svg>
             </a>
-            <a data-social="telegram" href="#" target="_blank" rel="noopener noreferrer" aria-label="Telegram"
+            <a data-social="telegram" href="{{ config('roumdoul.social.telegram') }}" target="_blank" rel="noopener noreferrer" aria-label="Telegram"
               class="flex h-9 w-9 items-center justify-center rounded-full bg-plum-100 text-brand-700 transition-colors hover:bg-brand-700 hover:text-white dark:bg-plum-800 dark:text-brand-300 dark:hover:bg-brand-700 dark:hover:text-white">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4.5 w-4.5">
                 <path d="M21.05 2.927a1.5 1.5 0 00-1.523-.245L2.98 9.36a1.31 1.31 0 00.088 2.457l4.377 1.462 1.68 5.393a1 1 0 001.697.372l2.457-2.457 4.522 3.34a1.5 1.5 0 002.37-.94l2.334-14.09a1.5 1.5 0 00-.452-1.61zM9.66 13.996l-.33 3.386-1.36-4.36 9.09-6.99c.19-.146.44.08.28.25l-7.4 7.4a.87.87 0 00-.28.314z" />
@@ -105,7 +105,7 @@
             <p class="text-sm text-plum-600 dark:text-plum-400">{{ __('Customer support 24 hours / 7 days') }}</p>
           </div>
           <p class="text-sm text-plum-600 dark:text-plum-400">{{ __('Have a question? Chat with us instantly on Telegram.') }}</p>
-          <a id="footer-telegram-chat-link" href="#" target="_blank" rel="noopener noreferrer"
+          <a id="footer-telegram-chat-link" href="{{ config('roumdoul.telegram_chat') }}" target="_blank" rel="noopener noreferrer"
             class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
             <x-app-icon name="chat" class="h-4 w-4 shrink-0" />
             {{ __('Chat on Telegram') }}
