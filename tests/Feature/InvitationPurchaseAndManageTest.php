@@ -271,7 +271,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         $this->assertNull($invitation->fresh()->field_values['cover_image'] ?? null);
     }
 
-    public function test_a_large_phone_photo_is_accepted_and_shrunk_before_storing(): void
+    public function test_a_big_photo_under_the_cap_is_accepted_and_shrunk_before_storing(): void
     {
         Storage::fake('s3');
 
@@ -281,7 +281,7 @@ class InvitationPurchaseAndManageTest extends TestCase
 
         Livewire::actingAs($customer, 'customer')
             ->test(InvitationManagePage::class, ['invitation' => $invitation])
-            ->set('imageUploads.cover_image', UploadedFile::fake()->image('phone.jpg', 4000, 3000)->size(8000))
+            ->set('imageUploads.cover_image', UploadedFile::fake()->image('phone.jpg', 4000, 3000)->size(InvitationManagePage::MAX_UPLOAD_KB - 100))
             ->assertHasNoErrors()
             ->call('save')
             ->assertHasNoErrors();
@@ -300,7 +300,7 @@ class InvitationPurchaseAndManageTest extends TestCase
         Livewire::actingAs($customer, 'customer')
             ->test(InvitationManagePage::class, ['invitation' => $invitation])
             ->set('imageUploads.cover_image', UploadedFile::fake()->image('huge.jpg')->size(InvitationManagePage::MAX_UPLOAD_KB + 1))
-            ->assertHasErrors(['imageUploads.cover_image' => "This photo couldn't be uploaded. Photos can be at most 20 MB each."]);
+            ->assertHasErrors(['imageUploads.cover_image' => 'Each photo can be at most 3 MB.']);
     }
 
     public function test_uploading_a_song_stores_it_as_mp3_and_saves_the_path(): void

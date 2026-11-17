@@ -6,16 +6,18 @@
     // River Love — romantic anniversary / love page.
     // Cover: a full-screen looping video of a blossom lake (cropped, never shrunk, on phones),
     // the words in the middle rise softly out of a blur, and petals and leaves fall forever over the
-    // whole page. Below: the letter → our photos → together since (or a countdown) → closing line.
+    // whole page. Below: the letter → scratch-off photos → our photos → together since (or a countdown) → closing line.
     //
     // Everything personal comes from $fields (catalog keys, docs/invitation-templates.md):
     //   recipient name   → «For …» on the cover and «Dear …» on the letter (the guest link's name)
     //   sender_name      → signature + top bar   headline → the big cover line (« | » = line break)
     //   message          → the letter (blank line = new paragraph); its first sentence is the cover subline
     //   event_date       → past = «together since» + days count; future = countdown (premium countdown_enabled)
-    //   photo_gallery + photo_captions → the photo reels (caption «Title | small line» = the card's film labels)
+    //   photo_gallery + photo_captions → letter prints (1–3), scratch cards (4–7, title = caption), the photo reels
+    //                    (caption «Title | small line» = the card's film labels). Scratch cards: the shared x-scratch-card component
     //   cover_image      → first photo of the photos section (default: gallery photo 1)
-    //   background_image → replaces the cover video with the customer's own photo
+    // The background is always the river-love video (not a customer field): background_image and
+    // cover_image never replace it — cover_image only leads the photos section.
     //   music_file / music_url + song_title → «Play our song» on the cover
     //   closing_line + thanks_message → the ending      accent_color → petals, buttons, hearts
     // Empty fields fall back to gentle generic wording. On demo pages $invitation is null → all unlocked.
@@ -71,6 +73,15 @@
         return ['src' => $src, 'title' => $title, 'sub' => $sub];
     })->all();
 
+    // scratch cards: photos 4–7 (after the letter's 3 prints); a gallery of 6 or fewer starts from photo 1
+    $scratchDefaults = ['my favorite kind of day', 'right here, with you', 'that night we laughed', 'us, always'];
+    $scratchFrom = count($gallery) > 6 ? 3 : 0;
+    $scratchCards = $gallery ? collect(range(0, min(4, count($gallery)) - 1))->map(function ($k) use ($gallery, $scratchFrom, $scratchDefaults) {
+        $g = $gallery[($scratchFrom + $k) % count($gallery)];
+
+        return ['src' => $g['src'], 'caption' => $g['title'] !== '' ? $g['title'] : $scratchDefaults[$k]];
+    })->all() : [];
+
     // together since (past date) or a countdown to the day (future date)
     $date = null;
     if ($isUnlocked('event_date') && $text('event_date') !== '') {
@@ -100,7 +111,6 @@
 
     $accent = preg_match('/^#[0-9a-f]{6}$/i', $text('accent_color')) ? $text('accent_color') : '#e8789a';
 
-    $bgPhoto = ! empty($fields['background_image']) && $isUnlocked('background_image') ? $resolveUrl($fields['background_image']) : null;
     $video = 'images/invitations/assets/videos/river-love-loop.mp4';
     $poster = 'images/invitations/assets/videos/river-love-poster.jpg';
     $videoPortrait = 'images/invitations/assets/videos/river-love-portrait-loop.mp4';
@@ -137,18 +147,14 @@
 
   {{-- one video background behind the whole page (fixed; every section sits on it) --}}
   <div class="rl-media" aria-hidden="true">
-    @if ($bgPhoto)
-      <img class="rl-photo" src="{{ $bgPhoto }}" alt="">
-    @else
-      {{-- portrait screens (phones) get the portrait cut; river-love.js swaps it when the phone is rotated --}}
-      <video class="rl-video" id="rlVideo" autoplay muted loop playsinline preload="auto" disablepictureinpicture
-        poster="{{ $rlAsset($poster) }}"
-        data-landscape="{{ $rlAsset($video) }}" data-landscape-poster="{{ $rlAsset($poster) }}"
-        data-portrait="{{ $rlAsset($videoPortrait) }}" data-portrait-poster="{{ $rlAsset($posterPortrait) }}">
-        <source src="{{ $rlAsset($videoPortrait) }}" type="video/mp4" media="(orientation: portrait)">
-        <source src="{{ $rlAsset($video) }}" type="video/mp4">
-      </video>
-    @endif
+    {{-- portrait screens (phones) get the portrait cut; river-love.js swaps it when the phone is rotated --}}
+    <video class="rl-video" id="rlVideo" autoplay muted loop playsinline preload="auto" disablepictureinpicture
+      poster="{{ $rlAsset($poster) }}"
+      data-landscape="{{ $rlAsset($video) }}" data-landscape-poster="{{ $rlAsset($poster) }}"
+      data-portrait="{{ $rlAsset($videoPortrait) }}" data-portrait-poster="{{ $rlAsset($posterPortrait) }}">
+      <source src="{{ $rlAsset($videoPortrait) }}" type="video/mp4" media="(orientation: portrait)">
+      <source src="{{ $rlAsset($video) }}" type="video/mp4">
+    </video>
     <div class="rl-shade"></div>
   </div>
 
@@ -301,6 +307,26 @@
   </section>
 
   </div>
+
+  {{-- ─────────── scratch to remember: the shared scratch-card component (up to 4) ───────────
+       photos 4–7 of the gallery (the first three are the letter's prints; a small gallery starts over),
+       their caption titles under each card. Revealed cards open in the photo preview and drop petals. --}}
+  @if ($scratchCards)
+    <section class="rl-sec rl-scratch" id="rlScratch">
+      <p class="rl-kicker rl-rv">Scratch to remember</p>
+      <h2 class="rl-h2 rl-rv">If I could live a moment twice…</h2>
+      <div class="rl-scratch-grid" style="--n: {{ count($scratchCards) }}">
+        @foreach ($scratchCards as $i => $card)
+          <x-scratch-card class="rl-scratch-card rl-rv" style="--d: {{ $i * .12 }}s; --tilt: {{ [-2.5, 2, -1.5, 2.5][$i % 4] }}deg"
+            :caption="$card['caption']" cover="scratch me" hint="scratch to see" label="Scratch to reveal photo {{ $i + 1 }}">
+            <button type="button" class="rl-ph-btn" data-full="{{ $card['src'] }}" data-cap="{{ $card['caption'] }}" aria-label="Open photo {{ $i + 1 }}">
+              <img src="{{ $card['src'] }}" alt="" loading="lazy" decoding="async" draggable="false">
+            </button>
+          </x-scratch-card>
+        @endforeach
+      </div>
+    </section>
+  @endif
 
   {{-- ─────────── photos: tilted film reels sliding forever ───────────
        three white bands of framed photos on a pale sky, tilted, each row sliding the other way.

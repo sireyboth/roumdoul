@@ -32,6 +32,11 @@ template, fill in details in their dashboard, and send one personalized link per
 - Payment is manual for now: checkout creates a `pending_payment` order and sends a Telegram
   alert, then an admin confirms payment (ABA/Wing/QR) and marks the order `paid` in Filament,
   which unlocks the invitation. Online automatic payment comes later. Don't build it unless asked.
+- Customer photo uploads (dashboard image + gallery fields, GIFs included) are **3 MB max** per
+  file. Keep `InvitationManagePage::MAX_UPLOAD_KB` / `MAX_GIF_KB` (3072) and the UI/lang texts in
+  step. `config/livewire.php` `temporary_file_upload.rules` (20 MB) is only a safety ceiling, so
+  leave it. The browser shrinks photos to 1600px before sending
+  (`resources/js/modules/photoUploader.js`), so the cap applies to the file that is sent.
 - Guest-facing invitation pages are always Khmer; the rest of the site defaults to English.
 - On demo pages `$invitation` is `null` — treat that as "every premium field unlocked".
 - Every move to a new page must have a transition. Internal links use `wire:navigate` (or

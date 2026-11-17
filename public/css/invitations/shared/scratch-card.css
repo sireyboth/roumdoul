@@ -1,0 +1,46 @@
+/* Shared scratch-off card (resources/views/components/scratch-card.blade.php, public/js/invitations/shared/scratch-card.js).
+   Rules use :where() (zero specificity) so a template's own styles always win. Theme with the --inv-scratch-* variables. */
+:where(.inv-scratch){ position:relative; display:block; -webkit-tap-highlight-color:transparent; outline:none; }
+:where(.inv-scratch):focus-visible{ outline:2px solid var(--inv-scratch-accent, #d65f7f); outline-offset:4px; }
+:where(.inv-scratch *){ box-sizing:border-box; }
+
+:where(.inv-scratch__face){
+  position:relative; aspect-ratio:var(--inv-scratch-ratio, 4/5); overflow:hidden; isolation:isolate;
+  border-radius:var(--inv-scratch-radius, 0); background:#eee;
+}
+:where(.inv-scratch__img){ position:absolute; inset:0; width:100%; height:100%; display:block; object-fit:cover; }
+/* the foil: only catches the finger once the script has painted it; fades away after the reveal */
+:where(.inv-scratch__foil){
+  position:absolute; inset:0; z-index:5; width:100%; height:100%; display:block;
+  pointer-events:none; touch-action:none; transition:opacity .7s ease;
+}
+:where(.inv-scratch.is-ready:not(.is-revealed) .inv-scratch__foil){ pointer-events:auto; cursor:grab; }
+:where(.inv-scratch.is-ready:not(.is-revealed) .inv-scratch__foil):active{ cursor:grabbing; }
+:where(.inv-scratch.is-revealed .inv-scratch__foil){ opacity:0; }
+:where(.inv-scratch.is-revealed .inv-scratch__img){ animation:inv-scratch-pop 1.2s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes inv-scratch-pop{ from{ transform:scale(1.15); } to{ transform:none; } }
+
+/* caption row: the hint while it's covered, the caption once revealed (both shown without JavaScript is fine:
+   the hint only appears once the foil is painted) */
+:where(.inv-scratch__cap){ position:relative; margin:8px 0 0; min-height:2.4em; line-height:1.2; display:grid; place-items:center; text-align:center; }
+:where(.inv-scratch__hint), :where(.inv-scratch__txt){ grid-area:1/1; transition:opacity .6s ease; }
+:where(.inv-scratch__hint){
+  font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; opacity:0;
+  color:var(--inv-scratch-hint-color, rgba(31,30,27,.6));
+}
+:where(.inv-scratch__txt){ font-family:var(--inv-scratch-cap-font, inherit); font-size:clamp(.8rem,3vw,1rem); color:var(--inv-scratch-cap-color, inherit); }
+:where(.inv-scratch.is-ready:not(.is-revealed) .inv-scratch__hint){ opacity:1; }
+:where(.inv-scratch.is-ready:not(.is-revealed) .inv-scratch__txt){ opacity:0; }
+
+/* stamp: perforated postage-stamp frame (the Rose Bloom look) */
+:where(.inv-scratch--stamp){
+  padding:13px 13px 10px; filter:drop-shadow(0 12px 12px rgba(0,0,0,.35));
+  background:radial-gradient(circle at 7px 7px, rgba(0,0,0,0) 4.6px, var(--inv-scratch-frame, #fdfcf8) 5.1px) -7px -7px / 14px 14px;
+}
+:where(.inv-scratch--stamp)::before{ content:""; position:absolute; inset:5px; background:var(--inv-scratch-frame, #fdfcf8); }
+:where(.inv-scratch--stamp .inv-scratch__face){ box-shadow:0 0 0 1px rgba(31,30,27,.25); }
+
+@media (prefers-reduced-motion: reduce){
+  :where(.inv-scratch__foil), :where(.inv-scratch__hint), :where(.inv-scratch__txt){ transition:none; }
+  :where(.inv-scratch.is-revealed .inv-scratch__img){ animation:none; }
+}

@@ -85,9 +85,9 @@ class InvitationManagePage extends Component
     protected const WIDE_CARD_TYPES = ['schedule', 'story'];
 
     /** Per-photo upload cap (KB); keep in step with livewire.temporary_file_upload.rules. */
-    public const MAX_UPLOAD_KB = 20480;
+    public const MAX_UPLOAD_KB = 3072;
 
-    public const MAX_GIF_KB = 5120;
+    public const MAX_GIF_KB = 3072;
 
     /** Default gallery size when the invitation's plan leaves `max_gallery_photos` blank. */
     public const MAX_GALLERY_PHOTOS = 20;
@@ -619,9 +619,9 @@ class InvitationManagePage extends Component
     }
 
     /**
-     * Rules for pending photo uploads. Photos may be up to MAX_UPLOAD_KB (a full-resolution
-     * phone photo) because ImageOptimizer shrinks them before storing; GIFs are stored as-is
-     * to keep their animation, so they keep a tighter cap. A gallery's saved photos plus the
+     * Rules for pending photo uploads. Every photo (GIFs too) is capped at MAX_UPLOAD_KB = 3 MB
+     * (see CLAUDE.md); the browser shrinks big photos before sending, so this applies to the file
+     * that arrives. GIFs are stored as-is to keep their animation. A gallery's saved photos plus the
      * new ones may not exceed the plan's gallery limit (Invitation::maxGalleryPhotos()).
      */
     protected function uploadRules(): array
@@ -673,7 +673,7 @@ class InvitationManagePage extends Component
     /**
      * Livewire rejects files over livewire.temporary_file_upload's cap (or a dropped
      * connection) before updated() ever runs, with a raw "The imageUploads.cover_image field
-     * must not be greater than 20480 kilobytes." — swap that for a message a customer can read.
+     * must not be greater than 3072 kilobytes." — swap that for a message a customer can read.
      */
     public function _uploadErrored($name, $errorsInJson, $isMultiple)
     {
@@ -1043,7 +1043,15 @@ class InvitationManagePage extends Component
 
     public function render()
     {
-        $recipients = $this->invitation->recipients;
+        // One aggregate query instead of loading every guest — render runs on every upload and
+        // keystroke round-trip, so hydrating hundreds of recipients each time adds up.
+        $counts = $this->invitation->recipients()->toBase()
+            ->selectRaw('count(*) as recipients')
+            ->selectRaw('count(viewed_at) as viewed')
+            ->selectRaw("sum(case when rsvp_status = 'yes' then 1 else 0 end) as attending")
+            ->selectRaw("sum(case when rsvp_status = 'no' then 1 else 0 end) as declined")
+            ->selectRaw('count(revoked_at) as paused')
+            ->first();
         $templateFields = $this->invitation->template->fields ?? [];
 
         return view('livewire.pages.dashboard.invitation-manage-page', [
@@ -1053,11 +1061,11 @@ class InvitationManagePage extends Component
             'responseList' => $this->section === 'responses' ? $this->guestPage('responsesPage') : null,
             'hasGuestFilters' => $this->guestSearch !== '' || $this->guestFilter !== '' || $this->responseFilter !== '' || $this->guestSort !== 'newest',
             'stats' => [
-                'recipients' => $recipients->count(),
-                'viewed' => $recipients->whereNotNull('viewed_at')->count(),
-                'attending' => $recipients->where('rsvp_status', 'yes')->count(),
-                'declined' => $recipients->where('rsvp_status', 'no')->count(),
-                'paused' => $recipients->whereNotNull('revoked_at')->count(),
+                'recipients' => (int) $counts->recipients,
+                'viewed' => (int) $counts->viewed,
+                'attending' => (int) $counts->attending,
+                'declined' => (int) $counts->declined,
+                'paused' => (int) $counts->paused,
                 'fields' => count($templateFields),
                 'filled' => collect($templateFields)
                     ->filter(fn (string $key) => filled($this->invitation->field_values[$key] ?? null))

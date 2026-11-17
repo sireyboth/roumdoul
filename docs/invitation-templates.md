@@ -165,6 +165,26 @@ invitations if not handled carefully) — instead it has a **"Manage pricing & p
 that takes you straight to that product's normal Service edit screen, where pricing plans work
 exactly like they do for every other product in the shop.
 
+## Shared scratch-off card (`<x-scratch-card>`)
+
+`resources/views/components/scratch-card.blade.php` (JS `public/js/invitations/shared/scratch-card.js`, CSS
+`public/css/invitations/shared/scratch-card.css`, both loaded once by the component). A foil the guest rubs away
+to reveal a photo or any content; past `threshold` (default .45) the rest melts away. Used by River Love's
+«If I could live a moment twice…» section (Rose Bloom still has its own built-in stamps).
+
+```blade
+<x-scratch-card :src="$photo" caption="that night we laughed" />
+<x-scratch-card stamp :src="$photo" :caption="$caption" />          {{-- perforated postage-stamp frame --}}
+<x-scratch-card cover="open me" :heart="false"><p>Save the date!</p></x-scratch-card>
+```
+
+Props: `src`, `alt`, `caption`, `hint` (shown until revealed), `cover` (script text on the foil), `heart`,
+`ratio` (default `4/5`), `threshold`, `sound` / `revealSound` (`true` = shared sfx, a URL, or `false`), `stamp`,
+`label` (aria). Theme with `--inv-scratch-foil` (comma list of colours), `--inv-scratch-ink`, `--inv-scratch-accent`,
+`--inv-scratch-font`, `--inv-scratch-radius`, `--inv-scratch-frame`, `--inv-scratch-cap-font`/`-cap-color`/`-hint-color`.
+Buttons/links in the slot (e.g. a lightbox button) can't be focused or tapped until revealed. A revealed card fires
+a bubbling `inv-scratch:reveal` event; `window.InvScratch.setMuted(bool)` hooks it to a template's mute button.
+
 ## Things that are NOT per-template concerns
 
 - Pricing, recipient limits, retention, feature unlocks → all on `Service`/`ServicePlan`, not

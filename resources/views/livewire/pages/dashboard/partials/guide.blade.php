@@ -100,7 +100,7 @@
     ['icon' => 'check-circle', 'text' => __('Press Save to keep your changes. Guests see edits right away — no need to send new links.')],
     ['icon' => 'users', 'text' => __('Up to :max guests. Removing a guest = their link stops working.', ['max' => $invitation->max_recipients])],
     $invitation->expires_at ? ['icon' => 'clock', 'text' => __('Active until :date. After that, the links close.', ['date' => $invitation->expires_at->format('d M Y')])] : null,
-    ['icon' => 'photo', 'text' => __('JPG/PNG/WebP photos ≤ 20 MB · GIF ≤ 5 MB.')],
+    ['icon' => 'photo', 'text' => __('JPG/PNG/WebP/GIF photos ≤ 3 MB.')],
   ]) as $note)
     <div class="flex items-start gap-3 rounded-xl border border-plum-200 bg-white p-4 dark:border-plum-800 dark:bg-plum-900">
       <x-app-icon :name="$note['icon']" class="mt-0.5 h-5 w-5 shrink-0 text-brand-600 dark:text-brand-400" />

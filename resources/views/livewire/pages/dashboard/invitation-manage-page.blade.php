@@ -327,7 +327,7 @@
             <div class="h-full rounded-full bg-brand-500" style="width: {{ $usage }}%"></div>
           </div>
 
-          @if ($invitation->recipients->count() < $invitation->max_recipients)
+          @if ($stats['recipients'] < $invitation->max_recipients)
             <form wire:submit="addRecipient" class="mt-5 flex gap-2">
               <input type="text" wire:model="newRecipientName" placeholder="{{ __("Guest's name") }}"
                 wire:loading.attr="disabled" wire:target="addRecipient"
@@ -509,14 +509,14 @@
                           <x-app-icon :name="$recipient->revoked_at ? 'play' : 'pause'" class="h-4 w-4" />
                           {{ $recipient->revoked_at ? __('Restore link') : __('Pause link') }}
                         </button>
-                        <button type="button" wire:click="rotateRecipient({{ $recipient->id }})" @click="open = false"
-                          wire:confirm="{{ __('Create a new link for :name? The old link will stop working.', ['name' => $recipient->recipient_name]) }}"
+                        <button type="button"
+                          @click="open = false; $dispatch('confirm-action', { method: 'rotateRecipient', id: {{ $recipient->id }}, tone: 'brand', icon: 'arrow-path', title: @js(__('Make a new link for «:name»?', ['name' => $recipient->recipient_name])), body: @js(__('The old link stops working right away. Send the new link to them again so they can still open the invitation.')), confirm: @js(__('Make new link')) })"
                           class="flex w-full items-center gap-2 px-3 py-2 text-left text-plum-700 hover:bg-plum-50 dark:text-plum-200 dark:hover:bg-plum-800">
                           <x-app-icon name="arrow-path" class="h-4 w-4" /> {{ __('New link') }}
                         </button>
                         <div class="my-1 border-t border-plum-100 dark:border-plum-800"></div>
-                        <button type="button" wire:click="removeRecipient({{ $recipient->id }})" @click="open = false"
-                          wire:confirm="{{ __('Remove :name? Their link will stop working.', ['name' => $recipient->recipient_name]) }}"
+                        <button type="button"
+                          @click="open = false; $dispatch('confirm-action', { method: 'removeRecipient', id: {{ $recipient->id }}, tone: 'danger', icon: 'trash', title: @js(__('Remove «:name»?', ['name' => $recipient->recipient_name])), body: @js(__('Their link stops working right away. This can’t be undone.')), confirm: @js(__('Remove')) })"
                           class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
                           <x-app-icon name="trash" class="h-4 w-4" /> {{ __('Remove') }}
                         </button>
@@ -626,4 +626,46 @@
       @endif
     </div>
   </main>
+  {{-- ───────── Confirm dialog (New link / Remove a guest) ─────────
+       Rows open it with $dispatch('confirm-action', { method, id, tone, icon, title, body, confirm });
+       it calls that Livewire method only after the customer confirms. Always in the page and toggled
+       with x-show, so it animates in and out. --}}
+  <div x-data="{ open: false, busy: false, d: {} }" x-cloak
+    x-on:confirm-action.window="d = $event.detail; busy = false; open = true; $nextTick(() => $refs.confirmBtn.focus())"
+    @keydown.escape.window="if (open && !busy) open = false">
+    <div x-show="open" class="fixed inset-0 z-[70] flex items-end justify-center p-4 sm:items-center">
+      <div class="absolute inset-0 bg-plum-950/60 backdrop-blur-sm" @click="if (!busy) open = false"
+        x-show="open"
+        x-transition:enter="transition-opacity ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+
+      <div role="alertdialog" aria-modal="true" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-body"
+        class="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white p-6 shadow-2xl dark:bg-plum-900"
+        x-show="open"
+        x-transition:enter="transition ease-out duration-300 motion-reduce:transition-none" x-transition:enter-start="opacity-0 translate-y-8 sm:translate-y-3 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+        x-transition:leave="transition ease-in duration-200 motion-reduce:transition-none" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-8 sm:translate-y-3 sm:scale-95">
+        <span class="flex h-11 w-11 items-center justify-center rounded-full"
+          :class="d.tone === 'danger' ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400' : 'bg-brand-50 text-brand-700 dark:bg-plum-800 dark:text-brand-300'">
+          <span x-show="d.icon === 'trash'"><x-app-icon name="trash" class="h-6 w-6" /></span>
+          <span x-show="d.icon !== 'trash'"><x-app-icon name="arrow-path" class="h-6 w-6" /></span>
+        </span>
+        <h2 id="confirm-action-title" class="mt-4 text-lg font-extrabold text-plum-900 dark:text-white" x-text="d.title"></h2>
+        <p id="confirm-action-body" class="mt-1 text-sm text-plum-500 dark:text-plum-400" x-text="d.body"></p>
+
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" @click="open = false" :disabled="busy"
+            class="rounded-full border border-plum-200 px-5 py-2.5 text-sm font-semibold text-plum-700 hover:bg-plum-50 disabled:opacity-50 dark:border-plum-700 dark:text-plum-200 dark:hover:bg-plum-800">
+            {{ __('Cancel') }}
+          </button>
+          <button type="button" x-ref="confirmBtn" :disabled="busy"
+            @click="busy = true; $wire.call(d.method, d.id).finally(() => { busy = false; open = false })"
+            :class="d.tone === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-brand-600 hover:bg-brand-700'"
+            class="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60">
+            <svg x-show="busy" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"/><path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <span x-text="d.confirm"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

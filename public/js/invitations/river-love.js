@@ -478,6 +478,7 @@
     if (on) stopSong();
     else birds.start();
     birds.refresh();
+    if (window.InvScratch) window.InvScratch.setMuted(on); // the scratch cards' sounds follow the sound button
   }
   if (soundBtn) {
     soundBtn.addEventListener('click', function () { setMuted(!muted); });
@@ -492,7 +493,14 @@
     dropPetals(e.clientX, e.clientY, 0.85 + Math.random() * 0.3);
   }, true);
 
-  /* ─────────── photo preview ─────────── */
+  /* ─────────── scratch cards (shared component): a revealed card bursts into petals ─────────── */
+  root.addEventListener('inv-scratch:reveal', function (e) {
+    if (!dropPetals) return;
+    var r = e.target.getBoundingClientRect();
+    dropPetals(r.left + r.width / 2, r.top + r.height * .45, 1.2);
+  });
+
+    /* ─────────── photo preview ─────────── */
   var lb = document.getElementById('rlLb');
   if (lb) {
     var img = document.getElementById('rlLbImg'), cap = document.getElementById('rlLbCap'), last = null;

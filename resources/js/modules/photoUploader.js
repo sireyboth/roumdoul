@@ -2,16 +2,21 @@
 //
 // Instead of letting `wire:model` push the raw file, it:
 //  - rejects wrong types / oversized files / too many gallery photos before anything is sent,
-//  - shrinks big photos in the browser (an 18 MB phone photo becomes ~1-2 MB), since the
-//    server scales everything down to 1600px anyway,
+//  - shrinks every photo in the browser to the server's 1600px / q0.82 (an 18 MB phone photo
+//    becomes ~300-600 KB), since the server scales everything down to that anyway — sending
+//    more pixels only makes the upload slower on a phone connection,
+//  - decodes photos two at a time, so picking 20 phone photos doesn't decode ~1 GB of bitmaps
+//    at once and stall (or crash) the phone,
 //  - locks the picker (and the form's Save button) while an upload runs, so it can't be spammed,
 //  - shows progress, can be cancelled, and gives up with a message if the upload stalls.
 
 import { t } from './i18n.js'
 
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-const MAX_EDGE = 2560
-const SHRINK_ABOVE_BYTES = 1.5 * 1024 * 1024
+const MAX_EDGE = 1600 // keep in step with App\Services\ImageOptimizer::MAX_EDGE
+const QUALITY = 0.82 // ImageOptimizer::QUALITY
+const SHRINK_ABOVE_BYTES = 300 * 1024
+const SHRINK_CONCURRENCY = 2
 const STALL_MS = 45000
 
 async function shrink(file) {
@@ -28,7 +33,7 @@ async function shrink(file) {
 
     // PNG/WebP may have transparency, so keep them as WebP; everything else becomes JPEG.
     const type = file.type === 'image/jpeg' ? 'image/jpeg' : 'image/webp'
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, type, 0.85))
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, type, QUALITY))
     if (!blob || blob.size >= file.size) return file
 
     const name = file.name.replace(/\.[^.]+$/, '') + (type === 'image/jpeg' ? '.jpg' : '.webp')
@@ -38,9 +43,23 @@ async function shrink(file) {
   }
 }
 
+// Runs `fn` over `items` with at most `limit` in flight, keeping the input order.
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length)
+  let next = 0
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++
+      out[i] = await fn(items[i])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return out
+}
+
 // `data-room` on the component root holds how many more gallery photos fit; it's read at pick
 // time because Livewire re-renders it after every upload/removal.
-export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 }) {
+export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) {
   return {
     busy: false,
     preparing: false,
@@ -76,7 +95,7 @@ export function photoUploader({ name, multiple = false, maxMb = 20, gifMb = 5 })
 
       this.start()
       this.preparing = true
-      const ready = await Promise.all(files.map(shrink))
+      const ready = await mapLimit(files, SHRINK_CONCURRENCY, shrink)
       this.preparing = false
 
       const tooBig = ready.find((file) => file.size > maxMb * 1024 * 1024)

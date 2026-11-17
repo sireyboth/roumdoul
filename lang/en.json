@@ -136,7 +136,6 @@
     "Cover image": "Cover image",
     "Cover image and photos": "Cover image and photos",
     "Create a new account": "Create a new account",
-    "Create a new link for :name? The old link will stop working.": "Create a new link for :name? The old link will stop working.",
     "Create an account": "Create an account",
     "Create an account | ROUMDOUL": "Create an account | ROUMDOUL",
     "Created :date": "Created :date",
@@ -236,8 +235,8 @@
     "Is there a guarantee if an account has a problem?": "Is there a guarantee if an account has a problem?",
     "It started with a simple idea: bring world-class digital apps to people in Cambodia, without the hassle.": "It started with a simple idea: bring world-class digital apps to people in Cambodia, without the hassle.",
     "Items": "Items",
-    "JPG, PNG or WebP · up to 20 MB": "JPG, PNG or WebP · up to 20 MB",
-    "JPG/PNG/WebP photos ≤ 20 MB · GIF ≤ 5 MB.": "JPG/PNG/WebP photos ≤ 20 MB · GIF ≤ 5 MB.",
+    "JPG, PNG or WebP · up to 3 MB": "JPG, PNG or WebP · up to 3 MB",
+    "JPG/PNG/WebP/GIF photos ≤ 3 MB.": "JPG/PNG/WebP/GIF photos ≤ 3 MB.",
     "Khmer date (lunar)": "Khmer date (lunar)",
     "Know when the guest has opened it": "Know when the guest has opened it",
     "Language": "Language",
@@ -406,7 +405,6 @@
     "Reload": "Reload",
     "Remember me": "Remember me",
     "Remove": "Remove",
-    "Remove :name? Their link will stop working.": "Remove :name? Their link will stop working.",
     "Remove photo": "Remove photo",
     "Remove song": "Remove song",
     "Removed «:name» — their link no longer works.": "Removed «:name» — their link no longer works.",
@@ -643,5 +641,10 @@
     "Song title": "Song title",
     "The name of your song, written on the cassette tape label. Add the song itself in the music fields.": "The name of your song, written on the cassette tape label. Add the song itself in the music fields.",
     "Closing line": "Closing line",
-    "The last big line they see at the very end, e.g. «I love you, always.»": "The last big line they see at the very end, e.g. «I love you, always.»"
+    "The last big line they see at the very end, e.g. «I love you, always.»": "The last big line they see at the very end, e.g. «I love you, always.»",
+    "Make a new link for «:name»?": "Make a new link for «:name»?",
+    "The old link stops working right away. Send the new link to them again so they can still open the invitation.": "The old link stops working right away. Send the new link to them again so they can still open the invitation.",
+    "Make new link": "Make new link",
+    "Remove «:name»?": "Remove «:name»?",
+    "Their link stops working right away. This can’t be undone.": "Their link stops working right away. This can’t be undone."
 }

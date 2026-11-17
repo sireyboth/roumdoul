@@ -35,7 +35,7 @@
       @else
         <x-app-icon name="upload" class="h-6 w-6 text-plum-400 group-hover:text-brand-500" />
         <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">{{ __('Click to upload photo') }}</span>
-        <span class="text-[11px] text-plum-400">{{ __('JPG, PNG or WebP · up to 20 MB') }}</span>
+        <span class="text-[11px] text-plum-400">{{ __('JPG, PNG or WebP · up to 3 MB') }}</span>
       @endif
 
       <div x-show="busy" style="display: none" class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/85 dark:bg-plum-900/85">

@@ -132,7 +132,6 @@
     "Cover image": "រូបភាពគម្រប",
     "Cover image and photos": "រូបភាពគម្រប និងរូបថតនានា",
     "Create a new account": "បង្កើតគណនីថ្មី",
-    "Create a new link for :name? The old link will stop working.": "តើអ្នកចង់បង្កើតតំណភ្ជាប់ថ្មីសម្រាប់ :name មែនទេ? តំណភ្ជាប់ចាស់នឹងលែងដំណើរការ។",
     "Create an account": "បង្កើតគណនី",
     "Create an account | ROUMDOUL": "បង្កើតគណនី | ROUMDOUL",
     "Created :date": "បានបង្កើតនៅ :date",
@@ -233,8 +232,8 @@
     "Is there a guarantee if an account has a problem?": "តើមានការធានាដែរឬទេ ប្រសិនបើគណនីមានបញ្ហា?",
     "It started with a simple idea: bring world-class digital apps to people in Cambodia, without the hassle.": "អ្វីៗចាប់ផ្ដើមចេញពីគំនិតដ៏សាមញ្ញមួយ៖ គឺការនាំយកកម្មវិធីឌីជីថលលំដាប់ថ្នាក់ពិភពលោក មកកាន់ប្រជាជននៅកម្ពុជា ដោយមិនចាំបាច់មានភាពស្មុគស្មាញ។",
     "Items": "ទំនិញ",
-    "JPG, PNG or WebP · up to 20 MB": "JPG, PNG ឬ WebP · ទំហំអតិបរមា ២០ MB",
-    "JPG/PNG/WebP photos ≤ 20 MB · GIF ≤ 5 MB.": "រូបភាពទម្រង់ JPG/PNG/WebP ≤ 20 MB · ឯកសារ GIF ≤ 5 MB។",
+    "JPG, PNG or WebP · up to 3 MB": "JPG, PNG ឬ WebP · ទំហំអតិបរមា ៣ MB",
+    "JPG/PNG/WebP/GIF photos ≤ 3 MB.": "រូបភាពទម្រង់ JPG/PNG/WebP/GIF ≤ 3 MB។",
     "Khmer date (lunar)": "កាលបរិច្ឆេទខ្មែរ (ចន្ទគតិ)",
     "Know when the guest has opened it": "អាចដឹងនៅពេលដែលភ្ញៀវបានបើកមើល",
     "Language": "ភាសា",
@@ -392,7 +391,6 @@
     "Reload": "ផ្ទុកឡើងវិញ",
     "Remember me": "ចងចាំខ្ញុំ",
     "Remove": "ដកចេញ",
-    "Remove :name? Their link will stop working.": "តើអ្នកចង់លុប :name មែនទេ? តំណភ្ជាប់របស់ពួកគេនឹងលែងដំណើរការ។",
     "Remove photo": "លុបរូបថតចេញ",
     "Remove song": "លុបបទចម្រៀងចេញ",
     "Removed «:name» — their link no longer works.": "បានលុប «:name» រួចរាល់ — តំណភ្ជាប់របស់ពួកគេលែងដំណើរការហើយ។",
@@ -627,5 +625,10 @@
     "Song title": "ចំណងជើងបទចម្រៀង",
     "The name of your song, written on the cassette tape label. Add the song itself in the music fields.": "ឈ្មោះបទចម្រៀងរបស់អ្នក ដែលសរសេរលើស្លាកកាសែត។ សូមបញ្ចូលបទចម្រៀងផ្ទាល់នៅក្នុងប្រអប់តន្ត្រី។",
     "Closing line": "ឃ្លាបញ្ចប់",
-    "The last big line they see at the very end, e.g. «I love you, always.»": "ឃ្លាធំចុងក្រោយដែលគាត់ឃើញនៅទីបញ្ចប់ ឧ. «ខ្ញុំស្រលាញ់អ្នកជានិច្ច»។"
+    "The last big line they see at the very end, e.g. «I love you, always.»": "ឃ្លាធំចុងក្រោយដែលគាត់ឃើញនៅទីបញ្ចប់ ឧ. «ខ្ញុំស្រលាញ់អ្នកជានិច្ច»។",
+    "Make a new link for «:name»?": "តើចង់បង្កើតតំណភ្ជាប់ថ្មីសម្រាប់ «:name» មែនទេ?",
+    "The old link stops working right away. Send the new link to them again so they can still open the invitation.": "តំណភ្ជាប់ចាស់នឹងលែងដំណើរការភ្លាមៗ។ សូមផ្ញើតំណភ្ជាប់ថ្មីទៅពួកគេម្តងទៀត ដើម្បីឲ្យពួកគេនៅតែអាចបើកការអញ្ជើញបាន។",
+    "Make new link": "បង្កើតតំណភ្ជាប់ថ្មី",
+    "Remove «:name»?": "តើចង់លុប «:name» មែនទេ?",
+    "Their link stops working right away. This can’t be undone.": "តំណភ្ជាប់របស់ពួកគេនឹងលែងដំណើរការភ្លាមៗ។ សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។"
 }
