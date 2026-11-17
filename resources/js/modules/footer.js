@@ -19,6 +19,7 @@ export function initFooter() {
   document.querySelectorAll('[data-social]').forEach((link) => {
     const url = socialLinks[link.getAttribute('data-social')]
     if (url) link.href = url
+    else link.hidden = true // no profile yet: don't show an icon that goes nowhere
   })
 
   document.querySelectorAll('[data-footer-phone]').forEach((link, index) => {
