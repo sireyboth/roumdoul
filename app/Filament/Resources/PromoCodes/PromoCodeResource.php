@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\PromoCodes;
 
-use App\Filament\Resources\PromoCodes\Pages\CreatePromoCode;
-use App\Filament\Resources\PromoCodes\Pages\EditPromoCode;
 use App\Filament\Resources\PromoCodes\Pages\ListPromoCodes;
 use App\Filament\Resources\PromoCodes\Schemas\PromoCodeForm;
 use App\Filament\Resources\PromoCodes\Tables\PromoCodesTable;
@@ -44,9 +42,8 @@ class PromoCodeResource extends Resource
     public static function getPages(): array
     {
         return [
+            // create + edit open in modals on the list page
             'index' => ListPromoCodes::route('/'),
-            'create' => CreatePromoCode::route('/create'),
-            'edit' => EditPromoCode::route('/{record}/edit'),
         ];
     }
 }

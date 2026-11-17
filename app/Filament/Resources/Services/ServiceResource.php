@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Services;
 
-use App\Filament\Resources\Services\Pages\CreateService;
-use App\Filament\Resources\Services\Pages\EditService;
 use App\Filament\Resources\Services\Pages\ListServices;
 use App\Filament\Resources\Services\Schemas\ServiceForm;
 use App\Filament\Resources\Services\Tables\ServicesTable;
@@ -44,9 +42,8 @@ class ServiceResource extends Resource
     public static function getPages(): array
     {
         return [
+            // create + edit open in modals on the list page
             'index' => ListServices::route('/'),
-            'create' => CreateService::route('/create'),
-            'edit' => EditService::route('/{record}/edit'),
         ];
     }
 }

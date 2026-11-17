@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Customers;
 
-use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
@@ -52,8 +51,8 @@ class CustomerResource extends Resource
     public static function getPages(): array
     {
         return [
+            // editing opens in a modal on the list page
             'index' => ListCustomers::route('/'),
-            'edit' => EditCustomer::route('/{record}/edit'),
         ];
     }
 }

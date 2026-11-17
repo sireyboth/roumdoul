@@ -123,6 +123,23 @@
           </div>
         </div>
 
+        @if ($isInvitation)
+          {{-- quantity on an invitation template = how many separate invitations, not how many guests --}}
+          <p @class(['mt-3 flex items-start gap-2 rounded-xl px-3.5 py-2.5 text-xs leading-relaxed',
+            'bg-gold-50 text-plum-700 dark:bg-plum-800 dark:text-plum-200' => $quantity > 1,
+            'text-plum-500 dark:text-plum-400' => $quantity <= 1])>
+            <x-app-icon name="light-bulb" class="mt-px h-4 w-4 shrink-0 text-gold-600 dark:text-gold-400" />
+            <span>
+              @if ($quantity > 1)
+                {{ __('You\'re buying :n separate invitations — each has its own details and its own guest links.', ['n' => $quantity]) }}
+              @else
+                {{ __('Each one is a separate invitation.') }}
+              @endif
+              {{ __('Need more guests? Choose a bigger plan — you can also add guests later from your dashboard.') }}
+            </span>
+          </p>
+        @endif
+
         @if ($canPurchase)
           <button type="button" wire:click="addToCart"
             class="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-700 sm:w-auto sm:px-10">

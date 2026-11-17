@@ -57,8 +57,13 @@ class InvitationShowController extends Controller
             return redirect($coverUrl);
         }
 
-        if (! $recipient->viewed_at) {
-            $recipient->update(['viewed_at' => now()]);
+        // guest stats: first open, how many visits (a refresh within 30 min isn't a new visit), latest visit
+        if (! $recipient->last_viewed_at || $recipient->last_viewed_at->lt(now()->subMinutes(30))) {
+            $recipient->forceFill([
+                'viewed_at' => $recipient->viewed_at ?? now(),
+                'last_viewed_at' => now(),
+                'open_count' => $recipient->open_count + 1,
+            ])->saveQuietly();
         }
 
         return view('invitations.show', [

@@ -7,6 +7,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -36,9 +38,13 @@ class UsersTable
                 SelectFilter::make('role')
                     ->options(UserForm::ROLES),
             ])
+            ->emptyStateIcon(Heroicon::OutlinedUsers)
+            ->emptyStateHeading('No admin users yet')
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->modalWidth(Width::FourExtraLarge),
+                DeleteAction::make()
+                    ->modalDescription('This person will no longer be able to log in to the admin panel.'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

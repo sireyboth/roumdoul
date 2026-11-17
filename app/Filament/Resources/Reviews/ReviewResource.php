@@ -31,7 +31,7 @@ class ReviewResource extends Resource
 
     public static function infolist(Schema $schema): Schema
     {
-        return $schema->components([
+        return $schema->columns(3)->components([
             TextEntry::make('email')->placeholder('—'),
             TextEntry::make('order.order_number')->label('Order #')->placeholder('—'),
             TextEntry::make('source')->formatStateUsing(fn (string $state) => $state === 'public_form' ? 'Feedback link' : 'Order'),

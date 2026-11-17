@@ -219,11 +219,37 @@ class InvitationTemplate extends Model
                 'max_gallery_photos' => $plan['max_gallery_photos'] ?? null,
                 'retention_months' => $plan['retention_months'] ?? null,
                 'features' => $plan['features'] ?? [],
+                // add-on prices (blank = not sold) — see docs «Add-ons»
+                'extra_guest_price' => filled($plan['extra_guest_price'] ?? null) ? $plan['extra_guest_price'] : null,
+                'extra_photo_price' => filled($plan['extra_photo_price'] ?? null) ? $plan['extra_photo_price'] : null,
+                'feature_prices' => self::normalizeFeaturePrices($plan['feature_prices'] ?? null),
+                'extend_price' => filled($plan['extend_price'] ?? null) ? $plan['extend_price'] : null,
+                'extend_months' => filled($plan['extend_months'] ?? null) ? (int) $plan['extend_months'] : null,
                 'sort_order' => $index,
             ]);
         }
 
         return $service;
+    }
+
+    /**
+     * feature_prices as {field_key: price}: accepts that shape or a repeater's [['key' => …, 'price' => …], …];
+     * drops unknown keys and blank/zero prices. Null when nothing is left.
+     */
+    public static function normalizeFeaturePrices(mixed $prices): ?array
+    {
+        if (! is_array($prices)) {
+            return null;
+        }
+        $pairs = array_is_list($prices)
+            ? collect($prices)->mapWithKeys(fn ($row) => [(string) ($row['key'] ?? $row['feature'] ?? '') => $row['price'] ?? null])
+            : collect($prices);
+        $valid = array_keys(self::premiumFieldOptions());
+        $clean = $pairs->filter(fn ($price, $key) => in_array($key, $valid, true) && is_numeric($price) && $price > 0)
+            ->map(fn ($price) => round((float) $price, 2))
+            ->all();
+
+        return $clean ?: null;
     }
 
     /**

@@ -21,7 +21,7 @@ class ImageOptimizer
     public const QUALITY = 82;
 
     /** Hard ceiling for a stored image: anything larger is compressed further. */
-    public const MAX_BYTES = 5 * 1024 * 1024;
+    public const MAX_BYTES = 3 * 1024 * 1024;
 
     /** Stores the optimized image under $directory on $disk and returns its path. */
     public function store(UploadedFile $file, string $directory, string $disk = 's3'): string

@@ -434,3 +434,93 @@ html.lang-entering body {
         transition: none;
     }
 }
+
+/* ── KHQR payment modal: 3D glass (resources/views/components/shop/payment-modal.blade.php) ────────────
+   A frosted, tinted glass card on a dark blurred backdrop. The card tilts a
+   little toward the pointer (desktop only), a light sheen follows it, and the QR floats above the glass
+   (translateZ). It flips up into view when it opens. Reduced motion: no tilt, a plain fade. */
+.pay-overlay { position: fixed; inset: 0; z-index: 80; }
+.pay-backdrop { position: absolute; inset: 0; overflow: hidden; background: rgb(20 10 18 / .6); backdrop-filter: blur(14px) saturate(130%); -webkit-backdrop-filter: blur(14px) saturate(130%); }
+
+.pay-stage { position: absolute; inset: 0; display: flex; padding: 16px; overflow-y: auto; overscroll-behavior: contain; perspective: 1400px; }
+/* the stage scrolls (not the card: overflow on the card would flatten its 3D); margin:auto centres it when it fits */
+.pay-card {
+  --rx: 0deg; --ry: 0deg; --mx: 30%; --my: 0%;
+  position: relative; width: min(100%, 25rem); margin: auto;
+  padding: 26px 22px 22px; border-radius: 28px; color: #fff; text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / .55), inset 0 -1px 0 rgb(255 255 255 / .08), inset 0 0 40px rgb(255 255 255 / .05),
+    0 2px 4px rgb(0 0 0 / .1), 0 24px 48px -12px rgb(30 0 20 / .55), 0 60px 120px -40px rgb(30 0 20 / .6);
+  transform: rotateX(var(--rx)) rotateY(var(--ry)); transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+}
+/* the frosted glass is its own layer: backdrop-filter on the card itself would flatten its 3D (no floating QR) */
+.pay-glass { position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  /* tinted enough to stay readable even where the browser can't blur what's behind */
+  background: linear-gradient(145deg, rgb(255 255 255 / .24), rgb(255 255 255 / .07) 42%, rgb(255 255 255 / .03)), rgb(72 18 52 / .74);
+  backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border: 1px solid rgb(255 255 255 / .28); }
+/* content sits above the glass layer */
+.pay-card > :not(.pay-glass):not(.pay-sheen):not(.pay-x) { position: relative; }
+.pay-sheen { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; mix-blend-mode: soft-light;
+  background: radial-gradient(circle at var(--mx) var(--my), rgb(255 255 255 / .55), transparent 55%); }
+.pay-x { position: absolute; top: 14px; right: 14px; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+  color: #fff; background: rgb(255 255 255 / .12); border: 1px solid rgb(255 255 255 / .22); transition: background .2s; transform: translateZ(30px); }
+.pay-x:hover, .pay-x:focus-visible { background: rgb(255 255 255 / .24); outline: none; }
+.pay-head { transform: translateZ(24px); }
+.pay-kicker { font-size: .68rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: rgb(255 255 255 / .7); }
+.pay-title { margin-top: 4px; font-size: 1.35rem; font-weight: 800; text-shadow: 0 2px 12px rgb(0 0 0 / .25); }
+.pay-amount { margin-top: 2px; font-size: 2.4rem; line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: #fff; text-shadow: 0 4px 14px rgb(0 0 0 / .25); }
+
+.pay-qr { position: relative; width: min(100%, 15rem); margin: 18px auto 0; padding: 10px; border-radius: 22px; background: #fff;
+  transform: translateZ(60px); box-shadow: 0 1px 0 rgb(255 255 255 / .9) inset, 0 18px 36px -12px rgb(0 0 0 / .55), 0 0 0 6px rgb(255 255 255 / .14); }
+.pay-qr img { display: block; width: 100%; border-radius: 14px; }
+.pay-qr-empty { display: grid; place-items: center; aspect-ratio: 1; padding: 18px; font-size: .8rem; color: #6b5563; }
+.pay-name { margin-top: 12px; font-size: .95rem; font-weight: 800; letter-spacing: .08em; transform: translateZ(30px); }
+.pay-save { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 9px 18px; border-radius: 999px; font-size: .8rem; font-weight: 700;
+  color: var(--color-brand-800); background: #fff; box-shadow: 0 8px 20px -8px rgb(0 0 0 / .45); transform: translateZ(36px); transition: transform .2s, box-shadow .2s; }
+.pay-save:hover { box-shadow: 0 12px 26px -8px rgb(0 0 0 / .5); }
+.pay-tip { margin: 8px auto 0; max-width: 18rem; font-size: .7rem; line-height: 1.4; color: rgb(255 255 255 / .7); }
+
+.pay-rows { margin-top: 18px; border-radius: 18px; text-align: left; background: rgb(255 255 255 / .1); border: 1px solid rgb(255 255 255 / .16); transform: translateZ(18px); }
+.pay-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; }
+.pay-row + .pay-row { border-top: 1px solid rgb(255 255 255 / .12); }
+.pay-row dt { font-size: .72rem; color: rgb(255 255 255 / .72); }
+.pay-row dd { display: flex; align-items: center; gap: 8px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .03em; }
+.pay-copy { padding: 4px 10px; border-radius: 999px; font-size: .68rem; font-weight: 700; color: #fff; background: rgb(255 255 255 / .16); border: 1px solid rgb(255 255 255 / .22); transition: background .2s; }
+.pay-copy:hover, .pay-copy:focus-visible { background: rgb(255 255 255 / .3); outline: none; }
+
+.pay-steps { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; text-align: left; counter-reset: pay; transform: translateZ(12px); }
+.pay-steps li { display: flex; gap: 10px; font-size: .82rem; line-height: 1.4; color: rgb(255 255 255 / .92); counter-increment: pay; }
+.pay-steps li::before { content: counter(pay); display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%;
+  font-size: .7rem; font-weight: 800; color: var(--color-brand-800); background: rgb(255 255 255 / .88); }
+.pay-done { margin-top: 16px; display: flex; gap: 8px; padding: 12px 14px; border-radius: 16px; text-align: left; font-size: .74rem; line-height: 1.5;
+  color: #eafff1; background: rgb(34 197 94 / .18); border: 1px solid rgb(134 239 172 / .3); transform: translateZ(12px); }
+
+/* open / close: the backdrop fades, the card flips up out of the page */
+.pay-fade-enter { transition: opacity .35s ease; } .pay-fade-leave { transition: opacity .25s ease; }
+.pay-fade-from { opacity: 0; } .pay-fade-to { opacity: 1; }
+.pay-card-enter { transition: transform .7s cubic-bezier(.16,1,.3,1), opacity .45s ease; }
+.pay-card-leave { transition: transform .25s ease-in, opacity .2s ease-in; }
+.pay-card-from { opacity: 0; transform: translateY(40px) rotateX(24deg) scale(.9); }
+.pay-card-to { opacity: 1; transform: rotateX(var(--rx)) rotateY(var(--ry)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pay-card, .pay-card-enter, .pay-card-leave { transition: opacity .2s ease; }
+  .pay-card-from { transform: none; }
+}
+
+/* wide screens: QR on the left, title + details on the right — a short, wide card instead of a tall one */
+.pay-body, .pay-left, .pay-info { transform-style: preserve-3d; }
+.pay-body { display: grid; grid-template-areas: "head" "left" "info"; }
+.pay-head { grid-area: head; } .pay-left { grid-area: left; } .pay-info { grid-area: info; }
+@media (min-width: 760px) {
+  .pay-card { width: min(100%, 54rem); padding: 30px 30px 26px; }
+  .pay-body { grid-template-columns: 17rem 1fr; grid-template-areas: "left head" "left info"; column-gap: 32px; align-items: start; }
+  .pay-head { text-align: left; padding-right: 44px; }
+  .pay-left { align-self: center; }
+  .pay-qr { width: 100%; margin-top: 0; }
+  .pay-rows { margin-top: 14px; }
+  .pay-steps { margin-top: 14px; gap: 6px; }
+  .pay-done { margin-top: 14px; }
+}

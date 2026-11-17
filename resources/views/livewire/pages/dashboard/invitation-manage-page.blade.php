@@ -6,6 +6,7 @@
     'program' => ['label' => __('Program'), 'icon' => 'calendar'],
     'guests' => ['label' => __('Guests'), 'icon' => 'users'],
     'responses' => ['label' => __('Responses'), 'icon' => 'chat'],
+    'addons' => ['label' => __('Add more'), 'icon' => 'sparkles'],
     'guide' => ['label' => __('Guide'), 'icon' => 'question'],
   ];
   $isPaid = $invitation->isPaid();
@@ -120,8 +121,8 @@
 
   <main class="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-10">
     @php
-      $wide = $section === 'guide' || ($isPaid && in_array($section, ['details', 'media', 'program'], true));
-      $roomy = in_array($section, ['guests', 'responses'], true);
+      $wide = $section === 'guide' || ($isPaid && in_array($section, ['details', 'media', 'program', 'addons'], true));
+      $roomy = in_array($section, ['guests', 'responses', 'overview'], true);
     @endphp
     {{-- Keyed by section: a new section is a new element, so the enter animation replays --}}
     <div wire:key="section-{{ $section }}" @class(['ws-enter mx-auto', 'max-w-none' => $wide, 'max-w-6xl' => $roomy && ! $wide, 'max-w-3xl' => ! $wide && ! $roomy])>
@@ -158,6 +159,47 @@
             </div>
           @endforeach
         </div>
+
+        {{-- guest stats: who opened their link, how often, and who answered --}}
+        @if ($stats['recipients'] > 0)
+          @php
+            $openPct = (int) round($stats['viewed'] / max(1, $stats['recipients']) * 100);
+            $waiting = max(0, $stats['recipients'] - $stats['attending'] - $stats['declined']);
+          @endphp
+          <div class="mt-6 grid gap-4 rounded-xl border border-plum-200 bg-white p-6 md:grid-cols-2 dark:border-plum-800 dark:bg-plum-900">
+            <div>
+              <h2 class="text-base font-bold text-plum-900 dark:text-white">{{ __('Guest stats') }}</h2>
+              <div class="mt-4 flex items-end justify-between gap-3">
+                <p class="text-3xl font-extrabold text-plum-900 dark:text-white">{{ $openPct }}%</p>
+                <p class="text-xs text-plum-500 dark:text-plum-400">{{ __(':viewed of :total guests opened · :opens visits', ['viewed' => $stats['viewed'], 'total' => $stats['recipients'], 'opens' => $stats['opens']]) }}</p>
+              </div>
+              <div class="mt-2 h-2 overflow-hidden rounded-full bg-plum-100 dark:bg-plum-800"><div class="h-full rounded-full bg-brand-600" style="width: {{ $openPct }}%"></div></div>
+              <dl class="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div class="rounded-lg bg-green-50 p-2 dark:bg-green-500/10"><dt class="text-[11px] font-semibold text-green-700 dark:text-green-400">{{ __('Attending') }}</dt><dd class="text-lg font-extrabold text-green-700 dark:text-green-400">{{ $stats['attending'] }}</dd></div>
+                <div class="rounded-lg bg-red-50 p-2 dark:bg-red-500/10"><dt class="text-[11px] font-semibold text-red-600 dark:text-red-400">{{ __('Not attending') }}</dt><dd class="text-lg font-extrabold text-red-600 dark:text-red-400">{{ $stats['declined'] }}</dd></div>
+                <div class="rounded-lg bg-plum-50 p-2 dark:bg-plum-800"><dt class="text-[11px] font-semibold text-plum-500 dark:text-plum-400">{{ __('No reply yet') }}</dt><dd class="text-lg font-extrabold text-plum-700 dark:text-plum-200">{{ $waiting }}</dd></div>
+              </dl>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-plum-700 dark:text-plum-200">{{ __('Recently opened') }}</h3>
+              @if ($recentOpeners->isEmpty())
+                <p class="mt-3 text-sm text-plum-400">{{ __('Nobody has opened their link yet.') }}</p>
+              @else
+                <ul class="mt-3 flex flex-col divide-y divide-plum-100 dark:divide-plum-800">
+                  @foreach ($recentOpeners as $r)
+                    <li class="flex items-center justify-between gap-3 py-2 text-sm">
+                      <span class="truncate font-semibold text-plum-800 dark:text-plum-100">{{ $r->recipient_name }}</span>
+                      <span class="shrink-0 text-xs text-plum-500 dark:text-plum-400">
+                        @if ($r->open_count > 1){{ __(':count×', ['count' => $r->open_count]) }} · @endif{{ ($r->last_viewed_at ?? $r->viewed_at)->diffForHumans(short: true) }}
+                      </span>
+                    </li>
+                  @endforeach
+                </ul>
+                <button type="button" wire:click="showSection('guests')" class="mt-2 text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400">{{ __('See all guests →') }}</button>
+              @endif
+            </div>
+          </div>
+        @endif
 
         @php
           $steps = [
@@ -352,7 +394,12 @@
             </div>
             @error('guestFile') <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
           @else
-            <p class="mt-5 text-sm text-plum-500 dark:text-plum-400">{{ __("You've used all :max guest links on this plan.", ['max' => $invitation->max_recipients]) }}</p>
+            <div class="mt-5 flex flex-wrap items-center gap-3">
+              <p class="text-sm text-plum-500 dark:text-plum-400">{{ __("You've used all :max guest links on this plan.", ['max' => $invitation->max_recipients]) }}</p>
+              @if ($this->addonOptions()['guests'] || $this->addonOptions()['upgrades'])
+                <button type="button" wire:click="showSection('addons')" class="rounded-full bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700">{{ __('Add more guests') }}</button>
+              @endif
+            </div>
           @endif
         </div>
 
@@ -448,8 +495,15 @@
                         <x-app-icon name="pause" class="h-3.5 w-3.5" /> {{ __('Paused') }}
                       </span>
                     @elseif ($recipient->viewed_at)
-                      <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400" title="{{ $recipient->viewed_at->format('d M Y H:i') }}">
-                        <x-app-icon name="eye" class="h-3.5 w-3.5" /> {{ __('Opened') }} · {{ $recipient->viewed_at->diffForHumans(short: true) }}
+                      @php $lastSeen = $recipient->last_viewed_at ?? $recipient->viewed_at; @endphp
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400"
+                        title="{{ __('First opened :first · last opened :last', ['first' => $recipient->viewed_at->format('d M Y H:i'), 'last' => $lastSeen->format('d M Y H:i')]) }}">
+                        <x-app-icon name="eye" class="h-3.5 w-3.5" />
+                        @if ($recipient->open_count > 1)
+                          {{ __('Opened :count×', ['count' => $recipient->open_count]) }} · {{ $lastSeen->diffForHumans(short: true) }}
+                        @else
+                          {{ __('Opened') }} · {{ $lastSeen->diffForHumans(short: true) }}
+                        @endif
                       </span>
                     @else
                       <span class="inline-flex items-center gap-1.5 rounded-full bg-plum-100 px-2.5 py-1 text-xs font-semibold text-plum-500 dark:bg-plum-800 dark:text-plum-400">
@@ -536,6 +590,9 @@
             ])
           @endif
         </div>
+
+      @elseif ($section === 'addons')
+        @include('livewire.pages.dashboard.partials.addons')
 
       @elseif ($section === 'responses')
         @unless ($invitation->fieldUnlocked('rsvp_enabled'))

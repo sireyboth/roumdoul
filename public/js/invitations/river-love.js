@@ -420,24 +420,43 @@
       refresh: function () { apply(.6); },
     };
   })();
-  var firstTouch = function () {
-    ['pointerdown', 'keydown', 'touchend'].forEach(function (e) { document.removeEventListener(e, firstTouch, true); });
-    if (!muted) birds.start();
+  /* ─────────── music: plays by itself ───────────
+     The song tries to start as soon as the page opens. Most browsers block sound until the guest touches the
+     page, so if that's refused it starts on the first tap/key anywhere instead (unless that tap is on the
+     Play or sound button — those decide for themselves). Once the guest pauses or mutes, it never restarts by itself. */
+  var playBtn = document.getElementById('rlPlay');
+  var npBtn = document.getElementById('rlNpPlay');   // the «Now playing» card's button: same song, kept in sync
+  var np = document.getElementById('rlNp');
+  var stopSong = function () {};
+  var autoSong = function () { return false; };   // → true if the song is (or is starting to be) playing
+  var songWanted = true;                          // false once the guest pauses or mutes
+
+  var firstTouch = function (e) {
+    ['pointerdown', 'keydown', 'touchend'].forEach(function (t) { document.removeEventListener(t, firstTouch, true); });
+    if (muted) return;
+    birds.start();
+    var onButton = e && e.target && e.target.closest && e.target.closest('#rlPlay, #rlNpPlay, #rlSound');
+    if (songWanted && !onButton) autoSong();
   };
   ['pointerdown', 'keydown', 'touchend'].forEach(function (e) { document.addEventListener(e, firstTouch, true); });
 
-  /* ─────────── music (nothing downloads until Play) ─────────── */
-  var playBtn = document.getElementById('rlPlay');
-  var stopSong = function () {};
-  if (playBtn) {
+  if (playBtn || npBtn) {
     var txt = document.getElementById('rlPlayTxt');
-    var label = txt.textContent;
+    var label = txt ? txt.textContent : '';
+    var npLabel = npBtn ? npBtn.getAttribute('aria-label') : '';
     var audio = document.getElementById('rlAudio');
     var yt = null, playing = false;
     var set = function (on) {
       playing = on;
-      playBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      txt.textContent = on ? 'Pause' : label;
+      if (playBtn) {
+        playBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (txt) txt.textContent = on ? 'Pause' : label;
+      }
+      if (npBtn) {
+        npBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        npBtn.setAttribute('aria-label', on ? 'Pause' : npLabel);
+      }
+      if (np) np.classList.toggle('is-playing', on);
       birds.duck(on);                        // the song plays → birds go quiet; paused → they come back
     };
     stopSong = function () {
@@ -446,15 +465,7 @@
       if (yt) { yt.remove(); yt = null; }
       set(false);
     };
-    playBtn.addEventListener('click', function () {
-      if (muted) setMuted(false);           // pressing play means they want sound
-      if (audio) {
-        if (playing) { audio.pause(); set(false); return; }
-        var p = audio.play();
-        if (p && p.catch) p.catch(function () { set(false); });
-        set(true);
-      } else if (config.music && config.music.youtube) {
-        if (playing && yt) { yt.remove(); yt = null; set(false); return; }
+    var startYoutube = function () {
         yt = document.createElement('iframe');
         yt.src = 'https://www.youtube.com/embed/' + config.music.youtube + '?autoplay=1&loop=1&playlist=' + config.music.youtube + '&controls=0';
         yt.allow = 'autoplay; encrypted-media';
@@ -463,9 +474,49 @@
         yt.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;';
         document.body.appendChild(yt);
         set(true);
+    };
+    // start the song without a click; false if the browser refuses (audio) — then the first tap retries
+    autoSong = function (onRefused) {
+      if (playing || muted) return playing;
+      if (audio) {
+        var p = audio.play();
+        set(true);
+        if (p && p.catch) p.catch(function () { set(false); if (onRefused) onRefused(); });
+        return true;
       }
-    });
+      if (config.music && config.music.youtube && !onRefused) { startYoutube(); return true; } // needs a tap: only from firstTouch
+      return false;
+    };
+    var toggleSong = function () {
+      if (muted) setMuted(false);           // pressing play means they want sound
+      if (playing) { songWanted = false; stopSong(); return; }
+      songWanted = true;
+      if (audio) {
+        var p = audio.play();
+        if (p && p.catch) p.catch(function () { set(false); });
+        set(true);
+      } else if (config.music && config.music.youtube) {
+        startYoutube();
+      }
+    };
+    [playBtn, npBtn].forEach(function (b) { if (b) b.addEventListener('click', toggleSong); });
     if (audio) audio.addEventListener('ended', function () { set(false); });
+
+    // the «Now playing» card's progress bar + times (an uploaded song; a YouTube song just says «on repeat»)
+    if (audio && np) {
+      var fill = document.getElementById('rlNpFill'), cur = document.getElementById('rlNpCur'), dur = document.getElementById('rlNpDur');
+      var clock = function (s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
+      var showTime = function () {
+        var d = audio.duration;
+        if (isFinite(d) && d > 0) { dur.textContent = clock(d); fill.style.width = (audio.currentTime / d * 100).toFixed(2) + '%'; }
+        cur.textContent = clock(audio.currentTime);
+      };
+      audio.addEventListener('timeupdate', showTime);
+      audio.addEventListener('loadedmetadata', showTime);
+    }
+
+    // try right away; a browser that blocks it leaves the song to the first tap (firstTouch above)
+    autoSong(function () {});
   }
 
   /* ─────────── sound on / off (birds + song) ─────────── */
@@ -475,11 +526,26 @@
       soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
       soundBtn.setAttribute('aria-label', on ? 'Turn sound on' : 'Mute sound');
     }
-    if (on) stopSong();
-    else birds.start();
+    if (on) { songWanted = false; stopSong(); }
+    else { birds.start(); }
     birds.refresh();
     if (window.InvScratch) window.InvScratch.setMuted(on); // the scratch cards' sounds follow the sound button
+    if (window.InvMap) window.InvMap.setMuted(on);         // so does the memory map's pin pop
+    if (on) stopSfx();                                     // and this template's own taps
   }
+
+  /* ─────────── short tap sounds (boats, hearts, lantern), silent while muted ─────────── */
+  var sounds = {};
+  var sfx = function (key, vol) {
+    var url = config.sfx && config.sfx[key];
+    if (!url || muted) return;
+    var a = sounds[key] || (sounds[key] = new Audio(url));
+    try {
+      a.currentTime = 0; a.volume = vol == null ? .5 : vol; a.playbackRate = .95 + Math.random() * .1;
+      var p = a.play(); if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  };
+  var stopSfx = function () { Object.keys(sounds).forEach(function (k) { try { sounds[k].pause(); } catch (e) {} }); };
   if (soundBtn) {
     soundBtn.addEventListener('click', function () { setMuted(!muted); });
   }
@@ -499,6 +565,141 @@
     var r = e.target.getBoundingClientRect();
     dropPetals(r.left + r.width / 2, r.top + r.height * .45, 1.2);
   });
+  // a memory opened on the map (shared memory-map component) lets a few petals fall from its pin
+  root.addEventListener('inv-map:open', function (e) {
+    if (!dropPetals) return;
+    var pin = e.target.querySelectorAll('.inv-map__pin')[e.detail.index];
+    if (!pin) return;
+    var r = pin.getBoundingClientRect();
+    dropPetals(r.left + r.width / 2, r.top + r.height / 2, .6);
+  });
+
+  /* ─────────── paper boats of reasons ───────────
+     tapping a boat unfolds it into the note (placed over that boat, kept inside the river strip); one at a time.
+     Tapping the note, the same boat, anywhere else or Escape folds it back; a read boat keeps a heart on its sail. */
+  var river = document.getElementById('rlRiver');
+  if (river) {
+    var note = document.getElementById('rlNote'), noteN = document.getElementById('rlNoteN'), noteT = document.getElementById('rlNoteT');
+    var hint = document.getElementById('rlBoatHint');
+    var boats = Array.prototype.slice.call(river.querySelectorAll('.rl-boat'));
+    var openBoat = null, foldTimer = null;
+    var fold = function (silent) {
+      if (!openBoat) return;
+      var b = openBoat;
+      openBoat = null;
+      b.classList.remove('is-open');
+      b.setAttribute('aria-expanded', 'false');
+      if (!silent) sfx('card', .35);
+      clearTimeout(foldTimer);
+      if (reduce) { note.hidden = true; return; }
+      note.classList.add('is-closing');
+      foldTimer = setTimeout(function () { note.hidden = true; note.classList.remove('is-closing'); }, 280);
+    };
+    var unfold = function (b) {
+      if (openBoat) fold(true);
+      clearTimeout(foldTimer);              // after fold(): the note stays, it only changes boats
+      openBoat = b;
+      var i = boats.indexOf(b);
+      noteN.textContent = (i + 1) + ' of ' + boats.length;
+      noteT.textContent = b.getAttribute('data-reason');
+      note.classList.remove('is-closing');
+      note.hidden = false;
+      // place it over the boat it came from, inside the strip
+      var rr = river.getBoundingClientRect(), br = b.getBoundingClientRect();
+      var w = note.offsetWidth, h = note.offsetHeight;
+      var x = br.left - rr.left + br.width / 2 - w / 2, y = br.top - rr.top + br.height / 2 - h / 2;
+      note.style.left = Math.max(8, Math.min(rr.width - w - 8, x)) + 'px';
+      note.style.top = Math.max(8, Math.min(rr.height - h - 8, y)) + 'px';
+      note.style.animation = 'none'; void note.offsetWidth; note.style.animation = ''; // replay the unfold
+      b.classList.add('is-open', 'is-read');
+      b.setAttribute('aria-expanded', 'true');
+      sfx('paper', .55);
+      var read = river.querySelectorAll('.rl-boat.is-read').length;
+      if (hint) hint.textContent = read >= boats.length ? 'Every boat unfolded. Every word true.' : read + ' of ' + boats.length + ' unfolded';
+    };
+    river.addEventListener('click', function (e) {
+      var b = e.target.closest('.rl-boat');
+      if (b) { if (b === openBoat) fold(); else unfold(b); return; }
+      if (e.target.closest('.rl-note')) fold();
+    });
+    document.addEventListener('click', function (e) { if (openBoat && !river.contains(e.target)) fold(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && openBoat) { var b = openBoat; fold(); b.focus(); } });
+  }
+
+  /* ─────────── lantern finale ───────────
+     «Send a lantern»: a warm paper lantern rises from the river and floats away; after the first one the closing
+     words appear. Every tap sends another (a few at most at once). Reduced motion: one lantern simply hangs there. */
+  var end = document.getElementById('rlEnd'), wishBtn = document.getElementById('rlWishBtn');
+  if (end && wishBtn) {
+    var lanterns = document.getElementById('rlLanterns'), tpl = document.getElementById('rlLanternTpl');
+    var wished = false;
+    end.classList.add('is-waiting');
+    wishBtn.addEventListener('click', function () {
+      sfx('chime', .45);
+      if (!reduce || !lanterns.children.length) {
+        if (lanterns.children.length >= 6) lanterns.removeChild(lanterns.firstElementChild);
+        var l = tpl.content.firstElementChild.cloneNode(true);
+        l.style.setProperty('--x', Math.round((Math.random() - .5) * 120) + 'px');
+        l.style.setProperty('--dx', Math.round((Math.random() - .5) * 220) + 'px');
+        l.style.setProperty('--dur', (9 + Math.random() * 3).toFixed(1) + 's');
+        // it starts just under the button (where the guest is looking), not at the section's far bottom
+        if (!reduce) l.style.top = Math.round(wishBtn.getBoundingClientRect().bottom - end.getBoundingClientRect().top + 24) + 'px';
+        if (!reduce) l.addEventListener('animationend', function (ev) { if (ev.target === l && l.parentNode) l.parentNode.removeChild(l); });
+        lanterns.appendChild(l);
+      }
+      if (wished) return;
+      wished = true;
+      document.getElementById('rlWishTxt').textContent = 'Send another wish';
+      setTimeout(function () { end.classList.remove('is-waiting'); }, reduce ? 0 : 1600);
+    });
+  }
+
+  /* ─────────── hidden hearts hunt ───────────
+     a small heart hides in each section; the counter shows after the first find, each find pops with a toast,
+     and the last one opens the secret card. */
+  var hearts = root.querySelectorAll('.rl-hh');
+  if (hearts.length) {
+    var hunt = document.getElementById('rlHunt'), huntN = document.getElementById('rlHuntN');
+    var toast = document.getElementById('rlToast'), secret = document.getElementById('rlSecret');
+    var found = 0, toastTimer = null;
+    var say = function (msg) {
+      toast.hidden = true; void toast.offsetWidth;
+      toast.textContent = msg;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toast.hidden = true; }, 2600);
+    };
+    var lastFocus = null;
+    var closeSecret = function () { sfx('card', .35); secret.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus(); };
+    var lines = ['You found a hidden heart', 'Another one, just for you', 'Three. You’re good at this', 'Only one more to go'];
+    hearts.forEach(function (h) {
+      h.addEventListener('click', function (e) {
+        e.stopPropagation();          // a heart inside the river doesn't fold/unfold a boat
+        if (h.classList.contains('is-found')) return;
+        h.classList.add('is-found');
+        h.setAttribute('aria-hidden', 'true');
+        h.tabIndex = -1;
+        found++;
+        sfx('pop', .55);
+        if (dropPetals) { var r = h.getBoundingClientRect(); dropPetals(r.left + r.width / 2, r.top + r.height / 2, 1); }
+        hunt.hidden = false;
+        huntN.textContent = found;
+        if (found < hearts.length) {
+          say((hearts.length - found === 1 ? lines[3] : lines[Math.min(found - 1, 2)]) + ' · ' + found + ' of ' + hearts.length);
+          return;
+        }
+        toast.hidden = true;
+        lastFocus = document.activeElement;
+        setTimeout(function () {
+          sfx('reveal', .4);
+          secret.hidden = false;
+          document.getElementById('rlSecretX').focus();
+        }, reduce ? 0 : 450);
+      });
+    });
+    secret.addEventListener('click', function (e) { if (e.target === secret || e.target.closest('#rlSecretX')) closeSecret(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !secret.hidden) closeSecret(); });
+  }
 
     /* ─────────── photo preview ─────────── */
   var lb = document.getElementById('rlLb');

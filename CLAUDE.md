@@ -32,6 +32,16 @@ template, fill in details in their dashboard, and send one personalized link per
 - Payment is manual for now: checkout creates a `pending_payment` order and sends a Telegram
   alert, then an admin confirms payment (ABA/Wing/QR) and marks the order `paid` in Filament,
   which unlocks the invitation. Online automatic payment comes later. Don't build it unless asked.
+  While an order is `pending_payment`, the customer gets the KHQR payment modal (`<x-shop.payment-modal>`, 3D glass: QR,
+  account name + ID, exact amount, order number as the transfer note; no screenshot asked) on the order
+  confirmation page (opens by itself) and the dashboard order page («Pay now»). QR image: `public/images/payment/khqr.png`.
+  Account details: `config('roumdoul.payment')`. An order only becomes `paid` through the admin's
+  «Mark as paid» (`Order::markPaid()`: amount received ≥ total + a bank transaction ID never used on
+  another order); that provisions invitations, applies add-ons and emails the customer.
+- Add-ons (more guests / photos, unlock a feature, upgrade, extend) are add-on orders for one invitation
+  — see «Add-ons» in `docs/invitation-templates.md`. Each invitation keeps its own copy of its plan's
+  limits, so editing a plan never changes invitations already sold. Production needs the scheduler
+  (`php artisan schedule:run` every minute) for the daily expiry reminders.
 - Customer photo uploads (dashboard image + gallery fields, GIFs included) are **3 MB max** per
   file. Keep `InvitationManagePage::MAX_UPLOAD_KB` / `MAX_GIF_KB` (3072) and the UI/lang texts in
   step. `config/livewire.php` `temporary_file_upload.rules` (20 MB) is only a safety ceiling, so
@@ -62,8 +72,20 @@ template, fill in details in their dashboard, and send one personalized link per
 - **Every invitation template always ends with the shared footer component** (no exceptions, never a
   hand-written footer): `<x-invitation-footer>` (`resources/views/components/invitation-footer.blade.php`,
   styles `public/css/invitations/shared/footer.css`). It has the back-to-top button, ornament divider,
-  names, date, «រៀបចំឡើងដោយក្តីស្រឡាញ់ ♥», then «Created with love by» and the ROUMDOUL block (the site footer
+  names, date, «Made with love ♥», then «Created with love by» and the ROUMDOUL block (the site footer
   without Product categories / Company: logo, description, social icons, quick help + Telegram button, policy links, ©).
   Its text is Khmer; an English template passes `lang="en"`.
   Pass `prefix` to reuse a template's own footer classes, or theme it with the `--inv-footer-*` variables.
   Social links live in `config/roumdoul.php` (`ROUMDOUL_*_URL` in `.env`).
+- **Always use sound effects (sfx)** in invitation templates and their interactive parts: every tap,
+  open, reveal, scratch, flip, pin, etc. gets a short sound. Use the shared files in
+  `public/images/invitations/assets/sfx/` (`pop`, `chime`, `reveal`, `card`, `envelope`, `scratch`/`scratch-loop`,
+  `papercrackle1`, `cassette`, `birds-loop`, …) and add a new file there when nothing fits. Shared components
+  (`<x-scratch-card>`, `<x-memory-map>`, …) play sfx too. Sounds start only after the guest's first tap,
+  stay soft under the song, and follow the template's mute button.
+- **Fonts must support both English and Khmer.** Prefer a font that has both scripts (e.g. `Kantumruy Pro`,
+  `Noto Sans Khmer` / `Noto Serif Khmer`, `Battambang`). When a stylish Latin-only font is needed (script,
+  display, serif…), always pair it with a Khmer font right after it in the same `font-family` stack, e.g.
+  `"Pinyon Script", "Moul", cursive` or `"Instrument Serif", "Kantumruy Pro", serif`, so Khmer text never falls
+  back to a system font. Load both from Google Fonts. Applies everywhere: CSS variables, inline styles, canvas
+  `ctx.font`, and shared components (their `--inv-*-font` defaults too).

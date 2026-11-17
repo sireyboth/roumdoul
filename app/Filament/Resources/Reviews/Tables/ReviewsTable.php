@@ -2,13 +2,14 @@
 
 namespace App\Filament\Resources\Reviews\Tables;
 
+use App\Models\ModerationLog;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\BulkActionGroup;
-use App\Models\ModerationLog;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -74,6 +75,9 @@ class ReviewsTable
                     ->label('Flagged')
                     ->nullable(),
             ])
+            ->emptyStateIcon(Heroicon::OutlinedStar)
+            ->emptyStateHeading('No feedback yet')
+            ->emptyStateDescription('Reviews from orders and the public feedback link show up here.')
             ->recordActions([
                 Action::make('approve')
                     ->icon(Heroicon::OutlinedCheckCircle)
@@ -113,8 +117,10 @@ class ReviewsTable
                         $record->update(['reported_at' => null]);
                         ModerationLog::record('review_flag_cleared', 'review', $record->id, [], null, Auth::id());
                     }),
-                ViewAction::make(),
-                DeleteAction::make(),
+                ViewAction::make()
+                    ->modalWidth(Width::FourExtraLarge),
+                DeleteAction::make()
+                    ->modalDescription('The feedback is removed for good.'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

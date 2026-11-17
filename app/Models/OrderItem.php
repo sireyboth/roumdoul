@@ -14,6 +14,8 @@ class OrderItem extends Model
         'order_id',
         'service_id',
         'service_plan_id',
+        'addon_type',
+        'addon_value',
         'service_name_snapshot',
         'plan_label_snapshot',
         'unit_price',

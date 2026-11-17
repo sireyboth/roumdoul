@@ -59,10 +59,10 @@ add/remove), `boolean`, `datetime`, `color`.
 | `music_url` | text | Background music — a YouTube/TikTok link |
 | `music_file` | audio | Background music uploaded as a file (MP3/M4A/AAC, at most `InvitationManagePage::MAX_AUDIO_KB` = 10 MB ≈ 10 min). Checked in the browser before anything is sent and again on the server (size + real content type); stored under a random name in the invitation's own folder, never re-encoded (no ffmpeg). Templates play it instead of `music_url` when both are set, with `preload="none"` so guests download nothing until it plays |
 | `accent_color` | color | Theme color |
-| `love_reasons` | long text | Anniversary / love letter: reasons you love them, one per line (Rose Bloom: the tap-through cards deck) |
+| `love_reasons` | long text | Anniversary / love letter: reasons you love them, one per line (Rose Bloom: the tap-through cards deck; River Love: «Paper boats», one folded boat per line, max 9, a tap unfolds it into a note) |
 | `photo_captions` | long text | One caption per line, in photo-gallery order (Rose Bloom: lines 1–4 = scratch stamps, 5–9 = photo strip as «Title \| small line»). Shown in the dashboard's media tab |
-| `song_title` | text | Song name on the music card / record label (Rose Bloom: the “Now playing” card); the song itself is `music_file` / `music_url` |
-| `closing_line` | text | The last big line at the very end (Rose Bloom finale; `thanks_message` is the smaller line under it) |
+| `song_title` | text | Song name on the music card / record label (Rose Bloom: the “Now playing” card; River Love: the cover «Play …» button and its «Now playing» record card, both driving the same song); the song itself is `music_file` / `music_url` |
+| `closing_line` | text | The last big line at the very end (Rose Bloom finale; River Love: shows after the guest sends a paper lantern up; `thanks_message` is the smaller line under it) |
 
 **Premium fields — the pricing upsell lever.** A template can still tick these into its schema,
 but they only actually render for a customer whose plan has that exact key in
@@ -112,6 +112,27 @@ so the demo actually shows off premium content. Shared components like a reusabl
 map/countdown/RSVP block (`<x-invitations.map>` etc.) don't exist yet — the one real template so
 far (date-asking) inlines this logic itself. Build a shared component once a second template
 needs the same behavior, not preemptively.
+
+**Each invitation keeps its own limits.** When an order is paid, the plan's `max_recipients`,
+`max_gallery_photos` and `features` are **copied onto the invitation** (`invitations.*`). Templates
+and the dashboard read the invitation's copy (`$invitation->maxGalleryPhotos()`,
+`fieldUnlocked()`), so editing a plan in admin only affects new buyers. Old invitations made before
+the copy existed fall back to their plan.
+
+## Add-ons (more guests, photos, features, upgrade, extend)
+
+A customer can buy extras for an invitation they already own — `App\Services\InvitationAddons`,
+the dashboard's «Add more» section (`partials/addons.blade.php`). Prices are set **per plan** in
+admin (`service_plans.extra_guest_price`, `extra_photo_price`, `feature_prices` {key: price},
+`extend_price` + `extend_months`); a blank price = that add-on isn't sold for the plan. Upgrading
+to a pricier plan of the same product costs the difference and keeps everything already bought.
+
+Buying makes a `pending_payment` order with `type = 'addon'` and `invitation_id` (order items carry
+`addon_type` / `addon_value`), sends the Telegram alert and opens the KHQR payment modal. When the
+admin marks it paid (Filament «Mark as paid» → `Order::markPaid()`: amount received ≥ total, unique
+bank transaction ID), `InvitationAddons::apply()` raises the invitation's limits **once**
+(`orders.addons_applied_at`). The customer gets an «order paid» email (`CustomerNotifier`), and
+`invitations:remind-expiring` (daily) emails them 14 days before expiry, pointing at «Extend time».
 
 ## Steps to add a new template
 
@@ -170,7 +191,7 @@ exactly like they do for every other product in the shop.
 `resources/views/components/scratch-card.blade.php` (JS `public/js/invitations/shared/scratch-card.js`, CSS
 `public/css/invitations/shared/scratch-card.css`, both loaded once by the component). A foil the guest rubs away
 to reveal a photo or any content; past `threshold` (default .45) the rest melts away. Used by River Love's
-«If I could live a moment twice…» section (Rose Bloom still has its own built-in stamps).
+«If I could live a moment twice…» section and Front Page's scratch-to-reveal date (Rose Bloom still has its own built-in stamps).
 
 ```blade
 <x-scratch-card :src="$photo" caption="that night we laughed" />
@@ -184,6 +205,47 @@ Props: `src`, `alt`, `caption`, `hint` (shown until revealed), `cover` (script t
 `--inv-scratch-font`, `--inv-scratch-radius`, `--inv-scratch-frame`, `--inv-scratch-cap-font`/`-cap-color`/`-hint-color`.
 Buttons/links in the slot (e.g. a lightbox button) can't be focused or tapped until revealed. A revealed card fires
 a bubbling `inv-scratch:reveal` event; `window.InvScratch.setMuted(bool)` hooks it to a template's mute button.
+
+## Shared memory map (`<x-memory-map>`)
+
+`resources/views/components/memory-map.blade.php` (JS `public/js/invitations/shared/memory-map.js`, CSS
+`public/css/invitations/shared/memory-map.css`, both loaded once by the component). A hand-drawn paper map with
+heart pins joined by a dotted route; tapping a pin opens a polaroid with that place's photo, name, date and note.
+Used by River Love's «Our places» section (Rose Bloom still has its own built-in map). Renders nothing when
+`places` is empty, so a template can drop it in unconditionally.
+
+```blade
+{{-- usually built from story_chapters: title «Place | when» → name + date, text → note --}}
+<x-memory-map :places="[['name' => 'Where we met', 'date' => 'Spring 2022', 'note' => '…', 'photo' => $url], …]" />
+<x-memory-map :places="$places" river :label="$from.' & '.$name" photo-class="rl-ph-btn" />
+```
+
+Props: `places` (max 6; optional `x`/`y` 0–100 to place a pin yourself), `river` (draws a winding river),
+`label` (script line on the paper), `seed` (changes the hills), `sound` (pin pop: `true` = shared `pop.mp3`, a URL, or `false`), `photoClass` (extra class on the polaroid's photo
+button, which carries `data-full`/`data-cap`, so the template's own photo preview opens it), `closeLabel`.
+Theme with `--inv-map-paper`, `--inv-map-ink`, `--inv-map-land`, `--inv-map-water`, `--inv-map-pin`,
+`--inv-map-card`, `--inv-map-card-ink`, `--inv-map-font`, `--inv-map-note-font`, `--inv-map-radius`, `--inv-map-ratio`.
+A pin tap fires a bubbling `inv-map:open` event (`detail: { index, place }`); `window.InvMap.setMuted(bool)` hooks it to a template's mute button. Without JS, the memories are listed
+under the map.
+
+## Wedding templates (`templates/wedding/`)
+
+- **Vellum Garden** — `wedding/vellum-garden.blade.php` (CSS/JS `public/{css,js}/invitations/vellum-garden.*`,
+  demo `/demo/wedding/vellum-garden`, `?open=1` skips the envelope). Fine-art garden look: ivory linen, botanical line
+  art that draws itself, arched photo frames, vellum cards, a wax-seal envelope the guest taps open. Uses
+  `groom_name`/`bride_name`, `couple_initials` (the seal), the four parents, `event_date` (hero + save-the-date
+  calendar), `khmer_date`, `countdown_enabled`, `message` (a note under the card), `story_chapters`, `event_schedule` /
+  `schedule_image`, `reception_message`, `photo_gallery` + `photo_captions` (one per photo, shown under it and in the
+  preview), `cover_image` (main arch; empty = first gallery photo), `venue_name`/`venue_address`/`map_url`, `qr_code` +
+  `gift_account` + `gift_message`, `rsvp_enabled` + `rsvp_message`, `groom_phone`/`bride_phone`/`contact_phone`,
+  `thanks_message`/`apology_message`, `music_file`/`music_url`, `accent_color` (the wax colour, default terracotta).
+- **Front Page** — `wedding/front-page.blade.php` (CSS/JS `public/{css,js}/invitations/front-page.*`, demo
+  `/demo/wedding/front-page`). Modern editorial "wedding issue": cream paper + ink + one accent, a magazine-style cover
+  (names as the masthead, cover lines, a barcode drawn from the date), a marquee band, a running header with page
+  numbers, giant date numerals under an `<x-scratch-card>` foil, photo-booth strips that "print" into view, a
+  «contents page» program. Uses the same fields as Vellum Garden plus `dress_code` (under the venue); `message` is the
+  pull quote, `photo_gallery` fills strips of 4 (up to 16 photos), `cover_image` the cover (empty = first gallery photo),
+  `accent_color` the accent (default vermilion `#c2412d`).
 
 ## Things that are NOT per-template concerns
 

@@ -137,6 +137,21 @@ class InvitationTemplateDemoController extends Controller
                     .'You turned ordinary mornings into my favorite part of the day, and quiet evenings into a place I never want to leave. Like a river, I keep finding my way back to you.'."\n\n"
                     .'Thank you for choosing me, again and again. From this moment on, and every one after it, I will love you.',
             ],
+            // Vellum Garden: the personal note, gallery captions, a terracotta wax seal and a sample song
+            'vellum-garden' => [
+                'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
+                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nដំណើរកម្សាន្តលើកដំបូង\nពេលល្ងាចនៅមាត់ទន្លេ\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nរហូតទៅ",
+                'accent_color' => '#b0654b',
+                'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
+            ],
+            // Front Page: pull quote, 12 photos (three full photo-booth strips) + captions, dress code, a sample song
+            'front-page' => [
+                'message' => 'ពីថ្ងៃនេះតទៅ យើងនឹងសរសេររឿងរ៉ាវតែមួយជាមួយគ្នា ហើយទំព័រដំបូងនៃរឿងនោះ យើងចង់ឲ្យមានវត្តមានលោកអ្នក។',
+                'photo_gallery' => collect(range(1, 12))->map(fn ($i) => "https://picsum.photos/seed/frontpage{$i}/800/".($i % 2 ? '640' : '800'))->all(),
+                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង",
+                'dress_code' => 'ពណ៌ក្រែម ខ្មៅ ឬក្រហមដិត',
+                'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
+            ],
             default => [],
         });
 

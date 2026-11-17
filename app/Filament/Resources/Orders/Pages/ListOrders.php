@@ -3,17 +3,15 @@
 namespace App\Filament\Resources\Orders\Pages;
 
 use App\Filament\Resources\Orders\OrderResource;
-use Filament\Actions\CreateAction;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\ManageRecords;
 
-class ListOrders extends ListRecords
+class ListOrders extends ManageRecords
 {
     protected static string $resource = OrderResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [
-            CreateAction::make(),
-        ];
+        // Orders come from checkout (or the customer's «Add more» panel) — never created by hand.
+        return [];
     }
 }

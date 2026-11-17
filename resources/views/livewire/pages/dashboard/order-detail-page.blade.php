@@ -24,6 +24,10 @@
   </div>
   <p class="mt-1 text-xs text-plum-400 dark:text-plum-500">{{ __('Ordered on :date', ['date' => $order->created_at->format('d M Y, h:i A')]) }}</p>
 
+  @if ($order->status === 'pending_payment')
+    <x-shop.payment-modal :order="$order" class="mt-6" />
+  @endif
+
   <div class="mt-6 rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
     <h2 class="mb-4 text-sm font-bold uppercase tracking-wide text-plum-500 dark:text-plum-400">{{ __('Order items') }}</h2>
     <ul class="flex flex-col gap-3">
@@ -77,14 +81,6 @@
     @endif
   </div>
 
-  @if ($order->status === 'pending_payment')
-    <div class="mt-6 flex items-start gap-3 rounded-lg border border-gold-400/40 bg-gold-50 p-4 dark:border-gold-400/20 dark:bg-plum-800">
-      <x-app-icon name="chat" class="mt-0.5 h-5 w-5 shrink-0 text-gold-600 dark:text-gold-400" />
-      <p class="text-xs leading-relaxed text-plum-700 dark:text-plum-300">
-        {!! __('Our team will contact you at :phone shortly to confirm your payment and deliver your order.', ['phone' => '<strong>'.e($order->customer_phone).'</strong>']) !!}
-      </p>
-    </div>
-  @endif
 
   @if ($order->review)
     <div class="mt-6 rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">

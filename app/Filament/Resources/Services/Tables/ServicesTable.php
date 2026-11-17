@@ -6,6 +6,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -30,7 +32,7 @@ class ServicesTable
                     ->label('Name')
                     ->searchable()
                     ->weight('bold')
-                    ->description(fn($record) => $record->name_km),
+                    ->description(fn ($record) => $record->name_km),
                 TextColumn::make('category.name_en')
                     ->label('Category')
                     ->badge()
@@ -75,9 +77,14 @@ class ServicesTable
                 TernaryFilter::make('in_stock')
                     ->label('In stock'),
             ])
+            ->emptyStateIcon(Heroicon::OutlinedShoppingBag)
+            ->emptyStateHeading('No services yet')
+            ->emptyStateDescription('Click «New service» to add a product to the shop. Digital Invitations are managed under Invitation Templates.')
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->modalWidth(Width::SevenExtraLarge),
+                DeleteAction::make()
+                    ->modalDescription('The service and its plans are removed from the shop. Past orders keep their details.'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

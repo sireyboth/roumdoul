@@ -6,6 +6,8 @@ use App\Models\Invitation;
 use App\Models\InvitationRecipient;
 use App\Models\InvitationTemplate;
 use App\Services\ImageOptimizer;
+use App\Services\InvitationAddons;
+use App\Services\TelegramNotifier;
 use App\Support\Invitations\ChristmasTemplate;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -149,6 +151,12 @@ class InvitationManagePage extends Component
 
     public bool $saved = false;
 
+    /** «Add more» section: how many guests / photos / extensions the customer is about to buy. */
+    public array $addonQty = ['guests' => 10, 'photos' => 5, 'extend' => 1];
+
+    /** Cached InvitationAddons::options() for this request. */
+    protected ?array $addonOptionsCache = null;
+
     public function mount(Invitation $invitation): void
     {
         abort_unless($invitation->customer_id === Auth::guard('customer')->id(), 403);
@@ -217,6 +225,10 @@ class InvitationManagePage extends Component
 
         if (in_array('rsvp_enabled', $this->invitation->template->fields ?? [], true)) {
             $sections[] = 'responses';
+        }
+
+        if ($this->hasAddons()) {
+            $sections[] = 'addons';
         }
 
         $sections[] = 'guide';
@@ -418,13 +430,28 @@ class InvitationManagePage extends Component
         }
         $this->imageUploads = [];
 
+        // each gallery photo is stored on its own: one that can't be stored (a broken file, a storage
+        // hiccup) is skipped and reported, instead of failing the whole save and losing every photo
+        $failedPhotos = 0;
         foreach ($this->galleryUploads as $key => $files) {
             if (! empty($files)) {
-                $stored = collect($files)->map(fn ($file) => $optimizer->store($file, $directory));
+                $stored = collect($files)->map(function ($file) use ($optimizer, $directory, &$failedPhotos) {
+                    try {
+                        return $optimizer->store($file, $directory);
+                    } catch (\Throwable $e) {
+                        report($e);
+                        $failedPhotos++;
+
+                        return null;
+                    }
+                })->filter();
                 $this->fieldValues[$key] = collect($this->fieldValues[$key] ?? [])->merge($stored)->values()->all();
             }
         }
         $this->galleryUploads = [];
+        if ($failedPhotos > 0) {
+            $this->toast('warning', trans_choice(':count photo couldn\'t be saved — please add it again.|:count photos couldn\'t be saved — please add them again.', $failedPhotos, ['count' => $failedPhotos]));
+        }
 
         // songs are stored as uploaded (already size/type-checked by uploadRules), under a random
         // name with the extension their real content type maps to
@@ -721,8 +748,22 @@ class InvitationManagePage extends Component
         try {
             $this->validate($this->uploadRules());
         } catch (ValidationException $e) {
+            $message = collect($e->errors())->flatten()->first() ?? __("This photo can't be used.");
+
+            // Gallery photos arrive one at a time: drop only the photo(s) that failed, keep the rest of the batch.
+            $bad = collect(array_keys($e->errors()))
+                ->map(fn (string $k) => preg_match('/^galleryUploads\.'.preg_quote($m[2], '/').'\.(\d+)/', $k, $x) ? (int) $x[1] : null)
+                ->filter(fn ($i) => $i !== null)->unique();
+            if ($m[1] === 'galleryUploads' && $bad->isNotEmpty() && is_array($this->galleryUploads[$m[2]] ?? null)) {
+                $this->galleryUploads[$m[2]] = array_values(array_diff_key($this->galleryUploads[$m[2]], array_flip($bad->all())));
+                $this->toast('error', $message);
+                $this->addError('galleryUploads.'.$m[2], $message);
+
+                return;
+            }
+
             unset($this->{$m[1]}[$m[2]]);
-            $this->toast('error', collect($e->errors())->flatten()->first() ?? __("This photo can't be used."));
+            $this->toast('error', $message);
 
             throw $e;
         }
@@ -1052,6 +1093,7 @@ class InvitationManagePage extends Component
             ->selectRaw("sum(case when rsvp_status = 'yes' then 1 else 0 end) as attending")
             ->selectRaw("sum(case when rsvp_status = 'no' then 1 else 0 end) as declined")
             ->selectRaw('count(revoked_at) as paused')
+            ->selectRaw('coalesce(sum(open_count), 0) as opens')
             ->first();
         $templateFields = $this->invitation->template->fields ?? [];
 
@@ -1060,6 +1102,9 @@ class InvitationManagePage extends Component
             'sections' => $this->visibleSections(),
             'guestList' => $this->section === 'guests' ? $this->guestPage('guestsPage') : null,
             'responseList' => $this->section === 'responses' ? $this->guestPage('responsesPage') : null,
+            'recentOpeners' => $this->section === 'overview'
+                ? $this->invitation->recipients()->whereNotNull('viewed_at')->orderByDesc(DB::raw('coalesce(last_viewed_at, viewed_at)'))->limit(5)->get()
+                : collect(),
             'hasGuestFilters' => $this->guestSearch !== '' || $this->guestFilter !== '' || $this->responseFilter !== '' || $this->guestSort !== 'newest',
             'stats' => [
                 'recipients' => (int) $counts->recipients,
@@ -1067,12 +1112,65 @@ class InvitationManagePage extends Component
                 'attending' => (int) $counts->attending,
                 'declined' => (int) $counts->declined,
                 'paused' => (int) $counts->paused,
+                'opens' => (int) $counts->opens,
                 'fields' => count($templateFields),
                 'filled' => collect($templateFields)
                     ->filter(fn (string $key) => filled($this->invitation->field_values[$key] ?? null))
                     ->count(),
             ],
         ])->title(__('Manage invitation | ROUMDOUL'));
+    }
+
+    /** What this invitation can buy in the «Add more» section (prices from its plan). */
+    public function addonOptions(): array
+    {
+        return $this->addonOptionsCache ??= app(InvitationAddons::class)->options($this->invitation);
+    }
+
+    public function hasAddons(): bool
+    {
+        $o = $this->addonOptions();
+
+        return $o['guests'] || $o['photos'] || $o['features'] || $o['upgrades'] || $o['extend'];
+    }
+
+    /** Add-on orders for this invitation still waiting for payment (shown with a «Pay now» link). */
+    public function pendingAddonOrders()
+    {
+        return $this->invitation->addonOrders()->where('status', 'pending_payment')->with('items')->latest()->get();
+    }
+
+    /**
+     * Buy one add-on: makes a pending add-on order (InvitationAddons computes the price) and opens its
+     * payment page, where the KHQR modal shows the exact amount. The admin's «Mark as paid» applies it.
+     */
+    public function buyAddon(string $type, ?string $value = null): void
+    {
+        if (! $this->invitation->isPaid()) {
+            return;
+        }
+
+        $line = match ($type) {
+            InvitationAddons::GUESTS, InvitationAddons::PHOTOS, InvitationAddons::EXTEND => ['type' => $type, 'quantity' => (int) ($this->addonQty[$type] ?? 1)],
+            InvitationAddons::FEATURE => ['type' => $type, 'key' => (string) $value],
+            InvitationAddons::UPGRADE => ['type' => $type, 'plan_id' => (int) $value],
+            default => null,
+        };
+        if (! $line) {
+            return;
+        }
+
+        try {
+            $order = app(InvitationAddons::class)->order($this->invitation->fresh(['plan', 'template', 'customer']), [$line]);
+        } catch (ValidationException $e) {
+            $this->toast('error', collect($e->errors())->flatten()->first() ?? __('That add-on isn\'t available for this invitation.'));
+
+            return;
+        }
+
+        rescue(fn () => app(TelegramNotifier::class)->sendNewOrder($order->load('items')), report: true);
+
+        $this->redirect(route('order.confirmation', $order), navigate: true);
     }
 
     /** Field names in validation messages, in the interface language (e.g. "សូមបំពេញ ឈ្មោះកូនកំលោះ។"). */

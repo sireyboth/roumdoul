@@ -2,13 +2,14 @@
 
 namespace App\Filament\Resources\InvitationTemplates\Tables;
 
+use App\Filament\Resources\InvitationTemplates\InvitationTemplateActions;
+use App\Filament\Resources\InvitationTemplates\InvitationTemplateResource;
 use App\Models\InvitationTemplate;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -22,6 +23,10 @@ class InvitationTemplatesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->withCount('invitations'))
+            // a row click opens the edit modal (not the template's page)
+            ->recordUrl(null)
+            ->recordAction('edit')
             ->columns([
                 ImageColumn::make('thumbnail')
                     ->label('')
@@ -40,6 +45,11 @@ class InvitationTemplatesTable
                     ->label('Fields')
                     ->state(fn ($record) => (string) count($record->fields ?? []))
                     ->badge(),
+                TextColumn::make('invitations_count')
+                    ->label('Invitations')
+                    ->badge()
+                    ->color(fn ($state) => $state ? 'info' : 'gray')
+                    ->url(fn (InvitationTemplate $record) => InvitationTemplateResource::getUrl('view', ['record' => $record])),
                 IconColumn::make('is_premium')
                     ->boolean(),
                 IconColumn::make('is_active')
@@ -51,10 +61,19 @@ class InvitationTemplatesTable
                 TernaryFilter::make('is_premium')
                     ->label('Premium'),
             ])
+            ->emptyStateIcon(Heroicon::OutlinedEnvelope)
+            ->emptyStateHeading('No invitation templates yet')
+            ->emptyStateDescription('Click «New template» to add a design customers can buy.')
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make()
-                    ->before(fn (DeleteAction $action, InvitationTemplate $record) => static::cancelIfInUse($action, collect([$record]))),
+                InvitationTemplateActions::setUpPricing(),
+                InvitationTemplateActions::edit(),
+                Action::make('invitations')
+                    ->label('Invitations')
+                    ->tooltip('Customer invitations made with this template — give extra guests, photos or time here')
+                    ->icon(Heroicon::OutlinedUserGroup)
+                    ->color('gray')
+                    ->url(fn (InvitationTemplate $record) => InvitationTemplateResource::getUrl('view', ['record' => $record])),
+                InvitationTemplateActions::delete(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -85,7 +104,7 @@ class InvitationTemplatesTable
             ->body(new HtmlString(
                 $inUse->map(fn (array $row) => e($row[0])." — used by {$row[1]} invitation(s)")->implode('<br>')
                 .'<br>Turn off "Active" instead to stop offering it, or delete those invitations first '
-                .'from the "Invitations using this template" table on the Edit page.'
+                .'(click «Invitations» on the template).'
             ))
             ->persistent()
             ->send();

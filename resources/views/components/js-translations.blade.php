@@ -19,6 +19,8 @@
     '":name" is not an MP3 or M4A audio file.' => __('":name" is not an MP3 or M4A audio file.'),
     '":name" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.' => __('":name" is :mb MB — audio files can be at most :max MB (≈ a 10-minute song). Please use a shorter song or a 128 kbps MP3.'),
     'Slide :number' => __('Slide :number'),
+    'The upload failed. Please try again.' => __('The upload failed. Please try again.'),
+    ":failed of :count photos couldn't be uploaded — please try those again." => __(":failed of :count photos couldn't be uploaded — please try those again."),
   ];
 @endphp
 <script>

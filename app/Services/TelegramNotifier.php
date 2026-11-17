@@ -67,7 +67,9 @@ class TelegramNotifier
         $esc = fn (?string $value) => htmlspecialchars((string) $value, ENT_QUOTES);
 
         $lines = [
-            "🛒 <b>New order — {$esc($order->order_number)}</b>",
+            $order->isAddon()
+                ? "🧩 <b>Add-on order — {$esc($order->order_number)}</b>\nFor invitation #{$order->invitation_id}"
+                : "🛒 <b>New order — {$esc($order->order_number)}</b>",
             '',
             "👤 {$esc($order->customer_name)}",
             "📞 {$esc($order->customer_phone)}",

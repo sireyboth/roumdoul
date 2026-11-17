@@ -174,7 +174,7 @@ class LocalizationTest extends TestCase
             ->call('addRecipient')
             ->assertHasErrors('newRecipientName')
             ->assertSee('សូមបំពេញ ឈ្មោះភ្ញៀវ។')
-            ->assertDispatched('toast', type: 'error', message: 'សូមវាយឈ្មោះភ្ញៀវជាមុនសិន។');
+            ->assertDispatched('toast', type: 'error', message: 'សូមវាយបញ្ចូលឈ្មោះភ្ញៀវជាមុនសិន។');
 
         App::setLocale('en');
         Livewire::actingAs($customer, 'customer')

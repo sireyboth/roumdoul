@@ -7,6 +7,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -55,9 +57,14 @@ class PromoCodesTable
                 TernaryFilter::make('is_active')
                     ->label('Active'),
             ])
+            ->emptyStateIcon(Heroicon::OutlinedTag)
+            ->emptyStateHeading('No promo codes yet')
+            ->emptyStateDescription('Click «New promo code» to create a discount customers can type at checkout.')
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->modalWidth(Width::FiveExtraLarge),
+                DeleteAction::make()
+                    ->modalDescription('Customers will no longer be able to use this code.'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

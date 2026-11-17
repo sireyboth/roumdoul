@@ -208,7 +208,7 @@
 
             <p class="mt-4 flex items-start gap-2 text-xs leading-relaxed text-plum-600 dark:text-plum-300">
               <x-app-icon name="phone" class="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
-              <span>{!! __('We will contact you at :phone to confirm payment (ABA/Wing/QR).', ['phone' => '<strong>'.e($customer_phone).'</strong>']) !!}</span>
+              <span>{{ __("Next you'll see our KHQR with the exact amount — scan it in any bank app. No screenshot needed.") }}</span>
             </p>
 
             <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

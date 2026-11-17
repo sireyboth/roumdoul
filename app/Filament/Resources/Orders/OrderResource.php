@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources\Orders;
 
-use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
-use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Filament\Resources\Orders\Schemas\OrderInfolist;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
@@ -42,17 +40,15 @@ class OrderResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            \App\Filament\Resources\Orders\RelationManagers\ItemsRelationManager::class,
-        ];
+        // items are shown in the «View» modal (Items tab)
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
+            // view, notes, «Mark as paid» and «Change status» all open in modals on the list page
             'index' => ListOrders::route('/'),
-            'view' => ViewOrder::route('/{record}'),
-            'edit' => EditOrder::route('/{record}/edit'),
         ];
     }
 

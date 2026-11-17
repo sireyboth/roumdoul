@@ -21,12 +21,18 @@ class Invitation extends Model
         'slug',
         'field_values',
         'max_recipients',
+        'max_gallery_photos',
+        'features',
         'expires_at',
+        'expiry_reminded_at',
     ];
 
     protected $casts = [
         'field_values' => 'array',
         'expires_at' => 'datetime',
+        'expiry_reminded_at' => 'datetime',
+        'max_gallery_photos' => 'integer',
+        'features' => 'array',
     ];
 
     public function customer(): BelongsTo
@@ -50,13 +56,21 @@ class Invitation extends Model
     }
 
     /**
-     * How many photos this invitation's photo gallery may hold: the plan's `max_gallery_photos`
-     * (set by an admin per plan), or InvitationManagePage::MAX_GALLERY_PHOTOS when it's blank.
-     * Read live from the plan, so an admin change applies to existing invitations too.
+     * How many photos this invitation's photo gallery may hold: its own `max_gallery_photos` (copied from
+     * the plan when paid, raised by «more photos» add-ons), else the plan's, else
+     * InvitationManagePage::MAX_GALLERY_PHOTOS. Editing a plan in admin no longer changes invitations already sold.
      */
     public function maxGalleryPhotos(): int
     {
-        return $this->plan?->max_gallery_photos ?: InvitationManagePage::MAX_GALLERY_PHOTOS;
+        return $this->max_gallery_photos ?: $this->plan?->max_gallery_photos ?: InvitationManagePage::MAX_GALLERY_PHOTOS;
+    }
+
+    /**
+     * Add-on orders for this invitation (more guests / photos, feature unlocks, upgrades, extensions).
+     */
+    public function addonOrders(): HasMany
+    {
+        return $this->hasMany(Order::class)->where('type', Order::TYPE_ADDON);
     }
 
     public function recipients(): HasMany
@@ -80,14 +94,14 @@ class Invitation extends Model
     }
 
     /**
-     * Whether the plan this invitation was purchased under has unlocked a given key in its
-     * `features` list. `features` now stores InvitationTemplate::FIELD_CATALOG keys directly
+     * Whether this invitation has unlocked a given key: its own `features` (copied from the plan when paid,
+     * plus feature add-ons), falling back to the plan's list for invitations made before that column existed. `features` now stores InvitationTemplate::FIELD_CATALOG keys directly
      * (e.g. 'venue_address', 'countdown_enabled', 'photo_gallery') rather than separate
      * feature names, so this doubles as the low-level check behind fieldUnlocked() below.
      */
     public function hasFeature(string $key): bool
     {
-        return in_array($key, $this->plan?->features ?? [], true);
+        return in_array($key, $this->features ?? $this->plan?->features ?? [], true);
     }
 
     /**

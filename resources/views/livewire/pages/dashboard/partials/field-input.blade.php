@@ -125,6 +125,13 @@
           <span class="text-xs font-semibold text-plum-600 dark:text-plum-300">{{ __('Add photos') }}</span>
           <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" multiple accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
         </label>
+      @elseif ($this->addonOptions()['photos'] || $this->addonOptions()['upgrades'])
+        {{-- gallery full: offer the «more photos» add-on --}}
+        <button type="button" wire:click="showSection('addons')"
+          class="flex h-28 w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-brand-300 bg-brand-50/60 text-center transition-colors hover:border-brand-500 dark:border-brand-500/40 dark:bg-brand-500/5">
+          <x-app-icon name="sparkles" class="h-5 w-5 text-brand-500" />
+          <span class="px-2 text-xs font-semibold text-brand-700 dark:text-brand-300">{{ __('Add more photos') }}</span>
+        </button>
       @endif
     </div>
     <div x-show="busy" style="display: none" class="mt-2 flex items-center gap-3">

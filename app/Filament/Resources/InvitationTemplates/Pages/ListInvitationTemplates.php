@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\InvitationTemplates\Pages;
 
+use App\Filament\Resources\InvitationTemplates\InvitationTemplateActions;
 use App\Filament\Resources\InvitationTemplates\InvitationTemplateResource;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListInvitationTemplates extends ListRecords
@@ -13,7 +13,7 @@ class ListInvitationTemplates extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            InvitationTemplateActions::create(),
         ];
     }
 }

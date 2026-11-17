@@ -8,12 +8,22 @@
     <p class="mt-1 text-lg font-bold tracking-wide text-brand-700 dark:text-brand-300">#{{ $order->order_number }}</p>
   </div>
 
-  <div class="mt-10 rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
+  @if ($order->status === 'pending_payment')
+    <x-shop.payment-modal :order="$order" auto-open class="mt-10" />
+  @endif
+
+  <div class="mt-6 rounded-lg border border-plum-200 bg-white p-6 dark:border-plum-800 dark:bg-plum-900">
     <div class="flex items-center justify-between border-b border-plum-100 pb-4 dark:border-plum-800">
       <span class="text-sm text-plum-500 dark:text-plum-400">{{ __('Status') }}</span>
-      <span class="rounded-full bg-gold-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-gold-700 dark:bg-gold-400/10 dark:text-gold-400">
-        {{ __('Pending payment') }}
-      </span>
+      @if ($order->status === 'pending_payment')
+        <span class="rounded-full bg-gold-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-gold-700 dark:bg-gold-400/10 dark:text-gold-400">
+          {{ __('Pending payment') }}
+        </span>
+      @else
+        <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-green-700 dark:bg-green-900/30 dark:text-green-400">
+          {{ __('Paid') }}
+        </span>
+      @endif
     </div>
 
     <ul class="mt-4 flex flex-col gap-3">
@@ -41,13 +51,6 @@
     </div>
   </div>
 
-  <div class="mt-6 flex items-start gap-3 rounded-lg border border-gold-400/40 bg-gold-50 p-4 dark:border-gold-400/20 dark:bg-plum-800">
-    <x-app-icon name="chat" class="mt-0.5 h-5 w-5 shrink-0 text-gold-600 dark:text-gold-400" />
-    <p class="text-xs leading-relaxed text-plum-700 dark:text-plum-300">
-      {!! __('Our team will contact you at :phone shortly to confirm your payment and deliver your order.', ['phone' => '<strong>'.e($order->customer_phone).'</strong>']) !!}
-    </p>
-  </div>
-
   <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
     <a href="/shop" wire:navigate class="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
       {{ __('Continue shopping') }}
@@ -57,8 +60,16 @@
     </a>
   </div>
 
-  {{-- Post-order feedback modal --}}
-  <div x-data="{ open: @js(! $reviewSubmitted) }">
+  {{-- Post-order feedback modal. While the order still needs paying it doesn't pop up by itself (it would
+       cover the payment QR) — a button opens it instead. --}}
+  <div x-data="{ open: @js(! $reviewSubmitted && $order->status !== 'pending_payment') }">
+    @if (! $reviewSubmitted && $order->status === 'pending_payment')
+      <p class="mt-6 text-center">
+        <button type="button" @click="open = true" class="inline-flex items-center gap-1.5 text-sm font-semibold text-plum-500 hover:text-brand-700 dark:text-plum-400 dark:hover:text-brand-300">
+          <x-app-icon name="star" class="h-4 w-4" /> {{ __('Rate your shopping experience') }}
+        </button>
+      </p>
+    @endif
     <div x-show="open" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-plum-950/60" @click="open = false"></div>
 
     <div x-show="open" x-cloak x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4">

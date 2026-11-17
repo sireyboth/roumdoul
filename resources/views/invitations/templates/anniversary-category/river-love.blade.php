@@ -6,7 +6,8 @@
     // River Love — romantic anniversary / love page.
     // Cover: a full-screen looping video of a blossom lake (cropped, never shrunk, on phones),
     // the words in the middle rise softly out of a blur, and petals and leaves fall forever over the
-    // whole page. Below: the letter → scratch-off photos → our photos → together since (or a countdown) → closing line.
+    // whole page. Below: the letter → scratch-off photos → our photos → paper boats of reasons →
+    // our places → now playing → together since (or a countdown) → the lantern finale.
     //
     // Everything personal comes from $fields (catalog keys, docs/invitation-templates.md):
     //   recipient name   → «For …» on the cover and «Dear …» on the letter (the guest link's name)
@@ -15,11 +16,19 @@
     //   event_date       → past = «together since» + days count; future = countdown (premium countdown_enabled)
     //   photo_gallery + photo_captions → letter prints (1–3), scratch cards (4–7, title = caption), the photo reels
     //                    (caption «Title | small line» = the card's film labels). Scratch cards: the shared x-scratch-card component
+    //   story_chapters   → «Our places» memory map pins (shared x-memory-map; title «Place | when», text = the memory,
+    //                    photo = gallery photo 8+); no chapters = no map
     //   cover_image      → first photo of the photos section (default: gallery photo 1)
     // The background is always the river-love video (not a customer field): background_image and
     // cover_image never replace it — cover_image only leads the photos section.
-    //   music_file / music_url + song_title → «Play our song» on the cover
-    //   closing_line + thanks_message → the ending      accent_color → petals, buttons, hearts
+    //   love_reasons     → «Paper boats»: one folded paper boat per line (max 9) bobbing on the river; a tap unfolds
+    //                    it into a note with that reason (gentle generic reasons when empty)
+    //   music_file / music_url + song_title → plays by itself; «Play our song» on the cover and the «Now playing»
+    //                    card (record, title, from/for, progress) both pause/play the same song, always in sync
+    //   closing_line + thanks_message → the lantern finale: «Send a lantern» lets a paper lantern rise, then they show
+    //   accent_color → petals, buttons, hearts
+    // Hidden hearts hunt: a small heart hides in the letter, scratch cards, photo reels, map and boats (sections
+    // that aren't shown take their heart with them); a counter appears after the first, all found = a secret card.
     // Empty fields fall back to gentle generic wording. On demo pages $invitation is null → all unlocked.
     // Video: images/invitations/assets/videos/river-love-loop.mp4 (landscape) and river-love-portrait-loop.mp4
     // (portrait screens), each a seamless loop made with ffmpeg from river-love.mp4 / river-love-portrait.mp4,
@@ -63,24 +72,44 @@
         ->filter(fn ($p) => is_string($p) && trim($p) !== '')
         ->map(fn ($p) => $resolveUrl(trim($p)))
         ->values();
-    if (! empty($fields['cover_image']) && $isUnlocked('cover_image')) {
-        $photos = $photos->prepend($resolveUrl($fields['cover_image']))->unique()->values();
-    }
+    // captions belong to the gallery photos (caption 1 = gallery photo 1), never to the cover
     $captions = $lines('photo_captions');
-    $gallery = $photos->take(18)->map(function ($src, $i) use ($captions) {
+    $galleryItems = $photos->map(function ($src, $i) use ($captions) {
         [$title, $sub] = array_pad(array_map('trim', explode('|', $captions[$i] ?? '', 2)), 2, '');
 
         return ['src' => $src, 'title' => $title, 'sub' => $sub];
-    })->all();
+    })->values();
+    // cover_image only leads the photo reels — the letter prints and scratch cards use gallery photos
+    // (a lone cover still shows everywhere when there's no gallery)
+    $cover = (! empty($fields['cover_image']) && $isUnlocked('cover_image')) ? $resolveUrl($fields['cover_image']) : null;
+    $reelItems = $cover
+        ? $galleryItems->reject(fn ($g) => $g['src'] === $cover)->prepend(['src' => $cover, 'title' => '', 'sub' => ''])->values()
+        : $galleryItems;
+    $gallery = $reelItems->take(18)->all();
+    $ownPhotos = $galleryItems->isNotEmpty() ? $galleryItems->all() : $gallery;
 
-    // scratch cards: photos 4–7 (after the letter's 3 prints); a gallery of 6 or fewer starts from photo 1
+    // scratch cards: gallery photos 4–7 (after the letter's 3 prints); a gallery of 6 or fewer starts from photo 1
     $scratchDefaults = ['my favorite kind of day', 'right here, with you', 'that night we laughed', 'us, always'];
-    $scratchFrom = count($gallery) > 6 ? 3 : 0;
-    $scratchCards = $gallery ? collect(range(0, min(4, count($gallery)) - 1))->map(function ($k) use ($gallery, $scratchFrom, $scratchDefaults) {
-        $g = $gallery[($scratchFrom + $k) % count($gallery)];
+    $scratchFrom = count($ownPhotos) > 6 ? 3 : 0;
+    $scratchCards = $ownPhotos ? collect(range(0, min(4, count($ownPhotos)) - 1))->map(function ($k) use ($ownPhotos, $scratchFrom, $scratchDefaults) {
+        $g = $ownPhotos[($scratchFrom + $k) % count($ownPhotos)];
 
         return ['src' => $g['src'], 'caption' => $g['title'] !== '' ? $g['title'] : $scratchDefaults[$k]];
     })->all() : [];
+
+    // memory map (shared x-memory-map): one pin per story chapter, title «Place | when», text = the memory;
+    // pin photos are gallery photos 8+ (after the prints and scratch cards), starting over when the gallery runs out
+    $places = collect($isUnlocked('story_chapters') ? ($fields['story_chapters'] ?? []) : [])
+        ->filter(fn ($c) => is_array($c) && trim(($c['title'] ?? '').($c['text'] ?? '')) !== '')
+        ->take(6)->values()
+        ->map(function ($c, $i) use ($ownPhotos) {
+            [$place, $when] = array_pad(array_map('trim', explode('|', (string) ($c['title'] ?? ''), 2)), 2, '');
+
+            return [
+                'name' => $place !== '' ? $place : 'A memory', 'date' => $when, 'note' => trim((string) ($c['text'] ?? '')),
+                'photo' => $ownPhotos ? $ownPhotos[(7 + $i) % count($ownPhotos)]['src'] : null,
+            ];
+        })->all();
 
     // together since (past date) or a countdown to the day (future date)
     $date = null;
@@ -95,7 +124,7 @@
     $days = $date && $isPast ? (int) $date->copy()->startOfDay()->diffInDays(now()->startOfDay()) : null;
     $showCountdown = $date && ! $isPast && $isUnlocked('countdown_enabled') && ! empty($fields['countdown_enabled'] ?? true);
 
-    // an uploaded song wins over a link; nothing downloads until «Play our song» is tapped
+    // an uploaded song wins over a link; it plays by itself (on open, or on the first tap when the browser blocks sound)
     $musicFile = (! empty($fields['music_file']) && $isUnlocked('music_file')) ? $resolveUrl($fields['music_file']) : null;
     $musicUrl = $isUnlocked('music_url') ? $text('music_url') : '';
     $youtubeId = null;
@@ -116,6 +145,19 @@
     $videoPortrait = 'images/invitations/assets/videos/river-love-portrait-loop.mp4';
     $posterPortrait = 'images/invitations/assets/videos/river-love-portrait-poster.jpg';
 
+    // paper boats: one reason per line, at most 9 (three rows of three on a phone)
+    $reasons = array_slice($lines('love_reasons') ?: [
+        'The way you make ordinary days feel like a holiday.',
+        'You listen, even to my longest stories.',
+        'Your laugh. I would cross any river for it.',
+        'You feel like home.',
+        'Because every day with you becomes my favourite one.',
+    ], 0, 9);
+
+    // hidden hearts: one per shown section (letter + boats always; scratch, reels and map when they're on the page)
+    $heartCount = 2 + ($scratchCards ? 1 : 0) + ($gallery ? 1 : 0) + ($places ? 1 : 0);
+    $hiddenHeart = fn (string $where) => '<button type="button" class="rl-hh rl-hh-'.$where.'" aria-label="A little hidden heart"><svg aria-hidden="true"><use href="#rl-heart"/></svg></button>';
+
     $closing = $text('closing_line') ?: 'I love you, always.';
     $thanks = $text('thanks_message') ?: 'Today, tomorrow, and on every ordinary day in between.';
 
@@ -124,6 +166,9 @@
         'countdown' => $showCountdown ? $date->toIso8601String() : null,
         // template ambience: a seamless 40 s birdsong loop (made with ffmpeg from soundreality-birds-forest-nature-445379.mp3)
         'birds' => $rlAsset('images/invitations/assets/sfx/birds-loop.mp3'),
+        // short taps: a boat unfolds (paper), folds back (card), a hidden heart (pop), a lantern (chime), the secret (reveal)
+        'sfx' => collect(['paper' => 'papercrackle1', 'card' => 'card', 'pop' => 'pop', 'chime' => 'chime', 'reveal' => 'reveal'])
+            ->map(fn ($f) => $rlAsset("images/invitations/assets/sfx/{$f}.mp3"))->all(),
     ];
 @endphp
 
@@ -166,6 +211,8 @@
       <nav class="rl-nav" aria-label="Sections">
         <a href="#rlLetter">Letter</a>
         @if ($gallery)<a href="#rlPhotos">Moments</a>@endif
+        <a href="#rlReasons">Reasons</a>
+        @if ($places)<a href="#rlMap">Places</a>@endif
         @if ($date)<a href="#rlTime">{{ $isPast ? 'Us' : 'Our day' }}</a>@endif
       </nav>
       <a class="rl-chip" href="#rlLetter">For {{ $name }} <svg aria-hidden="true"><use href="#rl-heart"/></svg></a>
@@ -216,7 +263,7 @@
       $stamp = $date
           ? ['top' => mb_strtoupper($date->format('l')), 'mid' => $date->format('d'), 'bottom' => mb_strtoupper($date->format('F'))]
           : ['top' => 'ALWAYS', 'mid' => '♡', 'bottom' => '& FOREVER'];
-      $prints = $photos->take(3)->values()->all();
+      $prints = collect($ownPhotos)->take(3)->pluck('src')->all();
       // green wax seal with a leaf; $id keeps gradient ids unique when it appears twice
       $seal = fn (string $id, string $class) => '<svg class="'.$class.'" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="'.$id.'" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#7fa36a"/><stop offset=".55" stop-color="#4f7a43"/><stop offset="1" stop-color="#355a2e"/></radialGradient></defs>'
           .'<path d="M50 4 C62 3 70 8 79 14 C89 21 96 33 96 47 C97 60 93 71 84 81 C75 91 63 96 50 96 C37 97 25 92 16 83 C7 74 3 62 4 49 C4 36 9 25 18 16 C27 8 38 4 50 4Z" fill="url(#'.$id.')"/>'
@@ -242,6 +289,7 @@
   <div id="rlLetter" class="rl-letter-host">
   <section class="rl-letter">
     <div class="rl-l-wrap">
+      {!! $hiddenHeart('letter') !!}
       <div class="rl-l-text">
         <div class="rl-stamp rl-rv" aria-label="{{ $date ? $date->format('l, j F Y') : 'Always and forever' }}">
           <p class="rl-stamp-day" aria-hidden="true">{{ $stamp['top'] }}</p>
@@ -313,6 +361,7 @@
        their caption titles under each card. Revealed cards open in the photo preview and drop petals. --}}
   @if ($scratchCards)
     <section class="rl-sec rl-scratch" id="rlScratch">
+      {!! $hiddenHeart('scratch') !!}
       <p class="rl-kicker rl-rv">Scratch to remember</p>
       <h2 class="rl-h2 rl-rv">If I could live a moment twice…</h2>
       <div class="rl-scratch-grid" style="--n: {{ count($scratchCards) }}">
@@ -359,6 +408,7 @@
       <header class="rl-reel-head">
         <p class="rl-kicker rl-rv">Little pieces of us</p>
         <h2 class="rl-reel-title rl-rv">Moments<span>I keep</span></h2>
+        {!! $hiddenHeart('reel') !!}
       </header>
       <div class="rl-reel-glow" aria-hidden="true"></div>
       <div class="rl-reel-grain" aria-hidden="true"></div>
@@ -386,6 +436,75 @@
     </section>
   @endif
 
+  {{-- ─────────── paper boats of reasons: love_reasons, one folded boat per line ───────────
+       the boats bob on a strip of the river; a tap unfolds one into a small note with its reason (one at a time,
+       tap again / anywhere else to fold it back); a boat that's been read keeps a little heart on its sail. --}}
+  <section class="rl-sec rl-boats" id="rlReasons">
+    <p class="rl-kicker rl-rv">Paper boats</p>
+    <h2 class="rl-h2 rl-rv">Reasons I love you, sent down the river</h2>
+    {{-- --cols: boats per row on wide screens (up to 7 in one row, more = two even rows) --}}
+    <div class="rl-river rl-rv" id="rlRiver" style="--cols: {{ count($reasons) <= 7 ? count($reasons) : (int) ceil(count($reasons) / 2) }}">
+      <div class="rl-fleet">
+      @foreach ($reasons as $i => $reason)
+        <button type="button" class="rl-boat" data-reason="{{ $reason }}" aria-expanded="false" aria-controls="rlNote"
+          aria-label="Unfold reason {{ $i + 1 }}"
+          style="--bd: {{ 4.2 + ($i * 7 % 5) * .45 }}s; --bdl: -{{ ($i * 3 % 7) * .6 }}s; --by: {{ [0, 18, 6, 22, 2, 14, 10, 20, 4][$i] }}px; --bt: {{ [-4, 3, -2, 5, -3, 2, -5, 4, -1][$i] }}deg">
+          <svg viewBox="0 0 120 84" aria-hidden="true">
+            <g stroke="rgba(90,62,74,.22)" stroke-width=".8" stroke-linejoin="round">
+              <path d="M4 50 L116 50 L97 74 L23 74Z" fill="#fbf9f5"/>
+              <path d="M23 74 L60 57 L97 74Z" fill="#ebe5dd"/>
+              <path d="M14 50 L36 27 L45 50Z" fill="#f1ede6"/>
+              <path d="M106 50 L84 27 L75 50Z" fill="#e2dcd2"/>
+              <path d="M60 5 L31 50 L60 50Z" fill="#fff"/>
+              <path d="M60 5 L89 50 L60 50Z" fill="#ece6de"/>
+            </g>
+            <use class="rl-boat-heart" href="#rl-heart" x="52" y="31" width="12" height="12"/>
+          </svg>
+        </button>
+      @endforeach
+      </div>
+      <div class="rl-note" id="rlNote" hidden>
+        <p class="rl-note-k">Reason <b id="rlNoteN">1</b></p>
+        <p class="rl-note-t" id="rlNoteT" aria-live="polite"></p>
+        <p class="rl-note-s">{{ $from }} &#9825;</p>
+      </div>
+      {!! $hiddenHeart('boats') !!}
+    </div>
+    <p class="rl-river-hint rl-rv"><span id="rlBoatHint" data-total="{{ count($reasons) }}">Tap a boat to unfold a reason</span>
+      <small>psst… {{ ['one', 'two', 'three', 'four', 'five'][$heartCount - 1] }} tiny {{ $heartCount === 1 ? 'heart is' : 'hearts are' }} hiding on this page</small></p>
+  </section>
+
+  {{-- ─────────── our places: the shared memory map, with a river through it ─────────── --}}
+  @if ($places)
+    <section class="rl-sec rl-map" id="rlMap">
+      {!! $hiddenHeart('map') !!}
+      <p class="rl-kicker rl-rv">Our places</p>
+      <h2 class="rl-h2 rl-rv">Every road led me to you</h2>
+      <x-memory-map :places="$places" river :label="mb_strtolower($from.' & '.$name)" photo-class="rl-ph-btn" class="rl-map-box rl-rv" />
+      <p class="rl-map-hint rl-rv">Tap a heart to open a memory</p>
+    </section>
+  @endif
+
+  {{-- ─────────── now playing: the same song as the cover button (river-love.js keeps both in sync) ─────────── --}}
+  @if ($hasMusic)
+    <section class="rl-sec rl-np-sec" id="rlSong">
+      <div class="rl-np rl-rv {{ $musicFile ? '' : 'is-stream' }}" id="rlNp">
+        <div class="rl-np-disc" aria-hidden="true"><span><svg><use href="#rl-blossom"/></svg></span></div>
+        <div class="rl-np-info">
+          <p class="rl-np-k"><span class="rl-eq" aria-hidden="true"><i></i><i></i><i></i></span> Now playing</p>
+          <h2 class="rl-np-title">{{ $songTitle }}</h2>
+          <p class="rl-np-by">from {{ $from }}, for {{ $name }}</p>
+          <div class="rl-np-bar" aria-hidden="true"><i id="rlNpFill"></i></div>
+          <p class="rl-np-time" aria-hidden="true"><span id="rlNpCur">0:00</span><span id="rlNpDur">{{ $musicFile ? '–:––' : 'on repeat' }}</span></p>
+        </div>
+        <button class="rl-np-btn" id="rlNpPlay" type="button" aria-pressed="false" aria-label="Play {{ $songTitle }}">
+          <svg class="play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+          <svg class="pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </section>
+  @endif
+
   {{-- ─────────── together since / countdown ─────────── --}}
   @if ($date)
     <section class="rl-sec rl-time" id="rlTime">
@@ -406,10 +525,29 @@
   @endif
 
   {{-- ─────────── ending ─────────── --}}
-  <section class="rl-sec rl-end">
+  {{-- the guest sends a paper lantern up from the river (river-love.js); then closing_line + thanks_message show.
+       Without the script the words are simply there. --}}
+  <section class="rl-sec rl-end" id="rlEnd">
     <svg class="rl-end-flower rl-rv" aria-hidden="true"><use href="#rl-blossom"/></svg>
-    <p class="rl-closing rl-rv">{{ $closing }}</p>
-    <p class="rl-thanks rl-rv">{{ $thanks }}</p>
+    <div class="rl-wish rl-rv">
+      <p class="rl-kicker">One last thing</p>
+      <p class="rl-wish-q">Make a wish with me</p>
+      <button class="rl-btn" id="rlWishBtn" type="button"><span id="rlWishTxt">Send a lantern</span> <svg aria-hidden="true"><use href="#rl-heart"/></svg></button>
+    </div>
+    <div class="rl-lanterns" id="rlLanterns" aria-hidden="true"></div>
+    <div class="rl-end-msg" id="rlEndMsg">
+      <p class="rl-closing">{{ $closing }}</p>
+      <p class="rl-thanks">{{ $thanks }}</p>
+    </div>
+    <template id="rlLanternTpl">
+      <div class="rl-lantern"><svg viewBox="0 0 60 84" aria-hidden="true">
+        <defs><linearGradient id="rlLanternG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4dc"/><stop offset=".6" stop-color="#ffd596"/><stop offset="1" stop-color="#f3a35c"/></linearGradient></defs>
+        <path d="M7 10 Q30 1 53 10 L46 64 Q30 70 14 64Z" fill="url(#rlLanternG)"/>
+        <path d="M22 5.5 L19 66 M38 5.5 L41 66" fill="none" stroke="rgba(170,96,40,.22)" stroke-width="1"/>
+        <ellipse cx="30" cy="65" rx="16" ry="3.6" fill="#b8642c" opacity=".55"/>
+        <ellipse cx="30" cy="72" rx="3.2" ry="5" fill="#ffe7a6"/>
+      </svg></div>
+    </template>
   </section>
 
   <x-invitation-footer :names="$from.' ♡ '.$name" :date="$date?->format('d · m · Y')" love="Made with love"
@@ -422,13 +560,26 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="off" d="M16.5 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
   </button>
 
+  {{-- hidden hearts hunt: counter (after the first find), a short toast, and the secret card when all are found --}}
+  <p class="rl-hunt" id="rlHunt" hidden aria-live="polite"><svg aria-hidden="true"><use href="#rl-heart"/></svg> <b id="rlHuntN">0</b>/{{ $heartCount }}</p>
+  <p class="rl-toast" id="rlToast" role="status" hidden></p>
+  <div class="rl-secret" id="rlSecret" role="dialog" aria-modal="true" aria-labelledby="rlSecretT" hidden>
+    <div class="rl-secret-card">
+      <svg class="rl-secret-heart" aria-hidden="true"><use href="#rl-heart"/></svg>
+      <p class="rl-secret-k">A little secret</p>
+      <h2 class="rl-secret-t" id="rlSecretT">You found every heart, just like you found mine.</h2>
+      <p class="rl-secret-by">from {{ $from }}, for {{ $name }}</p>
+      <button type="button" class="rl-btn rl-secret-x" id="rlSecretX">Keep it <svg aria-hidden="true"><use href="#rl-heart"/></svg></button>
+    </div>
+  </div>
+
   {{-- photo preview --}}
   <div class="rl-lb" id="rlLb" role="dialog" aria-modal="true" aria-label="Photo preview" hidden>
     <figure><img id="rlLbImg" alt=""><figcaption id="rlLbCap"></figcaption></figure>
     <button type="button" class="rl-lb-x" id="rlLbX" aria-label="Close">&#10005;</button>
   </div>
 
-  @if ($musicFile)<audio id="rlAudio" src="{{ $musicFile }}" preload="none" loop></audio>@endif
+  @if ($musicFile)<audio id="rlAudio" src="{{ $musicFile }}" preload="auto" loop></audio>@endif
 </div>
 
 <script id="rl-config" type="application/json">{!! json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>

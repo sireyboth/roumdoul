@@ -66,6 +66,7 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
     progress: 0,
     error: '',
     stallTimer: null,
+    cancelled: false,
 
     async pick(event) {
       const files = [...event.target.files]
@@ -104,6 +105,11 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
         return
       }
 
+      if (multiple) {
+        await this.uploadEach(ready)
+        return
+      }
+
       const done = () => this.finish()
       const failed = () => this.finish() // the server's _uploadErrored puts a readable message in the error bag
       const progress = (e) => {
@@ -112,11 +118,66 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
       }
 
       this.armStallTimer()
-      if (multiple) {
-        this.$wire.$uploadMultiple(name, ready, done, failed, progress, done)
-      } else {
+      try {
         this.$wire.$upload(name, ready[0], done, failed, progress, done)
+      } catch (err) {
+        this.finish(t('The upload failed. Please try again.'))
       }
+    },
+
+    // Gallery: send the photos ONE AT A TIME, each appended to the gallery's pending list. One big
+    // multi-file request breaks when many photos are picked together (the server's request-size /
+    // file-count limits apply to the whole batch, and one bad file failed them all). Each photo has
+    // its own try/catch: a failed one is skipped and counted, the rest still go up.
+    async uploadEach(files) {
+      this.cancelled = false
+      let failed = 0
+      for (let i = 0; i < files.length; i++) {
+        if (this.cancelled) break
+        try {
+          const ok = await this.uploadOne(files[i], (p) => {
+            this.progress = Math.round(((i + p / 100) / files.length) * 100)
+          })
+          if (!ok) failed++
+        } catch {
+          failed++
+        }
+      }
+      if (this.cancelled) return
+      this.progress = 100
+      this.finish(failed
+        ? t(':failed of :count photos couldn\'t be uploaded — please try those again.', { failed, count: files.length })
+        : '')
+    },
+
+    // One photo → resolves true when it's uploaded, false when it failed or stalled (never rejects).
+    uploadOne(file, onProgress) {
+      return new Promise((resolve) => {
+        let settled = false
+        const settle = (ok) => {
+          if (settled) return
+          settled = true
+          clearTimeout(this.stallTimer)
+          resolve(ok)
+        }
+        const arm = () => {
+          clearTimeout(this.stallTimer)
+          this.stallTimer = setTimeout(() => {
+            try { this.$wire.$cancelUpload(name) } catch {}
+            settle(false)
+          }, STALL_MS)
+        }
+        arm()
+        try {
+          // append = true (Livewire's default): adds to the files already waiting in this gallery
+          this.$wire.$uploadMultiple(name, [file], () => settle(true), () => settle(false), (e) => {
+            onProgress(e.detail.progress)
+            arm()
+          }, () => settle(false))
+        } catch {
+          settle(false)
+        }
+      })
     },
 
     // shows the problem under the field and as a toast
@@ -126,7 +187,8 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
     },
 
     cancel() {
-      this.$wire.$cancelUpload(name)
+      this.cancelled = true
+      try { this.$wire.$cancelUpload(name) } catch {}
       this.finish()
     },
 

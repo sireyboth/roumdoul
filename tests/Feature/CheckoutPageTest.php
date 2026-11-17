@@ -73,7 +73,7 @@ class CheckoutPageTest extends TestCase
             ->call('reviewOrder')
             ->assertSet('confirmingOrder', true)
             ->assertSee(__('Confirm your order'))
-            ->assertSee('012345678');
+            ->assertSee(__("Next you'll see our KHQR with the exact amount — scan it in any bank app. No screenshot needed."));
 
         $this->assertDatabaseCount('orders', 0);
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Models\Order;
 use Filament\Actions\ViewAction;
@@ -28,16 +29,13 @@ class LatestOrders extends TableWidget
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (string $state) => OrderForm::STATUSES[$state] ?? $state)
-                    ->color(fn (string $state) => match ($state) {
-                        'paid', 'fulfilled' => 'success',
-                        'cancelled' => 'danger',
-                        default => 'warning',
-                    }),
+                    ->color(fn (string $state) => OrderForm::statusColor($state)),
                 TextColumn::make('created_at')->label('Placed')->since(),
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn (Order $record) => "/admin/orders/{$record->id}"),
+                    // opens the order's View modal on the Orders list
+                    ->url(fn (Order $record) => OrderResource::getUrl('index', ['tableAction' => 'view', 'tableActionRecord' => $record->getKey()])),
             ]);
     }
 }

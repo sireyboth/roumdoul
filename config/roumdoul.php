@@ -26,4 +26,13 @@ return [
     // the «Chat on Telegram» button (same chat as the storefront footer)
     'telegram_chat' => env('ROUMDOUL_TELEGRAM_CHAT_URL', 'https://t.me/+85515578707'),
 
+    // How customers pay (manual for now): the KHQR shown on the order confirmation page and on a
+    // pending order in the dashboard (resources/views/components/shop/payment-modal.blade.php).
+    // Put the QR picture at public/{qr_image}; until it exists, the box shows the name + account ID only.
+    'payment' => [
+        'qr_image' => env('ROUMDOUL_PAY_QR_IMAGE', 'images/payment/khqr.png'),
+        'account_name' => env('ROUMDOUL_PAY_ACCOUNT_NAME', 'THAI NGOUNLENG'),
+        'account_id' => env('ROUMDOUL_PAY_ACCOUNT_ID', '102 492 369'),
+    ],
+
 ];

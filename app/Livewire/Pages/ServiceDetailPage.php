@@ -45,6 +45,8 @@ class ServiceDetailPage extends Component
     {
         return view('livewire.pages.service-detail-page', [
             'selectedPlan' => $this->service->plans->firstWhere('id', $this->selectedPlanId),
+            // invitation templates get a hint under the quantity: each one is a separate invitation
+            'isInvitation' => $this->service->invitationTemplates()->exists(),
             'relatedServices' => Service::with(['category', 'plans'])
                 ->where('category_id', $this->service->category_id)
                 ->where('id', '!=', $this->service->id)

@@ -3,16 +3,15 @@
 namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\ManageRecords;
 
-class ListCustomers extends ListRecords
+class ListCustomers extends ManageRecords
 {
     protected static string $resource = CustomerResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [
-            //
-        ];
+        // Customers sign up on the storefront themselves — no «New» button here.
+        return [];
     }
 }
