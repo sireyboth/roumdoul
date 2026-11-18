@@ -5,7 +5,6 @@ import { initLangToggle } from './modules/lang.js'
 import { initHeroSlider } from './modules/heroSlider.js'
 import { initFooter } from './modules/footer.js'
 import { initScrollReveal } from './modules/scrollReveal.js'
-import { initCounters } from './modules/counters.js'
 import { initHeroParticles } from './modules/heroParticles.js'
 import { initTilt } from './modules/tilt.js'
 import './modules/photoUploader.js'
@@ -23,7 +22,6 @@ document.addEventListener('livewire:init', () => {
   Livewire.hook('commit', ({ succeed }) => {
     succeed(() => {
       initScrollReveal()
-      initCounters()
       initTilt()
     })
   })
@@ -73,7 +71,6 @@ function mountApp() {
   initFooter()
   scrollToHash()
   initScrollReveal()
-  initCounters()
   initHeroParticles()
   initTilt()
 }

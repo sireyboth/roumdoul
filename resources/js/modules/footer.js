@@ -1,16 +1,12 @@
-import { companyEmail, companyPhone, gmailLink, telegramLink, companyPhones, socialLinks } from './config.js'
+import { companyPhone, telegramLink, companyPhones, socialLinks } from './config.js'
 
 export function initFooter() {
-  const emailLink = document.getElementById('footer-email-link')
-  const emailText = document.getElementById('footer-email-text')
   const phoneLink = document.getElementById('footer-phone-link')
   const phoneText = document.getElementById('footer-phone-text')
   const telegramChatLink = document.getElementById('footer-telegram-chat-link')
   const year = document.getElementById('footer-year')
 
   // Some pages (dashboard, invitation views) render without the site footer.
-  if (emailLink) emailLink.href = gmailLink
-  if (emailText) emailText.textContent = companyEmail
   if (phoneLink) phoneLink.href = telegramLink
   if (phoneText) phoneText.textContent = companyPhone
   if (telegramChatLink) telegramChatLink.href = telegramLink
