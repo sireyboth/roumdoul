@@ -95,6 +95,31 @@
 
     $story = collect($isUnlocked('story_chapters') ? ($fields['story_chapters'] ?? []) : [])
         ->filter(fn ($row) => ! empty($row['title']) || ! empty($row['text']))->values();
+    // a chapter title may be «Place | when»: the story card shows both, the map uses them for its pins
+    $splitTitle = fn ($t) => array_pad(array_map('trim', explode('|', (string) $t, 2)), 2, '');
+
+    // scratch to reveal: three perforated stamps hiding gallery photos (taken from the end of the gallery,
+    // so they aren't the photos the hero already shows)
+    $scratchDefaults = ['ថ្ងៃដែលយើងជួបគ្នា', 'ស្នាមញញឹមរបស់យើង', 'រហូតទៅ'];
+    $scratchCards = $gallery->count() >= 2
+        ? collect(range(0, min(3, $gallery->count()) - 1))->map(function ($k) use ($gallery, $captions, $scratchDefaults) {
+            $i = $gallery->count() - 1 - $k;
+
+            return ['src' => $gallery[$i], 'caption' => ($captions[$i] ?? '') ?: $scratchDefaults[$k]];
+        })->reverse()->values()->all()
+        : [];
+
+    // memory map (shared x-memory-map): one pin per story chapter — place, when and a gallery photo
+    // (the chapter's text stays in the story cards above, so it isn't repeated in the pin)
+    $places = $story->take(6)->map(function ($c, $i) use ($splitTitle, $gallery, $khDigits) {
+        [$place, $when] = $splitTitle($c['title'] ?? '');
+
+        return [
+            'name' => $place !== '' ? $place : 'អនុស្សាវរីយ៍ទី '.$khDigits($i + 1),
+            'date' => $when,
+            'photo' => $gallery->isNotEmpty() ? $gallery[($i + 1) % $gallery->count()] : null,
+        ];
+    })->all();
     $schedule = collect($isUnlocked('event_schedule') ? ($fields['event_schedule'] ?? []) : [])
         ->filter(fn ($row) => ! empty($row['time']) || ! empty($row['label']))->values();
     $scheduleImg = ($isUnlocked('schedule_image') && ! empty($fields['schedule_image'])) ? $resolveUrl($fields['schedule_image']) : null;
@@ -200,7 +225,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&family=Moulpali&family=Noto+Serif+Khmer:wght@400;500;600;700&family=Kantumruy+Pro:wght@300;400;500;600&display=swap">
 <link rel="stylesheet" href="{{ $vgAsset('css/invitations/vellum-garden.css') }}">
-<noscript><style>.vg-gate{display:none}.vg-petals,.vg-sound{opacity:1}</style></noscript>
+<noscript><style>.vg-gate{display:none}.vg-sound{opacity:1}</style></noscript>
 
 <div class="vg{{ $skipGate ? ' is-open' : '' }}" style="--vg-accent: {{ $accent }};">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -224,8 +249,6 @@
           </g>
         </g>
       </symbol>
-      {{-- one falling petal --}}
-      <symbol id="vg-petal" viewBox="-10 -14 20 28"><path d="M0 13C-9 6-9-6-3-12-1-13 0-11 0-10 0-11 1-13 3-12 9-6 9 6 0 13Z"/></symbol>
     </defs>
   </svg>
 
@@ -273,12 +296,9 @@
     </div>
   @endunless
 
-  {{-- a few pressed petals drifting past (CSS only, off with reduced motion) --}}
-  <div class="vg-petals" aria-hidden="true">
-    @for ($i = 0; $i < 9; $i++)
-      <svg style="--i:{{ $i }}"><use href="#vg-petal"/></svg>
-    @endfor
-  </div>
+  {{-- rose petals and a few leaves falling in 3D (shared component; fades in once the envelope opens).
+       A tap drops a handful, a revealed stamp bursts into petals, a map pin lets a few fall. --}}
+  <x-flower-drop class="vg-flowers" :color="$accent" shape="rose" leaf-color="#9aab84" density=".55" />
 
   <main class="vg-page" id="vg-top">
 
@@ -428,16 +448,30 @@
         </div>
         <ol class="vg-story">
           @foreach ($story as $i => $chapter)
+            @php [$chTitle, $chWhen] = $splitTitle($chapter['title'] ?? ''); @endphp
             <li class="vg-story-item {{ $rv }}">
               <span class="vg-story-pin" aria-hidden="true"><svg><use href="#vg-flower"/></svg></span>
               <div class="vg-card vg-story-card">
-                <span class="vg-story-num">{{ $khDigits(str_pad($i + 1, 2, '0', STR_PAD_LEFT)) }}</span>
-                @if (! empty($chapter['title']))<h3>{{ $chapter['title'] }}</h3>@endif
+                <span class="vg-story-num">{{ $khDigits(str_pad($i + 1, 2, '0', STR_PAD_LEFT)) }}@if ($chWhen !== '') · {{ $chWhen }}@endif</span>
+                @if ($chTitle !== '')<h3>{{ $chTitle }}</h3>@endif
                 @if (! empty($chapter['text']))<p>{{ $chapter['text'] }}</p>@endif
               </div>
             </li>
           @endforeach
         </ol>
+      </section>
+    @endif
+
+    {{-- ============ 4b · OUR PLACES: the shared memory map (one pin per story chapter) ============ --}}
+    @if ($places)
+      <section class="vg-sec" id="vg-places">
+        <div class="vg-head {{ $rv }}">
+          <p class="vg-eyebrow">ទីកន្លែងអនុស្សាវរីយ៍</p>
+          {!! $headEn('Our places') !!}
+          <p class="vg-label">ចុចលើបេះដូងនីមួយៗ ដើម្បីមើលរូបភាព</p>
+        </div>
+        <x-memory-map :places="$places" :label="mb_strtolower($groomPretty && $bridePretty ? $groomPretty.' & '.$bridePretty : 'our garden')"
+          seed="11" photo-class="vg-ph-one" close-label="បិទ" class="vg-places-map {{ $rv }}" />
       </section>
     @endif
 
@@ -482,6 +516,28 @@
             @endif
           </div>
         @endif
+      </section>
+    @endif
+
+    {{-- ============ 5b · SCRATCH TO REVEAL: three perforated stamps hiding photos ============ --}}
+    @if ($scratchCards)
+      <section class="vg-sec" id="vg-scratch">
+        <div class="vg-head {{ $rv }}">
+          <p class="vg-eyebrow">កោសដើម្បីមើលរូបភាព</p>
+          {!! $headEn('A little surprise') !!}
+          <p class="vg-label">ប្រើម្រាមដៃកោសលើតែមនីមួយៗ</p>
+        </div>
+        <div class="vg-stamps" style="--n: {{ count($scratchCards) }}">
+          @foreach ($scratchCards as $i => $card)
+            <x-scratch-card stamp class="vg-stamp {{ $rv }}" style="--i: {{ $i }}; --tilt: {{ [-2.5, 1.8, -1.4][$i % 3] }}deg"
+              :caption="$card['caption']" cover="ស្នេហា" hint="កោសមើល" :heart="true"
+              label="កោសដើម្បីមើលរូបភាពទី {{ $khDigits($i + 1) }}" :reveal-sound="$sfx('reveal.mp3')">
+              <button type="button" class="vg-ph-one" data-full="{{ $card['src'] }}" data-cap="{{ $card['caption'] }}" aria-label="មើលរូបភាពធំ">
+                <img src="{{ $card['src'] }}" alt="" loading="lazy" decoding="async" draggable="false">
+              </button>
+            </x-scratch-card>
+          @endforeach
+        </div>
       </section>
     @endif
 

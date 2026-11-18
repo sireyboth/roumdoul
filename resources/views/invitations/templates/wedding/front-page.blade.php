@@ -102,6 +102,29 @@
     $story = collect($isUnlocked('story_chapters') ? ($fields['story_chapters'] ?? []) : [])
         ->filter(fn ($c) => is_array($c) && trim(($c['title'] ?? '').($c['text'] ?? '')) !== '')
         ->take(8)->values();
+    // a chapter title may be «Place | when»: the chapter shows both, the map uses them for its pins
+    $splitTitle = fn ($t) => array_pad(array_map('trim', explode('|', (string) $t, 2)), 2, '');
+    // «Our places» memory map (shared x-memory-map): one pin per chapter — place, when and a gallery photo
+    // (the chapter's text stays in «The story so far», so the pin doesn't repeat it)
+    $places = $story->take(6)->map(function ($c, $i) use ($splitTitle, $gallery, $khDigits) {
+        [$place, $when] = $splitTitle($c['title'] ?? '');
+
+        return [
+            'name' => $place !== '' ? $place : 'អនុស្សាវរីយ៍ទី '.$khDigits($i + 1),
+            'date' => $when,
+            'photo' => $gallery->isNotEmpty() ? $gallery[($i + 2) % $gallery->count()] : null,
+        ];
+    })->all();
+
+    // «Exclusive»: three unseen shots under scratch foil (the last photos of the gallery)
+    $exclusiveDefaults = ['មិនធ្លាប់បង្ហាញ', 'នៅពីក្រោយកាមេរ៉ា', 'តែយើងពីរនាក់'];
+    $exclusive = $gallery->count() >= 2
+        ? collect(range(0, min(3, $gallery->count()) - 1))->map(function ($k) use ($gallery, $captions, $exclusiveDefaults) {
+            $i = $gallery->count() - 1 - $k;
+
+            return ['src' => $gallery[$i], 'cap' => ($captions[$i] ?? '') ?: $exclusiveDefaults[$k]];
+        })->reverse()->values()->all()
+        : [];
 
     // ---- program ----
     $schedule = collect($isUnlocked('event_schedule') ? ($fields['event_schedule'] ?? []) : [])
@@ -209,6 +232,10 @@
 <link rel="stylesheet" href="{{ $fpAsset('css/invitations/front-page.css') }}">
 
 <div class="fp" id="fpTop" style="--fp-accent: {{ $accent }};">
+
+  {{-- rose petals in the accent colour, falling in 3D (shared component). A tap drops a handful,
+       a scratched card bursts into petals, a map pin lets a few fall. --}}
+  <x-flower-drop class="fp-flowers" :color="$accent" shape="rose" :leaves="false" density=".45" />
 
   {{-- running header: the issue line + the page you're on (appears once the cover is scrolled past) --}}
   <header class="fp-run" id="fpRun" aria-hidden="true">
@@ -367,6 +394,30 @@
       </section>
     @endif
 
+    {{-- ─────────── 04b · exclusive: unseen photos under scratch foil ─────────── --}}
+    @if ($exclusive)
+      <section class="fp-sec fp-excl" id="fpExclusive" data-page="{{ $page() }}">
+        <p class="fp-folio fp-rv"><span>Nº {{ sprintf('%02d', $pg) }}</span><span>Exclusive · មិនធ្លាប់បង្ហាញ</span></p>
+        <header class="fp-excl-head">
+          <h2 class="fp-h-big fp-mask fp-rv"><span>Exclusive<em>unseen</em></span></h2>
+          <p class="fp-sub-kh fp-rv">រូបភាពពិសេស ដែលមិនទាន់បង្ហាញនៅកន្លែងណា — កោសដើម្បីមើល</p>
+        </header>
+        <div class="fp-excl-grid" style="--n: {{ count($exclusive) }}">
+          @foreach ($exclusive as $i => $shot)
+            <div class="fp-excl-item fp-rv" style="--d: {{ $i * .1 }}s; --tilt: {{ [-1.6, 1.2, -.8][$i % 3] }}deg">
+              <span class="fp-excl-no" aria-hidden="true">{{ sprintf('%02d', $i + 1) }}</span>
+              <x-scratch-card class="fp-excl-card" ratio="3/4" :heart="false" cover="កោសមើល" hint="កោសលើផ្ទាំងនេះ"
+                :caption="$shot['cap']" label="កោសដើម្បីមើលរូបពិសេសទី {{ $khDigits($i + 1) }}" :reveal-sound="$sfx('reveal.mp3')">
+                <button type="button" class="fp-ph" data-full="{{ $shot['src'] }}" data-cap="{{ $shot['cap'] }}" aria-label="មើលរូបធំ">
+                  <img src="{{ $shot['src'] }}" alt="" loading="lazy" decoding="async" draggable="false">
+                </button>
+              </x-scratch-card>
+            </div>
+          @endforeach
+        </div>
+      </section>
+    @endif
+
     {{-- ─────────── 05 · the story so far ─────────── --}}
     @if ($story->isNotEmpty())
       <section class="fp-sec fp-story" id="fpStory" data-page="{{ $page() }}">
@@ -387,12 +438,28 @@
               <li class="fp-chapter fp-rv">
                 <span class="fp-chapter-no" aria-hidden="true">{{ sprintf('%02d', $i + 1) }}</span>
                 <div>
-                  @if (trim($c['title'] ?? '') !== '')<h3>{{ trim($c['title']) }}</h3>@endif
+                  @php [$chTitle, $chWhen] = $splitTitle($c['title'] ?? ''); @endphp
+                  @if ($chWhen !== '')<p class="fp-chapter-when">{{ $chWhen }}</p>@endif
+                  @if ($chTitle !== '')<h3>{{ $chTitle }}</h3>@endif
                   @if (trim($c['text'] ?? '') !== '')<p>{{ trim($c['text']) }}</p>@endif
                 </div>
               </li>
             @endforeach
           </ol>
+        </div>
+      </section>
+    @endif
+
+    {{-- ─────────── 05b · our places: the shared memory map (one pin per chapter) ─────────── --}}
+    @if ($places)
+      <section class="fp-sec fp-places" id="fpPlaces" data-page="{{ $page() }}">
+        <p class="fp-folio fp-rv"><span>Nº {{ sprintf('%02d', $pg) }}</span><span>The map · ទីកន្លែងអនុស្សាវរីយ៍</span></p>
+        <div class="fp-places-grid">
+          <header>
+            <h2 class="fp-h-big fp-mask fp-rv"><span>Our<em>places</em></span></h2>
+            <p class="fp-sub-kh fp-rv">ទីកន្លែងដែលរឿងរបស់យើងបានកើតឡើង — ចុចលើបេះដូង ដើម្បីមើលរូប</p>
+          </header>
+          <x-memory-map :places="$places" :label="mb_strtolower($groom.' & '.$bride)" seed="5" photo-class="fp-ph" close-label="បិទ" class="fp-map-box fp-rv" />
         </div>
       </section>
     @endif

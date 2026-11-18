@@ -129,6 +129,15 @@ class InvitationTemplateDemoController extends Controller
             $fields['photo_gallery'] = $ownImages->all();
         }
 
+        // story chapters titled «Place | when»: the wedding templates turn them into memory-map pins
+        $weddingPlaces = [
+            ['title' => 'ហាងកាហ្វេតូចមួយ | ឆ្នាំ ២០២១', 'text' => 'យើងបានជួបគ្នាជាលើកដំបូងនៅក្នុងថ្ងៃភ្លៀងមួយ ដែលគ្មាននរណាដឹងថាវានឹងក្លាយជាដំណើររឿងដ៏ស្រស់ស្អាត។'],
+            ['title' => 'មាត់ទន្លេចតុមុខ | ល្ងាចដំបូង', 'text' => 'ពីការផ្ញើសារតិចតួច ទៅជាការសន្ទនាយ៉ាងយូរ យើងចាប់ផ្ដើមស្គាល់ចិត្តគ្នាកាន់តែស៊ីជម្រៅ។'],
+            ['title' => 'ឆ្នេរកែប | រដូវក្ដៅ ២០២២', 'text' => 'ក្នុងគ្រាសប្បាយ និងគ្រាលំបាក យើងបានរៀនពីតម្លៃនៃការជឿទុកចិត្ត និងការគាំទ្រគ្នាទៅវិញទៅមក។'],
+            ['title' => 'ប្រាសាទអង្គរវត្ត | ពេលថ្ងៃរះ', 'text' => 'នៅក្រោមពន្លឺព្រឹកព្រលឹម គាត់បានសួរសំណួរដ៏សំខាន់ ហើយចម្លើយតែមួយគត់គឺ «យល់ព្រម»។'],
+            ['title' => 'ផ្ទះរបស់យើង | ថ្ងៃនេះ', 'text' => 'ឥឡូវនេះ យើងរង់ចាំចែករំលែកថ្ងៃដ៏វិសេសនេះជាមួយក្រុមគ្រួសារ និងមិត្តជិតស្និទ្ធ។'],
+        ];
+
         // sample wording for one template file only, when the folder's shared sample doesn't fit it
         $fields = array_merge($fields, match (basename($path)) {
             'river-love' => [
@@ -142,6 +151,7 @@ class InvitationTemplateDemoController extends Controller
                 'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
                 'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nដំណើរកម្សាន្តលើកដំបូង\nពេលល្ងាចនៅមាត់ទន្លេ\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nរហូតទៅ",
                 'accent_color' => '#b0654b',
+                'story_chapters' => $weddingPlaces,
                 'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             ],
             // Front Page: pull quote, 12 photos (three full photo-booth strips) + captions, dress code, a sample song
@@ -150,6 +160,7 @@ class InvitationTemplateDemoController extends Controller
                 'photo_gallery' => collect(range(1, 12))->map(fn ($i) => "https://picsum.photos/seed/frontpage{$i}/800/".($i % 2 ? '640' : '800'))->all(),
                 'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង",
                 'dress_code' => 'ពណ៌ក្រែម ខ្មៅ ឬក្រហមដិត',
+                'story_chapters' => $weddingPlaces,
                 'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             ],
             default => [],

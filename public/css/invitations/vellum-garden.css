@@ -133,22 +133,9 @@ html.vg-locked,html.vg-locked body{ overflow:hidden; }
 .vg-gate.is-broken .vg-gate-hint{ animation:none; opacity:0; transition:opacity .4s; }
 
 /* ================= falling petals ================= */
-.vg-petals{ position:fixed; inset:0; z-index:5; pointer-events:none; overflow:hidden; opacity:0; transition:opacity 2s ease; }
-.vg.is-open .vg-petals{ opacity:1; }
-.vg-petals svg{
-  position:absolute; top:-30px; left:calc(var(--i) * 11% + 3%); width:12px; height:17px;
-  fill:var(--vg-rose); opacity:.55;
-  animation:vg-fall calc(19s + var(--i) * 1.7s) linear calc(var(--i) * -3.1s) infinite;
-}
-.vg-petals svg:nth-child(3n){ fill:#c9cfb4; width:10px; }
-.vg-petals svg:nth-child(4n){ fill:#e6c9bd; }
-@keyframes vg-fall{
-  0%{ transform:translate3d(0, 0, 0) rotate(0deg); }
-  25%{ transform:translate3d(26px, 26vh, 0) rotate(80deg); }
-  50%{ transform:translate3d(-12px, 52vh, 0) rotate(170deg); }
-  75%{ transform:translate3d(30px, 78vh, 0) rotate(250deg); }
-  100%{ transform:translate3d(4px, 108vh, 0) rotate(340deg); }
-}
+/* falling rose petals (shared x-flower-drop): under the envelope and the photo preview, fades in once opened */
+.vg-flowers{ --inv-flowers-z:30; }
+.vg:not(.is-open) .vg-flowers{ opacity:0; }
 
 /* ================= page layout ================= */
 .vg-page{ position:relative; z-index:2; }
@@ -409,7 +396,6 @@ html.vg-locked,html.vg-locked body{ overflow:hidden; }
 /* ================= reduced motion ================= */
 @media (prefers-reduced-motion:reduce){
   .vg *,.vg *::before,.vg *::after{ animation:none !important; transition-duration:.01ms !important; transition-delay:0s !important; }
-  .vg-petals{ display:none; }
   .vg.js .vg-rv{ opacity:1; transform:none; }
   .vg.js .vg-draw path,.vg.js .vg-cal-day svg path{ stroke-dashoffset:0; }
   .vg-draw .lf{ fill-opacity:.16; } .vg-draw .pt{ fill-opacity:.35; } .vg-draw .ct{ opacity:1; }
@@ -433,3 +419,31 @@ html.vg-locked,html.vg-locked body{ overflow:hidden; }
   .vg-pair > .vg-card{ display:flex; flex-direction:column; justify-content:center; align-items:center; }
   .vg-pair > .vg-card > .vg-sched,.vg-pair > .vg-card > .vg-sched-img{ align-self:stretch; }
 }
+
+/* ================= our places: the shared memory map, themed as garden stationery ================= */
+.vg-places-map{
+  --inv-map-paper:#fbf6ea; --inv-map-ink:#5b6350; --inv-map-land:rgba(139,154,122,.2); --inv-map-water:#b9cbd0;
+  --inv-map-pin:var(--vg-accent); --inv-map-card:var(--vg-paper); --inv-map-card-ink:var(--vg-ink);
+  --inv-map-font:var(--vg-script); --inv-map-note-font:var(--vg-ui); --inv-map-radius:8px;
+  width:min(100%, 880px); margin:0 auto;
+}
+.vg-places-map .inv-map__paper{ box-shadow:0 26px 50px -30px rgba(60,45,25,.55), 0 0 0 1px rgba(184,166,126,.45), 0 0 0 9px var(--vg-paper), 0 0 0 10px rgba(184,166,126,.35); }
+.vg-head .vg-label{ margin-top:6px; }
+
+/* ================= scratch to reveal: perforated stamps ================= */
+.vg-stamps{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap:30px 22px; width:min(100%, 960px); margin:0 auto; }
+.vg-stamp{
+  --inv-scratch-foil:#efe6d4, #f9f4ea, #e4d8c1, #fbf8f2, #eadfca;
+  --inv-scratch-ink:rgba(59,66,52,.7); --inv-scratch-font:var(--vg-kh-title); --inv-scratch-accent:var(--vg-accent);
+  --inv-scratch-frame:var(--vg-paper); --inv-scratch-cap-font:var(--vg-kh); --inv-scratch-cap-color:var(--vg-ink);
+  --inv-scratch-hint-color:var(--vg-ink-soft);
+  width:min(100%, 280px); justify-self:center; rotate:var(--tilt, 0deg);
+}
+.vg.js .vg-stamp.vg-rv{ transition-delay:calc(var(--i) * .12s); }
+.vg-stamp .inv-scratch__face{ background:var(--vg-linen-2); }
+.vg-stamp .vg-ph-one{ position:absolute; inset:0; display:block; width:100%; height:100%; }
+.vg-stamp .vg-ph-one img{ width:100%; height:100%; object-fit:cover; }
+.vg-stamp .inv-scratch__txt{ font-size:.98rem; line-height:1.9; }
+
+/* the photo preview opened from one photo (stamp / map pin): no previous / next */
+.vg-lb.is-single .vg-lb-nav{ visibility:hidden; }

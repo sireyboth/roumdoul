@@ -228,6 +228,27 @@ Theme with `--inv-map-paper`, `--inv-map-ink`, `--inv-map-land`, `--inv-map-wate
 A pin tap fires a bubbling `inv-map:open` event (`detail: { index, place }`); `window.InvMap.setMuted(bool)` hooks it to a template's mute button. Without JS, the memories are listed
 under the map.
 
+## Shared falling flowers (`<x-flower-drop>`)
+
+`resources/views/components/flower-drop.blade.php` (JS `public/js/invitations/shared/flower-drop.js`, CSS
+`public/css/invitations/shared/flower-drop.css`, both loaded once by the component). Petals (and a few leaves) fall
+in 3D over the whole page forever: each one spins on three axes and catches the light, near ones are bigger and
+soft-focus, scrolling gives them wind, a finger brushes them aside. Taken from River Love (which still has its own
+copy). Off with `prefers-reduced-motion`. Used by Vellum Garden and Front Page.
+
+```blade
+<x-flower-drop :color="$accent" />
+<x-flower-drop :color="$accent" shape="rose" :leaves="false" density=".5" />
+```
+
+Props: `color` (petal colour, hex, three tones are made from it), `shape` (`blossom` | `rose`), `leaves` (mix in green
+leaves, default true) + `leafColor`, `density` (1 = normal), `tap` (a tap drops a handful where the finger was,
+default true), `bursts` (a revealed `<x-scratch-card>` bursts into petals and an opened `<x-memory-map>` pin lets a few
+fall, default true). Layer with `--inv-flowers-z` (default 30, keep it under the template's dialogs); hide it until
+something happens with your own CSS (`.tpl:not(.is-open) .inv-flowers{ opacity:0 }` fades it in).
+`window.InvFlowers.drop(x, y, scale)`, `.pause()`, `.resume()`. No sound of its own: the taps, scratches and pins
+that set it off already play theirs.
+
 ## Wedding templates (`templates/wedding/`)
 
 - **Vellum Garden** — `wedding/vellum-garden.blade.php` (CSS/JS `public/{css,js}/invitations/vellum-garden.*`,
@@ -238,14 +259,20 @@ under the map.
   `schedule_image`, `reception_message`, `photo_gallery` + `photo_captions` (one per photo, shown under it and in the
   preview), `cover_image` (main arch; empty = first gallery photo), `venue_name`/`venue_address`/`map_url`, `qr_code` +
   `gift_account` + `gift_message`, `rsvp_enabled` + `rsvp_message`, `groom_phone`/`bride_phone`/`contact_phone`,
-  `thanks_message`/`apology_message`, `music_file`/`music_url`, `accent_color` (the wax colour, default terracotta).
+  `thanks_message`/`apology_message`, `music_file`/`music_url`, `accent_color` (the wax colour and the falling rose
+  petals, default terracotta). Shared parts: `<x-flower-drop>` (rose petals + leaves, shown once the envelope opens),
+  «Our places» `<x-memory-map>` (one pin per story chapter; a title «Place | when» gives the pin's name + date, the
+  chapter text stays in the story cards) and «A little surprise»: three `<x-scratch-card stamp>` stamps hiding the last
+  three gallery photos (their captions under them).
 - **Front Page** — `wedding/front-page.blade.php` (CSS/JS `public/{css,js}/invitations/front-page.*`, demo
   `/demo/wedding/front-page`). Modern editorial "wedding issue": cream paper + ink + one accent, a magazine-style cover
   (names as the masthead, cover lines, a barcode drawn from the date), a marquee band, a running header with page
   numbers, giant date numerals under an `<x-scratch-card>` foil, photo-booth strips that "print" into view, a
   «contents page» program. Uses the same fields as Vellum Garden plus `dress_code` (under the venue); `message` is the
   pull quote, `photo_gallery` fills strips of 4 (up to 16 photos), `cover_image` the cover (empty = first gallery photo),
-  `accent_color` the accent (default vermilion `#c2412d`).
+  `accent_color` the accent and the falling rose petals (default vermilion `#c2412d`). Shared parts: `<x-flower-drop>`
+  (rose petals, no leaves), «Exclusive · unseen»: three `<x-scratch-card>`s hiding the last three gallery photos, and
+  «Our places» `<x-memory-map>` (one pin per story chapter, «Place | when» like Vellum Garden).
 
 ## Things that are NOT per-template concerns
 

@@ -161,13 +161,14 @@
     }
     if (on) stopSong(); else if (songWanted) startSong();
     if (window.InvScratch) window.InvScratch.setMuted(on);
+    if (window.InvMap) window.InvMap.setMuted(on);
   }
   if (soundBtn) soundBtn.addEventListener('click', function () { setMuted(!muted); });
 
-  /* a soft sound on every tap of a button or link (the photo, scratch and controls have their own) */
+  /* a soft sound on every tap of a button or link (the photo, scratch, map and controls have their own) */
   root.addEventListener('click', function (e) {
     var el = e.target.closest('a, button');
-    if (!el || el.closest('.inv-scratch') || el.matches('#fpMusic, #fpSound, .fp-ph, .fp-opt, [type=submit]')) return;
+    if (!el || el.closest('.inv-scratch, .inv-map') || el.matches('#fpMusic, #fpSound, .fp-ph, .fp-opt, [type=submit]')) return;
     sfx(el.getAttribute('data-sfx') || 'tap');
   });
 

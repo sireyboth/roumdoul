@@ -67,6 +67,9 @@
       soundBtn.setAttribute('aria-label', on ? 'បើកសំឡេង' : 'បិទសំឡេង');
     }
     if (on) { songWanted = false; stopSong(); } else { songWanted = true; startSong(true); }
+    // the shared scratch stamps and memory map play their own sounds: they follow this button too
+    if (window.InvScratch) window.InvScratch.setMuted(on);
+    if (window.InvMap) window.InvMap.setMuted(on);
   };
   if (soundBtn) soundBtn.addEventListener('click', function () { setMuted(!muted); if (!muted) sfx('tap', .35); });
 
@@ -199,10 +202,22 @@
     };
     btns.forEach(function (b, i) {
       b.addEventListener('click', function () {
-        last = b; show(i); lb.hidden = false; sfx('card', .45);
+        last = b; show(i); lb.classList.remove('is-single'); lb.hidden = false; sfx('card', .45);
         document.documentElement.classList.add('vg-locked');
         document.getElementById('vg-lb-x').focus();
       });
+    });
+    // one photo on its own (a revealed stamp, a map pin's polaroid): no previous / next
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('.vg-ph-one');
+      if (!b || !b.getAttribute('data-full') || b.closest('.inv-scratch:not(.is-revealed)')) return;
+      last = b;
+      img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';
+      img.src = b.getAttribute('data-full'); img.alt = '';
+      cap.textContent = b.getAttribute('data-cap') || '';
+      lb.classList.add('is-single'); lb.hidden = false; sfx('card', .45);
+      document.documentElement.classList.add('vg-locked');
+      document.getElementById('vg-lb-x').focus();
     });
     document.getElementById('vg-lb-prev').addEventListener('click', function () { show(idx - 1); sfx('card', .3); });
     document.getElementById('vg-lb-next').addEventListener('click', function () { show(idx + 1); sfx('card', .3); });
@@ -210,6 +225,7 @@
     document.addEventListener('keydown', function (e) {
       if (lb.hidden) return;
       if (e.key === 'Escape') close();
+      else if (lb.classList.contains('is-single')) return;
       else if (e.key === 'ArrowLeft') show(idx - 1);
       else if (e.key === 'ArrowRight') show(idx + 1);
     });

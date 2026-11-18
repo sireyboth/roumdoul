@@ -1,0 +1,6 @@
+/* falling flowers (resources/views/components/flower-drop.blade.php): fixed over the whole page, never catches taps */
+.inv-flowers{
+  position:fixed; inset:0; width:100%; height:100%; z-index:var(--inv-flowers-z, 30);
+  pointer-events:none; transition:opacity 1.6s ease;
+}
+@media (prefers-reduced-motion: reduce){ .inv-flowers{ display:none; } }

@@ -111,7 +111,7 @@
       x.beginPath(); x.arc(Math.random() * W, Math.random() * H, Math.random() * 1.7 * DPR, 0, 7); x.fill();
     }
     var text = card.getAttribute('data-cover') || '';
-    var font = css(card, '--inv-scratch-font', '"Pinyon Script", cursive');
+    var font = css(card, '--inv-scratch-font', '"Pinyon Script", "Kantumruy Pro", cursive');
     x.textAlign = 'center'; x.textBaseline = 'middle';
     if (text) {
       x.fillStyle = css(card, '--inv-scratch-ink', 'rgba(31,30,27,.62)');
@@ -162,7 +162,7 @@
       x.lineCap = 'round'; x.lineJoin = 'round'; x.lineWidth = W * .17; x.globalCompositeOperation = 'destination-out';
     };
 
-    var font = css(card, '--inv-scratch-font', '"Pinyon Script", cursive');
+    var font = css(card, '--inv-scratch-font', '"Pinyon Script", "Kantumruy Pro", cursive');
     var fontReady = document.fonts && document.fonts.load
       ? Promise.race([document.fonts.load('30px ' + font), new Promise(function (ok) { setTimeout(ok, 1500); })]).catch(function () {})
       : Promise.resolve();
