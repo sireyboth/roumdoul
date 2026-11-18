@@ -72,14 +72,14 @@
           class="rounded-md bg-gold-500 px-7 py-3.5 text-sm font-bold text-brand-950 shadow-lg shadow-gold-500/20 transition-all hover:-translate-y-0.5 hover:bg-gold-400 hover:shadow-xl hover:shadow-gold-500/30">
           {{ __('Start shopping now') }}
         </a>
-        <a href="#categories"
+        <a href="/shop" wire:navigate
           class="rounded-md border border-white/25 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur transition-all hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10">
           {{ __('Browse all categories') }}
         </a>
       </div>
     </div>
 
-    <a href="#stats" aria-label="{{ __('Scroll down') }}"
+    <a href="#featured" aria-label="{{ __('Scroll down') }}"
       class="absolute inset-x-0 bottom-16 mx-auto flex h-9 w-9 animate-bounce items-center justify-center rounded-full border border-white/20 text-white/60 transition-colors hover:text-white sm:bottom-20">
       <x-app-icon name="chevron-down" class="h-4 w-4" />
     </a>
@@ -97,49 +97,9 @@
     </div>
   </section>
 
-  {{-- Trust stats strip — real counts, floated over the hero for a layered look --}}
-  <section id="stats" class="relative z-10 -mt-8 px-4 sm:-mt-12 sm:px-6 lg:px-8">
-    <div data-reveal class="mx-auto grid max-w-6xl grid-cols-2 gap-4 rounded-2xl border border-plum-200/70 bg-white/90 p-5 shadow-xl shadow-plum-900/10 backdrop-blur-md dark:border-plum-800/70 dark:bg-plum-900/90 sm:grid-cols-4 sm:gap-6 sm:p-7">
-      <div class="flex flex-col items-center gap-1 text-center sm:items-start sm:text-left">
-        <span class="text-2xl font-extrabold text-brand-700 dark:text-brand-300 sm:text-3xl">
-          <span data-counter data-counter-target="{{ $categories->count() }}">0</span><span>+</span>
-        </span>
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('Service categories') }}</span>
-      </div>
-      <div class="flex flex-col items-center gap-1 text-center sm:items-start sm:text-left">
-        <span class="text-2xl font-extrabold text-brand-700 dark:text-brand-300 sm:text-3xl">
-          <span data-counter data-counter-target="{{ $totalActiveServices }}">0</span><span>+</span>
-        </span>
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('Digital products') }}</span>
-      </div>
-      <div class="flex flex-col items-center gap-1.5 text-center sm:items-start sm:text-left">
-        <x-app-icon name="truck" class="h-6 w-6 text-brand-700 dark:text-brand-300" />
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('Instant delivery') }}</span>
-      </div>
-      <div class="flex flex-col items-center gap-1.5 text-center sm:items-start sm:text-left">
-        <x-app-icon name="clock" class="h-6 w-6 text-brand-700 dark:text-brand-300" />
-        <span class="text-xs font-medium text-plum-500 dark:text-plum-400">{{ __('24/7 support') }}</span>
-      </div>
-    </div>
-  </section>
-
-  {{-- Trusted brands marquee --}}
-  @php
-    $trustedBrands = ['Gemini Pro', 'ChatGPT Plus', 'Netflix', 'Canva Pro', 'Envato'];
-  @endphp
-  <section class="mt-10 overflow-hidden border-y border-plum-100 bg-plum-50/60 py-4 dark:border-plum-800 dark:bg-plum-900/20">
-    <div class="flex w-max animate-marquee gap-10">
-      @foreach ([...$trustedBrands, ...$trustedBrands] as $brand)
-        <span class="shrink-0 text-sm font-semibold uppercase tracking-wide text-plum-400 dark:text-plum-500">
-          {{ $brand }}
-        </span>
-      @endforeach
-    </div>
-  </section>
-
-  {{-- Featured services --}}
+  {{-- Featured digital invitations --}}
   @if ($featuredServices->isNotEmpty())
-    <section class="border-b border-plum-100 bg-plum-50 py-14 dark:border-plum-800 dark:bg-plum-900/40">
+    <section id="featured" class="scroll-mt-24 border-b border-plum-100 bg-plum-50 py-14 dark:border-plum-800 dark:bg-plum-900/40">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div data-reveal class="mb-8 flex items-end justify-between">
           <div>
@@ -147,7 +107,7 @@
               <x-app-icon name="sparkles" class="h-3.5 w-3.5" />
               {{ __('Most popular') }}
             </span>
-            <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">{{ __('Featured services') }}</h2>
+            <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">{{ __('Digital invitations') }}</h2>
           </div>
           <a href="/shop" wire:navigate class="group hidden items-center gap-1 text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300 sm:flex">
             {{ __('View all') }}
@@ -164,34 +124,6 @@
     </section>
   @endif
 
-  {{-- Category quick links --}}
-  <section id="categories" class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-    <div data-reveal class="mb-8">
-      <h2 class="text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">{{ __('Browse by category') }}</h2>
-      <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">{{ __('Choose the type of service you need') }}</p>
-    </div>
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-      {{-- Staggered offsets (nth position, wraps every 3) on a wrapper div — the
-           cards themselves carry data-tilt, whose JS sets an inline transform
-           on pointer interaction that would otherwise stomp a class-based
-           translate on the same element. --}}
-      @foreach ($categories as $category)
-        <div @class([
-          'sm:-translate-y-3' => $loop->iteration % 3 === 2,
-          'sm:translate-y-2' => $loop->iteration % 3 === 0,
-        ])>
-          <a href="/shop/{{ $category->slug }}" wire:navigate data-reveal data-tilt
-            class="group flex flex-col items-center gap-3 rounded-lg border border-plum-200 bg-white p-6 text-center transition-colors duration-300 hover:border-brand-400 hover:shadow-lg hover:shadow-brand-500/10 dark:border-plum-800 dark:bg-plum-900">
-            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-plum-100 text-brand-700 transition-all duration-300 group-hover:scale-110 group-hover:bg-brand-600 group-hover:text-white dark:bg-plum-800 dark:text-brand-300">
-              <x-app-icon name="{{ $category->icon }}" class="h-6 w-6" />
-            </span>
-            <span class="text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $category->name_km }}</span>
-          </a>
-        </div>
-      @endforeach
-    </div>
-  </section>
-
   {{-- Why choose us --}}
   <section class="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-plum-950 bg-[length:200%_200%] py-16 animate-invite-gradient">
     <div class="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl animate-invite-float" style="--drift-duration:10s"></div>
@@ -204,8 +136,8 @@
       {{-- Bento: the first reason runs as a wide banner, the rest sit three-up below it --}}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-6">
         @foreach ([
-            ['icon' => 'bolt', 'title' => __('Instant delivery'), 'desc' => __('Get your account or code right after a successful order — no long waits')],
-            ['icon' => 'shield-check', 'title' => __('100% secure'), 'desc' => __('Genuine accounts, guaranteed by our team')],
+            ['icon' => 'bolt', 'title' => __('Instant delivery'), 'desc' => __('Your invitation is ready right after your order is confirmed — no long waits')],
+            ['icon' => 'shield-check', 'title' => __('100% secure'), 'desc' => __('Secure payment, with our team here to support you')],
             ['icon' => 'chat', 'title' => __('24/7 support'), 'desc' => __('Our team is ready to help at any hour')],
             ['icon' => 'heart', 'title' => __('Unbeatable prices'), 'desc' => __('Competitive prices with a quality guarantee')],
         ] as $item)

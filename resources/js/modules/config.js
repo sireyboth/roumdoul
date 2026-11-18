@@ -1,6 +1,4 @@
-export const companyEmail = 'we dont have Email yet'
 export const companyPhone = '+855 15 57 87 07'
-export const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${companyEmail}`
 export const telegramLink = `https://t.me/${companyPhone.replace(/[^\d+]/g, '')}`
 
 // Placeholder — replace with the real numbers.

@@ -22,7 +22,7 @@
     </div>
 
     <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
         <div class="flex flex-col gap-4 sm:col-span-2 lg:col-span-1">
           <a href="/" wire:navigate class="flex items-center gap-2.5">
             <img src="/images/Roumdoul_Logo.png" alt="ROUMDOUL" loading="lazy" class="h-10 w-10 shrink-0 rounded-full object-contain" />
@@ -61,20 +61,6 @@
         </div>
 
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">{{ __('Product categories') }}</h3>
-          <ul class="flex flex-col gap-2 text-sm">
-            @foreach ($categories as $category)
-              <li>
-                <a href="/shop/{{ $category->slug }}" wire:navigate
-                  class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
-                  {{ $category->name_km }}
-                </a>
-              </li>
-            @endforeach
-          </ul>
-        </div>
-
-        <div class="flex flex-col gap-3">
           <h3 class="text-sm font-semibold uppercase tracking-wider text-brand-800 dark:text-white">{{ __('Company') }}</h3>
           <ul class="flex flex-col gap-3 text-sm">
             <li><a href="/" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Home') }}</a></li>
@@ -82,13 +68,6 @@
             <li><a href="/about" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('About us') }}</a></li>
             <li><a href="/contact" wire:navigate class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">{{ __('Contact') }}</a></li>
             <li class="flex items-start gap-2 pt-2">
-              <x-app-icon name="envelope" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
-              <a id="footer-email-link" href="#" target="_blank" rel="noopener noreferrer"
-                class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
-                <span id="footer-email-text"></span>
-              </a>
-            </li>
-            <li class="flex items-start gap-2">
               <x-app-icon name="phone" class="mt-0.5 h-4 w-4 shrink-0 text-plum-400" />
               <a id="footer-phone-link" href="#" target="_blank" rel="noopener noreferrer"
                 class="text-plum-600 transition-colors hover:text-brand-700 dark:text-plum-400 dark:hover:text-white">
