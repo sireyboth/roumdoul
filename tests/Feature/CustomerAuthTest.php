@@ -106,6 +106,49 @@ class CustomerAuthTest extends TestCase
             ->assertHasErrors(['email']);
     }
 
+    public function test_failed_sign_up_attempts_never_lock_a_customer_out(): void
+    {
+        Customer::factory()->create(['email' => 'taken@example.com']);
+
+        // more failed tries than the limit (e.g. «email already taken» again and again)…
+        foreach (range(1, 7) as $i) {
+            Livewire::test(RegisterPage::class)
+                ->set('name', 'Sokha')->set('email', 'taken@example.com')->set('phone', '012345678')
+                ->set('password', 'password123')->set('password_confirmation', 'password123')->set('terms', true)
+                ->call('register')
+                ->assertHasErrors(['email' => 'unique']);
+        }
+
+        // …and the corrected email still goes through
+        Livewire::test(RegisterPage::class)
+            ->set('name', 'Sokha')->set('email', 'sokha@example.com')->set('phone', '012345678')
+            ->set('password', 'password123')->set('password_confirmation', 'password123')->set('terms', true)
+            ->call('register')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('customers', ['email' => 'sokha@example.com']);
+    }
+
+    public function test_sign_up_is_limited_to_five_new_accounts_per_hour_per_ip(): void
+    {
+        foreach (range(1, 5) as $i) {
+            Livewire::test(RegisterPage::class)
+                ->set('name', 'Guest '.$i)->set('email', "guest{$i}@example.com")->set('phone', '012345678')
+                ->set('password', 'password123')->set('password_confirmation', 'password123')->set('terms', true)
+                ->call('register')
+                ->assertHasNoErrors();
+            Auth::guard('customer')->logout();
+        }
+
+        Livewire::test(RegisterPage::class)
+            ->set('name', 'Guest 6')->set('email', 'guest6@example.com')->set('phone', '012345678')
+            ->set('password', 'password123')->set('password_confirmation', 'password123')->set('terms', true)
+            ->call('register')
+            ->assertHasErrors('email');
+
+        $this->assertDatabaseMissing('customers', ['email' => 'guest6@example.com']);
+    }
+
     public function test_a_customer_can_log_in_with_correct_credentials(): void
     {
         Customer::factory()->create([

@@ -39,6 +39,8 @@
 
   <x-toasts />
 
+  <x-loading-overlay />
+
   @livewireScripts
 </body>
 

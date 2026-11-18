@@ -51,6 +51,8 @@
     @endpersist
   </div>
 
+  <x-loading-overlay />
+
   @livewireScripts
 </body>
 

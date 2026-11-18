@@ -11,6 +11,8 @@ import { initTilt } from './modules/tilt.js'
 import './modules/photoUploader.js'
 import './modules/christmasEditor.js'
 import './modules/toast.js'
+import './modules/loader.js'
+import './modules/formErrors.js'
 
 document.addEventListener('livewire:init', () => {
   // Pagination, filters, etc. update a Livewire component in place without a

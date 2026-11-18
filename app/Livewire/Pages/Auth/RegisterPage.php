@@ -42,19 +42,18 @@ class RegisterPage extends Component
 
     public function register(): void
     {
-        // IP-only key (unlike login's email+IP) — registration has no "account" yet to
-        // scope by, and this exists purely to slow down mass fake-account/spam creation.
-        $throttleKey = 'register|'.request()->ip();
+        // Only accounts actually created count toward the limit (5 per hour per IP): a customer
+        // who mistypes a field or hits "email already taken" a few times must never get locked
+        // out, while a bot still can't mass-create accounts. IP-only key — there's no account yet.
+        $validated = $this->validate();
 
+        $throttleKey = 'register|'.request()->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             $this->addError('email', __('Too many requests. Please try again in :seconds seconds.', ['seconds' => $seconds]));
 
             return;
         }
-        RateLimiter::hit($throttleKey, 3600);
-
-        $validated = $this->validate();
 
         $customer = Customer::create([
             'name' => $validated['name'],
@@ -63,6 +62,7 @@ class RegisterPage extends Component
             'password' => Hash::make($validated['password']),
             'terms_accepted_at' => now(),
         ]);
+        RateLimiter::hit($throttleKey, 3600);
 
         Auth::guard('customer')->login($customer);
 

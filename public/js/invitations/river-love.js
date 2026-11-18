@@ -340,11 +340,11 @@
   /* ─────────── countdown ─────────── */
   var count = document.getElementById('rlCount');
   if (count && config.countdown) {
-    var end = new Date(config.countdown).getTime();
+    var countEnd = new Date(config.countdown).getTime();
     var cells = {};
     count.querySelectorAll('[data-u]').forEach(function (b) { cells[b.getAttribute('data-u')] = b; });
     var tick = function () {
-      var left = Math.max(0, end - Date.now());
+      var left = Math.max(0, countEnd - Date.now());
       cells.d.textContent = Math.floor(left / 864e5);
       cells.h.textContent = Math.floor(left / 36e5) % 24;
       cells.m.textContent = Math.floor(left / 6e4) % 60;

@@ -731,5 +731,6 @@
     ":failed of :count photos couldn't be uploaded — please try those again.": ":failed of :count photos couldn't be uploaded — please try those again.",
     "Next you'll see our KHQR with the exact amount — scan it in any bank app. No screenshot needed.": "Next you'll see our KHQR with the exact amount — scan it in any bank app. No screenshot needed.",
     "The name of your song, shown on the “Now playing” music card. Add the song itself in the music fields.": "The name of your song, shown on the “Now playing” music card. Add the song itself in the music fields.",
-    "Creating…": "Creating…"
+    "Creating…": "Creating…",
+    "Please wait": "Please wait"
 }
