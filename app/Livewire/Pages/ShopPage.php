@@ -58,6 +58,6 @@ class ShopPage extends Component
         return view('livewire.pages.shop-page', [
             'services' => $query->paginate(12),
             'categories' => Category::orderBy('sort_order')->get(),
-        ])->title(__('Shop').' | ROUMDOUL');
+        ])->title(($this->category ? (app()->getLocale() === 'km' ? $this->category->name_km : $this->category->name_en).' | ' : '').__('Shop').' | ROUMDOUL');
     }
 }

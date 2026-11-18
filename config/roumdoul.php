@@ -19,7 +19,7 @@ return [
     'social' => [
         'facebook' => env('ROUMDOUL_FACEBOOK_URL', 'https://www.facebook.com/roumdoulofficial'),
         'instagram' => env('ROUMDOUL_INSTAGRAM_URL', 'https://www.instagram.com/roumd_oul/'),
-        'tiktok' => env('ROUMDOUL_TIKTOK_URL', 'https://www.tiktok.com/@roumdoul1'),
+        'tiktok' => env('ROUMDOUL_TIKTOK_URL', 'https://www.tiktok.com/@roumd_oul'),
         'telegram' => env('ROUMDOUL_TELEGRAM_URL', 'https://t.me/roumdoul_official'),
     ],
 

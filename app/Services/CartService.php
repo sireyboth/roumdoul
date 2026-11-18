@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\PromoCode;
 use App\Models\Service;
-use App\Models\ServicePlan;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
 
@@ -14,18 +13,26 @@ class CartService
 
     protected const PROMO_SESSION_KEY = 'cart_promo_code';
 
+    /** Most of one line a customer can order; also stops absurd totals. */
+    public const MAX_QUANTITY = 99;
+
     public function add(int $serviceId, ?int $planId, int $quantity = 1): void
     {
+        // A negative quantity would subtract from the order total, so never accept one.
+        if ($quantity < 1) {
+            return;
+        }
+
         $cart = $this->raw();
         $key = $this->key($serviceId, $planId);
 
         if (isset($cart[$key])) {
-            $cart[$key]['quantity'] += $quantity;
+            $cart[$key]['quantity'] = min(self::MAX_QUANTITY, $cart[$key]['quantity'] + $quantity);
         } else {
             $cart[$key] = [
                 'service_id' => $serviceId,
                 'plan_id' => $planId,
-                'quantity' => $quantity,
+                'quantity' => min(self::MAX_QUANTITY, $quantity),
             ];
         }
 
@@ -43,7 +50,7 @@ class CartService
         if ($quantity < 1) {
             unset($cart[$key]);
         } else {
-            $cart[$key]['quantity'] = $quantity;
+            $cart[$key]['quantity'] = min(self::MAX_QUANTITY, $quantity);
         }
 
         Session::put(self::SESSION_KEY, $cart);
@@ -69,7 +76,9 @@ class CartService
 
     /**
      * Hydrated cart line items, each with the Service/ServicePlan models and a computed line total.
-     * Silently drops lines whose Service no longer exists.
+     * Silently drops lines whose Service no longer exists, and any line that could only come from a
+     * tampered request: a quantity below 1, a plan that isn't one of that Service's own plans, or no
+     * plan at all on a Service that has plans (that would charge its base price instead).
      */
     public function items(): Collection
     {
@@ -80,29 +89,42 @@ class CartService
         }
 
         $serviceIds = collect($cart)->pluck('service_id')->unique();
-        $planIds = collect($cart)->pluck('plan_id')->filter()->unique();
 
-        $services = Service::whereIn('id', $serviceIds)->get()->keyBy('id');
-        $plans = ServicePlan::whereIn('id', $planIds)->get()->keyBy('id');
+        $services = Service::with('plans')->whereIn('id', $serviceIds)->get()->keyBy('id');
 
         return collect($cart)
-            ->map(function (array $line, string $key) use ($services, $plans) {
+            ->map(function (array $line, string $key) use ($services) {
                 $service = $services->get($line['service_id']);
+                $quantity = (int) ($line['quantity'] ?? 0);
 
-                if (! $service) {
+                // A product turned off in admin can no longer be bought, even if it is still in a cart.
+                if (! $service || ! $service->is_active || $quantity < 1) {
                     return null;
                 }
 
-                $plan = $line['plan_id'] ? $plans->get($line['plan_id']) : null;
+                $plan = null;
+
+                if ($line['plan_id']) {
+                    // Only this Service's own plans — never a cheaper plan of another product.
+                    $plan = $service->plans->firstWhere('id', $line['plan_id']);
+
+                    if (! $plan) {
+                        return null;
+                    }
+                } elseif ($service->plans->isNotEmpty()) {
+                    return null;
+                }
+
+                $quantity = min(self::MAX_QUANTITY, $quantity);
                 $unitPrice = $service->discountedPrice($plan ? (float) $plan->price : (float) $service->base_price);
 
                 return (object) [
                     'key' => $key,
                     'service' => $service,
                     'plan' => $plan,
-                    'quantity' => $line['quantity'],
+                    'quantity' => $quantity,
                     'unit_price' => $unitPrice,
-                    'line_total' => $unitPrice * $line['quantity'],
+                    'line_total' => $unitPrice * $quantity,
                     'in_stock' => $service->in_stock && ($plan === null || $plan->in_stock),
                 ];
             })

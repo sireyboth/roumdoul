@@ -15,8 +15,11 @@
   @php
     $ogTitle = $fields['headline'] ?? ($recipientName ? "A special invitation for {$recipientName}" : 'You have a special invitation');
     $ogDescription = $fields['message'] ?? 'Tap to see what it is! 💌';
+    // demo sample data uses full https:// URLs; real invitations store a path on the s3 disk
     $ogImage = ! empty($fields['cover_image'])
-      ? \Illuminate\Support\Facades\Storage::disk('s3')->url($fields['cover_image'])
+      ? (preg_match('#^https?://#i', $fields['cover_image'])
+        ? $fields['cover_image']
+        : \Illuminate\Support\Facades\Storage::disk('s3')->url($fields['cover_image']))
       : asset('images/Roumdoul_Logo.png');
   @endphp
 

@@ -263,10 +263,67 @@ class CartServiceTest extends TestCase
     public function test_item_with_no_plan_selected_is_in_stock_based_on_service_only(): void
     {
         $service = Service::factory()->create();
-        ServicePlan::factory()->outOfStock()->create(['service_id' => $service->id]);
         $this->cart->add($service->id, null, 1);
 
         $this->assertTrue($this->cart->items()->first()->in_stock);
+    }
+
+    // ---- tampered cart lines (security) ----------------------------------------------------
+
+    public function test_a_plan_from_another_service_is_dropped(): void
+    {
+        $expensive = Service::factory()->create(['base_price' => 20]);
+        ServicePlan::factory()->create(['service_id' => $expensive->id, 'price' => 20]);
+        $cheapPlan = ServicePlan::factory()->create(['service_id' => Service::factory()->create()->id, 'price' => 1]);
+
+        $this->cart->add($expensive->id, $cheapPlan->id, 1);
+
+        $this->assertCount(0, $this->cart->items());
+        $this->assertSame(0.0, $this->cart->total());
+    }
+
+    public function test_no_plan_on_a_service_that_has_plans_is_dropped(): void
+    {
+        $service = Service::factory()->create(['base_price' => 1]);
+        ServicePlan::factory()->create(['service_id' => $service->id, 'price' => 20]);
+
+        $this->cart->add($service->id, null, 1);
+
+        $this->assertCount(0, $this->cart->items());
+    }
+
+    public function test_a_negative_quantity_never_lowers_the_total(): void
+    {
+        $template = Service::factory()->create(['base_price' => 20]);
+        $other = Service::factory()->create(['base_price' => 19]);
+
+        $this->cart->add($template->id, null, 1);
+        $this->cart->add($other->id, null, -1);
+        $this->cart->add($template->id, null, -5);
+
+        $this->assertCount(1, $this->cart->items());
+        $this->assertSame(20.0, $this->cart->total());
+    }
+
+    public function test_a_negative_quantity_already_in_the_session_is_dropped(): void
+    {
+        $template = Service::factory()->create(['base_price' => 20]);
+        $other = Service::factory()->create(['base_price' => 19]);
+        session()->put('cart', [
+            $template->id.'_base' => ['service_id' => $template->id, 'plan_id' => null, 'quantity' => 1],
+            $other->id.'_base' => ['service_id' => $other->id, 'plan_id' => null, 'quantity' => -1],
+        ]);
+
+        $this->assertSame(20.0, $this->cart->total());
+    }
+
+    public function test_quantity_is_capped(): void
+    {
+        $service = Service::factory()->create(['base_price' => 1]);
+
+        $this->cart->add($service->id, null, 500);
+
+        $this->assertSame(CartService::MAX_QUANTITY, $this->cart->items()->first()->quantity);
     }
 
     // ---- promo codes: whole order vs. limited to products --------------------------------

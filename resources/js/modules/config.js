@@ -10,6 +10,6 @@ export const companyPhones = ['+855 15 57 87 07 ', '+855 71 26 000 78']
 export const socialLinks = {
   facebook: 'https://www.facebook.com/roumdoulofficial',
   instagram: 'https://www.instagram.com/roumd_oul/',
-  tiktok: 'https://www.tiktok.com/@roumdoul1',
+  tiktok: 'https://www.tiktok.com/@roumd_oul',
   telegram: 'https://t.me/roumdoul_official',
 }

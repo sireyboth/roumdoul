@@ -66,6 +66,45 @@ class ImageOptimizer
         return $path;
     }
 
+    /**
+     * Re-encodes an image already on $disk (e.g. an admin upload) when it is heavier than
+     * $minBytes, deletes the original and returns the new path. Returns null when the file is
+     * missing, small enough, a GIF, or the result wouldn't be smaller — leave the path as is then.
+     */
+    public function optimizeStored(string $path, string $disk = 's3', int $minBytes = 400 * 1024): ?string
+    {
+        $storage = Storage::disk($disk);
+
+        if (preg_match('#^https?://#i', $path) || ! $storage->exists($path) || $storage->size($path) <= $minBytes) {
+            return null;
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'img');
+
+        try {
+            file_put_contents($tmp, $storage->get($path));
+            $file = new UploadedFile($tmp, basename($path), null, null, true);
+
+            if ($file->getMimeType() === 'image/gif' || ! str_starts_with((string) $file->getMimeType(), 'image/')) {
+                return null;
+            }
+
+            $newPath = $this->store($file, dirname($path), $disk);
+
+            if ($newPath === $path || $storage->size($newPath) >= $storage->size($path)) {
+                $newPath !== $path && $storage->delete($newPath);
+
+                return null;
+            }
+
+            $storage->delete($path);
+
+            return $newPath;
+        } finally {
+            @unlink($tmp);
+        }
+    }
+
     private function encode(\GdImage $image, bool $jpeg, int $quality): string
     {
         ob_start();

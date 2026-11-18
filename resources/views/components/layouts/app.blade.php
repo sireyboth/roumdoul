@@ -25,6 +25,25 @@
     href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Outfit:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
   <title>{{ $title ?? 'ROUMDOUL | Premium Digital Services' }}</title>
+  {{-- Search results + Facebook/Telegram link previews. A page can pass its own
+       ->layoutData(['description' => ..., 'ogImage' => ...]); otherwise the site defaults. --}}
+  @php
+    $metaTitle = $title ?? 'ROUMDOUL | Premium Digital Services';
+    $metaDescription = \Illuminate\Support\Str::limit(trim(strip_tags($description ?? '')) ?: __('ROUMDOUL — premium digital services at fair prices: subscriptions, software licenses, design and Khmer digital invitations. Order online and get your account fast.'), 160);
+    $metaImage = $ogImage ?? asset('images/Roumdoul_Logo.png');
+  @endphp
+  <meta name="description" content="{{ $metaDescription }}" />
+  <link rel="canonical" href="{{ url()->current() }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ROUMDOUL" />
+  <meta property="og:url" content="{{ url()->current() }}" />
+  <meta property="og:title" content="{{ $metaTitle }}" />
+  <meta property="og:description" content="{{ $metaDescription }}" />
+  <meta property="og:image" content="{{ $metaImage }}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{ $metaTitle }}" />
+  <meta name="twitter:description" content="{{ $metaDescription }}" />
+  <meta name="twitter:image" content="{{ $metaImage }}" />
   <x-js-translations />
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   <style>@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }</style>

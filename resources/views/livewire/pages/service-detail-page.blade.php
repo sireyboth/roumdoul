@@ -118,7 +118,7 @@
             <button type="button" wire:click="$set('quantity', {{ max(1, $quantity - 1) }})" @disabled(! $canPurchase)
               class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">&minus;</button>
             <span class="w-8 text-center text-sm font-semibold text-plum-800 dark:text-plum-100">{{ $quantity }}</span>
-            <button type="button" wire:click="$set('quantity', {{ $quantity + 1 }})" @disabled(! $canPurchase)
+            <button type="button" wire:click="$set('quantity', {{ min(\App\Services\CartService::MAX_QUANTITY, $quantity + 1) }})" @disabled(! $canPurchase || $quantity >= \App\Services\CartService::MAX_QUANTITY)
               class="flex h-10 w-10 items-center justify-center text-plum-500 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40">+</button>
           </div>
         </div>

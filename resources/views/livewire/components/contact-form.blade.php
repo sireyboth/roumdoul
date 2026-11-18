@@ -6,6 +6,10 @@
         </div>
     @else
         <form wire:submit="submit" class="flex flex-col gap-3">
+            {{-- Honeypot — hidden from real users, left empty by them --}}
+            <div class="absolute -left-[9999px]" aria-hidden="true">
+                <input type="text" tabindex="-1" autocomplete="off" wire:model="website" />
+            </div>
             <div>
                 <input type="email" wire:model="email" placeholder="{{ __('Your email (not required)') }}"
                     class="w-full rounded-lg border border-plum-200 bg-white px-3 py-2 text-sm text-plum-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-plum-700 dark:bg-plum-800 dark:text-white" />

@@ -14,6 +14,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -929,17 +930,28 @@ class InvitationManagePage extends Component
             fwrite($out, "\xEF\xBB\xBF"); // BOM, so Excel reads the Khmer as UTF-8
             fputcsv($out, [__('Name'), __('Link'), __('Opened'), __('RSVP'), __('Note'), __('Link paused')]);
             foreach ($invitation->recipients as $r) {
-                fputcsv($out, [
+                fputcsv($out, array_map([self::class, 'csvSafe'], [
                     $r->recipient_name,
                     route('invitation.show', $r),
                     $r->viewed_at?->format('Y-m-d H:i') ?? '',
                     $rsvp[$r->rsvp_status] ?? '',
                     $r->rsvp_note ?? '',
                     $r->revoked_at ? 'yes' : '',
-                ]);
+                ]));
             }
             fclose($out);
         }, 'guests-'.$invitation->slug.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Guests write their own RSVP note, so a cell starting with = + - @ (or a tab / line break)
+     * would run as a formula when the owner opens the export in Excel. A leading ' keeps it text.
+     */
+    public static function csvSafe(?string $value): string
+    {
+        $value = (string) $value;
+
+        return $value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true) ? "'".$value : $value;
     }
 
     public function removeRecipient(int $recipientId): void
@@ -1160,6 +1172,14 @@ class InvitationManagePage extends Component
             return;
         }
 
+        // Each add-on order sends a Telegram alert, so cap unpaid orders per customer.
+        $limiterKey = 'addon-order|'.$this->invitation->customer_id;
+        if (RateLimiter::tooManyAttempts($limiterKey, 10)) {
+            $this->toast('error', __('Too many submissions — please try again later.'));
+
+            return;
+        }
+
         try {
             $order = app(InvitationAddons::class)->order($this->invitation->fresh(['plan', 'template', 'customer']), [$line]);
         } catch (ValidationException $e) {
@@ -1168,6 +1188,7 @@ class InvitationManagePage extends Component
             return;
         }
 
+        RateLimiter::hit($limiterKey, 3600);
         rescue(fn () => app(TelegramNotifier::class)->sendNewOrder($order->load('items')), report: true);
 
         $this->redirect(route('order.confirmation', $order), navigate: true);

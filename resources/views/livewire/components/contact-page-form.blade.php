@@ -6,6 +6,10 @@
         </div>
     @else
         <form wire:submit="submit" class="flex flex-col gap-4">
+            {{-- Honeypot — hidden from real users, left empty by them --}}
+            <div class="absolute -left-[9999px]" aria-hidden="true">
+                <input type="text" tabindex="-1" autocomplete="off" wire:model="website" />
+            </div>
             <div>
                 <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-plum-500 dark:text-plum-400">
                     {{ __('Full name') }}

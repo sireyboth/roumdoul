@@ -40,21 +40,28 @@ class LoginPage extends Component
     {
         $credentials = $this->validate();
 
-        if (RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
-            $seconds = RateLimiter::availableIn($this->throttleKey());
-            $this->addError('email', __('auth.throttle', ['seconds' => $seconds]));
+        // Two caps: 5 tries a minute per email+IP, and a wider 20 wrong passwords an hour per
+        // email alone, so an attacker rotating IPs can't keep guessing one account's password.
+        $emailKey = 'login-email|'.Str::transliterate(Str::lower($this->email));
 
-            return;
+        foreach ([[$this->throttleKey(), 5], [$emailKey, 20]] as [$key, $max]) {
+            if (RateLimiter::tooManyAttempts($key, $max)) {
+                $this->addError('email', __('auth.throttle', ['seconds' => RateLimiter::availableIn($key)]));
+
+                return;
+            }
         }
 
         if (! Auth::guard('customer')->attempt($credentials, $this->remember)) {
             RateLimiter::hit($this->throttleKey(), 60);
+            RateLimiter::hit($emailKey, 3600);
             $this->addError('email', __('auth.failed'));
 
             return;
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($emailKey);
         session()->regenerate();
 
         $this->redirect(session()->pull('url.intended', '/dashboard'), navigate: true);
