@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Services\Schemas;
 
+use App\Models\Category;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -47,11 +49,7 @@ class ServiceForm
                     ->columns(2)
                     ->columnSpan(2)
                     ->components([
-                        Select::make('category_id')
-                            ->relationship('category', 'name_en')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
+                        self::categoryField(),
                         TextInput::make('name_en')
                             ->label('Name (English)')
                             ->required()
@@ -64,47 +62,80 @@ class ServiceForm
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->helperText('Auto-generated from the English name — used in /service/{slug} URLs.'),
-                        TextInput::make('short_description')
-                            ->label('Short description')
-                            ->helperText('Shown on product cards in the shop grid. Max 255 characters.')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpanFull(),
-                        Textarea::make('description')
-                            ->label('Full description')
-                            ->helperText('Shown on the service detail page.')
-                            ->required()
-                            ->rows(3)
-                            ->columnSpanFull(),
+                        ...self::descriptionFields(),
                     ]),
 
                 Section::make('Settings')
                     ->columnSpan(1)
                     ->components([
-                        TextInput::make('demo_url')
-                            ->label('Live demo URL')
-                            ->helperText('Shows a "View Live Demo" button on the product page.')
-                            ->url()
-                            ->placeholder('https://...'),
-                        TextInput::make('sort_order')
-                            ->label('Sort order')
-                            ->helperText('Lower numbers appear first.')
-                            ->required()
-                            ->numeric()
-                            ->default(0),
-                        Toggle::make('is_featured')
-                            ->label('Featured')
-                            ->helperText('Shown in "Special Deals" on the homepage.'),
+                        ...self::settingsFields(),
                         Toggle::make('is_active')
                             ->label('Active')
                             ->helperText('Visible in the shop.')
                             ->default(true),
-                        Toggle::make('in_stock')
-                            ->label('In stock')
-                            ->helperText('Off blocks purchases.')
-                            ->default(true),
                     ]),
             ]);
+    }
+
+    /*
+     * The shop-listing fields below are shared with the Invitation Templates modal («Shop page» tab),
+     * which edits the template's linked Service — keep them here so both forms stay the same.
+     */
+
+    /** Which shop category (the filter on /shop) the product is listed under. */
+    public static function categoryField(bool $required = true): Select
+    {
+        return Select::make('category_id')
+            ->label('Category')
+            ->options(fn () => Category::orderBy('sort_order')->pluck('name_en', 'id'))
+            ->helperText('The shop filter it shows under.')
+            ->searchable()
+            ->preload()
+            ->required($required);
+    }
+
+    /** @return array<int, Field> */
+    public static function descriptionFields(bool $required = true): array
+    {
+        return [
+            TextInput::make('short_description')
+                ->label('Short description')
+                ->helperText('Shown on product cards in the shop grid. Max 255 characters.')
+                ->required($required)
+                ->maxLength(255)
+                ->columnSpanFull(),
+            Textarea::make('description')
+                ->label('Full description')
+                ->helperText('Shown on the service detail page.')
+                ->required($required)
+                ->rows(3)
+                ->columnSpanFull(),
+        ];
+    }
+
+    /** Demo link, display order, featured, in stock (not «Active»: templates set that themselves). */
+    public static function settingsFields(): array
+    {
+        return [
+            TextInput::make('demo_url')
+                ->label('Live demo URL')
+                ->helperText('Shows a "View Live Demo" button on the product page.')
+                ->url()
+                ->placeholder('https://...'),
+            TextInput::make('sort_order')
+                ->label('Sort order')
+                ->helperText('Lower numbers appear first.')
+                ->required()
+                ->numeric()
+                ->default(0),
+            Toggle::make('is_featured')
+                ->label('Featured')
+                ->helperText('Shown in "Special Deals" on the homepage.'),
+            Toggle::make('in_stock')
+                ->label('In stock')
+                ->helperText('Off blocks purchases.')
+                ->default(true),
+        ];
     }
 
     protected static function pricingTab(): Tab
@@ -162,35 +193,41 @@ class ServiceForm
         return Tab::make('Media')
             ->icon(Heroicon::OutlinedPhoto)
             ->columns(3)
-            ->components([
-                FileUpload::make('image_path')
-                    ->label('Cover image')
-                    ->helperText('Max 3MB, auto-resized to 1200×900.')
-                    ->image()
-                    ->imageEditor()
-                    ->disk('s3')
-                    ->directory('services')
-                    ->maxSize(3072)
-                    ->automaticallyResizeImagesMode('cover')
-                    ->automaticallyResizeImagesToWidth('1200')
-                    ->automaticallyResizeImagesToHeight('900')
-                    ->automaticallyUpscaleImagesWhenResizing(false),
-                FileUpload::make('gallery_images')
-                    ->label('Gallery')
-                    ->helperText('Extra screenshots (e.g. template pages, video scenes). Max 3MB each.')
-                    ->multiple()
-                    ->image()
-                    ->reorderable()
-                    ->disk('s3')
-                    ->directory('services/gallery')
-                    ->maxSize(3072)
-                    ->automaticallyResizeImagesMode('cover')
-                    ->automaticallyResizeImagesToWidth('1600')
-                    ->automaticallyResizeImagesToHeight('1200')
-                    ->automaticallyUpscaleImagesWhenResizing(false)
-                    ->panelLayout('grid')
-                    ->columnSpan(2),
-            ]);
+            ->components(self::mediaFields());
+    }
+
+    /** Cover image + gallery screenshots of the product page. */
+    public static function mediaFields(): array
+    {
+        return [
+            FileUpload::make('image_path')
+                ->label('Cover image')
+                ->helperText('Max 3MB, auto-resized to 1200×900.')
+                ->image()
+                ->imageEditor()
+                ->disk('s3')
+                ->directory('services')
+                ->maxSize(3072)
+                ->automaticallyResizeImagesMode('cover')
+                ->automaticallyResizeImagesToWidth('1200')
+                ->automaticallyResizeImagesToHeight('900')
+                ->automaticallyUpscaleImagesWhenResizing(false),
+            FileUpload::make('gallery_images')
+                ->label('Gallery')
+                ->helperText('Extra screenshots (e.g. template pages, video scenes). Max 3MB each.')
+                ->multiple()
+                ->image()
+                ->reorderable()
+                ->disk('s3')
+                ->directory('services/gallery')
+                ->maxSize(3072)
+                ->automaticallyResizeImagesMode('cover')
+                ->automaticallyResizeImagesToWidth('1600')
+                ->automaticallyResizeImagesToHeight('1200')
+                ->automaticallyUpscaleImagesWhenResizing(false)
+                ->panelLayout('grid')
+                ->columnSpan(2),
+        ];
     }
 
     protected static function detailsTab(): Tab
@@ -199,43 +236,49 @@ class ServiceForm
             ->icon(Heroicon::OutlinedQuestionMarkCircle)
             ->badge(fn (callable $get) => (count($get('how_to_use_steps') ?? []) + count($get('faqs') ?? [])) ?: null)
             ->columns(2)
-            ->components([
-                Section::make('How to use')
-                    ->description('Leave empty to hide this tab on the product page.')
-                    ->columnSpan(1)
-                    ->components([
-                        Repeater::make('how_to_use_steps')
-                            ->hiddenLabel()
-                            ->simple(
-                                TextInput::make('step')->required(),
-                            )
-                            ->addActionLabel('Add step')
-                            ->reorderableWithButtons()
-                            ->defaultItems(0),
-                    ]),
+            ->components(self::detailsSections());
+    }
 
-                Section::make('FAQ')
-                    ->description('Leave empty to hide this tab on the product page.')
-                    ->columnSpan(1)
-                    ->components([
-                        Repeater::make('faqs')
-                            ->hiddenLabel()
-                            ->components([
-                                TextInput::make('question')
-                                    ->required()
-                                    ->columnSpanFull(),
-                                Textarea::make('answer')
-                                    ->required()
-                                    ->rows(2)
-                                    ->columnSpanFull(),
-                            ])
-                            ->addActionLabel('Add question')
-                            ->reorderableWithButtons()
-                            ->itemLabel(fn (array $state) => $state['question'] ?? 'New question')
-                            ->collapsed()
-                            ->defaultItems(0)
-                            ->collapsible(),
-                    ]),
-            ]);
+    /** «How to use» steps + FAQ, each its own tab on the product page. */
+    public static function detailsSections(): array
+    {
+        return [
+            Section::make('How to use')
+                ->description('Leave empty to hide this tab on the product page.')
+                ->columnSpan(1)
+                ->components([
+                    Repeater::make('how_to_use_steps')
+                        ->hiddenLabel()
+                        ->simple(
+                            TextInput::make('step')->required(),
+                        )
+                        ->addActionLabel('Add step')
+                        ->reorderableWithButtons()
+                        ->defaultItems(0),
+                ]),
+
+            Section::make('FAQ')
+                ->description('Leave empty to hide this tab on the product page.')
+                ->columnSpan(1)
+                ->components([
+                    Repeater::make('faqs')
+                        ->hiddenLabel()
+                        ->components([
+                            TextInput::make('question')
+                                ->required()
+                                ->columnSpanFull(),
+                            Textarea::make('answer')
+                                ->required()
+                                ->rows(2)
+                                ->columnSpanFull(),
+                        ])
+                        ->addActionLabel('Add question')
+                        ->reorderableWithButtons()
+                        ->itemLabel(fn (array $state) => $state['question'] ?? 'New question')
+                        ->collapsed()
+                        ->defaultItems(0)
+                        ->collapsible(),
+                ]),
+        ];
     }
 }

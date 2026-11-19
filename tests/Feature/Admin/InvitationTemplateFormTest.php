@@ -6,6 +6,7 @@ use App\Filament\Resources\InvitationTemplates\Pages\ListInvitationTemplates;
 use App\Filament\Resources\InvitationTemplates\Pages\ViewInvitationTemplate;
 use App\Filament\Resources\InvitationTemplates\RelationManagers\InvitationsRelationManager;
 use App\Filament\Resources\Services\Pages\ListServices;
+use App\Models\Category;
 use App\Models\Invitation;
 use App\Models\InvitationTemplate;
 use App\Models\Service;
@@ -160,6 +161,60 @@ class InvitationTemplateFormTest extends TestCase
         $this->assertSame('0.20', $plan->extra_photo_price);
         $this->assertSame(1, $service->plans()->count());
         $this->assertSame(1, Service::count());
+    }
+
+    public function test_shop_page_of_the_linked_service_is_edited_in_the_template_modal(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $service = Service::factory()->create(['sort_order' => 0, 'is_featured' => false]);
+        ServicePlan::factory()->create(['service_id' => $service->id, 'max_recipients' => 10]);
+        $template = InvitationTemplate::factory()->create(['service_id' => $service->id]);
+        $wedding = Category::factory()->create();
+
+        Livewire::test(ListInvitationTemplates::class)
+            ->mountAction(TestAction::make(EditAction::class)->table($template))
+            ->assertSet('mountedActions.0.data.service.short_description', $service->short_description)
+            ->set('mountedActions.0.data.service.category_id', $wedding->id)
+            ->set('mountedActions.0.data.service.sort_order', 3)
+            ->set('mountedActions.0.data.service.is_featured', true)
+            ->set('mountedActions.0.data.service.short_description', 'A fine-art garden wedding')
+            ->set('mountedActions.0.data.service.faqs', [['question' => 'Can I change it?', 'answer' => 'Yes.']])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        $service->refresh();
+        $this->assertSame($wedding->id, $service->category_id);
+        $this->assertSame(3, (int) $service->sort_order);
+        $this->assertTrue($service->is_featured);
+        $this->assertSame('A fine-art garden wedding', $service->short_description);
+        $this->assertSame('Can I change it?', $service->faqs[0]['question']);
+        $this->assertSame(1, $service->plans()->count());
+    }
+
+    public function test_shop_page_fields_filled_on_create_go_to_the_new_service(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $wedding = Category::factory()->create();
+
+        Livewire::test(ListInvitationTemplates::class)
+            ->callAction(CreateAction::class, [
+                'name' => 'Garden Party',
+                'slug' => 'garden-party',
+                'category' => 'wedding',
+                'view' => 'invitations.templates.date-asking',
+                'fields_universal' => ['headline'],
+                'is_active' => true,
+                'plans' => [['label' => 'Basic', 'price' => 5, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true]],
+                'shop' => ['category_id' => $wedding->id, 'sort_order' => 2, 'is_featured' => true, 'short_description' => ''],
+            ])
+            ->assertHasNoActionErrors();
+
+        $service = InvitationTemplate::where('slug', 'garden-party')->firstOrFail()->service;
+        $this->assertSame($wedding->id, $service->category_id);
+        $this->assertSame(2, (int) $service->sort_order);
+        $this->assertTrue($service->is_featured);
+        $this->assertSame('Garden Party', $service->short_description); // blank keeps the default
     }
 
     public function test_invitation_linked_services_are_hidden_from_the_main_services_list(): void

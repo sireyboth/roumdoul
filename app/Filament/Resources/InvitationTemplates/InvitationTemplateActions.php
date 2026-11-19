@@ -31,9 +31,13 @@ class InvitationTemplateActions
                     $data = InvitationTemplate::mergeFieldSections($data);
 
                     $plans = array_values($data['plans'] ?? []);
-                    unset($data['plans']);
+                    $shop = $data['shop'] ?? [];
+                    unset($data['plans'], $data['shop']);
 
                     $service = InvitationTemplate::createServiceFor($data['name'], $data['is_active'] ?? true, $plans);
+
+                    // «Shop page» tab: category, order, texts, pictures, FAQ — blanks keep createServiceFor()'s defaults
+                    $service->update(array_filter($shop, fn ($value) => $value !== null && $value !== '' && $value !== []));
 
                     // createServiceFor() copies everything but the stock toggle — set that here
                     foreach ($service->plans()->orderBy('sort_order')->get() as $index => $plan) {

@@ -187,11 +187,16 @@ shows invitation products at all.
    at `/templates/{slug}/demo`, and the dashboard's field-filling form is generated
    automatically from whichever fields you ticked.
 
-**Changing prices/plans later**: the Invitation Templates *edit* screen doesn't show the plans
-repeater (editing plans on an already-selling product risks orphaning existing customers'
-invitations if not handled carefully) — instead it has a **"Manage pricing & plans"** button
-that takes you straight to that product's normal Service edit screen, where pricing plans work
-exactly like they do for every other product in the shop.
+**Changing it later**: Catalog → Invitation Templates → **Edit** opens the same wide modal, tabs
+**Basics · Fields · Plans · Shop page**. **Plans** edits the linked Service's pricing plans in place (click
+a plan to open it); a plan change only affects new buyers, each sold invitation keeps its own limits
+(edit those on the template's «Invitations» tab). **Shop page** edits the linked Service's product page:
+**Category** (the filter it shows under on `/shop`; default «Digital Invitations»), **Sort order**
+(display order, lower first, featured first), Featured, In stock, short + full description, live demo URL,
+**Cover image** + **Gallery**, «How to use» and FAQ. Both tabs are also on Create (blank shop texts = the
+product name). Invitation products are hidden from Catalog → Services, so these tabs are the only place to
+edit them; the fields come from `ServiceForm` helpers, so a change there shows in both forms. A template
+with no linked Service shows «Set up pricing» instead.
 
 ## Shared scratch-off card (`<x-scratch-card>`)
 

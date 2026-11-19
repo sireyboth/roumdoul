@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\InvitationTemplates\Schemas;
 
 use App\Filament\Resources\Services\Schemas\PlanFields;
+use App\Filament\Resources\Services\Schemas\ServiceForm;
 use App\Models\InvitationTemplate;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
@@ -11,6 +12,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Callout;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -20,7 +23,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 /**
- * Opened in a wide modal (create + edit) — tabs: Basics · Fields · Plans.
+ * Opened in a wide modal (create + edit) — tabs: Basics · Fields · Plans · Shop page.
  *
  * The stored `fields` array is flat; the «Fields» tab shows one checkbox list per FIELD_SECTIONS group,
  * so the create/edit actions split it on load and merge it back on save (InvitationTemplateActions).
@@ -48,6 +51,7 @@ class InvitationTemplateForm
                         self::basicsTab(),
                         self::fieldsTab(),
                         self::plansTab(),
+                        self::shopTab(),
                     ]),
             ]);
     }
@@ -184,6 +188,61 @@ class InvitationTemplateForm
                     ->warning()
                     ->visible(fn (string $operation, ?InvitationTemplate $record) => $operation !== 'create' && $record?->service_id === null),
             ]);
+    }
+
+    /**
+     * The template's product in the shop: which category filter it's under, display order, featured,
+     * texts, cover image + gallery, «How to use» + FAQ. The same fields as the Services form
+     * (ServiceForm helpers). Edit saves them straight to the linked Service; create collects them
+     * under `shop` and InvitationTemplateActions::create() applies them to the new Service.
+     */
+    protected static function shopTab(): Tab
+    {
+        return Tab::make('Shop page')
+            ->icon(Heroicon::OutlinedShoppingBag)
+            ->components([
+                Group::make()
+                    ->statePath('shop')
+                    ->visibleOn('create')
+                    ->columns(3)
+                    ->components(self::shopComponents(creating: true)),
+
+                Group::make()
+                    ->relationship('service')
+                    ->visible(fn (string $operation, ?InvitationTemplate $record) => $operation !== 'create' && $record?->service_id !== null)
+                    ->columns(3)
+                    ->components(self::shopComponents()),
+
+                Callout::make('Not sold in the shop')
+                    ->description('This template isn\'t linked to a shop product, so it has no shop page. Close this window and use «Set up pricing» on the template to add it to the shop.')
+                    ->warning()
+                    ->visible(fn (string $operation, ?InvitationTemplate $record) => $operation !== 'create' && $record?->service_id === null),
+            ]);
+    }
+
+    protected static function shopComponents(bool $creating = false): array
+    {
+        return [
+            Section::make('Listing')
+                ->description($creating ? 'Leave blank to use the product name and the «Digital Invitations» category.' : null)
+                ->columns(2)
+                ->columnSpan(2)
+                ->components([
+                    ServiceForm::categoryField(required: ! $creating)
+                        ->placeholder($creating ? 'Digital Invitations (default)' : null),
+                    ...ServiceForm::descriptionFields(required: ! $creating),
+                ]),
+            Section::make('Settings')
+                ->columnSpan(1)
+                ->components(ServiceForm::settingsFields()),
+            Section::make('Pictures')
+                ->columns(3)
+                ->columnSpanFull()
+                ->components(ServiceForm::mediaFields()),
+            Grid::make(2)
+                ->columnSpanFull()
+                ->components(ServiceForm::detailsSections()),
+        ];
     }
 
     /**
