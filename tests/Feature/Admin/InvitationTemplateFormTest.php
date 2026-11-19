@@ -180,6 +180,8 @@ class InvitationTemplateFormTest extends TestCase
             ->set('mountedActions.0.data.service.is_featured', true)
             ->set('mountedActions.0.data.service.short_description', 'A fine-art garden wedding')
             ->set('mountedActions.0.data.service.faqs', [['question' => 'Can I change it?', 'answer' => 'Yes.']])
+            ->set('mountedActions.0.data.service.discount_type', 'percentage')
+            ->set('mountedActions.0.data.service.discount_value', 20)
             ->callMountedAction()
             ->assertHasNoActionErrors();
 
@@ -189,6 +191,8 @@ class InvitationTemplateFormTest extends TestCase
         $this->assertTrue($service->is_featured);
         $this->assertSame('A fine-art garden wedding', $service->short_description);
         $this->assertSame('Can I change it?', $service->faqs[0]['question']);
+        $this->assertTrue($service->hasDiscount());
+        $this->assertSame(8.0, $service->discountedPrice(10));
         $this->assertSame(1, $service->plans()->count());
     }
 
@@ -206,7 +210,8 @@ class InvitationTemplateFormTest extends TestCase
                 'fields_universal' => ['headline'],
                 'is_active' => true,
                 'plans' => [['label' => 'Basic', 'price' => 5, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true]],
-                'shop' => ['category_id' => $wedding->id, 'sort_order' => 2, 'is_featured' => true, 'short_description' => ''],
+                'shop' => ['category_id' => $wedding->id, 'sort_order' => 2, 'is_featured' => true, 'short_description' => '',
+                    'discount_type' => 'fixed', 'discount_value' => 1.5],
             ])
             ->assertHasNoActionErrors();
 
@@ -215,6 +220,7 @@ class InvitationTemplateFormTest extends TestCase
         $this->assertSame(2, (int) $service->sort_order);
         $this->assertTrue($service->is_featured);
         $this->assertSame('Garden Party', $service->short_description); // blank keeps the default
+        $this->assertSame(3.5, $service->discountedPrice(5));
     }
 
     public function test_invitation_linked_services_are_hidden_from_the_main_services_list(): void

@@ -151,24 +151,7 @@ class ServiceForm
                     ->required()
                     ->numeric()
                     ->prefix('$'),
-                Select::make('discount_type')
-                    ->label('Discount')
-                    ->options([
-                        'percentage' => 'Percentage (%)',
-                        'fixed' => 'Fixed amount ($)',
-                    ])
-                    ->native(false)
-                    ->live()
-                    ->placeholder('No discount'),
-                TextInput::make('discount_value')
-                    ->label(fn (callable $get) => $get('discount_type') === 'fixed' ? 'Discount amount' : 'Discount percentage')
-                    ->numeric()
-                    ->minValue(0.01)
-                    ->maxValue(fn (callable $get) => $get('discount_type') === 'percentage' ? 100 : null)
-                    ->prefix(fn (callable $get) => $get('discount_type') === 'fixed' ? '$' : null)
-                    ->suffix(fn (callable $get) => $get('discount_type') === 'percentage' ? '%' : null)
-                    ->required(fn (callable $get) => filled($get('discount_type')))
-                    ->visible(fn (callable $get) => filled($get('discount_type'))),
+                ...self::discountFields(),
                 Repeater::make('plans')
                     ->relationship()
                     ->label('Pricing plans')
@@ -186,6 +169,31 @@ class ServiceForm
                     ->defaultItems(0)
                     ->columnSpanFull(),
             ]);
+    }
+
+    /** Discount on the whole product: every plan's price (cart, shop card, product page). */
+    public static function discountFields(): array
+    {
+        return [
+            Select::make('discount_type')
+                ->label('Discount')
+                ->options([
+                    'percentage' => 'Percentage (%)',
+                    'fixed' => 'Fixed amount ($)',
+                ])
+                ->native(false)
+                ->live()
+                ->placeholder('No discount'),
+            TextInput::make('discount_value')
+                ->label(fn (callable $get) => $get('discount_type') === 'fixed' ? 'Discount amount' : 'Discount percentage')
+                ->numeric()
+                ->minValue(0.01)
+                ->maxValue(fn (callable $get) => $get('discount_type') === 'percentage' ? 100 : null)
+                ->prefix(fn (callable $get) => $get('discount_type') === 'fixed' ? '$' : null)
+                ->suffix(fn (callable $get) => $get('discount_type') === 'percentage' ? '%' : null)
+                ->required(fn (callable $get) => filled($get('discount_type')))
+                ->visible(fn (callable $get) => filled($get('discount_type'))),
+        ];
     }
 
     protected static function mediaTab(): Tab

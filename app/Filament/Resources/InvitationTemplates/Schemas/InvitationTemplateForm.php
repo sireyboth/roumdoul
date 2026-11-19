@@ -146,6 +146,18 @@ class InvitationTemplateForm
         return Tab::make('Plans')
             ->icon(Heroicon::OutlinedCurrencyDollar)
             ->components([
+                // discount on the whole product (every plan) — create: applied with the «Shop page» fields
+                Group::make()
+                    ->statePath('shop')
+                    ->visibleOn('create')
+                    ->columns(3)
+                    ->components(ServiceForm::discountFields()),
+                Group::make()
+                    ->relationship('service')
+                    ->visible(fn (string $operation, ?InvitationTemplate $record) => $operation !== 'create' && $record?->service_id !== null)
+                    ->columns(3)
+                    ->components(ServiceForm::discountFields()),
+
                 // create: plain repeater, turned into the Service + plans on save
                 Repeater::make('plans')
                     ->label('Pricing plans')

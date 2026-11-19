@@ -189,7 +189,8 @@ shows invitation products at all.
 
 **Changing it later**: Catalog → Invitation Templates → **Edit** opens the same wide modal, tabs
 **Basics · Fields · Plans · Shop page**. **Plans** edits the linked Service's pricing plans in place (click
-a plan to open it); a plan change only affects new buyers, each sold invitation keeps its own limits
+a plan to open it) plus the product's **Discount** (percentage or fixed, applied to every plan's price in the
+cart, shop card and product page); a plan change only affects new buyers, each sold invitation keeps its own limits
 (edit those on the template's «Invitations» tab). **Shop page** edits the linked Service's product page:
 **Category** (the filter it shows under on `/shop`; default «Digital Invitations»), **Sort order**
 (display order, lower first, featured first), Featured, In stock, short + full description, live demo URL,
