@@ -152,6 +152,7 @@ class InvitationTemplateDemoController extends Controller
                 'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nដំណើរកម្សាន្តលើកដំបូង\nពេលល្ងាចនៅមាត់ទន្លេ\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nរហូតទៅ",
                 'accent_color' => '#b0654b',
                 'story_chapters' => $weddingPlaces,
+                'dress_code' => 'សូមស្លៀកពាក់ពណ៌ក្រែម បៃតងខ្ចី ឬផ្កាឈូកខ្ចី — សម្លៀកបំពាក់ផ្លូវការ ឬប្រពៃណីខ្មែរ',
                 'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             ],
             // Front Page: pull quote, 12 photos (three full photo-booth strips) + captions, dress code, a sample song
