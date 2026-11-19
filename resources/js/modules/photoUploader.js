@@ -57,9 +57,24 @@ async function mapLimit(items, limit, fn) {
   return out
 }
 
+// The form's Save button is locked while any uploader has announced `photo-upload-start` and not yet
+// `photo-upload-end` (each event carries the uploader's id; see invitation-manage-page.blade.php).
+// Both go out on `window`, never from an element: inside a method Alpine resolves `this.$dispatch`,
+// `this.$root` and `this.$wire` against the element whose directive called it — for `pick()` that's
+// the file input, and the gallery's input is removed by Livewire as soon as the gallery is full, so an
+// event dispatched from it after the last upload never reached the form and Save stayed stuck on
+// «Uploading photos…». The root and $wire are captured once in init() for the same reason.
+let nextUploaderId = 0
+
+const announce = (type, id) => window.dispatchEvent(new CustomEvent(`photo-upload-${type}`, { detail: { id } }))
+
 // `data-room` on the component root holds how many more gallery photos fit; it's read at pick
 // time because Livewire re-renders it after every upload/removal.
 export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) {
+  const id = `${name}#${++nextUploaderId}`
+  let root = null
+  let wire = null
+
   return {
     busy: false,
     preparing: false,
@@ -67,6 +82,18 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
     error: '',
     stallTimer: null,
     cancelled: false,
+    // true from start() until the matching end event has gone out — not tied to `busy`
+    announced: false,
+
+    init() {
+      root = this.$el
+      wire = this.$wire
+    },
+
+    // the Livewire component, captured while the root is in the page (falls back to the live lookup)
+    server() {
+      return wire ?? this.$wire
+    },
 
     async pick(event) {
       const files = [...event.target.files]
@@ -75,7 +102,7 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
 
       this.error = ''
 
-      const room = Number(this.$root.dataset.room ?? Infinity)
+      const room = Number(root?.dataset.room ?? Infinity)
       if (multiple && files.length > room) {
         this.reject(room > 0
           ? t('You picked :count photos, but only :room more fit in the gallery.', { count: files.length, room })
@@ -119,7 +146,7 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
 
       this.armStallTimer()
       try {
-        this.$wire.$upload(name, ready[0], done, failed, progress, done)
+        this.server().$upload(name, ready[0], done, failed, progress, done)
       } catch (err) {
         this.finish(t('The upload failed. Please try again.'))
       }
@@ -163,14 +190,14 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
         const arm = () => {
           clearTimeout(this.stallTimer)
           this.stallTimer = setTimeout(() => {
-            try { this.$wire.$cancelUpload(name) } catch {}
+            try { this.server().$cancelUpload(name) } catch {}
             settle(false)
           }, STALL_MS)
         }
         arm()
         try {
           // append = true (Livewire's default): adds to the files already waiting in this gallery
-          this.$wire.$uploadMultiple(name, [file], () => settle(true), () => settle(false), (e) => {
+          this.server().$uploadMultiple(name, [file], () => settle(true), () => settle(false), (e) => {
             onProgress(e.detail.progress)
             arm()
           }, () => settle(false))
@@ -188,24 +215,31 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
 
     cancel() {
       this.cancelled = true
-      try { this.$wire.$cancelUpload(name) } catch {}
+      try { this.server().$cancelUpload(name) } catch {}
       this.finish()
     },
 
     start() {
       this.busy = true
       this.progress = 0
-      this.$dispatch('photo-upload-start')
+      this.announced = true
+      announce('start', id)
     },
 
+    // Always closes what start() opened, even if `busy` was already cleared some other way.
     finish(error = '') {
-      if (!this.busy) return
       clearTimeout(this.stallTimer)
+      const wasBusy = this.busy
       this.busy = false
       this.preparing = false
-      if (error) this.reject(error)
-      else this.error = ''
-      this.$dispatch('photo-upload-end')
+      if (wasBusy) {
+        if (error) this.reject(error)
+        else this.error = ''
+      }
+      if (this.announced) {
+        this.announced = false
+        announce('end', id)
+      }
     },
 
     // Restarted on every progress tick, so it only fires when nothing has moved for STALL_MS
@@ -213,13 +247,18 @@ export function photoUploader({ name, multiple = false, maxMb = 3, gifMb = 3 }) 
     armStallTimer() {
       clearTimeout(this.stallTimer)
       this.stallTimer = setTimeout(() => {
-        this.$wire.$cancelUpload(name)
+        try { this.server().$cancelUpload(name) } catch {}
         this.finish(t('The upload is taking too long. Please try again on a better connection, or use a smaller photo.'))
       }, STALL_MS)
     },
 
+    // removed from the page (a re-render, leaving the tab) while uploading: let the form go
     destroy() {
       clearTimeout(this.stallTimer)
+      if (this.announced) {
+        this.announced = false
+        announce('end', id)
+      }
     },
   }
 }
@@ -254,10 +293,14 @@ export function audioUploader({ name, maxMb = 10 }) {
       this.start()
       this.armStallTimer()
       const done = () => this.finish()
-      this.$wire.$upload(name, file, done, done, (e) => {
-        this.progress = e.detail.progress
-        this.armStallTimer()
-      }, done)
+      try {
+        this.server().$upload(name, file, done, done, (e) => {
+          this.progress = e.detail.progress
+          this.armStallTimer()
+        }, done)
+      } catch {
+        this.finish(t('The upload failed. Please try again.'))
+      }
     },
   }
 }

@@ -370,6 +370,12 @@
 .rl-count p{ display:flex; flex-direction:column; min-width:70px; margin:0; padding:16px 8px; border-radius:16px; background:rgba(255,255,255,.82); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); text-shadow:none; box-shadow:0 16px 30px -22px rgba(120,50,80,.5); }
 .rl-count b{ font:italic 400 clamp(2.2rem,7vw,3.2rem)/1 var(--rl-serif); color:var(--rl-accent); font-variant-numeric:tabular-nums; }
 .rl-count span{ margin-top:4px; font-size:.82rem; letter-spacing:.14em; text-transform:uppercase; color:var(--rl-soft); }
+/* together-for count-up: a soft line under the count */
+.rl-count-up b{ color:var(--rl-accent); }
+.rl-time-note{ margin:12px 0 0; font:italic 1.2rem/1.3 var(--rl-body); color:rgba(255,255,255,.9); }
+/* the count-up runs straight into the lantern finale: without this, both sections' full padding stacked into a ~260px hole */
+.rl-time{ padding-bottom:clamp(36px,5vw,56px); }
+.rl-time + .rl-end{ padding-top:clamp(20px,3vw,36px); }
 
 /* paper boats of reasons: folded paper boats bobbing on a glassy strip of the river; a tap unfolds one into a note */
 .rl-boats .rl-h2{ margin-bottom:clamp(26px,4vw,40px); }
@@ -472,6 +478,8 @@
 .rl-end-flower{ width:52px; height:52px; margin:0 auto 18px; color:#fff; animation:rl-spin 24s linear infinite; }
 .rl-wish-q{ margin:0 0 22px; font:italic 400 clamp(1.8rem,4.6vw,2.6rem)/1.1 var(--rl-serif); }
 .rl-wish .rl-btn svg,.rl-secret-x svg{ width:13px; height:13px; color:var(--rl-accent); }
+/* «SEND A LANTERN» (and «SEND ANOTHER WISH» after the first) in capitals, spaced a little so they don't crowd */
+.rl-wish .rl-btn{ text-transform:uppercase; letter-spacing:.12em; }
 .rl-end-msg{ margin-top:clamp(44px,7vw,72px); transition:opacity 1.3s ease, transform 1.3s cubic-bezier(.2,.7,.2,1), filter 1.3s ease; }
 .rl-end.is-waiting .rl-end-msg{ opacity:0; transform:translateY(20px); filter:blur(6px); }
 .rl-closing{ margin:0; font:italic 400 clamp(2.6rem,8vw,4.8rem)/1.05 var(--rl-serif); }

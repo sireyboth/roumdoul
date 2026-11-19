@@ -27,7 +27,7 @@
     // Names may be typed in Khmer or English; Khmer script needs no tracking and taller lines.
     $kh = fn (?string $s) => preg_match('/\p{Khmer}/u', (string) $s) ? ' kw-kh' : '';
 
-    $eventDate = ! empty($fields['event_date']) ? Carbon::parse($fields['event_date']) : null;
+    $eventDate = \App\Support\Invitations\EventDate::parse($fields['event_date'] ?? null);
     $dateNumeric = $eventDate ? $eventDate->format('d · m · Y') : null;
     $dateKhmer = $eventDate
         ? 'ថ្ងៃ'.$khDays[$eventDate->dayOfWeek].' ទី'.$khDigits($eventDate->day).' ខែ'.$khMonths[$eventDate->month - 1].' ឆ្នាំ'.$khDigits($eventDate->year)

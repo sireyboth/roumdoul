@@ -308,7 +308,8 @@ class InvitationTemplateDemoController extends Controller
             'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             'closing_line' => 'I love you, always.',
             'thanks_message' => 'Today, tomorrow, and on every ordinary day in between.',
-            'event_date' => '2022-03-14 19:00:00',
+            // the day it began: River Love counts up from it and down to the next anniversary, Rose Bloom shows «together since»
+            'together_since' => '2022-03-14',
             'venue_name' => 'Where it all began: Phnom Penh',
             'accent_color' => '#d65f7f',
         ];

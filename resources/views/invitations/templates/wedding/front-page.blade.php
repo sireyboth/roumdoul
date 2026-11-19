@@ -57,7 +57,7 @@
     $date = null;
     if ($text('event_date') !== '') {
         try {
-            $date = Carbon::parse($text('event_date'));
+            $date = \App\Support\Invitations\EventDate::parse($text('event_date'));
         } catch (\Throwable) {
             $date = null;
         }

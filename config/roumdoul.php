@@ -29,6 +29,12 @@ return [
     // How customers pay (manual for now): the KHQR shown on the order confirmation page and on a
     // pending order in the dashboard (resources/views/components/shop/payment-modal.blade.php).
     // Put the QR picture at public/{qr_image}; until it exists, the box shows the name + account ID only.
+    // The wall-clock zone customers type invitation times in (the dashboard's datetime-local input
+    // has no zone). App\Support\Invitations\EventDate reads every stored event_date in this zone, so
+    // a countdown ends at the time the customer entered, whatever zone the guest's phone is in.
+    // Not app.timezone: that one stays UTC for the database timestamps.
+    'event_timezone' => env('ROUMDOUL_EVENT_TIMEZONE', 'Asia/Phnom_Penh'),
+
     'payment' => [
         'qr_image' => env('ROUMDOUL_PAY_QR_IMAGE', 'images/payment/khqr.png'),
         'account_name' => env('ROUMDOUL_PAY_ACCOUNT_NAME', 'THAI NGOUNLENG'),

@@ -9,6 +9,7 @@ use App\Services\ImageOptimizer;
 use App\Services\InvitationAddons;
 use App\Services\TelegramNotifier;
 use App\Support\Invitations\ChristmasTemplate;
+use App\Support\Invitations\EventDate;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
@@ -63,7 +64,7 @@ class InvitationManagePage extends Component
             'host_names', 'contact_phone',
         ]],
         'when_where' => ['label' => 'When and where', 'icon' => 'calendar', 'fields' => [
-            'event_date', 'end_time', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
+            'together_since', 'event_date', 'end_time', 'khmer_date', 'venue_name', 'venue_address', 'map_url',
         ]],
         'guest_notes' => ['label' => 'Notes for guests', 'icon' => 'light-bulb', 'fields' => ['dress_code', 'what_to_bring', 'rsvp_deadline']],
         'words' => ['label' => 'Invitation wording', 'icon' => 'pencil', 'fields' => ['headline', 'opening_line', 'message', 'love_reasons', 'closing_line', 'song_title', 'reception_message', 'rsvp_message', 'thanks_message', 'apology_message']],
@@ -202,7 +203,7 @@ class InvitationManagePage extends Component
     {
         $section = self::fieldSection($key);
 
-        if (in_array($key, $this->invitation->template->fields ?? [], true) && in_array($section, $this->visibleSections(), true)) {
+        if (in_array($key, $this->invitation->template->editorFields(), true) && in_array($section, $this->visibleSections(), true)) {
             $this->section = $section;
             $this->focusField = $key;
             $this->saved = false;
@@ -212,7 +213,7 @@ class InvitationManagePage extends Component
     /** Sidebar sections in display order, skipping field sections this template has nothing for. */
     public function availableSections(): array
     {
-        $usedSections = collect($this->invitation->template->fields ?? [])
+        $usedSections = collect($this->invitation->template->editorFields())
             ->map(fn (string $key) => self::fieldSection($key))
             ->filter();
 
@@ -246,7 +247,7 @@ class InvitationManagePage extends Component
     /** This template's field keys that are edited under the given sidebar section. */
     public function sectionFields(string $section): array
     {
-        return collect($this->invitation->template->fields ?? [])
+        return collect($this->invitation->template->editorFields())
             ->filter(fn (string $key) => self::fieldSection($key) === $section)
             ->values()
             ->all();
@@ -261,7 +262,18 @@ class InvitationManagePage extends Component
         $fields = $this->sectionFields($section);
         $groups = [];
 
-        foreach (self::FORM_GROUPS as $name => $group) {
+        // a template can move a field into another card (InvitationTemplate::FIELD_OVERRIDES `group`), first in it
+        $formGroups = self::FORM_GROUPS;
+        foreach ($this->invitation->template->fieldOverrides() as $key => $override) {
+            if (isset($override['group'], $formGroups[$override['group']])) {
+                foreach ($formGroups as $name => $group) {
+                    $formGroups[$name]['fields'] = array_values(array_diff($group['fields'], [$key]));
+                }
+                array_unshift($formGroups[$override['group']]['fields'], $key);
+            }
+        }
+
+        foreach ($formGroups as $name => $group) {
             $keys = array_values(array_intersect($group['fields'], $fields));
             if ($keys) {
                 $groups[$name] = ['fields' => $keys, 'or' => ($group['or'] ?? false) && count($keys) > 1, 'label' => __($group['label'])] + $group;
@@ -403,6 +415,14 @@ class InvitationManagePage extends Component
     {
         abort_unless($this->invitation->isPaid(), 403);
 
+        // one-line text is stored trimmed (Livewire payloads skip the TrimStrings middleware), so
+        // « Chetra » counts as 6 characters and doesn't push a name off-centre
+        foreach ($this->invitation->template->fields ?? [] as $key) {
+            if ((InvitationTemplate::FIELD_CATALOG[$key]['type'] ?? null) === 'text' && is_string($this->fieldValues[$key] ?? null)) {
+                $this->fieldValues[$key] = trim($this->fieldValues[$key]);
+            }
+        }
+
         if ($rules = $this->saveRules()) {
             try {
                 $this->validate($rules);
@@ -519,7 +539,7 @@ class InvitationManagePage extends Component
             return;
         }
 
-        $label = $first ? (InvitationTemplate::localizedCatalog()[$first]['label'] ?? $first) : null;
+        $label = $first ? ($this->invitation->template->localizedFields()[$first]['label'] ?? $first) : null;
         $this->toast('error', $keys->count() > 1
             ? __('Not saved yet — :count fields need fixing (starting with «:field»).', ['count' => $keys->count(), 'field' => $label])
             : __('Not saved yet — please fix «:field».', ['field' => $label]));
@@ -541,6 +561,7 @@ class InvitationManagePage extends Component
     protected function saveRules(): array
     {
         $catalog = InvitationTemplate::FIELD_CATALOG;
+        $overrides = $this->invitation->template->fieldOverrides();
         $urlFields = ['music_url', 'cta_url'];
         $rules = [];
 
@@ -550,7 +571,7 @@ class InvitationManagePage extends Component
             $rules["fieldValues.{$key}"] = match (true) {
                 in_array($key, $urlFields, true) => ['nullable', 'url', 'starts_with:https://,http://', 'max:2048'],
                 $type === 'textarea' => ['nullable', 'string', 'max:2000'],
-                $type === 'text' => ['nullable', 'string', 'max:255'],
+                $type === 'text' => ['nullable', 'string', 'max:'.($overrides[$key]['max'] ?? 255)],
                 $type === 'boolean' => ['nullable', 'boolean'],
                 $type === 'datetime' => ['nullable', 'date'],
                 $type === 'date' => ['nullable', 'date_format:Y-m-d'],
@@ -625,6 +646,12 @@ class InvitationManagePage extends Component
             'rsvp_deadline' => function (string $attribute, mixed $value, \Closure $fail) use ($start) {
                 if ($start && is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) && $value > $start->toDateString()) {
                     $fail(__('The reply-by date must be on or before the event date.'));
+                }
+            },
+            // the start of a relationship is today at the latest (Cambodian calendar day)
+            'together_since' => function (string $attribute, mixed $value, \Closure $fail) {
+                if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) && $value > EventDate::now()->toDateString()) {
+                    $fail(__("The day you started dating can't be in the future."));
                 }
             },
         ];
@@ -1107,10 +1134,10 @@ class InvitationManagePage extends Component
             ->selectRaw('count(revoked_at) as paused')
             ->selectRaw('coalesce(sum(open_count), 0) as opens')
             ->first();
-        $templateFields = $this->invitation->template->fields ?? [];
+        $templateFields = $this->invitation->template->editorFields();
 
         return view('livewire.pages.dashboard.invitation-manage-page', [
-            'fieldCatalog' => InvitationTemplate::localizedCatalog(),
+            'fieldCatalog' => $this->invitation->template->localizedFields(),
             'sections' => $this->visibleSections(),
             'guestList' => $this->section === 'guests' ? $this->guestPage('guestsPage') : null,
             'responseList' => $this->section === 'responses' ? $this->guestPage('responsesPage') : null,
@@ -1197,7 +1224,7 @@ class InvitationManagePage extends Component
     /** Field names in validation messages, in the interface language (e.g. "សូមបំពេញ ឈ្មោះកូនកំលោះ។"). */
     protected function validationAttributes(): array
     {
-        return collect(InvitationTemplate::localizedCatalog())
+        return collect($this->invitation->template->localizedFields())
             ->mapWithKeys(fn (array $field, string $key) => ["fieldValues.{$key}" => $field['label']])
             ->all();
     }
