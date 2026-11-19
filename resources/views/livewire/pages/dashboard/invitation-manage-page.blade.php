@@ -263,10 +263,15 @@
         </p>
 
         <form wire:submit="save" class="mt-6 xl:grid xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start xl:gap-8"
-          x-data="{ uploading: 0, zoom: null, focus: @js($initialFocus) }"
+          {{-- Save waits for every uploader that has started and not finished (by id, so a repeated or
+               missing event can't leave it stuck). The events come on window: see photoUploader.js. --}}
+          x-data="{ uploads: [], zoom: null, focus: @js($initialFocus),
+            get uploading() { return this.uploads.length },
+            uploadStarted(id) { if (! this.uploads.includes(id)) this.uploads.push(id) },
+            uploadEnded(id) { this.uploads = this.uploads.filter((u) => u !== id) } }"
           @if ($focusField) x-init="$nextTick(() => document.getElementById('field-{{ $focusField }}')?.scrollIntoView({ block: 'center' }))" @endif
-          x-on:photo-upload-start="uploading++"
-          x-on:photo-upload-end="uploading = Math.max(0, uploading - 1); dirty = true"
+          x-on:photo-upload-start.window="uploadStarted($event.detail.id)"
+          x-on:photo-upload-end.window="uploadEnded($event.detail.id); dirty = true"
           x-on:input="dirty = true" x-on:change="dirty = true"
           x-on:field-error.window="focus = $event.detail.key; $nextTick(() => document.getElementById('field-' + $event.detail.key)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))">
 

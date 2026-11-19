@@ -98,7 +98,10 @@
     x.beginPath(); x.moveTo(cx, cy - 40); x.lineTo(cx + 7, cy); x.lineTo(cx, cy + 40); x.lineTo(cx - 7, cy); x.closePath(); x.fill();
     x.font = 'italic 16px "Cormorant Garamond", serif'; x.textAlign = 'center'; x.fillText('N', cx, cy - 48);
     var label = map.getAttribute('data-label');
-    if (label) { x.font = 'italic 24px "Cormorant Garamond", "Kantumruy Pro", serif'; // the label can be Khmer names x.fillStyle = 'rgba(' + ink + ',.35)'; x.textAlign = 'left'; x.fillText(label, 40, 560); }
+    if (label) { // the label can be Khmer names, so a Khmer font follows the Latin one
+      x.font = 'italic 24px "Cormorant Garamond", "Kantumruy Pro", serif';
+      x.fillStyle = 'rgba(' + ink + ',.35)'; x.textAlign = 'left'; x.fillText(label, 40, 560);
+    }
     x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = x.createPattern(grain(), 'repeat'); x.fillRect(0, 0, W, MH);
   };
 

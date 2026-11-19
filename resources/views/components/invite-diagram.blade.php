@@ -16,7 +16,7 @@
     'celebrant_name' => ['names'], 'turning_age' => ['names'],
     'groom_photo' => ['photos'], 'bride_photo' => ['photos'],
     'message' => ['message'], 'reception_message' => ['message'], 'thanks_message' => ['message'], 'apology_message' => ['message'],
-    'event_date' => ['date'], 'khmer_date' => ['khmer'],
+    'event_date' => ['date'], 'together_since' => ['date', 'countdown'], 'khmer_date' => ['khmer'],
     'countdown_enabled' => ['countdown'],
     'event_schedule' => ['schedule'], 'schedule_image' => ['schedule'],
     'story_chapters' => ['story'],

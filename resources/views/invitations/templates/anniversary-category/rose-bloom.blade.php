@@ -13,7 +13,8 @@
     //   recipient name  → the big script name (poster + letter) and the «To» lines (the guest link's name)
     //   sender_name     → signature            headline      → text inside the petal heart
     //   message         → the letter (blank line = new paragraph)
-    //   event_date      → «together since» date on the poster + days-together count (optional)
+    //   together_since  → «together since» date on the poster + days-together count (optional; an older
+    //                     invitation's event_date stands in when it's empty)
     //   venue_name      → «where it began» line on the poster (optional)
     //   cover_image     → poster photo (default: photo 1 of the gallery)
     //   photo_gallery   → poster (1), polaroid (2), music card (3–4), stamps (1–4), strip (5–9), map (after that)
@@ -67,16 +68,11 @@
         return [$a !== '' ? $a : $title, $b];
     };
 
-    // «together since»: the poster's date column + a days-together count (only for a past date)
-    $since = null;
-    if ($isUnlocked('event_date') && $text('event_date') !== '') {
-        try {
-            $since = Carbon::parse($text('event_date'));
-        } catch (\Throwable) {
-            $since = null;
-        }
-    }
-    $days = $since && $since->isPast() ? (int) $since->startOfDay()->diffInDays(now()->startOfDay()) : null;
+    // «together since»: the poster's date column + a days-together count (only for a past date).
+    // together_since is the start date; invitations made before it existed used event_date for it.
+    $since = ($isUnlocked('together_since') ? \App\Support\Invitations\EventDate::parse($text('together_since')) : null)
+        ?? ($isUnlocked('event_date') ? \App\Support\Invitations\EventDate::parse($text('event_date')) : null);
+    $days = $since && $since->isPast() ? (int) $since->startOfDay()->diffInDays(\App\Support\Invitations\EventDate::now()->startOfDay()) : null;
     $venue = $isUnlocked('venue_name') ? $text('venue_name') : '';
     $dateLines = $since ? [$since->format('l'), $since->format('j F'), $since->format('Y')] : ['Always', '& forever', '♡'];
 

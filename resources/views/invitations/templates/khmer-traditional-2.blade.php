@@ -37,7 +37,7 @@
     // "ប & ម" / "ប&ម" -> the letters with a smaller, lighter ampersand between them
     $initialParts = preg_split('/\s*&\s*/u', $initials, 2);
 
-    $eventDate = ! empty($fields['event_date']) ? Carbon::parse($fields['event_date']) : null;
+    $eventDate = \App\Support\Invitations\EventDate::parse($fields['event_date'] ?? null);
     $dateNumeric = $eventDate ? $eventDate->format('d · m · Y') : null;
     $dateKhmer = $eventDate
         ? 'ថ្ងៃ'.$khDays[$eventDate->dayOfWeek].' ទី'.$khDigits($eventDate->day).' ខែ'.$khMonths[$eventDate->month - 1].' ឆ្នាំ'.$khDigits($eventDate->year)

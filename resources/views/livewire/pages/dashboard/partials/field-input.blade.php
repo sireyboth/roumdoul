@@ -11,7 +11,7 @@
       $tempImage = $imageUploads[$key] ?? null;
       $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
     @endphp
-    <div class="relative max-w-lg" x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
+    <div wire:key="uploader-{{ $key }}" class="relative max-w-lg" x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
     @if ($tempImage || ! empty($fieldValues[$key]))
       <button type="button" wire:click="removeImage('{{ $key }}')" x-show="!busy" title="{{ __('Remove photo') }}"
         class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-base font-bold text-white shadow hover:bg-red-700">&times;</button>
@@ -58,7 +58,7 @@
       $tempAudio = $audioUploads[$key] ?? null;
       $page = \App\Livewire\Pages\Dashboard\InvitationManagePage::class;
     @endphp
-    <div class="max-w-lg" x-data="audioUploader({ name: 'audioUploads.{{ $key }}', maxMb: {{ $page::MAX_AUDIO_KB / 1024 }} })">
+    <div wire:key="uploader-{{ $key }}" class="max-w-lg" x-data="audioUploader({ name: 'audioUploads.{{ $key }}', maxMb: {{ $page::MAX_AUDIO_KB / 1024 }} })">
       @if ($tempAudio || ! empty($fieldValues[$key]))
         <div class="mb-2 flex items-center gap-2 rounded-xl border border-plum-200 bg-plum-50 p-2 dark:border-plum-700 dark:bg-plum-800/40">
           @if (! $tempAudio)
@@ -97,7 +97,7 @@
       $galleryMax = $this->invitation->maxGalleryPhotos();
       $galleryRoom = max(0, $galleryMax - count($fieldValues[$key] ?? []) - count($galleryUploads[$key] ?? []));
     @endphp
-    <div data-room="{{ $galleryRoom }}"
+    <div wire:key="uploader-{{ $key }}" data-room="{{ $galleryRoom }}"
       x-data="photoUploader({ name: 'galleryUploads.{{ $key }}', multiple: true, maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
     <div class="flex flex-wrap gap-2">
       @foreach (($fieldValues[$key] ?? []) as $i => $path)
@@ -221,5 +221,6 @@
 
   @default
     <input id="input-{{ $key }}" type="text" wire:model="fieldValues.{{ $key }}" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
+      @if (! empty($catalogField['max'])) maxlength="{{ $catalogField['max'] }}" @endif
       class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
 @endswitch

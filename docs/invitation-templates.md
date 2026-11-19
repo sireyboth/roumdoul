@@ -36,7 +36,7 @@ add/remove), `boolean`, `datetime`, `color`.
 
 | Field | Type | Purpose |
 |---|---|---|
-| `sender_name` | text | Generic "who it's from" (date-asking, breakup, etc.) |
+| `sender_name` | text | Generic "who it's from" (date-asking, breakup, etc.). River Love / Rose Bloom: the sender everywhere «Me» would show («Chetra ♡ Anna», «Forever yours, Chetra»); their editor calls it «Your name», max 40 characters (`FIELD_OVERRIDES`) |
 | `groom_name` / `bride_name` | text | Wedding-specific names |
 | `couple_initials` | text | The couple's initials, e.g. «ប&ម» (Khmer Traditional Wedding II: inside the gold frame on the cover and on the closing seal); empty = first letter of each name |
 | `groom_father` / `groom_mother` / `bride_father` / `bride_mother` | text | Wedding-specific parents' names (top of the card, above the title; "លោក"/"លោកស្រី" added automatically) |
@@ -54,13 +54,14 @@ add/remove), `boolean`, `datetime`, `color`.
 | `background_image` | image | Optional full-screen background (Kathina: replaces the temple picture; portrait works best) |
 | `gift_message` | long text | Optional wording above the gift/donation QR; empty = the template's own text |
 | `rsvp_message` | text | Optional question above the RSVP buttons; empty = the template's own text |
-| `event_date` | datetime | The date being announced/proposed (Rose Bloom: «together since» — the poster's date column and a days-together count) |
+| `event_date` | datetime | The date being announced/proposed (Rose Bloom: «together since» — the poster's date column and a days-together count). Stored as typed, with no zone; always read it with `App\Support\Invitations\EventDate::parse()` (Cambodia time, `config('roumdoul.event_timezone')`) — never `Carbon::parse()`, which takes it as UTC and makes countdowns 7 hours late. Countdowns get `->toIso8601String()` («…T19:00:00+07:00») for `new Date()` |
 | `venue_name` | text | Location name (plain text, not a map link). Rose Bloom: a short «where it began» line on the poster |
 | `music_url` | text | Background music — a YouTube/TikTok link |
 | `music_file` | audio | Background music uploaded as a file (MP3/M4A/AAC, at most `InvitationManagePage::MAX_AUDIO_KB` = 10 MB ≈ 10 min). Checked in the browser before anything is sent and again on the server (size + real content type); stored under a random name in the invitation's own folder, never re-encoded (no ffmpeg). Templates play it instead of `music_url` when both are set, with `preload="none"` so guests download nothing until it plays |
 | `accent_color` | color | Theme color |
+| `together_since` | date | Anniversary / love letter: the day the relationship began, read as Cambodia time (`EventDate::parse()`). River Love: «Together since …» with a live days/hours/minutes/seconds count-up (River Love has no countdown, so its editor hides `event_date` and `countdown_enabled`); Rose Bloom: the poster's «together since» + days count. Both fall back to a past `event_date` (invitations made before this field). Can't be a future date |
 | `love_reasons` | long text | Anniversary / love letter: reasons you love them, one per line (Rose Bloom: the tap-through cards deck; River Love: «Paper boats», one folded boat per line, max 9, a tap unfolds it into a note) |
-| `photo_captions` | long text | One caption per line, in photo-gallery order (Rose Bloom: lines 1–4 = scratch stamps, 5–9 = photo strip as «Title \| small line»). Shown in the dashboard's media tab |
+| `photo_captions` | long text | One caption per line, in photo-gallery order (caption N belongs to gallery photo N). Rose Bloom and River Love: lines 1–4 = scratch cards (photos 1–4), 5–9 = photo strip as «Title \| small line» — the small line replaces the strip's year/tag (River Love's strip starts with photos 5+). Shown in the dashboard's media tab |
 | `song_title` | text | Song name on the music card / record label (Rose Bloom: the “Now playing” card; River Love: the cover «Play …» button and its «Now playing» record card, both driving the same song); the song itself is `music_file` / `music_url` |
 | `closing_line` | text | The last big line at the very end (Rose Bloom finale; River Love: shows after the guest sends a paper lantern up; `thanks_message` is the smaller line under it) |
 
@@ -85,6 +86,12 @@ plus `FREE_FIELDS` if it should never be gated) — not just to one template —
 template that needs something similar can reuse it too. Adding a new field TYPE (beyond the
 ones above) additionally needs a new `@case()` branch in
 `invitation-manage-page.blade.php`'s dynamic form renderer.
+
+When a shared field needs different wording on one template (another label, hint or example, a
+shorter `max`, a different card on the form, or `hidden` for a field the design stopped using), add it to `InvitationTemplate::FIELD_OVERRIDES`
+under the template's `view` instead of changing the catalog entry every other template shares
+(e.g. River Love's «Your name» and its own Headline example). New English strings go in both
+`lang/en.json` and `lang/km.json`.
 
 ## Feature gating by plan
 

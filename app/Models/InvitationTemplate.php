@@ -69,6 +69,7 @@ class InvitationTemplate extends Model
         'what_to_bring' => ['label' => 'What to bring', 'type' => 'text', 'hint' => 'Anything guests should bring, e.g. a small gift for the gift exchange. Leave empty to hide it.', 'example' => 'A small gift for the gift exchange'],
         'host_names' => ['label' => 'Hosts / organizers', 'type' => 'textarea', 'hint' => 'Names of the ceremony hosts or organizing committee — one name per line, e.g. «លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា».', 'example' => 'លោក សុខ ហេង និងលោកស្រី ចាន់ ធីតា'],
         // Anniversary / love-letter pages (Rose Bloom, ...)
+        'together_since' => ['label' => 'The day you started dating', 'type' => 'date', 'hint' => 'The day your relationship began — the invitation counts how long you have been together, live.'],
         'love_reasons' => ['label' => 'Reasons I love you', 'type' => 'textarea', 'hint' => 'Little reasons you love them — one per line. Each line becomes a card they tap through. Leave empty to use a few gentle default reasons.', 'example' => 'The way you laugh at your own jokes.'],
         'photo_captions' => ['label' => 'Photo captions', 'type' => 'textarea', 'section' => 'media', 'hint' => 'One short caption per line, in the same order as your photo gallery. The first 4 go on the scratch-off stamps; the next 5 go on the photo strip — write those as «Title | small line», e.g. «Our first trip | Kep, 2023».', 'example' => 'Our first trip | Kep, 2023'],
         'song_title' => ['label' => 'Song title', 'type' => 'text', 'hint' => 'The name of your song, shown on the “Now playing” music card. Add the song itself in the music fields.', 'example' => 'Our song'],
@@ -95,6 +96,43 @@ class InvitationTemplate extends Model
     ];
 
     /**
+     * Per-template changes to FIELD_CATALOG entries, keyed by the template's `view`: a different
+     * `label` / `hint` / `example` (English source strings, translated like the catalog's — `example`
+     * too, when lang/*.json has it), a `max` length for a text field, `group` to show the field in
+     * another InvitationManagePage::FORM_GROUPS card (first in that card), and `hidden` to keep a field the
+     * design no longer uses out of the editor even while the template's admin field list still has it
+     * (values already saved stay stored). Only the dashboard editor
+     * reads these; the admin panel and other templates keep the shared catalog.
+     */
+    public const FIELD_OVERRIDES = [
+        'invitations.templates.anniversary-category.river-love' => [
+            'sender_name' => self::LOVE_SENDER,
+            // River Love only counts up from together_since: no countdown, so no event date or countdown switch
+            'event_date' => ['hidden' => true],
+            'countdown_enabled' => ['hidden' => true],
+            'together_since' => [
+                'hint' => 'The day your relationship began. The invitation counts the days, hours, minutes and seconds you have been together, live.',
+            ],
+            'headline' => [
+                'hint' => 'The big line in the middle of the cover. Put « | » where the second line should start.',
+                'example' => 'Every river finds its way back to you',
+            ],
+        ],
+        'invitations.templates.anniversary-category.rose-bloom' => [
+            'sender_name' => self::LOVE_SENDER,
+        ],
+    ];
+
+    /** The sender's name on the love-letter templates: «Chetra ♡ Anna», «Forever yours, Chetra». */
+    protected const LOVE_SENDER = [
+        'label' => 'Your name',
+        'hint' => 'Shows as the sender, e.g. Chetra ❤️ Anna',
+        'example' => 'Chetra',
+        'max' => 40,
+        'group' => 'words',
+    ];
+
+    /**
      * Field keys that are never plan-gated — if a template selects them, every customer on
      * every plan sees them, regardless of the plan's `features` list. Everything else in
      * FIELD_CATALOG is a premium extra: a template can still choose to include it, but it
@@ -109,7 +147,7 @@ class InvitationTemplate extends Model
         'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'thanks_message', 'apology_message', 'reception_message', 'gallery_feed', 'gift_account',
         'contact_phone', 'host_names', 'title_image', 'opening_line', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
         'couple_initials', 'end_time', 'rsvp_deadline', 'dress_code', 'what_to_bring',
-        'love_reasons', 'photo_captions', 'song_title', 'closing_line',
+        'love_reasons', 'photo_captions', 'song_title', 'closing_line', 'together_since',
     ];
 
     /**
@@ -145,7 +183,7 @@ class InvitationTemplate extends Model
         // Buddhist merit-making ceremonies (Kathina, Phka Prak, ...)
         'ceremony' => ['host_names', 'opening_line'],
         // anniversaries / love letters (Rose Bloom, ...)
-        'anniversary' => ['love_reasons', 'photo_captions', 'song_title', 'closing_line'],
+        'anniversary' => ['together_since', 'love_reasons', 'photo_captions', 'song_title', 'closing_line'],
     ];
 
     protected $fillable = [
@@ -272,6 +310,42 @@ class InvitationTemplate extends Model
             'label' => __($field['label']),
             'hint' => isset($field['hint']) ? __($field['hint']) : null,
         ])), self::FIELD_CATALOG);
+    }
+
+    /** This template's FIELD_OVERRIDES (raw, untranslated): [key => ['label'?, 'hint'?, 'example'?, 'max'?, 'group'?]]. */
+    public function fieldOverrides(): array
+    {
+        return self::FIELD_OVERRIDES[$this->view] ?? [];
+    }
+
+    /** The fields the customer's editor shows: the admin field list minus FIELD_OVERRIDES `hidden` ones. */
+    public function editorFields(): array
+    {
+        $overrides = $this->fieldOverrides();
+
+        return array_values(array_filter($this->fields ?? [], fn (string $key) => empty($overrides[$key]['hidden'])));
+    }
+
+    /** localizedCatalog() with this template's FIELD_OVERRIDES applied (dashboard editor). */
+    public function localizedFields(): array
+    {
+        $catalog = self::localizedCatalog();
+
+        foreach ($this->fieldOverrides() as $key => $override) {
+            if (! isset($catalog[$key])) {
+                continue;
+            }
+            foreach (['label', 'hint', 'example'] as $text) {
+                if (isset($override[$text])) {
+                    $catalog[$key][$text] = __($override[$text]);
+                }
+            }
+            if (isset($override['max'])) {
+                $catalog[$key]['max'] = $override['max'];
+            }
+        }
+
+        return $catalog;
     }
 
     public static function premiumFieldOptions(): array

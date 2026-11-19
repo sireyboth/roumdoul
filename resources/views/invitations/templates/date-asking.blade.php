@@ -7,7 +7,7 @@
         ? \Illuminate\Support\Facades\Storage::disk('s3')->url($fields['cover_image'])
         : null;
 
-    $eventDate = ! empty($fields['event_date']) ? \Illuminate\Support\Carbon::parse($fields['event_date']) : null;
+    $eventDate = \App\Support\Invitations\EventDate::parse($fields['event_date'] ?? null);
     $venueName = $fields['venue_name'] ?? null;
     $venueAddress = $fields['venue_address'] ?? null;
     $musicUrl = $fields['music_url'] ?? null;

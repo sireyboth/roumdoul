@@ -7,15 +7,17 @@
     // Cover: a full-screen looping video of a blossom lake (cropped, never shrunk, on phones),
     // the words in the middle rise softly out of a blur, and petals and leaves fall forever over the
     // whole page. Below: the letter → scratch-off photos → our photos → paper boats of reasons →
-    // our places → now playing → together since (or a countdown) → the lantern finale.
+    // our places → now playing → together since (a live count-up) → the lantern finale.
     //
     // Everything personal comes from $fields (catalog keys, docs/invitation-templates.md):
     //   recipient name   → «For …» on the cover and «Dear …» on the letter (the guest link's name)
     //   sender_name      → signature + top bar   headline → the big cover line (« | » = line break)
     //   message          → the letter (blank line = new paragraph); its first sentence is the cover subline
-    //   event_date       → past = «together since» + days count; future = countdown (premium countdown_enabled)
-    //   photo_gallery + photo_captions → letter prints (1–3), scratch cards (4–7, title = caption), the photo reels
-    //                    (caption «Title | small line» = the card's film labels). Scratch cards: the shared x-scratch-card component
+    //   together_since   → «Together since …» + a live days/hours/minutes/seconds count-up (a past event_date stands in;
+    //                    there is no countdown — a future event_date isn't shown)
+    //   photo_gallery + photo_captions (caption N = gallery photo N) → scratch cards (photos 1–4, title = caption 1–4),
+    //                    letter prints (photos 5–7; 1–3 in a gallery under 7), the photo reels (led by photos 5+; caption
+    //                    «Title | small line» = the card's film labels, the small line replaces the year). Scratch cards: x-scratch-card
     //   story_chapters   → «Our places» memory map pins (shared x-memory-map; title «Place | when», text = the memory,
     //                    photo = gallery photo 8+); no chapters = no map
     //   cover_image      → first photo of the photos section (default: gallery photo 1)
@@ -82,17 +84,19 @@
     // cover_image only leads the photo reels — the letter prints and scratch cards use gallery photos
     // (a lone cover still shows everywhere when there's no gallery)
     $cover = (! empty($fields['cover_image']) && $isUnlocked('cover_image')) ? $resolveUrl($fields['cover_image']) : null;
+    // the photo strip leads with gallery photos 5+ (captions 5–9 are its «Title | small line» labels), then
+    // photos 1–4 (the scratch cards); the cover goes first of all
+    $stripOrder = $galleryItems->slice(4)->concat($galleryItems->take(4))->values();
     $reelItems = $cover
-        ? $galleryItems->reject(fn ($g) => $g['src'] === $cover)->prepend(['src' => $cover, 'title' => '', 'sub' => ''])->values()
-        : $galleryItems;
+        ? $stripOrder->reject(fn ($g) => $g['src'] === $cover)->prepend(['src' => $cover, 'title' => '', 'sub' => ''])->values()
+        : $stripOrder;
     $gallery = $reelItems->take(18)->all();
     $ownPhotos = $galleryItems->isNotEmpty() ? $galleryItems->all() : $gallery;
 
-    // scratch cards: gallery photos 4–7 (after the letter's 3 prints); a gallery of 6 or fewer starts from photo 1
+    // scratch cards: gallery photos 1–4 with captions 1–4 (as the Photo captions help says); a smaller gallery repeats
     $scratchDefaults = ['my favorite kind of day', 'right here, with you', 'that night we laughed', 'us, always'];
-    $scratchFrom = count($ownPhotos) > 6 ? 3 : 0;
-    $scratchCards = $ownPhotos ? collect(range(0, min(4, count($ownPhotos)) - 1))->map(function ($k) use ($ownPhotos, $scratchFrom, $scratchDefaults) {
-        $g = $ownPhotos[($scratchFrom + $k) % count($ownPhotos)];
+    $scratchCards = $ownPhotos ? collect(range(0, min(4, count($ownPhotos)) - 1))->map(function ($k) use ($ownPhotos, $scratchDefaults) {
+        $g = $ownPhotos[$k];
 
         return ['src' => $g['src'], 'caption' => $g['title'] !== '' ? $g['title'] : $scratchDefaults[$k]];
     })->all() : [];
@@ -111,18 +115,26 @@
             ];
         })->all();
 
-    // together since (past date) or a countdown to the day (future date)
-    $date = null;
-    if ($isUnlocked('event_date') && $text('event_date') !== '') {
-        try {
-            $date = Carbon::parse($text('event_date'));
-        } catch (\Throwable) {
-            $date = null;
-        }
+    // together_since → the live «together for» count-up (read as Cambodia time, EventDate). There's no countdown:
+    // invitations made before the field existed used a past event_date as the start, so that still counts.
+    $now = \App\Support\Invitations\EventDate::now();
+    $since = $isUnlocked('together_since') ? \App\Support\Invitations\EventDate::parse($text('together_since')) : null;
+    if (! $since && $isUnlocked('event_date')) {
+        $eventDate = \App\Support\Invitations\EventDate::parse($text('event_date'));
+        $since = $eventDate?->isPast() ? $eventDate : null;
     }
-    $isPast = $date?->isPast() ?? false;
-    $days = $date && $isPast ? (int) $date->copy()->startOfDay()->diffInDays(now()->startOfDay()) : null;
-    $showCountdown = $date && ! $isPast && $isUnlocked('countdown_enabled') && ! empty($fields['countdown_enabled'] ?? true);
+    if ($since?->isFuture()) {
+        $since = null; // a start date can't be ahead (the dashboard refuses it too)
+    }
+    $days = $since ? (int) $since->copy()->startOfDay()->diffInDays($now->copy()->startOfDay()) : null;
+    // the together-for count as the page first shows it (river-love.js keeps it ticking)
+    $together = null;
+    if ($since) {
+        $secs = max(0, $now->getTimestamp() - $since->getTimestamp());
+        $together = ['d' => intdiv($secs, 86400), 'h' => intdiv($secs, 3600) % 24, 'm' => intdiv($secs, 60) % 60, 's' => $secs % 60];
+    }
+    // the stamp, film labels and footer show the day it all began
+    $date = $since;
 
     // an uploaded song wins over a link; it plays by itself (on open, or on the first tap when the browser blocks sound)
     $musicFile = (! empty($fields['music_file']) && $isUnlocked('music_file')) ? $resolveUrl($fields['music_file']) : null;
@@ -163,7 +175,7 @@
 
     $config = [
         'music' => ['file' => $musicFile, 'youtube' => $youtubeId],
-        'countdown' => $showCountdown ? $date->toIso8601String() : null,
+        'since' => $since?->toIso8601String(),
         // template ambience: a seamless 40 s birdsong loop (made with ffmpeg from soundreality-birds-forest-nature-445379.mp3)
         'birds' => $rlAsset('images/invitations/assets/sfx/birds-loop.mp3'),
         // short taps: a boat unfolds (paper), folds back (card), a hidden heart (pop), a lantern (chime), the secret (reveal)
@@ -213,14 +225,14 @@
         @if ($gallery)<a href="#rlPhotos">Moments</a>@endif
         <a href="#rlReasons">Reasons</a>
         @if ($places)<a href="#rlMap">Places</a>@endif
-        @if ($date)<a href="#rlTime">{{ $isPast ? 'Us' : 'Our day' }}</a>@endif
+        @if ($since)<a href="#rlTime">Us</a>@endif
       </nav>
       <a class="rl-chip" href="#rlLetter">For {{ $name }} <svg aria-hidden="true"><use href="#rl-heart"/></svg></a>
     </header>
 
     <div class="rl-center">
       <p class="rl-pill rl-in" style="--d:.2s">
-        <b>{{ $isPast ? 'Since '.$date->format('Y') : ($date ? $date->format('j M Y') : 'With love') }}</b>
+        <b>{{ $since ? 'Since '.$since->format('Y') : 'With love' }}</b>
         <span>from {{ $from }}, for {{ $name }}</span>
       </p>
       <h1 class="rl-title" aria-label="{{ implode(' ', $headLines) }}">
@@ -263,7 +275,8 @@
       $stamp = $date
           ? ['top' => mb_strtoupper($date->format('l')), 'mid' => $date->format('d'), 'bottom' => mb_strtoupper($date->format('F'))]
           : ['top' => 'ALWAYS', 'mid' => '♡', 'bottom' => '& FOREVER'];
-      $prints = collect($ownPhotos)->take(3)->pluck('src')->all();
+      // the letter's prints: photos 5–7 when there are that many (1–4 hide under the scratch cards), else 1–3
+      $prints = collect($ownPhotos)->slice(count($ownPhotos) >= 7 ? 4 : 0, 3)->pluck('src')->all();
       // green wax seal with a leaf; $id keeps gradient ids unique when it appears twice
       $seal = fn (string $id, string $class) => '<svg class="'.$class.'" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="'.$id.'" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#7fa36a"/><stop offset=".55" stop-color="#4f7a43"/><stop offset="1" stop-color="#355a2e"/></radialGradient></defs>'
           .'<path d="M50 4 C62 3 70 8 79 14 C89 21 96 33 96 47 C97 60 93 71 84 81 C75 91 63 96 50 96 C37 97 25 92 16 83 C7 74 3 62 4 49 C4 36 9 25 18 16 C27 8 38 4 50 4Z" fill="url(#'.$id.')"/>'
@@ -394,12 +407,18 @@
             $i = ($k + $r * 3) % count($gallery);
             $g = $gallery[$i];
             $title = $g['title'] !== '' ? mb_strtoupper($g['title']) : $reelNames;
+            // a caption's small line («Title | 2022») always wins over the event year / days count / tagline
+            $bottom = match (true) {
+                $g['sub'] !== '' => ['tag', mb_strtoupper($g['sub'])],
+                (bool) (($k + $r) % 2) => ['tag', $reelTags[($k + $r) % count($reelTags)]],
+                default => ['num', $reelNum.' ▶'],
+            };
 
             return [
                 'src' => $g['src'], 'cap' => $g['title'], 'n' => $i + 1,
                 'ratio' => $ratios[($k + $r * 2) % count($ratios)],
                 'top' => ($k + $r) % 2 ? ['code', '▶ '.$reelCode] : ['name', $title],
-                'bottom' => ($k + $r) % 2 ? ['tag', $g['sub'] !== '' ? mb_strtoupper($g['sub']) : $reelTags[($k + $r) % count($reelTags)]] : ['num', $reelNum.' ▶'],
+                'bottom' => $bottom,
             ];
         })->all())->all();
     @endphp
@@ -505,22 +524,15 @@
     </section>
   @endif
 
-  {{-- ─────────── together since / countdown ─────────── --}}
-  @if ($date)
+  {{-- ─────────── together for: a live count-up from together_since, ticking every second (river-love.js) ─────────── --}}
+  @if ($since)
     <section class="rl-sec rl-time" id="rlTime">
-      @if ($isPast)
-        <p class="rl-kicker rl-rv">Together since {{ $date->format('j F Y') }}</p>
-        <p class="rl-days rl-rv"><b data-count="{{ $days }}">{{ number_format($days) }}</b><span>days of loving you</span></p>
-      @elseif ($showCountdown)
-        <p class="rl-kicker rl-rv">Until {{ $date->format('l, j F Y') }}</p>
-        <div class="rl-count rl-rv" id="rlCount">
-          <p><b data-u="d">0</b><span>days</span></p><p><b data-u="h">0</b><span>hours</span></p>
-          <p><b data-u="m">0</b><span>minutes</span></p><p><b data-u="s">0</b><span>seconds</span></p>
-        </div>
-      @else
-        <p class="rl-kicker rl-rv">Save the date</p>
-        <p class="rl-days rl-rv"><b>{{ $date->format('j F') }}</b><span>{{ $date->format('l · Y') }}</span></p>
-      @endif
+      <p class="rl-kicker rl-rv">Together since {{ $since->format('j F Y') }}</p>
+      <div class="rl-count rl-count-up rl-rv" id="rlTogether" role="timer" aria-live="off">
+        <p><b data-u="d">{{ number_format($together['d']) }}</b><span>days</span></p><p><b data-u="h">{{ $together['h'] }}</b><span>hours</span></p>
+        <p><b data-u="m">{{ $together['m'] }}</b><span>minutes</span></p><p><b data-u="s">{{ $together['s'] }}</b><span>seconds</span></p>
+      </div>
+      <p class="rl-time-note rl-rv">of loving you, and counting</p>
     </section>
   @endif
 

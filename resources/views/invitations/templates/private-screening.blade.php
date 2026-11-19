@@ -14,7 +14,7 @@
     $brideName = $fields['bride_name'] ?? 'Elena';
     $groomName = $fields['groom_name'] ?? 'Julian';
 
-    $eventDate = ! empty($fields['event_date']) ? Carbon::parse($fields['event_date']) : null;
+    $eventDate = \App\Support\Invitations\EventDate::parse($fields['event_date'] ?? null);
 
     $venueName = $fields['venue_name'] ?? 'Maison Verrière';
     $venueAddress = ($isUnlocked('venue_address') && ! empty($fields['venue_address']))

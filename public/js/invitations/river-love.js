@@ -317,41 +317,22 @@
     target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   });
 
-  /* ─────────── days together: count up when seen ─────────── */
-  var days = root.querySelector('.rl-days b[data-count]');
-  if (days && !reduce && 'IntersectionObserver' in window) {
-    var target = parseInt(days.getAttribute('data-count'), 10) || 0;
-    days.textContent = '0';
-    var dio = new IntersectionObserver(function (entries) {
-      if (!entries[0].isIntersecting) return;
-      dio.disconnect();
-      var start = null, dur = 2200;
-      var step = function (now) {
-        if (start === null) start = now; // time from the first frame: a frame stamped before "now" would count below 0
-        var k = Math.min(1, Math.max(0, (now - start) / dur)), e = 1 - Math.pow(1 - k, 3);
-        days.textContent = Math.round(target * e).toLocaleString('en-US');
-        if (k < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    }, { threshold: .5 });
-    dio.observe(days);
-  }
-
-  /* ─────────── countdown ─────────── */
-  var count = document.getElementById('rlCount');
-  if (count && config.countdown) {
-    var countEnd = new Date(config.countdown).getTime();
-    var cells = {};
-    count.querySelectorAll('[data-u]').forEach(function (b) { cells[b.getAttribute('data-u')] = b; });
-    var tick = function () {
-      var left = Math.max(0, countEnd - Date.now());
-      cells.d.textContent = Math.floor(left / 864e5);
-      cells.h.textContent = Math.floor(left / 36e5) % 24;
-      cells.m.textContent = Math.floor(left / 6e4) % 60;
-      cells.s.textContent = Math.floor(left / 1e3) % 60;
+  /* ─────────── together for: a live count-up from together_since ───────────
+     config.since carries the Cambodian offset («…T00:00:00+07:00»), so every phone counts from the same moment. */
+  var together = document.getElementById('rlTogether');
+  if (together && config.since) {
+    var sinceAt = new Date(config.since).getTime();
+    var upCells = {};
+    together.querySelectorAll('[data-u]').forEach(function (b) { upCells[b.getAttribute('data-u')] = b; });
+    var tickUp = function () {
+      var gone = Math.max(0, Date.now() - sinceAt);
+      upCells.d.textContent = Math.floor(gone / 864e5).toLocaleString('en-US');
+      upCells.h.textContent = Math.floor(gone / 36e5) % 24;
+      upCells.m.textContent = Math.floor(gone / 6e4) % 60;
+      upCells.s.textContent = Math.floor(gone / 1e3) % 60;
     };
-    tick();
-    setInterval(tick, 1000);
+    tickUp();
+    setInterval(tickUp, 1000);
   }
 
   /* ─────────── birdsong: a gapless loop, from the first tap ───────────
