@@ -16,6 +16,9 @@
     $isUnlocked = fn (string $key) => $invitation ? $invitation->fieldUnlocked($key) : true;
     $vgAsset = fn (string $file) => asset($file).'?v='.@filemtime(public_path($file));
     $sfx = fn (string $file) => asset('images/invitations/assets/sfx/'.$file);
+    // watercolour / pressed-flower decor (public/images/invitations/vellum-garden/)
+    $vgImg = fn (string $file) => $vgAsset('images/invitations/vellum-garden/decor/'.$file);
+    $pressed = fn (string $name, string $pos) => '<img class="vg-pressed '.$pos.' is-'.$name.'" src="'.e($vgImg('pressed-'.$name.'.webp')).'" alt="" aria-hidden="true" loading="lazy" decoding="async" draggable="false">';
 
     $khDigits = fn ($v) => strtr((string) $v, ['0' => '០', '1' => '១', '2' => '២', '3' => '៣', '4' => '៤', '5' => '៥', '6' => '៦', '7' => '៧', '8' => '៨', '9' => '៩']);
     $khMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
@@ -93,6 +96,59 @@
     // the second arch on wide screens: another gallery photo, so the hero isn't one lonely frame
     $coverAlt = $gallery->first(fn ($u) => $u !== $coverUrl);
 
+    // gallery rows, repeating: two arches → one big photo → three small squares. Near the end a row
+    // takes what's left (2 → a pair, 1 → a big one), so no row is ever half empty.
+    $galRows = [];
+    for ($i = 0, $r = 0, $n = $gallery->count(); $i < $n; $r++) {
+        $want = [2, 1, 3][$r % 3];
+        $size = $want <= $n - $i ? $want : min(2, $n - $i);
+        $galRows[] = ['type' => [1 => 'big', 2 => 'pair', 3 => 'trio'][$size], 'items' => range($i, $i + $size - 1)];
+        $i += $size;
+    }
+
+    // dress code: the colours the couple names (Khmer or English words, or #hex codes) become fabric swatches,
+    // in the order they're written; the text itself always shows under them
+    $dressCode = $isUnlocked('dress_code') ? trim($fields['dress_code'] ?? '') : '';
+    $dressColours = [];
+    if ($dressCode !== '') {
+        $palette = [
+            // Khmer (longest first, so «ក្រហមដិត» wins over «ក្រហម»)
+            'ក្រហមដិត' => '#7d1f2b', 'ក្រហមចាស់' => '#7d1f2b', 'ក្រហម' => '#b3262e', 'ផ្កាឈូកខ្ចី' => '#efc7c2', 'ផ្កាឈូក' => '#e39aa6',
+            'ទឹកក្រូច' => '#e0873d', 'លឿងខ្ចី' => '#f1dc98', 'លឿង' => '#e9c75b', 'មាស' => '#c9a14a', 'ប្រាក់' => '#c0c2c4',
+            'បៃតងចាស់' => '#3f5a3a', 'បៃតងខ្ចី' => '#b5c99a', 'បៃតងស្រាល' => '#a9b98f', 'បៃតង' => '#5f7f4e',
+            'ខៀវចាស់' => '#23345c', 'ខៀវខ្ចី' => '#a9c6e0', 'ខៀវ' => '#3d64a8', 'ស្វាយខ្ចី' => '#c9b6dc', 'ស្វាយ' => '#6d4a8c',
+            'ត្នោតខ្ចី' => '#b08d6e', 'ត្នោត' => '#7a5338', 'ប្រផេះ' => '#9a9a96', 'ក្រែម' => '#efe4cc', 'បេហ្ស' => '#dbc8a8',
+            'សំប៉ាញ' => '#e8d6b0', 'ខ្មៅ' => '#1d1c1a', 'ពណ៌ស' => '#fbfaf6',
+            // English
+            'dusty pink' => '#d9a5a5', 'dusty blue' => '#8fa9c0', 'sky blue' => '#a9c6e0', 'light blue' => '#a9c6e0', 'navy blue' => '#23345c',
+            'burgundy' => '#7d1f2b', 'maroon' => '#6e1f26', 'wine' => '#722f37', 'red' => '#b3262e', 'blush' => '#efc7c2',
+            'pink' => '#e39aa6', 'rose' => '#d58d93', 'peach' => '#f2c1a0', 'coral' => '#ee8a72', 'terracotta' => '#c0694e',
+            'orange' => '#e0873d', 'mustard' => '#d0a53a', 'yellow' => '#e9c75b', 'gold' => '#c9a14a', 'golden' => '#c9a14a',
+            'champagne' => '#e8d6b0', 'silver' => '#c0c2c4', 'sage' => '#a9b98f', 'olive' => '#77804a', 'emerald' => '#2f7a5a',
+            'green' => '#5f7f4e', 'navy' => '#23345c', 'teal' => '#2f7c80', 'blue' => '#3d64a8', 'lavender' => '#c9b6dc',
+            'lilac' => '#c8a8d3', 'purple' => '#6d4a8c', 'brown' => '#7a5338', 'beige' => '#dbc8a8', 'nude' => '#d9b99b',
+            'taupe' => '#a39382', 'cream' => '#efe4cc', 'ivory' => '#f6f0e1', 'white' => '#fbfaf6', 'black' => '#1d1c1a',
+            'charcoal' => '#3b3b3b', 'grey' => '#9a9a96', 'gray' => '#9a9a96',
+        ];
+        $scan = mb_strtolower($dressCode);
+        $found = [];
+        $take = function (string $pattern, callable $hex, callable $name) use (&$scan, &$found) {
+            if (preg_match_all($pattern, $scan, $m, PREG_OFFSET_CAPTURE)) {
+                foreach ($m[0] as [$text, $at]) {
+                    $found[] = ['at' => $at, 'hex' => $hex($text), 'name' => $name($text)];
+                    $scan = substr_replace($scan, str_repeat(' ', strlen($text)), $at, strlen($text)); // matched once only
+                }
+            }
+        };
+        $take('/#[0-9a-f]{6}\b/', fn ($t) => $t, fn ($t) => mb_strtoupper($t));
+        foreach ($palette as $word => $hex) {
+            $isLatin = ! preg_match('/\p{Khmer}/u', $word);
+            $take($isLatin ? '/\b'.preg_quote($word, '/').'\b/u' : '/'.preg_quote($word, '/').'/u', fn () => $hex, fn ($t) => $isLatin ? ucfirst($t) : $t);
+        }
+        // «ស» (white) on its own, between spaces / commas / «ឬ» / «និង»
+        $take('/(?<=^|[\s,\/&+]|ឬ|និង)ស(?=$|[\s,\/&+។]|ឬ|និង)/u', fn () => '#fbfaf6', fn () => 'ស');
+        $dressColours = collect($found)->sortBy('at')->unique('hex')->take(6)->values()->all();
+    }
     $story = collect($isUnlocked('story_chapters') ? ($fields['story_chapters'] ?? []) : [])
         ->filter(fn ($row) => ! empty($row['title']) || ! empty($row['text']))->values();
     // a chapter title may be «Place | when»: the story card shows both, the map uses them for its pins
@@ -212,10 +268,85 @@
     };
 
     $calendarSprig = $sprig(4, 5, 120, true);
-    $heroSprigL = $sprig(1, 9, 230, true);
-    $heroSprigR = $sprig(2, 8, 200, true);
     $gateSprig = $sprig(3, 7, 170, true);
 
+    // a leaf for the vine / wreath below: base at 0 0, pointing up (-y), $len long
+    $leafD = function (float $len): string {
+        $w = round($len * .38, 1);
+
+        return "M0 0C{$w} -".round($len * .3, 1).' '.round($w * .85, 1).' -'.round($len * .82, 1)." 0 -{$len}C-".round($w * .85, 1).' -'.round($len * .82, 1)." -{$w} -".round($len * .3, 1).' 0 0Z';
+    };
+    // a five-petal bloom (petals draw in, then the whole flower opens: .bloom)
+    $bloom = function (float $x, float $y, float $d, float $size = 1) {
+        $petals = '';
+        for ($j = 0; $j < 5; $j++) {
+            $petals .= '<path class="pt" pathLength="1" style="--d:'.$d.'" transform="rotate('.($j * 72).')" d="M0 0C-6 -3.5 -7 -11 -2.6 -13C-.9 -13.8 0 -12 0 -11.2C0 -12 .9 -13.8 2.6 -13C7 -11 6 -3.5 0 0Z"/>';
+        }
+
+        return '<g transform="translate('.$x.' '.$y.') scale('.$size.')"><g class="bloom" style="--d:'.$d.'">'.$petals.'<circle class="ct" r="2.4"/></g></g>';
+    };
+
+    // section headings: a small sprig beside the heading that draws itself, alternating left / right
+    $headSprigN = 0;
+    $headSprig = function () use ($sprig, &$headSprigN): string {
+        $headSprigN++;
+
+        return '<svg class="vg-head-sprig '.($headSprigN % 2 ? 'l' : 'r').' vg-draw" viewBox="-40 -135 80 140" aria-hidden="true">'.$sprig(10 + $headSprigN, 5, 120, true).'</svg>';
+    };
+
+    // a vine divider between sections: a bloom opens in the middle, then two vines grow out from it,
+    // leaves unfolding along them, a bud at each end
+    $vine = function (int $seed) use ($leafD, $bloom): string {
+        mt_srand($seed);
+        $out = '';
+        foreach ([-1, 1] as $s) {
+            $pts = [];
+            for ($i = 0; $i <= 30; $i++) {
+                $t = $i / 30;
+                $pts[] = [round($s * (16 + $t * 245), 1), round(sin($t * 5.2 + $seed) * 6 * $t, 1)];
+            }
+            $out .= '<path class="st" pathLength="1" style="--d:2" d="M'.implode(' L', array_map(fn ($p) => $p[0].' '.$p[1], $pts)).'"/>';
+            for ($k = 0; $k < 7; $k++) {
+                [$px, $py] = $pts[3 + $k * 4];
+                $ang = $s * ($k % 2 ? mt_rand(118, 138) : mt_rand(42, 62));
+                $out .= '<g transform="translate('.$px.' '.$py.') rotate('.$ang.')"><path class="lf" pathLength="1" style="--d:'.(2.5 + $k * 1.4).'" d="'.$leafD(round((17 - $k * 1.2) * mt_rand(88, 112) / 100, 1)).'"/></g>';
+            }
+            [$ex, $ey] = end($pts);
+            $out .= '<circle class="ct bud" cx="'.$ex.'" cy="'.$ey.'" r="2.2"/>';
+        }
+
+        return '<div class="vg-vine" aria-hidden="true"><svg class="vg-draw" viewBox="-275 -24 550 48">'.$out.$bloom(0, 0, 0, 1.1).'</svg></div>';
+    };
+
+    // the closing wreath around the wax seal: two leafy branches climb from the bottom round each side
+    $wreath = (function () use ($leafD, $bloom): string {
+        mt_srand(21);
+        $r = 74;
+        $out = '';
+        foreach ([-1, 1] as $s) {
+            $pts = [];
+            for ($i = 0; $i <= 28; $i++) {
+                $a = deg2rad(90 - $s * 158 * $i / 28);
+                $pts[] = [round(cos($a) * $r, 1), round(sin($a) * $r, 1), $a];
+            }
+            $out .= '<path class="st" pathLength="1" style="--d:1" d="M'.implode(' L', array_map(fn ($p) => $p[0].' '.$p[1], $pts)).'"/>';
+            for ($k = 0; $k < 9; $k++) {
+                [$px, $py, $a] = $pts[2 + $k * 3];
+                $tan = rad2deg(atan2(cos($a) * -$s, -sin($a) * -$s)) + 90; // along the branch, the way it grows
+                $ang = round($tan + ($k % 2 ? 38 : -38), 1);
+                $out .= '<g transform="translate('.$px.' '.$py.') rotate('.$ang.')"><path class="lf" pathLength="1" style="--d:'.(1.6 + $k * 1.1).'" d="'.$leafD(round((15 - $k * .5) * mt_rand(90, 110) / 100, 1)).'"/></g>';
+            }
+            foreach ([11, 23] as $j => $at) {
+                $out .= $bloom($pts[$at][0], $pts[$at][1], 6 + $j * 3, .55);
+            }
+        }
+
+        return '<svg class="vg-wreath vg-draw" viewBox="-100 -100 200 200" aria-hidden="true">'.$out.'</svg>';
+    })();
+
+    // gallery sprigs: beside the arches (outer side) and on two corners of the big photo
+    $galSprigs = ['l' => $sprig(31, 5, 140, true), 'r' => $sprig(32, 5, 140, true)];
+    $galCorner = ['tl' => $sprig(33, 6, 150, true), 'br' => $sprig(34, 6, 150, true)];
     $rv = 'vg-rv';
     $skipGate = request()->boolean('open');
     $headEn = fn (string $t) => '<p class="vg-script-sm">'.e($t).'</p>';
@@ -255,6 +386,12 @@
   {{-- ============ 0 · ENVELOPE (tap the wax seal) ============ --}}
   @unless ($skipGate)
     <div class="vg-gate" id="vg-gate" role="dialog" aria-modal="true" aria-label="{{ trim('លិខិតអញ្ជើញ '.$coupleTitle) }}">
+      {{-- olive-leaf shadows drifting over linen behind the envelope (6 s forward/backward loop, muted) --}}
+      <video class="vg-gate-video" autoplay muted loop playsinline preload="auto" aria-hidden="true" tabindex="-1"
+        poster="{{ $vgImg('gate-portrait.jpg') }}" data-poster-wide="{{ $vgImg('gate-landscape.jpg') }}">
+        <source src="{{ $vgImg('gate-portrait.mp4') }}" type="video/mp4" media="(max-aspect-ratio: 1/1)">
+        <source src="{{ $vgImg('gate-landscape.mp4') }}" type="video/mp4">
+      </video>
       <div class="vg-gate-in">
         <p class="vg-gate-kicker">សិរីមង្គលអាពាហ៍ពិពាហ៍</p>
         @if ($groomPretty || $bridePretty)
@@ -296,7 +433,7 @@
     </div>
   @endunless
 
-  {{-- rose petals and a few leaves falling in 3D (shared component; fades in once the envelope opens).
+  {{-- rose petals and a few leaves falling in 3D (shared component; in front of the envelope too, then over the page).
        A tap drops a handful, a revealed stamp bursts into petals, a map pin lets a few fall. --}}
   <x-flower-drop class="vg-flowers" :color="$accent" shape="rose" leaf-color="#9aab84" density=".55" />
 
@@ -305,15 +442,17 @@
     {{-- ============ 1 · HERO: arched portrait + names ============ --}}
     <section class="vg-hero">
       <div class="vg-hero-art {{ $rv }}">
-        <svg class="vg-hero-sprig l vg-draw" viewBox="-40 -245 80 250" aria-hidden="true">{!! $heroSprigL !!}</svg>
-        <svg class="vg-hero-sprig r vg-draw" viewBox="-40 -215 80 220" aria-hidden="true">{!! $heroSprigR !!}</svg>
-        <figure class="vg-arch vg-arch-main">
-          @if ($coverUrl)
-            <img src="{{ $coverUrl }}" alt="{{ $coupleTitle }}" fetchpriority="high">
-          @else
-            <div class="vg-arch-empty{{ $kh($initials) }}">{{ $initials }}</div>
-          @endif
-        </figure>
+        {{-- the arched photo inside a watercolour vine frame (the frame grows in from the bottom) --}}
+        <div class="vg-arch-wrap">
+          <figure class="vg-arch vg-arch-main">
+            @if ($coverUrl)
+              <img src="{{ $coverUrl }}" alt="{{ $coupleTitle }}" fetchpriority="high">
+            @else
+              <div class="vg-arch-empty{{ $kh($initials) }}">{{ $initials }}</div>
+            @endif
+          </figure>
+          <img class="vg-arch-frame" src="{{ $vgImg('arch-frame.webp') }}" alt="" aria-hidden="true" decoding="async" draggable="false">
+        </div>
         @if ($coverAlt)
           <figure class="vg-arch vg-arch-small" aria-hidden="true"><img src="{{ $coverAlt }}" alt="" loading="lazy"></figure>
         @endif
@@ -344,9 +483,11 @@
 
     {{-- ============ 2 · THE INVITATION (vellum card) ============ --}}
     <section class="vg-sec" id="vg-invite">
-      <svg class="vg-bg-sprig l" viewBox="-40 -245 80 250" aria-hidden="true">{!! $heroSprigL !!}</svg>
-      <svg class="vg-bg-sprig r" viewBox="-40 -215 80 220" aria-hidden="true">{!! $heroSprigR !!}</svg>
+      <img class="vg-bg-sprig l" src="{{ $vgImg('sprig.webp') }}" alt="" aria-hidden="true" loading="lazy" decoding="async" draggable="false">
+      <img class="vg-bg-sprig r" src="{{ $vgImg('sprig.webp') }}" alt="" aria-hidden="true" loading="lazy" decoding="async" draggable="false">
       <article class="vg-card vg-vellum vg-invite {{ $rv }}">
+        {!! $pressed('rose', 'tr') !!}
+        {!! $pressed('fern', 'bl') !!}
         <svg class="vg-orn" aria-hidden="true"><use href="#vg-flower"/></svg>
         @if ($groomParents || $brideParents)
           <div class="vg-parents">
@@ -401,6 +542,7 @@
 
     {{-- ============ 3 · SAVE THE DATE: calendar + countdown ============ --}}
     @if ($calendar)
+      {!! $vine(2) !!}
       <section class="vg-sec vg-split" id="vg-date">
         <div class="vg-split-head {{ $rv }}">
           <p class="vg-eyebrow">ចំណាំថ្ងៃដ៏មានអត្ថន័យ</p>
@@ -441,8 +583,10 @@
 
     {{-- ============ 4 · OUR STORY ============ --}}
     @if ($story->isNotEmpty())
+      {!! $vine(3) !!}
       <section class="vg-sec" id="vg-story">
         <div class="vg-head {{ $rv }}">
+          {!! $headSprig() !!}
           <p class="vg-eyebrow">ដំណើររឿងស្នេហារបស់យើង</p>
           {!! $headEn('Our story') !!}
         </div>
@@ -466,6 +610,7 @@
     @if ($places)
       <section class="vg-sec" id="vg-places">
         <div class="vg-head {{ $rv }}">
+          {!! $headSprig() !!}
           <p class="vg-eyebrow">ទីកន្លែងអនុស្សាវរីយ៍</p>
           {!! $headEn('Our places') !!}
           <p class="vg-label">ចុចលើបេះដូងនីមួយៗ ដើម្បីមើលរូបភាព</p>
@@ -477,9 +622,11 @@
 
     {{-- ============ 5 · PROGRAM + RECEPTION CARD ============ --}}
     @if ($scheduleImg || $schedule->isNotEmpty() || $receptionTime || $receptionCustom !== '')
+      {!! $vine(4) !!}
       <section class="vg-sec vg-pair" id="vg-program">
         @if ($scheduleImg || $schedule->isNotEmpty())
           <div class="vg-card vg-program {{ $rv }}">
+            {!! $pressed('leaf', 'tr') !!}
             <p class="vg-eyebrow">កម្មវិធីសិរីមង្គល</p>
             {!! $headEn('Order of the day') !!}
             @if ($scheduleImg)
@@ -502,6 +649,7 @@
 
         @if ($receptionTime || $receptionCustom !== '' || $venueName)
           <div class="vg-card vg-vellum vg-reception {{ $rv }} d1">
+            {!! $pressed('lavender', 'tl') !!}
             <svg class="vg-orn" aria-hidden="true"><use href="#vg-flower"/></svg>
             <p class="vg-eyebrow">សំបុត្រពិធីជប់លៀង</p>
             {!! $headEn('Reception') !!}
@@ -523,6 +671,7 @@
     @if ($scratchCards)
       <section class="vg-sec" id="vg-scratch">
         <div class="vg-head {{ $rv }}">
+          {!! $headSprig() !!}
           <p class="vg-eyebrow">កោសដើម្បីមើលរូបភាព</p>
           {!! $headEn('A little surprise') !!}
           <p class="vg-label">ប្រើម្រាមដៃកោសលើតែមនីមួយៗ</p>
@@ -543,19 +692,33 @@
 
     {{-- ============ 6 · GALLERY: arched windows ============ --}}
     @if ($gallery->isNotEmpty())
+      {!! $vine(5) !!}
       <section class="vg-sec vg-wide" id="vg-gallery">
         <div class="vg-head {{ $rv }}">
+          {!! $headSprig() !!}
           <p class="vg-eyebrow">កម្រងអនុស្សាវរីយ៍</p>
           {!! $headEn('Moments of us') !!}
         </div>
-        <div class="vg-gal" data-count="{{ min($gallery->count(), 9) }}">
-          @foreach ($gallery as $i => $url)
-            <figure class="vg-gal-item {{ $rv }}" style="--i:{{ $i % 4 }}">
-              <button type="button" class="vg-gal-btn" data-index="{{ $i }}" data-full="{{ $url }}" data-cap="{{ $captions[$i] ?? '' }}" aria-label="មើលរូបភាពទី {{ $khDigits($i + 1) }}">
-                <img src="{{ $url }}" alt="{{ $coupleTitle }} {{ $i + 1 }}" loading="lazy">
-              </button>
-              @if (! empty($captions[$i]))<figcaption>{{ $captions[$i] }}</figcaption>@endif
-            </figure>
+        {{-- rows: two arches → one big photo → three squares, repeating (built in $galRows above) --}}
+        <div class="vg-gal">
+          @foreach ($galRows as $row)
+            <div class="vg-gal-row is-{{ $row['type'] }}">
+              @foreach ($row['items'] as $k => $i)
+                @php $url = $gallery[$i]; @endphp
+                <figure class="vg-gal-item {{ $rv }}" style="--i:{{ $k }}">
+                  @if ($row['type'] === 'pair')
+                    <svg class="vg-gal-sprig {{ $k ? 'r' : 'l' }} vg-draw" viewBox="-40 -155 80 160" aria-hidden="true">{!! $galSprigs[$k ? 'r' : 'l'] !!}</svg>
+                  @elseif ($row['type'] === 'big')
+                    <svg class="vg-gal-corner tl vg-draw" viewBox="-40 -165 80 170" aria-hidden="true">{!! $galCorner['tl'] !!}</svg>
+                    <svg class="vg-gal-corner br vg-draw" viewBox="-40 -165 80 170" aria-hidden="true">{!! $galCorner['br'] !!}</svg>
+                  @endif
+                  <button type="button" class="vg-gal-btn" data-index="{{ $i }}" data-full="{{ $url }}" data-cap="{{ $captions[$i] ?? '' }}" aria-label="មើលរូបភាពទី {{ $khDigits($i + 1) }}">
+                    <img src="{{ $url }}" alt="{{ $coupleTitle }} {{ $i + 1 }}" loading="lazy">
+                  </button>
+                  @if (! empty($captions[$i]))<figcaption>{{ $captions[$i] }}</figcaption>@endif
+                </figure>
+              @endforeach
+            </div>
           @endforeach
         </div>
       </section>
@@ -563,6 +726,7 @@
 
     {{-- ============ 7 · VENUE ============ --}}
     @if ($showVenue)
+      {!! $vine(6) !!}
       <section class="vg-sec vg-split vg-venue" id="vg-venue">
         <div class="vg-split-head {{ $rv }}">
           <p class="vg-eyebrow">ទីតាំងប្រារព្ធពិធី</p>
@@ -581,6 +745,31 @@
             <iframe src="{{ $mapEmbed }}" title="Google Maps" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
           </div>
         @endif
+      </section>
+    @endif
+
+    {{-- ============ 7b · DRESS CODE: the colours named in dress_code become fabric swatches ============ --}}
+    @if ($dressCode !== '')
+      <section class="vg-sec" id="vg-dress">
+        <div class="vg-card vg-vellum vg-dress {{ $rv }}">
+          {!! $pressed('babys-breath', 'tr') !!}
+          <svg class="vg-dress-sprig l vg-draw" viewBox="-40 -135 80 140" aria-hidden="true">{!! $sprig(41, 5, 120, true) !!}</svg>
+          <svg class="vg-dress-sprig r vg-draw" viewBox="-40 -135 80 140" aria-hidden="true">{!! $sprig(42, 5, 120, true) !!}</svg>
+          <svg class="vg-orn" aria-hidden="true"><use href="#vg-flower"/></svg>
+          <p class="vg-eyebrow">សម្លៀកបំពាក់</p>
+          {!! $headEn('Dress code') !!}
+          @if ($dressColours)
+            <ul class="vg-swatches" aria-label="ពណ៌សម្លៀកបំពាក់">
+              @foreach ($dressColours as $i => $c)
+                <li style="--c: {{ $c['hex'] }}; --i: {{ $i }}">
+                  <span class="vg-swatch" aria-hidden="true"></span>
+                  <span class="vg-swatch-name{{ $kh($c['name']) ? ' is-kh' : '' }}">{{ $c['name'] }}</span>
+                </li>
+              @endforeach
+            </ul>
+          @endif
+          <p class="vg-body">{{ $dressCode }}</p>
+        </div>
       </section>
     @endif
 
@@ -624,6 +813,7 @@
     @if ($contacts->isNotEmpty())
       <section class="vg-sec" id="vg-contact">
         <div class="vg-head {{ $rv }}">
+          {!! $headSprig() !!}
           <p class="vg-eyebrow">ទំនាក់ទំនង</p>
           {!! $headEn('Questions? Call us') !!}
         </div>
@@ -653,13 +843,17 @@
     @endif
 
     {{-- ============ 11 · CLOSING: the seal again ============ --}}
+    {!! $vine(7) !!}
     <section class="vg-sec vg-finale" id="vg-finale">
+      <div class="vg-finale-seal">
+      {!! $wreath !!}
       <svg class="vg-seal vg-seal-end {{ $rv }}" viewBox="-60 -60 120 120" aria-hidden="true">
         <path d="{{ $sealEdge }}"/><path d="{{ $sealEdge }}" fill="url(#vg-wax)"/>
         <circle r="38" fill="none" stroke="#000" stroke-opacity=".22" stroke-width="1.4"/>
         <circle r="33" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".8" stroke-dasharray="1.5 3"/>
         <text y="{{ $isKh($initials) ? 7 : 10 }}" text-anchor="middle" class="{{ $isKh($initials) ? 'vg-kh' : '' }}" font-size="{{ mb_strlen($initials) > 3 ? 20 : 28 }}">{{ $initials }}</text>
       </svg>
+      </div>
       <p class="vg-eyebrow {{ $rv }}">សូមអរគុណ</p>
       <p class="vg-body {{ $rv }} d1">វត្តមានរបស់លោកអ្នក គឺជាកាដូដ៏មានតម្លៃបំផុត សម្រាប់ថ្ងៃដ៏មានអត្ថន័យរបស់យើងខ្ញុំ។</p>
       <p class="vg-script {{ $rv }} d1">with love,</p>
@@ -671,6 +865,8 @@
         </p>
       @endif
     </section>
+
+    <div class="vg-garland {{ $rv }}" aria-hidden="true"><img src="{{ $vgImg('divider.webp') }}" alt="" loading="lazy" decoding="async" draggable="false"></div>
 
     <x-invitation-footer prefix="vg" :names="collect([$groomPretty, $bridePretty])->filter()->implode(' & ')" :names-class="$isKh($groomPretty.$bridePretty) ? 'vg-kh' : ''" :date="$dateNumeric">
       <x-slot:ornament><svg aria-hidden="true"><use href="#vg-flower"/></svg></x-slot:ornament>

@@ -270,7 +270,12 @@ that set it off already play theirs.
   petals, default terracotta). Shared parts: `<x-flower-drop>` (rose petals + leaves, shown once the envelope opens),
   «Our places» `<x-memory-map>` (one pin per story chapter; a title «Place | when» gives the pin's name + date, the
   chapter text stays in the story cards) and «A little surprise»: three `<x-scratch-card stamp>` stamps hiding the last
-  three gallery photos (their captions under them).
+  three gallery photos (their captions under them). The gallery runs in rows of two arches → one big photo → three
+  squares (repeating; the last row takes what's left). `dress_code` shows as a card: colours named in it (Khmer like
+  «ក្រែម», «បៃតងខ្ចី», «ផ្កាឈូកខ្ចី» or English like «sage», «dusty pink», or `#hex` codes) become fabric swatches, in the
+  order written (max 6), with the text under them. Line art draws itself everywhere: sprigs beside section headings,
+  vine dividers whose bloom opens, the story line drawing down as you scroll (each chapter's flower blooms when
+  reached), leaves round the arches and the big photo, and a wreath round the closing seal.
 - **Front Page** — `wedding/front-page.blade.php` (CSS/JS `public/{css,js}/invitations/front-page.*`, demo
   `/demo/wedding/front-page`). Modern editorial "wedding issue": cream paper + ink + one accent, a magazine-style cover
   (names as the masthead, cover lines, a barcode drawn from the date), a marquee band, a running header with page

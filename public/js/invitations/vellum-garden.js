@@ -104,6 +104,30 @@
     root.querySelectorAll('.vg-page .vg-rv, .vg-page .vg-draw').forEach(function (el) { io.observe(el); });
   };
 
+  /* ─────────── our story: the timeline line draws down with the scroll, each flower blooms as it's reached ───────────
+     (scrolling back up takes them back; without JS or with reduced motion the plain line and flowers just show) */
+  var story = root.querySelector('.vg-story');
+  if (story && !reduce) {
+    story.classList.add('is-live');
+    var storyItems = Array.prototype.slice.call(story.querySelectorAll('.vg-story-item'));
+    var storyQueued = false;
+    var storyTick = function () {
+      storyQueued = false;
+      var r = story.getBoundingClientRect(), line = window.innerHeight * .62;
+      story.style.setProperty('--p', Math.max(0, Math.min(1, (line - r.top) / r.height)).toFixed(4));
+      storyItems.forEach(function (it) {
+        var pin = it.querySelector('.vg-story-pin');
+        if (!pin) return;
+        var pr = pin.getBoundingClientRect();
+        it.classList.toggle('is-reached', pr.top + pr.height / 2 < line);
+      });
+    };
+    var storyQueue = function () { if (!storyQueued) { storyQueued = true; requestAnimationFrame(storyTick); } };
+    window.addEventListener('scroll', storyQueue, { passive: true });
+    window.addEventListener('resize', storyQueue);
+    storyTick();
+  }
+
   /* ─────────── the envelope ─────────── */
   var gate = document.getElementById('vg-gate');
   var opened = false;
@@ -119,6 +143,12 @@
   if (gate) {
     document.documentElement.classList.add('vg-locked');
     window.scrollTo(0, 0);
+    // background video: the wide poster on wide screens; a still frame only for reduced motion
+    var gateVideo = gate.querySelector('.vg-gate-video');
+    if (gateVideo) {
+      if (window.matchMedia('(min-aspect-ratio: 1/1)').matches && gateVideo.dataset.posterWide) gateVideo.poster = gateVideo.dataset.posterWide;
+      if (reduce) { gateVideo.removeAttribute('autoplay'); gateVideo.pause(); }
+    }
     var gateSprig = gate.querySelector('.vg-draw');
     setTimeout(function () { if (gateSprig) gateSprig.classList.add('is-in'); }, reduce ? 0 : 300);
 
