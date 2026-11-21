@@ -72,7 +72,7 @@ class InvitationAddons
                     'price' => round((float) $to->price - (float) $plan->price, 2),
                     'max_recipients' => $to->max_recipients,
                     'max_gallery_photos' => $to->max_gallery_photos,
-                    'new_features' => collect($to->features ?? [])->diff($invitation->features ?? $plan->features ?? [])
+                    'new_features' => collect($to->unlockedFeatures())->diff($invitation->features ?? $plan->features ?? [])
                         ->filter(fn ($key) => $template?->usesField($key))
                         ->map(fn ($key) => __(InvitationTemplate::FIELD_CATALOG[$key]['label'] ?? $key))->values()->all(),
                 ])->all();
@@ -227,7 +227,7 @@ class InvitationAddons
         if ($photosGain > 0) {
             $invitation->max_gallery_photos = min(self::MAX_GALLERY, $invitation->maxGalleryPhotos() + $photosGain);
         }
-        $invitation->features = array_values(array_unique([...($invitation->features ?? $from?->features ?? []), ...($to->features ?? [])]));
+        $invitation->features = array_values(array_unique([...($invitation->features ?? $from?->features ?? []), ...$to->unlockedFeatures()]));
 
         if ($to->retention_months === null) {
             $invitation->expires_at = null;

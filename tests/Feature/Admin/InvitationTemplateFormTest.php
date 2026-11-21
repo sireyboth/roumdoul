@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Filament\Resources\InvitationTemplates\Pages\ListInvitationTemplates;
 use App\Filament\Resources\InvitationTemplates\Pages\ViewInvitationTemplate;
 use App\Filament\Resources\InvitationTemplates\RelationManagers\InvitationsRelationManager;
+use App\Filament\Resources\InvitationTemplates\Schemas\InvitationTemplateForm;
 use App\Filament\Resources\Services\Pages\ListServices;
 use App\Models\Category;
 use App\Models\Invitation;
@@ -51,13 +52,13 @@ class InvitationTemplateFormTest extends TestCase
                 'slug' => 'birthday-bash',
                 'category' => 'birthday',
                 'view' => 'invitations.templates.date-asking',
-                'fields_universal' => ['sender_name', 'headline'],
+                'fields_essentials' => ['sender_name', 'headline'],
                 'is_active' => true,
                 'plans' => [
-                    ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true],
-                    ['label' => 'Premium', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['venue_address', 'countdown_enabled'],
-                        'in_stock' => false, 'extra_guest_price' => 0.25, 'extend_price' => 2,
+                    ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => false, 'in_stock' => true,
                         'feature_prices' => [['feature' => 'rsvp_enabled', 'price' => 1.5]]],
+                    ['label' => 'Premium', 'badge' => 'Best value', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => true,
+                        'in_stock' => false, 'extra_guest_price' => 0.25, 'extend_price' => 2],
                 ],
             ])
             ->assertHasNoActionErrors();
@@ -72,12 +73,15 @@ class InvitationTemplateFormTest extends TestCase
 
         $plans = $service->plans->keyBy('label');
         $this->assertSame(10, $plans['Basic']->max_recipients);
-        $this->assertSame(['venue_address', 'countdown_enabled'], $plans['Premium']->features);
+        // the «Includes premium extras» switch stores every premium key; off stores none
+        $this->assertSame(array_keys(InvitationTemplate::premiumFieldOptions()), $plans['Premium']->features);
+        $this->assertSame([], $plans['Basic']->features);
+        $this->assertSame('Best value', $plans['Premium']->badge);
         $this->assertTrue($plans['Basic']->in_stock);
         $this->assertFalse($plans['Premium']->in_stock);
         $this->assertSame('0.25', $plans['Premium']->extra_guest_price);
         $this->assertSame('2.00', $plans['Premium']->extend_price);
-        $this->assertEquals(['rsvp_enabled' => 1.5], $plans['Premium']->feature_prices);
+        $this->assertEquals(['rsvp_enabled' => 1.5], $plans['Basic']->feature_prices);
     }
 
     public function test_editing_a_templates_fields_does_not_require_touching_plans(): void
@@ -86,7 +90,7 @@ class InvitationTemplateFormTest extends TestCase
         $template = InvitationTemplate::factory()->create(['fields' => ['sender_name']]);
 
         Livewire::test(ListInvitationTemplates::class)
-            ->callAction(TestAction::make(EditAction::class)->table($template), ['fields_universal' => ['sender_name', 'headline', 'message']])
+            ->callAction(TestAction::make(EditAction::class)->table($template), ['fields_essentials' => ['sender_name', 'headline', 'message']])
             ->assertHasNoActionErrors();
 
         $this->assertSame(['sender_name', 'headline', 'message'], $template->fresh()->fields);
@@ -101,9 +105,34 @@ class InvitationTemplateFormTest extends TestCase
 
         Livewire::test(ListInvitationTemplates::class)
             ->mountAction(TestAction::make(EditAction::class)->table($template))
-            ->assertSet('mountedActions.0.data.fields_universal', ['sender_name'])
+            ->assertSet('mountedActions.0.data.fields_essentials', ['sender_name'])
             ->assertSet('mountedActions.0.data.fields_wedding', ['groom_name', 'bride_name'])
             ->assertSet('mountedActions.0.data.fields_birthday', ['celebrant_name']);
+    }
+
+    public function test_every_catalog_field_sits_in_exactly_one_admin_group(): void
+    {
+        $grouped = array_merge(...array_values(InvitationTemplate::FIELD_SECTIONS));
+
+        $this->assertSame([], array_values(array_diff_assoc($grouped, array_unique($grouped))), 'A field is in more than one group');
+        $this->assertEqualsCanonicalizing(array_keys(InvitationTemplate::FIELD_CATALOG), $grouped);
+        $this->assertEqualsCanonicalizing(
+            array_keys(InvitationTemplate::FIELD_SECTIONS),
+            array_keys(InvitationTemplateForm::GROUPS),
+        );
+    }
+
+    public function test_the_premium_group_holds_exactly_the_premium_fields(): void
+    {
+        $premium = array_diff(array_keys(InvitationTemplate::FIELD_CATALOG), InvitationTemplate::FREE_FIELDS);
+
+        $this->assertEqualsCanonicalizing(array_values($premium), InvitationTemplate::FIELD_SECTIONS['premium']);
+    }
+
+    public function test_every_catalog_field_has_an_admin_hint(): void
+    {
+        $this->assertSame([], array_values(array_diff(array_keys(InvitationTemplate::FIELD_CATALOG), array_keys(InvitationTemplate::ADMIN_HINTS))));
+        $this->assertSame([], array_values(array_diff(array_keys(InvitationTemplate::ADMIN_HINTS), array_keys(InvitationTemplate::FIELD_CATALOG))));
     }
 
     public function test_editing_a_templates_wedding_and_birthday_fields_saves_correctly(): void
@@ -113,8 +142,9 @@ class InvitationTemplateFormTest extends TestCase
 
         Livewire::test(ListInvitationTemplates::class)
             ->callAction(TestAction::make(EditAction::class)->table($template), [
-                'fields_universal' => ['sender_name'],
-                'fields_wedding' => ['groom_name', 'bride_name', 'khmer_date'],
+                'fields_essentials' => ['sender_name'],
+                'fields_wedding' => ['groom_name', 'bride_name'],
+                'fields_premium' => ['khmer_date'],
                 'fields_birthday' => [],
             ])
             ->assertHasNoActionErrors();
@@ -207,9 +237,9 @@ class InvitationTemplateFormTest extends TestCase
                 'slug' => 'garden-party',
                 'category' => 'wedding',
                 'view' => 'invitations.templates.date-asking',
-                'fields_universal' => ['headline'],
+                'fields_essentials' => ['headline'],
                 'is_active' => true,
-                'plans' => [['label' => 'Basic', 'price' => 5, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true]],
+                'plans' => [['label' => 'Basic', 'price' => 5, 'max_recipients' => 10, 'retention_months' => 3, 'features' => false, 'in_stock' => true]],
                 'shop' => ['category_id' => $wedding->id, 'sort_order' => 2, 'is_featured' => true, 'short_description' => '',
                     'discount_type' => 'fixed', 'discount_value' => 1.5],
             ])

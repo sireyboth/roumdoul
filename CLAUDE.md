@@ -34,8 +34,8 @@ template, fill in details in their dashboard, and send one personalized link per
   which unlocks the invitation. Online automatic payment comes later. Don't build it unless asked.
   While an order is `pending_payment`, the customer gets the KHQR payment modal (`<x-shop.payment-modal>`, 3D glass: QR,
   account name + ID, exact amount, order number as the transfer note; no screenshot asked) on the order
-  confirmation page (opens by itself) and the dashboard order page («Pay now»). QR image: `public/images/payment/khqr.png`.
-  Account details: `config('roumdoul.payment')`. An order only becomes `paid` through the admin's
+  confirmation page (opens by itself) and the dashboard order page («Pay now»). The modal has tabs per bank, ABA first (preferred), then Wing.
+  QR images: `public/images/payment/aba.png` (ABA) and `khqr.png` (Wing). Account details: `config('roumdoul.payment.methods')`. An order only becomes `paid` through the admin's
   «Mark as paid» (`Order::markPaid()`: amount received ≥ total + a bank transaction ID never used on
   another order); that provisions invitations, applies add-ons and emails the customer.
 - Add-ons (more guests / photos, unlock a feature, upgrade, extend) are add-on orders for one invitation
@@ -69,6 +69,13 @@ template, fill in details in their dashboard, and send one personalized link per
   `resources/views/invitations/templates/` without `.blade.php`, e.g. `/demo/birthday` or `/demo/wedding/{name}`).
   If the template uses a field the sample data in `InvitationTemplateDemoController::file()`
   doesn't fill, add sample data there so every section shows in the demo.
+  (3) **Support every field that fits the event**, so the admin only has to tick it in the template's Fields tab
+  when a client wants it: all universal fields, the event's own (wedding / birthday / ceremony / anniversary), every
+  ★ premium extra (address + map, RSVP, countdown, schedule + schedule image, story, Khmer date, gift QR + account,
+  custom button) and the guest notes (dress code, what to bring, reply-by, end time). Each section hides itself
+  when its field is empty / not ticked. The demo sample data fills **all** of them. (4) With the demo link, give
+  the user a **checklist of the fields to tick** (grouped like the Fields tab: Most used / ★ Premium extras / the
+  other cards), and say which fields were skipped because they don't fit the event.
 - **Every invitation template always ends with the shared footer component** (no exceptions, never a
   hand-written footer): `<x-invitation-footer>` (`resources/views/components/invitation-footer.blade.php`,
   styles `public/css/invitations/shared/footer.css`). It has the back-to-top button, ornament divider,

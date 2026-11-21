@@ -72,11 +72,14 @@
         @if ($service->plans->isNotEmpty())
           <div class="mt-6">
             <p class="mb-2.5 text-sm font-semibold text-plum-800 dark:text-plum-100">{{ __('Choose a plan') }}</p>
-            <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            <div class="grid grid-cols-2 gap-2.5 pt-1 sm:grid-cols-3">
               @foreach ($service->plans as $plan)
                 <label wire:key="plan-{{ $plan->id }}"
-                  class="flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-2.5 text-center transition-colors {{ ! $plan->in_stock ? 'cursor-not-allowed opacity-50 grayscale border-plum-200 dark:border-plum-700' : ($selectedPlanId === $plan->id ? 'cursor-pointer border-brand-600 bg-brand-50 dark:bg-plum-800' : 'cursor-pointer border-plum-200 hover:border-brand-300 dark:border-plum-700') }}">
+                  class="relative flex flex-col items-center gap-1 rounded-xl border-2 px-3 {{ filled($plan->badge) ? 'pb-2.5 pt-4' : 'py-2.5' }} text-center transition-colors {{ ! $plan->in_stock ? 'cursor-not-allowed opacity-50 grayscale border-plum-200 dark:border-plum-700' : ($selectedPlanId === $plan->id ? 'cursor-pointer border-brand-600 bg-brand-50 dark:bg-plum-800' : 'cursor-pointer border-plum-200 hover:border-brand-300 dark:border-plum-700') }}">
                   <input type="radio" wire:model.live="selectedPlanId" value="{{ $plan->id }}" class="sr-only" @disabled(! $plan->in_stock) />
+                  @if (filled($plan->badge))
+                    <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">{{ $plan->badge }}</span>
+                  @endif
                   <span class="text-xs font-semibold text-plum-700 dark:text-plum-200">{{ $plan->label }}</span>
                   @if (! $plan->in_stock)
                     <span class="text-[11px] font-bold uppercase tracking-wide text-red-600 dark:text-red-400">{{ __('Out of Stock') }}</span>
@@ -87,6 +90,31 @@
                     </span>
                   @else
                     <span class="text-sm font-bold text-brand-700 dark:text-brand-300">${{ number_format($plan->price, 2) }}</span>
+                  @endif
+                  @if ($planTemplate)
+                    {{-- what this plan includes, built from the plan's numbers + the ★ extras this design uses --}}
+                    @php
+                      $months = $plan->retention_months;
+                      $extras = $planTemplate->premiumExtraNames();
+                    @endphp
+                    <ul class="mt-1.5 w-full space-y-1 border-t border-plum-100 pt-2 text-left text-[11px] leading-snug text-plum-600 dark:border-plum-700 dark:text-plum-300">
+                      @if ($plan->max_recipients)
+                        <li class="flex gap-1.5"><span class="text-emerald-600 dark:text-emerald-400">✓</span>{{ __(':n guest links', ['n' => $plan->max_recipients]) }}</li>
+                      @endif
+                      @if ($planTemplate->usesField('photo_gallery'))
+                        <li class="flex gap-1.5"><span class="text-emerald-600 dark:text-emerald-400">✓</span>{{ __(':n gallery photos', ['n' => $plan->max_gallery_photos ?: \App\Livewire\Pages\Dashboard\InvitationManagePage::MAX_GALLERY_PHOTOS]) }}</li>
+                      @endif
+                      <li class="flex gap-1.5"><span class="text-emerald-600 dark:text-emerald-400">✓</span>
+                        {{ ! $months ? __('Online forever') : ($months % 12 === 0 ? trans_choice('Online :n year|Online :n years', $months / 12, ['n' => $months / 12]) : __('Online :n months', ['n' => $months])) }}
+                      </li>
+                      @if ($extras)
+                        @if ($plan->includesPremium())
+                          <li class="flex gap-1.5"><span class="text-emerald-600 dark:text-emerald-400">✓</span><span>{{ implode(' · ', $extras) }}</span></li>
+                        @else
+                          <li class="flex gap-1.5 text-plum-400 dark:text-plum-500"><span>✗</span><span class="line-through">{{ implode(' · ', $extras) }}</span></li>
+                        @endif
+                      @endif
+                    </ul>
                   @endif
                 </label>
               @endforeach

@@ -20,24 +20,34 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 /**
  * Opened in a wide modal (create + edit) — tabs: Basics · Fields · Plans · Shop page.
  *
- * The stored `fields` array is flat; the «Fields» tab shows one checkbox list per FIELD_SECTIONS group,
+ * The stored `fields` array is flat; the «Fields» tab shows one card + checkbox list per FIELD_SECTIONS group
+ * (most used first, premium fields tagged),
  * so the create/edit actions split it on load and merge it back on save (InvitationTemplateActions).
  * Plans live on the linked shop Service: on create they're a plain repeater turned into a Service by
  * InvitationTemplate::createServiceFor(); on edit they're edited in place through the `service` relationship.
  */
 class InvitationTemplateForm
 {
-    public const SECTION_LABELS = [
-        'universal' => 'Universal — works for any event',
-        'wedding' => 'Wedding-specific',
-        'birthday' => 'Birthday-specific',
-        'ceremony' => 'Buddhist ceremony-specific',
-        'anniversary' => 'Anniversary / love letter-specific',
+    /**
+     * Heading, icon and one-line hint for each InvitationTemplate::FIELD_SECTIONS group on the «Fields» tab,
+     * in display order. `wide` = full row with more columns (the most-used group).
+     */
+    public const GROUPS = [
+        'essentials' => ['label' => 'Most used — almost every design', 'icon' => Heroicon::OutlinedStar, 'description' => 'Message, date, place, photos, music. Every plan gets these.', 'wide' => true],
+        'premium' => ['label' => '★ Premium extras', 'icon' => Heroicon::OutlinedLockClosed, 'description' => 'The customer only gets these when their plan unlocks them (Plans tab), or they buy the unlock later.', 'wide' => true],
+        'wedding' => ['label' => 'Wedding couple & family', 'icon' => Heroicon::OutlinedHeart, 'description' => 'Names, parents, phones and portraits of the couple.'],
+        'gifts' => ['label' => 'Gifts & contact', 'icon' => Heroicon::OutlinedGift, 'description' => 'Gift account details, text above the QR, a phone to call.'],
+        'wording' => ['label' => 'More details & guest notes', 'icon' => Heroicon::OutlinedPencilSquare, 'description' => 'End time, extra texts, dress code, what to bring, reply-by date.'],
+        'photos' => ['label' => 'More photos', 'icon' => Heroicon::OutlinedPhoto, 'description' => 'Captions, background, title picture, guest photo feed.'],
+        'anniversary' => ['label' => 'Anniversary / love letter', 'icon' => Heroicon::OutlinedSparkles, 'description' => 'Together since, reasons, song, closing line.'],
+        'birthday' => ['label' => 'Birthday', 'icon' => Heroicon::OutlinedCake, 'description' => 'Who is celebrating and the age.'],
+        'ceremony' => ['label' => 'Buddhist ceremony', 'icon' => Heroicon::OutlinedBuildingLibrary, 'description' => 'Hosts and the opening line.'],
     ];
 
     public static function configure(Schema $schema): Schema
@@ -108,37 +118,80 @@ class InvitationTemplateForm
 
     protected static function fieldsTab(): Tab
     {
+        $groups = collect(self::GROUPS)
+            ->filter(fn (array $group, string $key) => isset(InvitationTemplate::FIELD_SECTIONS[$key]));
+
         return Tab::make('Fields')
             ->icon(Heroicon::OutlinedListBullet)
             ->badge(fn (callable $get) => collect(array_keys(InvitationTemplate::FIELD_SECTIONS))
                 ->sum(fn (string $section) => count($get("fields_{$section}") ?? [])) ?: null)
             ->columns(2)
             ->components([
-                Callout::make('Which fields this design asks the customer to fill in')
-                    ->description('Grouped by event type. Adding a genuinely new field means adding it to InvitationTemplate::FIELD_CATALOG (and FIELD_SECTIONS) in code first.')
+                Callout::make(new HtmlString(
+                    'Tick what this design shows. Hover '.self::infoIcon().' to see what a field does.'
+                ))
                     ->info()
                     ->columnSpanFull(),
-                self::fieldsCheckboxList('universal')
-                    ->columns(4)
-                    ->columnSpanFull(),
-                self::fieldsCheckboxList('wedding')
-                    ->columns(2),
-                Section::make()
-                    ->columnSpan(1)
-                    ->components([
-                        self::fieldsCheckboxList('birthday'),
-                        self::fieldsCheckboxList('ceremony'),
-                        self::fieldsCheckboxList('anniversary'),
-                    ]),
+                ...$groups->map(function (array $group, string $key) {
+                    $wide = $group['wide'] ?? false;
+
+                    return Section::make($group['label'])
+                        ->icon($group['icon'])
+                        ->description($group['description'])
+                        ->compact()
+                        ->columnSpan($wide ? 'full' : 1)
+                        // the most-used card stays open; the others fold away while nothing in them is ticked
+                        ->collapsible(! $wide)
+                        ->collapsed($wide ? false : fn (callable $get) => blank($get("fields_{$key}")))
+                        ->components([
+                            self::fieldsCheckboxList($key)->columns($wide ? 3 : 2),
+                        ]);
+                })->values()->all(),
             ]);
     }
 
     protected static function fieldsCheckboxList(string $section): CheckboxList
     {
         return CheckboxList::make("fields_{$section}")
-            ->label(self::SECTION_LABELS[$section])
-            ->options(InvitationTemplate::sectionFieldOptions($section))
+            ->hiddenLabel()
+            ->options(collect(InvitationTemplate::sectionFieldOptions($section))
+                ->map(fn (string $label, string $key) => self::fieldOptionLabel($key, tag: false))
+                ->all())
+            ->allowHtml()
+            ->gridDirection('row')
             ->bulkToggleable();
+    }
+
+    /**
+     * A field's checkbox label for admin lists: its name, the «★ Premium» tag when a plan must unlock it, and an
+     * ⓘ that shows InvitationTemplate::adminHint() on hover (clicking the ⓘ doesn't tick the box). Also used by
+     * the plan's «Unlocked fields» list (pass $tag = false there: everything on it is premium).
+     */
+    public static function fieldOptionLabel(string $key, bool $tag = true): HtmlString
+    {
+        $premium = isset(InvitationTemplate::premiumFieldOptions()[$key]) || isset(InvitationTemplate::UNLOCKED_WITH[$key]);
+        $hint = json_encode(InvitationTemplate::adminHint($key), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+
+        return new HtmlString(
+            '<span style="display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap">'
+            .e(InvitationTemplate::FIELD_CATALOG[$key]['label'] ?? $key)
+            .($tag && $premium ? self::premiumBadge() : '')
+            .'<span x-on:click.prevent.stop x-tooltip="{ content: '.e($hint).', theme: $store.theme }">'.self::infoIcon().'</span>'
+            .'</span>'
+        );
+    }
+
+    /** The small amber «★ Premium» tag (inline styles: the admin's compiled CSS has no arbitrary classes). */
+    protected static function premiumBadge(): string
+    {
+        return '<span style="display:inline-block;padding:0 .35rem;border-radius:9999px;font-size:.65rem;font-weight:600;'
+            .'line-height:1.1rem;color:#b45309;background:rgba(245,158,11,.15);white-space:nowrap">★ Premium</span>';
+    }
+
+    protected static function infoIcon(): string
+    {
+        return '<svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" style="width:.9rem;height:.9rem;opacity:.4;cursor:help;vertical-align:-2px;display:inline">'
+            .'<path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd"/></svg>';
     }
 
     protected static function plansTab(): Tab

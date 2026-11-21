@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Pages\ServiceDetailPage;
+use App\Models\InvitationTemplate;
 use App\Models\Service;
 use App\Models\ServicePlan;
 use App\Services\CartService;
@@ -25,6 +26,28 @@ class ServiceDetailPageTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('1 Month');
         $response->assertSee('3 Months');
+    }
+
+    public function test_invitation_plan_cards_list_what_each_plan_includes(): void
+    {
+        $service = Service::factory()->create();
+        InvitationTemplate::factory()->create([
+            'service_id' => $service->id,
+            'fields' => ['sender_name', 'photo_gallery', 'venue_address', 'map_url', 'rsvp_enabled'],
+        ]);
+        ServicePlan::factory()->create(['service_id' => $service->id, 'label' => 'Basic', 'max_recipients' => 10,
+            'max_gallery_photos' => 6, 'retention_months' => 3, 'features' => [], 'sort_order' => 0]);
+        ServicePlan::factory()->create(['service_id' => $service->id, 'label' => 'Premium', 'badge' => 'Best value',
+            'max_recipients' => 50, 'retention_months' => 12, 'features' => ['venue_address'], 'sort_order' => 1]);
+
+        $this->get("/service/{$service->slug}")
+            ->assertOk()
+            ->assertSee('Best value')
+            ->assertSee('10 guest links')
+            ->assertSee('6 gallery photos')
+            ->assertSee('Online 3 months')
+            ->assertSee('Online 1 year')
+            ->assertSee('Map &amp; directions · RSVP', false); // map_url + venue_address listed once
     }
 
     public function test_mount_selects_the_first_in_stock_plan_by_default(): void

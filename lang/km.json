@@ -405,6 +405,7 @@
     "Pay only the difference. Your guests, photos and add-ons stay.": "បង់តែភាពខុសគ្នាប៉ុណ្ណោះ។ ភ្ញៀវ រូបថត និងការបន្ថែមរបស់អ្នក នៅដដែល។",
     "Pay securely, your way.": "ការទូទាត់ប្រាក់ប្រកបដោយសុវត្ថិភាព តាមជម្រើសដែលលោកអ្នកទុកចិត្ត។",
     "Pay to the account below with any bank app (KHQR).": "បង់ប្រាក់ទៅគណនីខាងក្រោម ដោយប្រើកម្មវិធីធនាគារណាមួយ (KHQR)។",
+    "Pay with": "បង់តាម",
     "Pay with KHQR": "បង់ប្រាក់តាម KHQR",
     "Payment confirmed — order :number": "បានបញ្ជាក់ការបង់ប្រាក់ — ការបញ្ជាទិញ :number",
     "Payment question": "សំណួរពាក់ព័ន្ធនឹងការទូទាត់ប្រាក់",
@@ -739,5 +740,14 @@
     "Your phone number": "លេខទូរស័ព្ទរបស់អ្នក",
     "Your session has expired. Please reload the page (unsaved changes may be lost).": "វគ្គចូលប្រើប្រាស់របស់អ្នកបានផុតកំណត់ហើយ។ សូមផ្ទុកទំព័រឡើងវិញ (រាល់ការកែប្រែដែលមិនទាន់រក្សាទុកអាចនឹងត្រូវបាត់បង់)។",
     "Your «:template» invitation will stop working on :date. After that, your guests' links won't open any more.": "ការអញ្ជើញ «:template» របស់អ្នកនឹងឈប់ដំណើរការនៅថ្ងៃ :date។ បន្ទាប់ពីនោះ តំណរបស់ភ្ញៀវនឹងមិនអាចបើកបានទៀតទេ។",
-    "— ROUMDOUL": "— ROUMDOUL"
+    "— ROUMDOUL": "— ROUMDOUL",
+    "Online forever": "បង្ហាញជារៀងរហូត",
+    "Online :n months": "បង្ហាញ :n ខែ",
+    "Online :n year|Online :n years": "បង្ហាញ :n ឆ្នាំ|បង្ហាញ :n ឆ្នាំ",
+    "Map & directions": "ផែនទី និងផ្លូវទៅ",
+    "Countdown": "រាប់ថយក្រោយ",
+    "Love story": "រឿងស្នេហា",
+    "Khmer date": "ថ្ងៃខែខ្មែរ",
+    "Gift QR": "QR ចំណងដៃ",
+    "Custom button": "ប៊ូតុងផ្ទាល់ខ្លួន"
 }

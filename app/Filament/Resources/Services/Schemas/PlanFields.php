@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Services\Schemas;
 
 use App\Models\InvitationTemplate;
 use App\Models\ServicePlan;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
@@ -62,12 +61,20 @@ class PlanFields
                         ->numeric()
                         ->minValue(1)
                         ->helperText($only.'how long it stays online. Blank = never expires.'),
+                    TextInput::make('badge')
+                        ->label('Badge (optional)')
+                        ->maxLength(40)
+                        ->placeholder('e.g. Best value')
+                        ->helperText('A small tag on this plan in the shop.'),
                 ]),
-            CheckboxList::make('features')
-                ->label('Unlocked fields (premium extras)')
-                ->helperText($only.'the essentials (names, headline, message, date, venue name, music, photo, colour) are always included. Tick the extras this plan also unlocks.')
-                ->options(InvitationTemplate::premiumFieldOptions())
-                ->columns(4)
+            // one switch instead of a checkbox per extra: on = every ★ premium field the template uses (its Fields
+            // tab), off = none. Stored as the full premium key list (or []) in `features`; see ServicePlan::includesPremium()
+            Toggle::make('features')
+                ->label('Includes premium extras')
+                ->helperText($only.'on = this plan gets every ★ Premium extra the template uses (its Fields tab: map, RSVP, countdown…). Off = only the free fields.')
+                ->formatStateUsing(fn ($state) => is_bool($state) ? $state : filled(is_string($state) ? json_decode($state, true) : $state))
+                ->dehydrateStateUsing(fn ($state) => $state ? array_keys(InvitationTemplate::premiumFieldOptions()) : [])
+                ->live()
                 ->columnSpanFull(),
             Fieldset::make('Add-ons (Digital Invitations only)')
                 ->columns(4)
@@ -98,7 +105,8 @@ class PlanFields
                         ->minValue(1)
                         ->placeholder((string) ServicePlan::DEFAULT_EXTEND_MONTHS)
                         ->helperText('How long one «extend» adds. Blank = '.ServicePlan::DEFAULT_EXTEND_MONTHS.'.'),
-                    self::featurePricesRepeater(),
+                    // selling one extra on its own only makes sense on a plan without the extras
+                    self::featurePricesRepeater()->hidden(fn (callable $get) => (bool) $get('features')),
                 ]),
         ];
     }

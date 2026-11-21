@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\InvitationTemplates\RelationManagers;
 
 use App\Filament\Resources\Customers\CustomerResource;
+use App\Filament\Resources\InvitationTemplates\Schemas\InvitationTemplateForm;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Models\Invitation;
@@ -90,7 +91,9 @@ class InvitationsRelationManager extends RelationManager
                     ->components([
                         CheckboxList::make('features')
                             ->hiddenLabel()
-                            ->options(InvitationTemplate::premiumFieldOptions())
+                            ->options(collect(InvitationTemplate::premiumFieldOptions())->map(fn ($label, string $key) => InvitationTemplateForm::fieldOptionLabel($key, tag: false))->all())
+                            ->allowHtml()
+                            ->gridDirection('row')
                             ->bulkToggleable()
                             ->columns(2),
                     ]),
