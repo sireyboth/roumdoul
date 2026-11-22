@@ -38,45 +38,5 @@
     </div>
   </div>
 
-  <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-    <div class="flex flex-col gap-8 lg:flex-row">
-      <div class="lg:sticky lg:top-24 lg:h-fit lg:w-64 lg:shrink-0">
-        <x-shop.sidebar :categories="$categories" :active="$category" />
-      </div>
-
-      <div class="min-w-0 flex-1">
-        @if ($search !== '')
-          <p data-reveal class="mb-4 text-sm text-plum-500 dark:text-plum-400">
-            {{ __('Results for') }} &ldquo;<span class="font-semibold text-plum-800 dark:text-plum-100">{{ $search }}</span>&rdquo; &mdash; {{ __(':count products', ['count' => $services->total()]) }}
-          </p>
-        @endif
-
-        @if ($services->isEmpty())
-          <div data-reveal class="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-plum-300 bg-plum-50/50 py-24 text-center dark:border-plum-700 dark:bg-plum-900/30">
-            <span class="flex h-16 w-16 items-center justify-center rounded-full bg-white text-plum-300 shadow-sm dark:bg-plum-800">
-              <x-app-icon name="search" class="h-8 w-8" />
-            </span>
-            <div>
-              <p class="text-sm font-semibold text-plum-700 dark:text-plum-200">{{ __('No services match these filters') }}</p>
-              <p class="mt-1 text-xs text-plum-400 dark:text-plum-500">{{ __('Try a different keyword or clear the filters') }}</p>
-            </div>
-            <a href="/shop" wire:navigate
-              class="mt-1 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-md">
-              {{ __('Clear filters') }}
-            </a>
-          </div>
-        @else
-          <div class="grid grid-cols-2 gap-5 transition-opacity duration-200 sm:grid-cols-3 xl:grid-cols-4" wire:loading.class="opacity-50">
-            @foreach ($services as $service)
-              <x-shop.product-card :service="$service" wire:key="service-{{ $service->id }}" />
-            @endforeach
-          </div>
-
-          <div class="mt-10">
-            {{ $services->links() }}
-          </div>
-        @endif
-      </div>
-    </div>
-  </div>
+  <x-shop.catalog :services="$services" :categories="$categories" :active="$category" :search="$search" />
 </div>

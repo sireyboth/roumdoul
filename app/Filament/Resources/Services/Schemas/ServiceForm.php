@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Services\Schemas;
 
 use App\Models\Category;
+use App\Support\InvitationDefaults;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -94,27 +95,32 @@ class ServiceForm
             ->required($required);
     }
 
-    /** @return array<int, Field> */
-    public static function descriptionFields(bool $required = true): array
+    /**
+     * @param  bool  $withDefaults  pre-fill the «Invitation defaults» texts (new invitation template only)
+     * @return array<int, Field>
+     */
+    public static function descriptionFields(bool $required = true, bool $withDefaults = false): array
     {
         return [
             TextInput::make('short_description')
+                ->when($withDefaults, fn (TextInput $f) => $f->default(fn () => InvitationDefaults::get('short_description')))
                 ->label('Short description')
                 ->helperText('Shown on product cards in the shop grid. Max 255 characters.')
                 ->required($required)
                 ->maxLength(255)
                 ->columnSpanFull(),
             Textarea::make('description')
+                ->when($withDefaults, fn (Textarea $f) => $f->default(fn () => InvitationDefaults::get('description')))
                 ->label('Full description')
-                ->helperText('Shown on the service detail page.')
+                ->helperText('Shown on the service detail page. Blank line = new paragraph, **bold**, start a line with "- " for a bullet list.')
                 ->required($required)
-                ->rows(3)
+                ->rows(10)
                 ->columnSpanFull(),
         ];
     }
 
     /** Demo link, display order, featured, in stock (not «Active»: templates set that themselves). */
-    public static function settingsFields(): array
+    public static function settingsFields(bool $withDefaults = false): array
     {
         return [
             TextInput::make('demo_url')
@@ -127,7 +133,7 @@ class ServiceForm
                 ->helperText('Lower numbers appear first.')
                 ->required()
                 ->numeric()
-                ->default(0),
+                ->default($withDefaults ? fn () => (int) InvitationDefaults::get('sort_order') : 0),
             Toggle::make('is_featured')
                 ->label('Featured')
                 ->helperText('Shown in "Special Deals" on the homepage.'),
@@ -205,12 +211,12 @@ class ServiceForm
     }
 
     /** Cover image + gallery screenshots of the product page. */
-    public static function mediaFields(): array
+    public static function mediaFields(?string $coverHint = null): array
     {
         return [
             FileUpload::make('image_path')
                 ->label('Cover image')
-                ->helperText('Max 3MB, auto-resized to 1200×900.')
+                ->helperText('Max 3MB, auto-resized to 1200×900.'.($coverHint ? ' '.$coverHint : ''))
                 ->image()
                 ->imageEditor()
                 ->disk('s3')
@@ -248,7 +254,7 @@ class ServiceForm
     }
 
     /** «How to use» steps + FAQ, each its own tab on the product page. */
-    public static function detailsSections(): array
+    public static function detailsSections(bool $withDefaults = false): array
     {
         return [
             Section::make('How to use')
@@ -262,7 +268,7 @@ class ServiceForm
                         )
                         ->addActionLabel('Add step')
                         ->reorderableWithButtons()
-                        ->defaultItems(0),
+                        ->default($withDefaults ? fn () => array_values(InvitationDefaults::get('how_to_use_steps') ?? []) : []),
                 ]),
 
             Section::make('FAQ')
@@ -284,7 +290,7 @@ class ServiceForm
                         ->reorderableWithButtons()
                         ->itemLabel(fn (array $state) => $state['question'] ?? 'New question')
                         ->collapsed()
-                        ->defaultItems(0)
+                        ->default($withDefaults ? fn () => array_values(InvitationDefaults::get('faqs') ?? []) : [])
                         ->collapsible(),
                 ]),
         ];

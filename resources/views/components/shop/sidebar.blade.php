@@ -1,8 +1,8 @@
-@props(['categories', 'active' => null])
+@props(['categories', 'active' => null, 'inline' => false])
 
 {{-- Desktop rail --}}
-<aside class="hidden shrink-0 lg:block lg:w-64">
-  @include('components.shop.sidebar-content', ['categories' => $categories, 'active' => $active])
+<aside x-data="{ open: false }" class="hidden shrink-0 lg:block lg:w-64">
+  @include('components.shop.sidebar-content', ['categories' => $categories, 'active' => $active, 'inline' => $inline])
 </aside>
 
 {{-- Mobile: trigger + slide-over drawer --}}
@@ -27,6 +27,6 @@
         <x-app-icon name="x-mark" class="h-5 w-5" />
       </button>
     </div>
-    @include('components.shop.sidebar-content', ['categories' => $categories, 'active' => $active])
+    @include('components.shop.sidebar-content', ['categories' => $categories, 'active' => $active, 'inline' => $inline])
   </div>
 </div>

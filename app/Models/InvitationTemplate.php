@@ -134,12 +134,10 @@ class InvitationTemplate extends Model
     ];
 
     /**
-     * Field keys that are never plan-gated — if a template selects them, every customer on
-     * every plan sees them, regardless of the plan's `features` list. Everything else in
-     * FIELD_CATALOG is a premium extra: a template can still choose to include it, but it
-     * only actually renders for a customer whose plan has that key in `features`
-     * (see Invitation::hasFeature()). This is the pricing upsell lever — e.g. Basic gets
-     * the essentials, Premium also unlocks the map link, countdown, RSVP tracking, gallery, etc.
+     * The catalog's suggested free fields. Which fields are ★ (a plan must include them) is now the admin's
+     * choice per template (`premium_fields`, see premiumFields()); this list only sets the starting
+     * suggestion: when the admin ticks a field that is NOT in here, it starts out ★. Gating itself reads
+     * the template's own list (Invitation::fieldUnlocked()).
      */
     public const FREE_FIELDS = [
         'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age',
@@ -274,6 +272,7 @@ class InvitationTemplate extends Model
         'is_premium',
         'is_active',
         'fields',
+        'premium_fields',
         'view',
         'thumbnail',
     ];
@@ -282,6 +281,7 @@ class InvitationTemplate extends Model
         'is_premium' => 'boolean',
         'is_active' => 'boolean',
         'fields' => 'array',
+        'premium_fields' => 'array',
     ];
 
     protected static function booted(): void
@@ -363,7 +363,7 @@ class InvitationTemplate extends Model
         $pairs = array_is_list($prices)
             ? collect($prices)->mapWithKeys(fn ($row) => [(string) ($row['key'] ?? $row['feature'] ?? '') => $row['price'] ?? null])
             : collect($prices);
-        $valid = array_keys(self::premiumFieldOptions());
+        $valid = array_keys(self::markableFieldOptions());
         $clean = $pairs->filter(fn ($price, $key) => in_array($key, $valid, true) && is_numeric($price) && $price > 0)
             ->map(fn ($price) => round((float) $price, 2))
             ->all();
@@ -390,14 +390,79 @@ class InvitationTemplate extends Model
         'cta_url' => 'Custom button',
     ];
 
-    /** The premium extras this design actually shows, as short translated names (once each), for the shop. */
-    public function premiumExtraNames(): array
+    /**
+     * Short translated names (once each) for the shop's plan cards: the ★ fields of this design, or only the
+     * given keys (e.g. the ones a plan includes) when $keys is passed.
+     */
+    public function premiumExtraNames(?array $keys = null): array
     {
-        return collect(self::FIELD_CATALOG)->keys()
-            ->reject(fn (string $key) => in_array($key, self::FREE_FIELDS, true))
-            ->filter(fn (string $key) => $this->usesField($key))
-            ->map(fn (string $key) => __(self::SHOP_EXTRA_NAMES[$key] ?? self::FIELD_CATALOG[$key]['label']))
+        return collect($this->premiumFields())
+            ->when($keys !== null, fn ($c) => $c->intersect($keys))
+            ->map(fn (string $key) => __(self::SHOP_EXTRA_NAMES[$key] ?? self::FIELD_CATALOG[$key]['label'] ?? $key))
             ->unique()->values()->all();
+    }
+
+    /**
+     * The fields of this design a plan must include (★), chosen by the admin in the template's Fields tab
+     * (`premium_fields`). Only fields the template ticks count. Before an admin saves a choice it is the
+     * catalog's default ★ list (defaultPremiumFields()). Keys in UNLOCKED_WITH never appear here: they follow
+     * the field they belong to (e.g. schedule_image follows event_schedule).
+     *
+     * @return list<string>
+     */
+    public function premiumFields(): array
+    {
+        $premium = $this->premium_fields ?? self::defaultPremiumFields();
+
+        return array_values(array_diff(array_intersect($premium, $this->fields ?? []), array_keys(self::UNLOCKED_WITH)));
+    }
+
+    /**
+     * Whether a plan must include this field (★) for this design: the admin's choice for fields the template
+     * ticks; a field it doesn't tick keeps the catalog's default (so it never turns free by accident).
+     */
+    public function isPremiumField(string $key): bool
+    {
+        $key = self::UNLOCKED_WITH[$key] ?? $key;
+
+        return $this->usesField($key)
+            ? in_array($key, $this->premiumFields(), true)
+            : ! in_array($key, self::FREE_FIELDS, true);
+    }
+
+    /**
+     * The fields of this design every plan gets (ticked and not ★). A paid invitation keeps a copy
+     * (`invitations.free_fields`), so marking one of them ★ later never takes it away from that customer.
+     *
+     * @return list<string>
+     */
+    public function freeFields(): array
+    {
+        return array_values(array_filter($this->fields ?? [], fn (string $key) => ! $this->isPremiumField($key)));
+    }
+
+    /**
+     * The catalog's suggested ★ list (FIELD_CATALOG minus FREE_FIELDS and UNLOCKED_WITH followers): what a new
+     * template starts with when the admin ticks those fields. The admin can change it per template.
+     *
+     * @return list<string>
+     */
+    public static function defaultPremiumFields(): array
+    {
+        return array_keys(self::premiumFieldOptions());
+    }
+
+    /**
+     * Every catalog field that can be marked ★, labeled (all of them except UNLOCKED_WITH followers).
+     *
+     * @return array<string, string>
+     */
+    public static function markableFieldOptions(): array
+    {
+        return collect(self::FIELD_CATALOG)
+            ->except(array_keys(self::UNLOCKED_WITH))
+            ->map(fn (array $field) => $field['label'])
+            ->all();
     }
 
     /**
@@ -458,6 +523,7 @@ class InvitationTemplate extends Model
         return $catalog;
     }
 
+    /** The catalog's suggested ★ fields, labeled (FIELD_CATALOG minus FREE_FIELDS and UNLOCKED_WITH followers). */
     public static function premiumFieldOptions(): array
     {
         return collect(self::FIELD_CATALOG)
@@ -509,6 +575,10 @@ class InvitationTemplate extends Model
         }
 
         $data['fields'] = array_values(array_unique($fields));
+
+        if (array_key_exists('premium_fields', $data)) {
+            $data['premium_fields'] = array_values(array_intersect($data['premium_fields'] ?? [], $data['fields']));
+        }
 
         return $data;
     }

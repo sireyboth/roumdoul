@@ -91,7 +91,12 @@ class InvitationsRelationManager extends RelationManager
                     ->components([
                         CheckboxList::make('features')
                             ->hiddenLabel()
-                            ->options(collect(InvitationTemplate::premiumFieldOptions())->map(fn ($label, string $key) => InvitationTemplateForm::fieldOptionLabel($key, tag: false))->all())
+                            // this design's ★ fields, plus anything this invitation already has unlocked
+                            ->options(fn ($state, ?Invitation $record) => collect([...($record?->template?->premiumFields() ?? []), ...(array) ($state ?? [])])
+                                ->filter(fn ($key) => is_string($key) && isset(InvitationTemplate::FIELD_CATALOG[$key]))
+                                ->unique()
+                                ->mapWithKeys(fn (string $key) => [$key => InvitationTemplateForm::fieldOptionLabel($key, tag: false)])
+                                ->all())
                             ->allowHtml()
                             ->gridDirection('row')
                             ->bulkToggleable()

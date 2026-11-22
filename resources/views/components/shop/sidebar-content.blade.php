@@ -3,14 +3,15 @@
 </div>
 <ul class="mt-3 flex flex-col gap-1">
   <li>
-    <a href="/shop" wire:navigate
+    @php($inline = $inline ?? false)
+    <a @if ($inline) href="#shop" wire:click.prevent="setCategory('')" @click="open = false" @else href="/shop" wire:navigate @endif
       class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold transition-colors {{ $active ? 'text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800' : 'bg-brand-600 text-white' }}">
       {{ __('All categories') }}
     </a>
   </li>
   @foreach ($categories as $category)
     <li>
-      <a href="/shop/{{ $category->slug }}" wire:navigate
+      <a @if ($inline) href="#shop" wire:click.prevent="setCategory('{{ $category->slug }}')" @click="open = false" @else href="/shop/{{ $category->slug }}" wire:navigate @endif
         class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all {{ $active && $active->id === $category->id ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/30' : 'text-plum-600 hover:translate-x-0.5 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800' }}">
         <x-app-icon name="{{ $category->icon }}" class="h-4.5 w-4.5 shrink-0" />
         {{ $category->name_km }}

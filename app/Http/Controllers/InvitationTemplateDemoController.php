@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\InvitationTemplate;
+use App\Services\ProductViews;
 use App\Support\Invitations\ChristmasTemplate;
 
 class InvitationTemplateDemoController extends Controller
 {
-    public function __invoke(InvitationTemplate $template)
+    public function __invoke(InvitationTemplate $template, ProductViews $views)
     {
         abort_unless($template->is_active, 404);
+
+        // admin dashboard: demos opened per product (once per visitor per day)
+        $views->record($template->service_id, ProductViews::DEMO);
 
         if (in_array($template->slug, ['khmer-traditional-wedding', 'khmer-traditional-2'], true)) {
             return view('invitations.show', [
@@ -108,6 +112,7 @@ class InvitationTemplateDemoController extends Controller
             str_contains($kind, 'kathin') || str_contains($kind, 'kak-thern') || str_contains($kind, 'ceremony') => $this->kathinaDemoFields(),
             str_contains($kind, 'christmas') => $this->christmasDemoFields(),
             str_contains($kind, 'anniversary') => $this->anniversaryDemoFields(),
+            str_contains($kind, 'birthday') => $this->birthdayDemoFields(),
             default => $this->khmerWeddingDemoFields() + $this->kathinaDemoFields() + [
                 'sender_name' => 'Alex',
                 'celebrant_name' => 'Bella',
@@ -126,6 +131,18 @@ class InvitationTemplateDemoController extends Controller
             ->sort()
             ->map(fn ($f) => asset($ownDir.'/'.rawurlencode($f)))
             ->values();
+        // every wedding demo without its own folder uses the shared couple photos in
+        // public/images/invitations/assets/demo-couple/ (sorted by name; groom.* / bride.* / end.* are kept for the
+        // groom photo, bride photo and closing photo, the rest are the cover + gallery)
+        $coupleDir = 'images/invitations/assets/demo-couple';
+        $couple = collect(is_dir(public_path($coupleDir)) ? scandir(public_path($coupleDir)) : [])
+            ->filter(fn ($f) => preg_match('/\.(png|jpe?g|webp)$/i', $f))->sort()->values()
+            ->mapWithKeys(fn ($f) => [$f => asset($coupleDir.'/'.rawurlencode($f))]);
+        $special = fn (string $name) => $couple->first(fn ($u, $f) => str_starts_with(strtolower($f), $name.'.'));
+        $isWeddingDemo = str_contains($kind, 'wedding') || str_contains($kind, 'khmer-traditional');
+        if ($ownImages->isEmpty() && $isWeddingDemo) {
+            $ownImages = $couple->reject(fn ($u, $f) => preg_match('/^(groom|bride|end)\./i', $f))->values();
+        }
         if ($ownImages->isNotEmpty()) {
             $fields['cover_image'] = $ownImages->first();
             $fields['photo_gallery'] = $ownImages->all();
@@ -249,6 +266,14 @@ class InvitationTemplateDemoController extends Controller
             ],
             default => [],
         });
+
+        if ($isWeddingDemo && $couple->isNotEmpty() && ! is_dir(public_path($ownDir))) {
+            $fields = array_merge($fields, array_filter([
+                'groom_photo' => $special('groom'),
+                'bride_photo' => $special('bride'),
+                'background_image' => $special('end') ?? $ownImages->last(),
+            ]));
+        }
 
         // the Christmas template is two pages; ?to= (the sample guest name) only matters on the cover
         $pages = ChristmasTemplate::is($view)
@@ -395,6 +420,65 @@ class InvitationTemplateDemoController extends Controller
             'together_since' => '2022-03-14',
             'venue_name' => 'Where it all began: Phnom Penh',
             'accent_color' => '#d65f7f',
+        ];
+    }
+
+    /**
+     * Sample content for the birthday templates (Chrome Bow, /demo/birthday/...): every birthday field, every premium
+     * extra and the guest notes filled, so each section of the design shows.
+     */
+    private function birthdayDemoFields(): array
+    {
+        return [
+            'celebrant_name' => 'Sreypov',
+            'turning_age' => '25',
+            'sender_name' => 'Dara & friends',
+            'headline' => "It's my birthday",
+            'message' => 'មួយឆ្នាំទៀតហើយ! ខ្ញុំចង់អបអរថ្ងៃនេះជាមួយមនុស្សដែលខ្ញុំស្រឡាញ់បំផុត — សើច ញ៉ាំ រាំ ហើយថតរូបឲ្យច្រើន។ សូមមកចូលរួមជាមួយគ្នាណា!',
+            'reception_message' => 'សូមគោរពអញ្ជើញមកចូលរួមអបអរខួបកំណើតដ៏រីករាយ ជប់លៀង សើចសប្បាយ និងបង្កើតអនុស្សាវរីយ៍ថ្មីៗជាមួយគ្នា។ វត្តមានរបស់អ្នក គឺជាកាដូដ៏ល្អបំផុត!',
+            'event_date' => '2026-12-19 18:30:00',
+            'end_time' => '22:30',
+            'khmer_date' => 'ថ្ងៃសៅរ៍ ១០កើត ខែមិគសិរ ឆ្នាំម្សាញ់ ព.ស. ២៥៧០',
+            'venue_name' => 'Pink Pearl Rooftop',
+            'venue_address' => 'Street 240, Daun Penh, Phnom Penh',
+            'map_url' => 'https://www.google.com/maps/@11.5631,104.9282,17z',
+            'cover_image' => 'https://picsum.photos/seed/chromebow-cover/900/1200',
+            'background_image' => 'https://picsum.photos/seed/chromebow-end/900/1100',
+            'photo_gallery' => collect(range(1, 9))
+                ->map(fn ($i) => "https://picsum.photos/seed/chromebow{$i}/700/".[900, 700, 1050][$i % 3])
+                ->all(),
+            'photo_captions' => "Golden hour 🌅\nBestie date\nCake first, always\nThat trip to Kep\nPink everything\nLate night karaoke\nSunday brunch\n24 → 25\nMain character energy",
+            'story_chapters' => [
+                ['title' => 'ថ្ងៃដំបូង | 2001', 'text' => 'ក្មេងស្រីតូចម្នាក់ដែលចូលចិត្តពណ៌ផ្កាឈូក និងនំខេកជាងគេ។'],
+                ['title' => 'Sweet sixteen | 2017', 'text' => 'ឆ្នាំដែលរៀនបើកម៉ូតូ ហើយបានមិត្តភក្តិល្អបំផុតសម្រាប់មួយជីវិត។'],
+                ['title' => 'Graduation | 2023', 'text' => 'បញ្ចប់ការសិក្សា ជាមួយក្តីសុបិនធំៗ និងទឹកភ្នែករីករាយ។'],
+                ['title' => 'Twenty-five | 2026', 'text' => 'ជំពូកថ្មីចាប់ផ្ដើមហើយ — ហើយខ្ញុំចង់ឲ្យអ្នកនៅទីនោះ។'],
+            ],
+            'event_schedule' => [
+                ['time' => '06:30 PM', 'label' => 'ទទួលភ្ញៀវ & welcome drinks'],
+                ['time' => '07:00 PM', 'label' => 'អាហារពេលល្ងាច'],
+                ['time' => '08:00 PM', 'label' => 'ផ្លុំទៀន & កាត់នំខេក'],
+                ['time' => '08:30 PM', 'label' => 'Party, DJ & photo booth'],
+                ['time' => '10:00 PM', 'label' => 'ថតរូបចុងក្រោយ'],
+            ],
+            'countdown_enabled' => true,
+            'rsvp_enabled' => true,
+            'rsvp_message' => 'តើអ្នកនឹងមកចូលរួមជប់លៀងជាមួយគ្នាដែរឬទេ?',
+            'rsvp_deadline' => '2026-12-12',
+            'qr_code' => 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=ROUMDOUL-DEMO-BIRTHDAY',
+            'gift_account' => "ABA · SREYPOV\n000 456 789",
+            'gift_message' => 'វត្តមានរបស់អ្នកគឺជាកាដូដ៏ល្អបំផុតហើយ។ បើចង់ផ្ញើកាដូពីចម្ងាយ សូមស្កេន QR ខាងក្រោម។',
+            'contact_phone' => '012 345 678',
+            'cta_label' => 'Party playlist',
+            'cta_url' => 'https://open.spotify.com',
+            'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ស ឬប្រាក់ — chic & sparkly',
+            'what_to_bring' => 'ស្នាមញញឹម និងថាមពលពេញ ✨',
+            'thanks_message' => 'អរគុណដែលតែងតែនៅក្បែរ ក្នុងគ្រាសប្បាយ និងគ្រាលំបាក។ ឆ្នាំនេះ ខ្ញុំចង់អបអរវាជាមួយអ្នក។',
+            'apology_message' => 'សូមអភ័យទោស ដែលមិនបានជូនលិខិតអញ្ជើញដោយផ្ទាល់ដៃ។ សូមទទួលយកលិខិតតូចមួយនេះជំនួសវិញណា ♥',
+            'closing_line' => "Let's party!",
+            'song_title' => 'Soft Piano · Birthday',
+            'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
+            'accent_color' => '#ff4fa0',
         ];
     }
 

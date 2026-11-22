@@ -26,8 +26,8 @@ For readability, `InvitationTemplate::FIELD_SECTIONS` groups every catalog key f
 it), then free fields by purpose (`wedding`, `gifts`, `wording`, `photos`) and the event-specific groups last
 (`anniversary`, `birthday`, `ceremony`). Each group is a card with its own checkbox list (heading/icon/hint in
 `InvitationTemplateForm::GROUPS`); the ⓘ next to each field shows its `ADMIN_HINTS` line on hover.
-This is purely layout — zero effect on gating or rendering; only `FREE_FIELDS` (below) and a template's own `fields`
-selection matter at runtime. A new catalog key must go into exactly one group (a test checks it); a new group also
+This is purely layout — zero effect on gating or rendering; only a template's own `fields` and `premium_fields`
+(see «Feature gating by plan») matter at runtime. A new catalog key must go into exactly one group (a test checks it); a new group also
 needs an entry in `InvitationTemplateForm::GROUPS`.
 
 **Field types the dashboard form renderer understands:** `text`, `textarea`, `image` (single
@@ -84,7 +84,7 @@ but they only actually render for a customer whose plan has that exact key in
 | `cta_label` + `cta_url` | text | Custom call-to-action button |
 
 If a genuinely new field is needed, add it to `InvitationTemplate::FIELD_CATALOG` (one time,
-plus `FREE_FIELDS` if it should never be gated, one group in `FIELD_SECTIONS`, and a one-line admin explanation
+plus `FREE_FIELDS` if it should start out free (not ★) when a template ticks it, one group in `FIELD_SECTIONS`, and a one-line admin explanation
 in `ADMIN_HINTS` — shown under its checkbox in admin; tests fail if either is missing) — not just to one template — so the next
 template that needs something similar can reuse it too. Adding a new field TYPE (beyond the
 ones above) additionally needs a new `@case()` branch in
@@ -98,22 +98,25 @@ under the template's `view` instead of changing the catalog entry every other te
 
 ## Feature gating by plan
 
-Premium fields (see table above) are gated by which `ServicePlan` the customer bought, via
-`service_plans.features` — a JSON array of **field keys straight from the catalog**
-(e.g. `['venue_address', 'countdown_enabled']`), not a separate feature-naming scheme. This is
-set in admin with **one switch per plan, «Includes premium extras»**: on stores every premium key, off stores
-`[]`. Which extras a design actually has is chosen once, in the template's Fields tab («★ Premium extras» card), so
-a plan never repeats that list. `ServicePlan::includesPremium()` reads the switch (an older plan with only some keys
-also counts as on) and `ServicePlan::unlockedFeatures()` is what a new invitation copies when paid — always the full
-current premium list, so a premium field added later reaches «on» plans without re-saving them. A plan without the
-extras can still sell single ones («Unlock one extra on its own», hidden while the switch is on). The shop's plan
-cards list what each plan includes automatically (guest links, gallery photos, how long it stays online, and the
-template's premium extras by their short `InvitationTemplate::SHOP_EXTRA_NAMES`, ✓ or crossed out), plus the plan's
-optional `badge` (e.g. «Best value»).
+**Which fields are ★ (premium) is the admin's choice, per template** — no code change needed:
+
+1. **Template › Fields › «★ Needs a plan (premium)»** lists every field the template ticks. Ticked = ★: only plans
+   that include it get it (or the customer buys the unlock). Unticked = every plan gets it. Stored in
+   `invitation_templates.premium_fields`; read with `$template->premiumFields()` / `isPremiumField($key)`. When the
+   admin ticks a field that the catalog suggests as premium (the table above = `FIELD_CATALOG` minus
+   `FREE_FIELDS`, `InvitationTemplate::defaultPremiumFields()`), it starts out ★; any field can be made ★ or free.
+   A field the template doesn't tick keeps the catalog's suggestion. `UNLOCKED_WITH` followers (`schedule_image`)
+   can't be marked themselves — they follow their field.
+2. **Template › Plans › each plan › «★ Fields this plan includes»** ticks which of those ★ fields the plan gets,
+   stored as catalog keys in `service_plans.features` (e.g. Basic `[]`, Standard `['venue_address', 'rsvp_enabled']`,
+   VIP all). The list follows the Fields tab live. `ServicePlan::unlockedFeatures()` is what a new invitation copies.
+   Any plan can also sell single ★ fields («Unlock one extra on its own»).
+3. The shop's plan cards list what each plan includes automatically (guest links, gallery photos, how long it stays
+   online, the ★ fields it includes ✓ and the ones it doesn't crossed out, by their short
+   `InvitationTemplate::SHOP_EXTRA_NAMES`), plus the plan's optional `badge` (e.g. «Best value»).
 
 In a template's Blade file, gate optional content with `$invitation->fieldUnlocked($key)`
-(handles the free/premium split for you — free fields always pass, premium ones check the
-plan):
+(handles the free/★ split for you — free fields always pass, ★ ones check what the invitation bought):
 
 ```blade
 @if ($invitation->fieldUnlocked('venue_address'))
@@ -130,10 +133,11 @@ far (date-asking) inlines this logic itself. Build a shared component once a sec
 needs the same behavior, not preemptively.
 
 **Each invitation keeps its own limits.** When an order is paid, the plan's `max_recipients`,
-`max_gallery_photos` and `features` are **copied onto the invitation** (`invitations.*`). Templates
-and the dashboard read the invitation's copy (`$invitation->maxGalleryPhotos()`,
-`fieldUnlocked()`), so editing a plan in admin only affects new buyers. Old invitations made before
-the copy existed fall back to their plan.
+`max_gallery_photos` and `features` are **copied onto the invitation** (`invitations.*`), and so is the template's
+list of free fields at that moment (`invitations.free_fields`). Templates and the dashboard read the invitation's
+copy (`$invitation->maxGalleryPhotos()`, `fieldUnlocked()`), so editing a plan **or marking a field ★ later** only
+affects new buyers — a sold invitation never loses a field. The other way round is generous: a ★ field made free
+reaches invitations already sold. Old invitations made before the copy existed fall back to their plan.
 
 ## Add-ons (more guests, photos, features, upgrade, extend)
 
@@ -149,6 +153,17 @@ admin marks it paid (Filament «Mark as paid» → `Order::markPaid()`: amount r
 bank transaction ID), `InvitationAddons::apply()` raises the invitation's limits **once**
 (`orders.addons_applied_at`). The customer gets an «order paid» email (`CustomerNotifier`), and
 `invitations:remind-expiring` (daily) emails them 14 days before expiry, pointing at «Extend time».
+
+## Admin «Invitation defaults» (starting values for a new template)
+
+Admin › Catalog › **Invitation defaults** (`App\Filament\Pages\InvitationDefaults`, values in
+`App\Support\InvitationDefaults`, stored in the `settings` table) sets what the «New template» form starts with:
+the starting plan(s) (default Basic · 100 guests · 6 photos · 6 months), add-on prices (guest $0.10, photo $0.25,
+extend $6; unlock QR $0.25, map $0.25, program $0.50), the dropdown suggestions under the plan inputs, the shop
+texts, sort order (2), «How to use», FAQ, and the fields ticked per category (typing «wedding» ticks most used +
+premium extras + couple & family + dress code). Only the invitation template form uses them — a plain Service
+plan stays blank. Unlock prices for ★ fields the design doesn't use are dropped on save. A blank shop cover image
+uses a copy of the template thumbnail.
 
 ## Steps to add a new template
 
@@ -189,8 +204,8 @@ shows invitation products at all.
 2. **In admin**: Catalog → Invitation Templates → Create — one screen, everything on it:
    product name, category label, the design (from step 1), which catalog fields it uses (tick
    the checkboxes), and its pricing plans (label, price, **Max recipients**, **Retention
-   (months)**, **Unlocked fields (premium extras)** per plan — this is the actual "Premium
-   unlocks the map" decision). Saving this auto-creates the underlying `Service` + `ServicePlan`
+   (months)**, **★ Fields this plan includes** per plan — this is the actual "Premium
+   unlocks the map" decision; which fields are ★ is set in the Fields tab). Saving this auto-creates the underlying `Service` + `ServicePlan`
    rows for you (in an internal "Digital Invitations" category) — you never touch Services directly.
 3. Done — it's immediately live: buying it now creates a real `Invitation`, its demo page works
    at `/templates/{slug}/demo`, and the dashboard's field-filling form is generated
@@ -451,6 +466,32 @@ that set it off already play theirs.
   silk sampot swatches; RSVP sealed into a crimson envelope that flies off; gift envelope that opens to the QR; contacts +
   custom button; letters; finale with a gold lotus blooming with scroll, `closing_line` (default «សូមអរគុណ») and «throw
   gold petals». Fonts: Cinzel → Moul, Cormorant Garamond → Noto Serif Khmer, Pinyon Script → Moulpali, body Kantumruy Pro.
+
+## Birthday templates (`templates/birthday/`)
+
+Demo sample data: `InvitationTemplateDemoController::birthdayDemoFields()` (any `/demo/birthday/...` path). Birthday
+templates use `WeddingData` for the shared prep (dates, venue, gallery, story, schedule, notes, RSVP, gift, music) and add
+`celebrant_name`, `turning_age` and `sender_name` (the host) themselves via `$w->field()`.
+
+- **Chrome Bow** — `birthday/chrome-bow.blade.php` (prefix `cb`, CSS/JS `public/{css,js}/invitations/chrome-bow.*`, demo
+  `/demo/birthday/chrome-bow`, `?open=1` skips the cover). Modern Pinterest party look: pearl + bubblegum (`accent_color`,
+  default `#ff4fa0`), puffy chrome balloon numerals (`turning_age`, an SVG specular-light filter `#cb-puff`), coquette
+  satin bows, a faint checkerboard, drifting iridescent blobs and glossy balloon clusters in the desktop side space.
+  Cover: a party scene to play — «PARTY TIME!» bunting with a spinning disco ball hanging from it, turning disco light
+  spots, a confetti drizzle, a comic «Psst… {guest}! 👀» bubble, and a bouquet of 6 glossy balloons round the
+  `cover_image` (a clear bubble balloon) + the chrome age. Each tap pops a balloon (sound, slivers, comic «POP!», its
+  string drops) and adds a sticker word to «មក ជប់លៀង ជាមួយ គ្នា ណា! 🎉»; the last pop (or «pop them all», which
+  chain-pops the rest) sets the disco off, bursts the photo balloon and flies the photo into the hero. On the page,
+  a balloon floats up every few seconds; tap it to pop it. Page: hero (`headline`, `celebrant_name` or `title_image`,
+  «turning N»), marquee bands, a holographic «ADMIT ONE» ticket that tilts with the finger/scroll (`reception_message`,
+  date, `khmer_date`, venue, host), `message` as a pull quote, **Make a wish**: a Lambeth-piped cake with number candles
+  from `turning_age` (3 striped candles when empty) — tap each to blow it out, all out = confetti + «Wish granted»,
+  save-the-date calendar + chrome countdown, `story_chapters` «Place | when» as a «Through the years» timeline, the
+  programme as a party playlist (or `schedule_image`), the gallery as a Pinterest mood board (masonry, captions, FLIP
+  preview), venue + map, `dress_code` as glossy balloons you can tap, `what_to_bring` / `rsvp_deadline` stickers, emoji
+  RSVP (confetti cannons), a gift box that opens to the QR (+ copy account), `contact_phone` + `cta_label`/`cta_url`,
+  thanks/apology notes on lined paper, finale (`background_image`, `closing_line` default «Let's party!», confetti
+  button). Fonts: Bricolage Grotesque → Kantumruy Pro, Instrument Serif → Noto Serif Khmer / Koulen (Khmer names).
 
 ## Things that are NOT per-template concerns
 

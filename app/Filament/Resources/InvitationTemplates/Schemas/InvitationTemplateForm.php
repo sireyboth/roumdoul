@@ -5,6 +5,7 @@ namespace App\Filament\Resources\InvitationTemplates\Schemas;
 use App\Filament\Resources\Services\Schemas\PlanFields;
 use App\Filament\Resources\Services\Schemas\ServiceForm;
 use App\Models\InvitationTemplate;
+use App\Support\InvitationDefaults;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -40,7 +41,7 @@ class InvitationTemplateForm
      */
     public const GROUPS = [
         'essentials' => ['label' => 'Most used — almost every design', 'icon' => Heroicon::OutlinedStar, 'description' => 'Message, date, place, photos, music. Every plan gets these.', 'wide' => true],
-        'premium' => ['label' => '★ Premium extras', 'icon' => Heroicon::OutlinedLockClosed, 'description' => 'The customer only gets these when their plan unlocks them (Plans tab), or they buy the unlock later.', 'wide' => true],
+        'premium' => ['label' => 'Extras — map, RSVP, countdown…', 'icon' => Heroicon::OutlinedPuzzlePiece, 'description' => 'Ticking one marks it ★ below by default — untick the ★ to give it to every plan.', 'wide' => true],
         'wedding' => ['label' => 'Wedding couple & family', 'icon' => Heroicon::OutlinedHeart, 'description' => 'Names, parents, phones and portraits of the couple.'],
         'gifts' => ['label' => 'Gifts & contact', 'icon' => Heroicon::OutlinedGift, 'description' => 'Gift account details, text above the QR, a phone to call.'],
         'wording' => ['label' => 'More details & guest notes', 'icon' => Heroicon::OutlinedPencilSquare, 'description' => 'End time, extra texts, dress code, what to bring, reply-by date.'],
@@ -87,7 +88,12 @@ class InvitationTemplateForm
                             ->helperText('Used in the demo URL: /templates/{slug}/demo'),
                         TextInput::make('category')
                             ->required()
-                            ->helperText('A grouping label, e.g. "wedding", "date-asking", "breakup".'),
+                            ->datalist(fn () => InvitationTemplate::query()->distinct()->orderBy('category')->pluck('category')
+                                ->merge(collect(InvitationDefaults::get('category_presets') ?? [])->pluck('category'))
+                                ->filter()->unique()->values()->all())
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (?string $state, callable $get, callable $set) => self::applyCategoryPreset($state, $get, $set))
+                            ->helperText('A grouping label, e.g. "wedding", "birthday". "wedding" ticks the usual wedding fields for you (Invitation defaults).'),
                         Select::make('view')
                             ->label('Design (Blade view)')
                             ->options(self::availableViews())
@@ -111,7 +117,7 @@ class InvitationTemplateForm
                             ->disk('s3')
                             ->directory('invitation-templates')
                             ->maxSize(3072)
-                            ->helperText('Optional preview thumbnail for the template picker. Max 3MB.'),
+                            ->helperText('Preview for the template picker. Max 3MB. Also used as the shop cover image when Cover image (Shop page) is left blank.'),
                     ]),
             ]);
     }
@@ -147,12 +153,80 @@ class InvitationTemplateForm
                             self::fieldsCheckboxList($key)->columns($wide ? 3 : 2),
                         ]);
                 })->values()->all(),
+                self::premiumSection(),
             ]);
+    }
+
+    /**
+     * «★ Needs a plan»: which of the ticked fields a customer only gets when their plan includes them (template ›
+     * Plans) or they buy the unlock. Options follow the ticks above live; newly ticked fields from the catalog's
+     * suggested ★ list start ticked here (syncPremium()). Saved as `premium_fields`.
+     */
+    protected static function premiumSection(): Section
+    {
+        return Section::make('★ Needs a plan (premium)')
+            ->icon(Heroicon::OutlinedLockClosed)
+            ->description('Ticked = only plans that include it (Plans tab) get it, or the customer buys the unlock. Unticked = every plan gets it. Invitations already sold never lose a field.')
+            ->compact()
+            ->columnSpanFull()
+            ->components([
+                CheckboxList::make('premium_fields')
+                    ->hiddenLabel()
+                    ->options(fn (callable $get) => collect(array_keys(InvitationTemplate::FIELD_SECTIONS))
+                        ->flatMap(fn (string $section) => $get("fields_{$section}") ?? [])
+                        ->unique()
+                        ->filter(fn ($key) => isset(InvitationTemplate::markableFieldOptions()[$key]))
+                        ->mapWithKeys(fn (string $key) => [$key => self::fieldOptionLabel($key, tag: false)])
+                        ->all())
+                    ->default([])
+                    ->allowHtml()
+                    ->gridDirection('row')
+                    ->columns(3)
+                    ->bulkToggleable(),
+            ]);
+    }
+
+    /**
+     * Category typed on Basics → tick the fields of its «Invitation defaults» preset (e.g. wedding: most used,
+     * premium extras, couple & family, dress code). Only adds ticks, never removes; ★ follows syncPremium().
+     */
+    public static function applyCategoryPreset(?string $category, callable $get, callable $set): void
+    {
+        $preset = InvitationDefaults::presetFieldsFor($category);
+
+        if ($preset === []) {
+            return;
+        }
+
+        foreach (InvitationTemplate::FIELD_SECTIONS as $section => $keys) {
+            $old = $get("fields_{$section}") ?? [];
+            $new = array_values(array_unique([...$old, ...array_intersect($keys, $preset)]));
+
+            if ($new !== $old) {
+                $set("fields_{$section}", $new);
+                self::syncPremium($new, $old, $get, $set);
+            }
+        }
+    }
+
+    /** Keep `premium_fields` in step with the ticks: unticked fields drop out, newly ticked suggested-★ ones join. */
+    public static function syncPremium(?array $state, ?array $old, callable $get, callable $set): void
+    {
+        $added = array_diff($state ?? [], $old ?? []);
+        $removed = array_diff($old ?? [], $state ?? []);
+        $premium = array_diff($get('premium_fields') ?? [], $removed);
+
+        $set('premium_fields', array_values(array_unique([
+            ...$premium,
+            ...array_intersect($added, InvitationTemplate::defaultPremiumFields()),
+        ])));
     }
 
     protected static function fieldsCheckboxList(string $section): CheckboxList
     {
         return CheckboxList::make("fields_{$section}")
+            ->live()
+            ->afterStateUpdated(fn (?array $state, ?array $old, callable $get, callable $set) => self::syncPremium($state, $old, $get, $set))
             ->hiddenLabel()
             ->options(collect(InvitationTemplate::sectionFieldOptions($section))
                 ->map(fn (string $label, string $key) => self::fieldOptionLabel($key, tag: false))
@@ -169,7 +243,7 @@ class InvitationTemplateForm
      */
     public static function fieldOptionLabel(string $key, bool $tag = true): HtmlString
     {
-        $premium = isset(InvitationTemplate::premiumFieldOptions()[$key]) || isset(InvitationTemplate::UNLOCKED_WITH[$key]);
+        $premium = isset(InvitationTemplate::premiumFieldOptions()[$key]) || isset(InvitationTemplate::UNLOCKED_WITH[$key]); // the catalog's suggestion
         $hint = json_encode(InvitationTemplate::adminHint($key), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
 
         return new HtmlString(
@@ -222,7 +296,8 @@ class InvitationTemplateForm
                     ->itemLabel(fn (array $state) => $state['label'] ?? 'New plan')
                     ->columns(4)
                     ->components(PlanFields::components(invitationsOnly: true))
-                    ->defaultItems(1)
+                    // starting plans + add-on prices from Admin › Invitation defaults
+                    ->default(fn () => InvitationDefaults::planItems())
                     ->minItems(1)
                     ->required(),
 
@@ -295,18 +370,18 @@ class InvitationTemplateForm
                 ->components([
                     ServiceForm::categoryField(required: ! $creating)
                         ->placeholder($creating ? 'Digital Invitations (default)' : null),
-                    ...ServiceForm::descriptionFields(required: ! $creating),
+                    ...ServiceForm::descriptionFields(required: ! $creating, withDefaults: $creating),
                 ]),
             Section::make('Settings')
                 ->columnSpan(1)
-                ->components(ServiceForm::settingsFields()),
+                ->components(ServiceForm::settingsFields(withDefaults: $creating)),
             Section::make('Pictures')
                 ->columns(3)
                 ->columnSpanFull()
-                ->components(ServiceForm::mediaFields()),
+                ->components(ServiceForm::mediaFields(coverHint: 'Blank = uses the template thumbnail (Basics).')),
             Grid::make(2)
                 ->columnSpanFull()
-                ->components(ServiceForm::detailsSections()),
+                ->components(ServiceForm::detailsSections(withDefaults: $creating)),
         ];
     }
 

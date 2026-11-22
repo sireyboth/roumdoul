@@ -178,6 +178,8 @@ class Order extends Model
                     // the invitation keeps its own copy of the plan's limits, so later plan edits don't change it
                     'max_gallery_photos' => $item->servicePlan?->max_gallery_photos,
                     'features' => $item->servicePlan?->unlockedFeatures() ?? [],
+                    // what's free on this design today stays free for this customer, even if marked ★ later
+                    'free_fields' => $template->freeFields(),
                     'expires_at' => $item->servicePlan?->retention_months
                         ? now()->addMonths($item->servicePlan->retention_months)
                         : null,

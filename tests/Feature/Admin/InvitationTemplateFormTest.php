@@ -53,11 +53,14 @@ class InvitationTemplateFormTest extends TestCase
                 'category' => 'birthday',
                 'view' => 'invitations.templates.date-asking',
                 'fields_essentials' => ['sender_name', 'headline'],
+                'fields_premium' => ['rsvp_enabled', 'countdown_enabled', 'venue_address'],
+                // venue_address left unticked here = every plan gets it on this design
+                'premium_fields' => ['rsvp_enabled', 'countdown_enabled'],
                 'is_active' => true,
                 'plans' => [
-                    ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => false, 'in_stock' => true,
+                    ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true,
                         'feature_prices' => [['feature' => 'rsvp_enabled', 'price' => 1.5]]],
-                    ['label' => 'Premium', 'badge' => 'Best value', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => true,
+                    ['label' => 'Premium', 'badge' => 'Best value', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['rsvp_enabled'],
                         'in_stock' => false, 'extra_guest_price' => 0.25, 'extend_price' => 2],
                 ],
             ])
@@ -65,7 +68,9 @@ class InvitationTemplateFormTest extends TestCase
 
         $template = InvitationTemplate::where('slug', 'birthday-bash')->firstOrFail();
         $this->assertNotNull($template->service_id);
-        $this->assertSame(['sender_name', 'headline'], $template->fields);
+        $this->assertSame(['sender_name', 'headline', 'rsvp_enabled', 'countdown_enabled', 'venue_address'], $template->fields);
+        $this->assertSame(['rsvp_enabled', 'countdown_enabled'], $template->premiumFields());
+        $this->assertFalse($template->isPremiumField('venue_address'));
 
         $service = $template->service;
         $this->assertSame('Birthday Bash', $service->name_en);
@@ -73,8 +78,8 @@ class InvitationTemplateFormTest extends TestCase
 
         $plans = $service->plans->keyBy('label');
         $this->assertSame(10, $plans['Basic']->max_recipients);
-        // the «Includes premium extras» switch stores every premium key; off stores none
-        $this->assertSame(array_keys(InvitationTemplate::premiumFieldOptions()), $plans['Premium']->features);
+        // each plan stores exactly the ★ fields ticked for it
+        $this->assertSame(['rsvp_enabled'], $plans['Premium']->features);
         $this->assertSame([], $plans['Basic']->features);
         $this->assertSame('Best value', $plans['Premium']->badge);
         $this->assertTrue($plans['Basic']->in_stock);
@@ -239,7 +244,7 @@ class InvitationTemplateFormTest extends TestCase
                 'view' => 'invitations.templates.date-asking',
                 'fields_essentials' => ['headline'],
                 'is_active' => true,
-                'plans' => [['label' => 'Basic', 'price' => 5, 'max_recipients' => 10, 'retention_months' => 3, 'features' => false, 'in_stock' => true]],
+                'plans' => [['label' => 'Basic', 'price' => 5, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true]],
                 'shop' => ['category_id' => $wedding->id, 'sort_order' => 2, 'is_featured' => true, 'short_description' => '',
                     'discount_type' => 'fixed', 'discount_value' => 1.5],
             ])

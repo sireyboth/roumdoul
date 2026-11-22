@@ -57,22 +57,14 @@ class ServicePlan extends Model
     }
 
     /**
-     * Whether this plan includes the premium extras. Admin sets it with one switch («Includes premium extras»):
-     * on = every premium field the template uses, off = none. Stored in `features` (all premium keys, or []);
-     * an older plan with only some keys ticked also counts as «on».
-     */
-    public function includesPremium(): bool
-    {
-        return filled($this->features);
-    }
-
-    /**
-     * The premium field keys a new invitation on this plan gets — always the full current premium list when the
-     * plan includes premium, so a premium field added to the catalog later is included without re-saving plans.
+     * The ★ fields a new invitation on this plan gets. The admin ticks them per plan (template › Plans,
+     * «★ Fields this plan includes»), out of the fields the template marks ★ in its Fields tab. Stored as
+     * catalog keys in `features`. The invitation keeps its own copy when paid, so editing the plan later only
+     * affects new buyers.
      */
     public function unlockedFeatures(): array
     {
-        return $this->includesPremium() ? array_keys(InvitationTemplate::premiumFieldOptions()) : [];
+        return array_values(array_intersect($this->features ?? [], array_keys(InvitationTemplate::markableFieldOptions())));
     }
 
     public function service(): BelongsTo

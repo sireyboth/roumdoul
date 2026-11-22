@@ -23,6 +23,7 @@ class Invitation extends Model
         'max_recipients',
         'max_gallery_photos',
         'features',
+        'free_fields',
         'expires_at',
         'expiry_reminded_at',
     ];
@@ -33,6 +34,7 @@ class Invitation extends Model
         'expiry_reminded_at' => 'datetime',
         'max_gallery_photos' => 'integer',
         'features' => 'array',
+        'free_fields' => 'array',
     ];
 
     public function customer(): BelongsTo
@@ -105,16 +107,22 @@ class Invitation extends Model
     }
 
     /**
-     * Whether a given FIELD_CATALOG key should actually render for this invitation's
-     * recipients. FREE_FIELDS are always unlocked; everything else needs the purchased
-     * plan's `features` to include that exact field key — this is the pricing upsell lever
-     * (e.g. Basic doesn't include 'venue_address', so no map link; Premium does). Keys in
-     * InvitationTemplate::UNLOCKED_WITH follow the field they're an alternative to.
+     * Whether a given FIELD_CATALOG key should actually render for this invitation's recipients. Unlocked when:
+     *  - the template doesn't mark it ★ (InvitationTemplate::premiumFields(), the admin's choice), or
+     *  - it was free when this invitation was paid (`free_fields`, so marking it ★ later never takes it away), or
+     *  - its plan / add-ons unlocked it (`features`, hasFeature()).
+     * Keys in InvitationTemplate::UNLOCKED_WITH follow the field they're an alternative to.
      */
     public function fieldUnlocked(string $key): bool
     {
         $key = InvitationTemplate::UNLOCKED_WITH[$key] ?? $key;
 
-        return in_array($key, InvitationTemplate::FREE_FIELDS, true) || $this->hasFeature($key);
+        if (in_array($key, $this->free_fields ?? [], true) || $this->hasFeature($key)) {
+            return true;
+        }
+
+        return $this->template
+            ? ! $this->template->isPremiumField($key)
+            : in_array($key, InvitationTemplate::FREE_FIELDS, true);
     }
 }
