@@ -329,6 +329,34 @@ that set it off already play theirs.
 
 ## Wedding templates (`templates/wedding/`)
 
+- **Memory Hall** — `wedding/memory-hall.blade.php` (prefix `mh`, CSS `public/css/invitations/memory-hall.css`, 3D scene
+  `resources/js/invitations/memory-hall.js` — a **Vite entry** (in `vite.config.js`) because it bundles three.js; demo
+  `/demo/wedding/memory-hall`, `?open=1` skips the cover, `?open=1&stop=N` starts at stop N, `?flat=1` = no 3D). A real-time
+  3D wedding hall walked in first person. Cover: night courtyard, stone facade, lanterns, a grand walnut double door with the
+  `couple_initials` monogram; «បើកទ្វារ» swings the doors open in a flood of light and the camera walks in. Inside: marble
+  floor, red aisle carpet, ivory + walnut panelled walls, coffered barrel vault, chandeliers (4 point lights follow the
+  guest), falling petals and gold dust. The hall is split into wings by doors that open as the guest walks up, each with
+  its name on the lintel (Welcome → Our day → Memories → For our guests → Forever). Stops, in order, each only when its
+  fields are filled: welcome (`cover_image` framed + a welcome easel with names, date, guest name; panel: parents,
+  `reception_message`, date, `khmer_date`, time + `end_time`), couple (`groom_photo`/`bride_photo` + brass name plates),
+  `message` (framed letter + monogram), date (big date + calendar with a heart, countdown in the panel), `story_chapters`
+  (one framed chapter each), programme (`schedule_image` framed or a programme easel from `event_schedule`), gallery
+  (`photo_gallery` along both walls, `photo_captions` on brass plates), venue easel (`venue_name`/`venue_address`/`map_url`),
+  guest notes (`dress_code` swatches painted in a frame + in the panel, `what_to_bring`, `rsvp_deadline`), RSVP at a
+  guestbook lectern (the guest's name is written into the book after replying), gift box on a pedestal (`qr_code`,
+  `gift_account`), contacts easel (+ `cta_label`/`cta_url`), `thanks_message`/`apology_message` as framed letters, and the
+  finale: a floral arch, candles, `background_image` (empty = cover) on the end wall with `closing_line` (default «Forever
+  starts here»), the «send love» button and the shared footer (its «back to top» walks back to the entrance). Walking: swipe
+  up/down, wheel, W/S/↑/↓, ‹ › buttons, stop chips, tap the floor, or «ដើរទស្សនា» (auto tour); look: drag sideways or
+  A/D/←/→ — the gaze also turns by itself to the photo being passed. Tap a photo on a wall (or its thumbnail in the panel):
+  the camera walks up to it, then the shared FLIP preview opens out of the frame. Each stop's details show in a glass panel
+  (bottom sheet on phones, side card from 900px). No WebGL, `prefers-reduced-motion`, `?flat=1` or the page button →
+  every stop as a normal scrolling page (same markup; the cube button goes back to 3D). Signs are painted on canvases after
+  their fonts load (Cormorant Garamond → Noto Serif Khmer, Great Vibes → Moulpali; body Kantumruy Pro). Sounds: the kit's
+  sfx plus `footstep.wav` (steps) and `whoosh.wav` (doors) in `assets/sfx/`. **Photos on the walls are WebGL textures, so
+  the S3/R2 bucket must send CORS headers (GET from the site's domain)**; without them the frames show a painted monogram
+  instead (the panel thumbnails and the preview still show the real photos). `accent_color` is the gold (default `#c9a24d`).
+
 - **Vellum Garden** — `wedding/vellum-garden.blade.php` (CSS/JS `public/{css,js}/invitations/vellum-garden.*`,
   demo `/demo/wedding/vellum-garden`, `?open=1` skips the envelope). Fine-art garden look: ivory linen, botanical line
   art that draws itself, arched photo frames, vellum cards, a wax-seal envelope the guest taps open. Uses

@@ -238,6 +238,14 @@ class InvitationTemplateDemoController extends Controller
             'eternal-vows' => $fullWeddingSample('eternalvows', ['accent_color' => '#b08d57', 'closing_line' => 'Forever & always', 'dress_code' => 'Black tie — ខ្មៅ ស ឬ champagne']),
             'love-bubble' => $fullWeddingSample('lovebubble', ['accent_color' => '#ff7eb6', 'headline' => 'We said yes!', 'closing_line' => 'See you there bestie!', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី lavender ឬ sky blue — casual cute']),
             'kbach-meas' => $fullWeddingSample('kbachmeas', ['accent_color' => '#c9a14a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌មាស ក្រហមដិត ឬក្រែម']),
+            // Memory Hall (3D walk-through): every stop filled, ten photos so the gallery wing is a real corridor
+            'memory-hall' => $fullWeddingSample('memoryhall', [
+                'accent_color' => '#c9a24d', 'headline' => 'Together with their families', 'closing_line' => 'Forever starts here',
+                'dress_code' => 'ពណ៌ក្រែម មាស ឬ sage — សម្លៀកបំពាក់ផ្លូវការ',
+                ...($ownImages->isEmpty() ? ['photo_gallery' => collect(range(1, 10))->map(fn ($i) => "https://picsum.photos/seed/memoryhall{$i}/900/".($i % 3 ? '1150' : '760'))->all()] : []),
+                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nអង្គរវត្តពេលថ្ងៃរះ\nរហូតទៅ",
+                'song_title' => 'Soft Piano · Memory Hall',
+            ]),
             'kbach-chhouk' => $fullWeddingSample('kbachchhouk', ['accent_color' => '#2f7a5a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌ក្រែម បៃតងខ្ចី ឬមាស']),
             // Paper Bloom: every section filled — couple photos, guest notes, end time, custom button, song name
             'paper-bloom' => [
