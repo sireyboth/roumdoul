@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\InvitationTemplate;
+use App\Services\ProductViews;
 use App\Support\Invitations\ChristmasTemplate;
 
 class InvitationTemplateDemoController extends Controller
 {
-    public function __invoke(InvitationTemplate $template)
+    public function __invoke(InvitationTemplate $template, ProductViews $views)
     {
         abort_unless($template->is_active, 404);
+
+        // admin dashboard: demos opened per product (once per visitor per day)
+        $views->record($template->service_id, ProductViews::DEMO);
 
         if (in_array($template->slug, ['khmer-traditional-wedding', 'khmer-traditional-2'], true)) {
             return view('invitations.show', [
@@ -94,10 +98,12 @@ class InvitationTemplateDemoController extends Controller
      */
     public function file(string $path, string $page = 'cover')
     {
-        $view = 'invitations.templates.'.str_replace('/', '.', trim($path, '/'));
+        // /demo/starter previews the skeleton new wedding templates are copied from (not a sellable design)
+        $isStarter = trim($path, '/') === 'starter';
+        $view = $isStarter ? 'invitations.starters.wedding' : 'invitations.templates.'.str_replace('/', '.', trim($path, '/'));
         abort_unless(view()->exists($view), 404);
 
-        $kind = strtolower(strtok(trim($path, '/'), '/'));
+        $kind = $isStarter ? 'wedding' : strtolower(strtok(trim($path, '/'), '/'));
         $fields = match (true) {
             str_contains($kind, 'wedding') || str_contains($kind, 'khmer-traditional') => $this->khmerWeddingDemoFields() + [
                 'contact_phone' => '012 345 678',
@@ -106,6 +112,7 @@ class InvitationTemplateDemoController extends Controller
             str_contains($kind, 'kathin') || str_contains($kind, 'kak-thern') || str_contains($kind, 'ceremony') => $this->kathinaDemoFields(),
             str_contains($kind, 'christmas') => $this->christmasDemoFields(),
             str_contains($kind, 'anniversary') => $this->anniversaryDemoFields(),
+            str_contains($kind, 'birthday') => $this->birthdayDemoFields(),
             default => $this->khmerWeddingDemoFields() + $this->kathinaDemoFields() + [
                 'sender_name' => 'Alex',
                 'celebrant_name' => 'Bella',
@@ -124,6 +131,18 @@ class InvitationTemplateDemoController extends Controller
             ->sort()
             ->map(fn ($f) => asset($ownDir.'/'.rawurlencode($f)))
             ->values();
+        // every wedding demo without its own folder uses the shared couple photos in
+        // public/images/invitations/assets/demo-couple/ (sorted by name; groom.* / bride.* / end.* are kept for the
+        // groom photo, bride photo and closing photo, the rest are the cover + gallery)
+        $coupleDir = 'images/invitations/assets/demo-couple';
+        $couple = collect(is_dir(public_path($coupleDir)) ? scandir(public_path($coupleDir)) : [])
+            ->filter(fn ($f) => preg_match('/\.(png|jpe?g|webp)$/i', $f))->sort()->values()
+            ->mapWithKeys(fn ($f) => [$f => asset($coupleDir.'/'.rawurlencode($f))]);
+        $special = fn (string $name) => $couple->first(fn ($u, $f) => str_starts_with(strtolower($f), $name.'.'));
+        $isWeddingDemo = str_contains($kind, 'wedding') || str_contains($kind, 'khmer-traditional');
+        if ($ownImages->isEmpty() && $isWeddingDemo) {
+            $ownImages = $couple->reject(fn ($u, $f) => preg_match('/^(groom|bride|end)\./i', $f))->values();
+        }
         if ($ownImages->isNotEmpty()) {
             $fields['cover_image'] = $ownImages->first();
             $fields['photo_gallery'] = $ownImages->all();
@@ -137,6 +156,31 @@ class InvitationTemplateDemoController extends Controller
             ['title' => 'ប្រាសាទអង្គរវត្ត | ពេលថ្ងៃរះ', 'text' => 'នៅក្រោមពន្លឺព្រឹកព្រលឹម គាត់បានសួរសំណួរដ៏សំខាន់ ហើយចម្លើយតែមួយគត់គឺ «យល់ព្រម»។'],
             ['title' => 'ផ្ទះរបស់យើង | ថ្ងៃនេះ', 'text' => 'ឥឡូវនេះ យើងរង់ចាំចែករំលែកថ្ងៃដ៏វិសេសនេះជាមួយក្រុមគ្រួសារ និងមិត្តជិតស្និទ្ធ។'],
         ];
+
+        // every optional wedding field filled (couple photos, guest notes, end time, custom button, song name…), with
+        // sample photos named after the template unless public/images/invitations/{file}/ has real ones
+        $fullWeddingSample = fn (string $seed, array $extra = []) => array_merge([
+            'headline' => 'Together with their families',
+            'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
+            ...($ownImages->isEmpty() ? [
+                'cover_image' => "https://picsum.photos/seed/{$seed}-couple/900/1400",
+                'photo_gallery' => collect(range(1, 9))->map(fn ($i) => "https://picsum.photos/seed/{$seed}{$i}/900/".($i % 3 ? '1100' : '700'))->all(),
+            ] : []),
+            'background_image' => "https://picsum.photos/seed/{$seed}-end/900/1200",
+            'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nរហូតទៅ",
+            'story_chapters' => $weddingPlaces,
+            'end_time' => '21:00',
+            'dress_code' => 'ពណ៌ក្រែម មាស ឬ sage — សម្លៀកបំពាក់ផ្លូវការ',
+            'what_to_bring' => 'ស្នាមញញឹម និងក្តីស្រឡាញ់របស់លោកអ្នក',
+            'rsvp_deadline' => '2026-12-05',
+            'rsvp_message' => 'តើលោកអ្នកនឹងអញ្ជើញមកចូលរួមអបអរជាមួយយើងខ្ញុំដែរឬទេ?',
+            'gift_message' => 'វត្តមានរបស់លោកអ្នកគឺជាកាដូដ៏ធំបំផុត។ សម្រាប់អ្នកដែលចង់ផ្ញើចំណងដៃពីចម្ងាយ សូមស្កេន QR ខាងក្រោម។',
+            'cta_label' => 'ចូលរួម Telegram Group',
+            'cta_url' => 'https://t.me/',
+            'closing_line' => 'Happily ever after',
+            'song_title' => 'Soft Piano',
+            'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
+        ], $extra);
 
         // sample wording for one template file only, when the folder's shared sample doesn't fit it
         $fields = array_merge($fields, match (basename($path)) {
@@ -164,8 +208,80 @@ class InvitationTemplateDemoController extends Controller
                 'story_chapters' => $weddingPlaces,
                 'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             ],
+            // Golden Hour: every section filled — couple photos, guest notes, end time, custom button, song name
+            'golden-hour' => [
+                'headline' => 'We are getting married',
+                'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
+                // sample photos only when public/images/invitations/golden-hour/ has none (a real couple photo there wins)
+                ...($ownImages->isEmpty() ? [
+                    'cover_image' => 'https://picsum.photos/seed/goldenhour-couple/1080/1920',
+                    'photo_gallery' => collect(range(1, 9))->map(fn ($i) => "https://picsum.photos/seed/goldenhour{$i}/900/".($i % 3 ? '900' : '1200'))->all(),
+                ] : []),
+                'background_image' => 'https://picsum.photos/seed/goldenhour-sunset/1200/1600',
+                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nរហូតទៅ",
+                'story_chapters' => $weddingPlaces,
+                'end_time' => '21:30',
+                'dress_code' => 'ពណ៌ក្រែម មាស ឬត្នោតខ្ចី — សម្លៀកបំពាក់ផ្លូវការ',
+                'what_to_bring' => 'ស្នាមញញឹម និងក្តីស្រឡាញ់របស់លោកអ្នក',
+                'rsvp_deadline' => '2026-12-05',
+                'rsvp_message' => 'តើលោកអ្នកនឹងអញ្ជើញមកចូលរួមអបអរជាមួយយើងខ្ញុំដែរឬទេ?',
+                'gift_message' => 'វត្តមានរបស់លោកអ្នកគឺជាកាដូដ៏ធំបំផុត។ សម្រាប់អ្នកដែលចង់ផ្ញើចំណងដៃពីចម្ងាយ សូមស្កេន QR ខាងក្រោម។',
+                'cta_label' => 'ចូលរួម Telegram Group',
+                'cta_url' => 'https://t.me/',
+                'closing_line' => 'Forever starts today',
+                'song_title' => 'Soft Piano · Golden Hour',
+                'accent_color' => '#d4a76a',
+                'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
+            ],
+            'starter' => $fullWeddingSample('starter'),
+            // the four templates built together (western, Gen Z, two Khmer kbach): every field filled
+            'eternal-vows' => $fullWeddingSample('eternalvows', ['accent_color' => '#b08d57', 'closing_line' => 'Forever & always', 'dress_code' => 'Black tie — ខ្មៅ ស ឬ champagne']),
+            'love-bubble' => $fullWeddingSample('lovebubble', ['accent_color' => '#ff7eb6', 'headline' => 'We said yes!', 'closing_line' => 'See you there bestie!', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី lavender ឬ sky blue — casual cute']),
+            'kbach-meas' => $fullWeddingSample('kbachmeas', ['accent_color' => '#c9a14a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌មាស ក្រហមដិត ឬក្រែម']),
+            // Memory Hall (3D walk-through): every stop filled, ten photos so the gallery wing is a real corridor
+            'memory-hall' => $fullWeddingSample('memoryhall', [
+                'accent_color' => '#c9a24d', 'headline' => 'Together with their families', 'closing_line' => 'Forever starts here',
+                'dress_code' => 'ពណ៌ក្រែម មាស ឬ sage — សម្លៀកបំពាក់ផ្លូវការ',
+                ...($ownImages->isEmpty() ? ['photo_gallery' => collect(range(1, 10))->map(fn ($i) => "https://picsum.photos/seed/memoryhall{$i}/900/".($i % 3 ? '1150' : '760'))->all()] : []),
+                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nអង្គរវត្តពេលថ្ងៃរះ\nរហូតទៅ",
+                'song_title' => 'Soft Piano · Memory Hall',
+            ]),
+            'kbach-chhouk' => $fullWeddingSample('kbachchhouk', ['accent_color' => '#2f7a5a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌ក្រែម បៃតងខ្ចី ឬមាស']),
+            // Paper Bloom: every section filled — couple photos, guest notes, end time, custom button, song name
+            'paper-bloom' => [
+                'headline' => 'Together with their families',
+                'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
+                // sample photos only when public/images/invitations/paper-bloom/ has none (a real couple photo there wins)
+                ...($ownImages->isEmpty() ? [
+                    'cover_image' => 'https://picsum.photos/seed/paperbloom-couple/900/1400',
+                    'photo_gallery' => collect(range(1, 8))->map(fn ($i) => "https://picsum.photos/seed/paperbloom{$i}/800/1000")->all(),
+                ] : []),
+                'background_image' => 'https://picsum.photos/seed/paperbloom-end/900/1200',
+                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nរហូតទៅ",
+                'story_chapters' => $weddingPlaces,
+                'end_time' => '21:00',
+                'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម បៃតងខ្ចី ឬ lavender — សម្លៀកបំពាក់ផ្លូវការ',
+                'what_to_bring' => 'ស្នាមញញឹម និងក្តីស្រឡាញ់របស់លោកអ្នក',
+                'rsvp_deadline' => '2026-12-05',
+                'rsvp_message' => 'តើលោកអ្នកនឹងអញ្ជើញមកចូលរួមអបអរជាមួយយើងខ្ញុំដែរឬទេ?',
+                'gift_message' => 'វត្តមានរបស់លោកអ្នកគឺជាកាដូដ៏ធំបំផុត។ សម្រាប់អ្នកដែលចង់ផ្ញើចំណងដៃពីចម្ងាយ សូមស្កេន QR ខាងក្រោម។',
+                'cta_label' => 'ចូលរួម Telegram Group',
+                'cta_url' => 'https://t.me/',
+                'closing_line' => 'Happily ever after',
+                'song_title' => 'Soft Piano · Paper Bloom',
+                'accent_color' => '#e58f8f',
+                'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
+            ],
             default => [],
         });
+
+        if ($isWeddingDemo && $couple->isNotEmpty() && ! is_dir(public_path($ownDir))) {
+            $fields = array_merge($fields, array_filter([
+                'groom_photo' => $special('groom'),
+                'bride_photo' => $special('bride'),
+                'background_image' => $special('end') ?? $ownImages->last(),
+            ]));
+        }
 
         // the Christmas template is two pages; ?to= (the sample guest name) only matters on the cover
         $pages = ChristmasTemplate::is($view)
@@ -312,6 +428,65 @@ class InvitationTemplateDemoController extends Controller
             'together_since' => '2022-03-14',
             'venue_name' => 'Where it all began: Phnom Penh',
             'accent_color' => '#d65f7f',
+        ];
+    }
+
+    /**
+     * Sample content for the birthday templates (Chrome Bow, /demo/birthday/...): every birthday field, every premium
+     * extra and the guest notes filled, so each section of the design shows.
+     */
+    private function birthdayDemoFields(): array
+    {
+        return [
+            'celebrant_name' => 'Sreypov',
+            'turning_age' => '25',
+            'sender_name' => 'Dara & friends',
+            'headline' => "It's my birthday",
+            'message' => 'មួយឆ្នាំទៀតហើយ! ខ្ញុំចង់អបអរថ្ងៃនេះជាមួយមនុស្សដែលខ្ញុំស្រឡាញ់បំផុត — សើច ញ៉ាំ រាំ ហើយថតរូបឲ្យច្រើន។ សូមមកចូលរួមជាមួយគ្នាណា!',
+            'reception_message' => 'សូមគោរពអញ្ជើញមកចូលរួមអបអរខួបកំណើតដ៏រីករាយ ជប់លៀង សើចសប្បាយ និងបង្កើតអនុស្សាវរីយ៍ថ្មីៗជាមួយគ្នា។ វត្តមានរបស់អ្នក គឺជាកាដូដ៏ល្អបំផុត!',
+            'event_date' => '2026-12-19 18:30:00',
+            'end_time' => '22:30',
+            'khmer_date' => 'ថ្ងៃសៅរ៍ ១០កើត ខែមិគសិរ ឆ្នាំម្សាញ់ ព.ស. ២៥៧០',
+            'venue_name' => 'Pink Pearl Rooftop',
+            'venue_address' => 'Street 240, Daun Penh, Phnom Penh',
+            'map_url' => 'https://www.google.com/maps/@11.5631,104.9282,17z',
+            'cover_image' => 'https://picsum.photos/seed/chromebow-cover/900/1200',
+            'background_image' => 'https://picsum.photos/seed/chromebow-end/900/1100',
+            'photo_gallery' => collect(range(1, 9))
+                ->map(fn ($i) => "https://picsum.photos/seed/chromebow{$i}/700/".[900, 700, 1050][$i % 3])
+                ->all(),
+            'photo_captions' => "Golden hour 🌅\nBestie date\nCake first, always\nThat trip to Kep\nPink everything\nLate night karaoke\nSunday brunch\n24 → 25\nMain character energy",
+            'story_chapters' => [
+                ['title' => 'ថ្ងៃដំបូង | 2001', 'text' => 'ក្មេងស្រីតូចម្នាក់ដែលចូលចិត្តពណ៌ផ្កាឈូក និងនំខេកជាងគេ។'],
+                ['title' => 'Sweet sixteen | 2017', 'text' => 'ឆ្នាំដែលរៀនបើកម៉ូតូ ហើយបានមិត្តភក្តិល្អបំផុតសម្រាប់មួយជីវិត។'],
+                ['title' => 'Graduation | 2023', 'text' => 'បញ្ចប់ការសិក្សា ជាមួយក្តីសុបិនធំៗ និងទឹកភ្នែករីករាយ។'],
+                ['title' => 'Twenty-five | 2026', 'text' => 'ជំពូកថ្មីចាប់ផ្ដើមហើយ — ហើយខ្ញុំចង់ឲ្យអ្នកនៅទីនោះ។'],
+            ],
+            'event_schedule' => [
+                ['time' => '06:30 PM', 'label' => 'ទទួលភ្ញៀវ & welcome drinks'],
+                ['time' => '07:00 PM', 'label' => 'អាហារពេលល្ងាច'],
+                ['time' => '08:00 PM', 'label' => 'ផ្លុំទៀន & កាត់នំខេក'],
+                ['time' => '08:30 PM', 'label' => 'Party, DJ & photo booth'],
+                ['time' => '10:00 PM', 'label' => 'ថតរូបចុងក្រោយ'],
+            ],
+            'countdown_enabled' => true,
+            'rsvp_enabled' => true,
+            'rsvp_message' => 'តើអ្នកនឹងមកចូលរួមជប់លៀងជាមួយគ្នាដែរឬទេ?',
+            'rsvp_deadline' => '2026-12-12',
+            'qr_code' => 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=ROUMDOUL-DEMO-BIRTHDAY',
+            'gift_account' => "ABA · SREYPOV\n000 456 789",
+            'gift_message' => 'វត្តមានរបស់អ្នកគឺជាកាដូដ៏ល្អបំផុតហើយ។ បើចង់ផ្ញើកាដូពីចម្ងាយ សូមស្កេន QR ខាងក្រោម។',
+            'contact_phone' => '012 345 678',
+            'cta_label' => 'Party playlist',
+            'cta_url' => 'https://open.spotify.com',
+            'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ស ឬប្រាក់ — chic & sparkly',
+            'what_to_bring' => 'ស្នាមញញឹម និងថាមពលពេញ ✨',
+            'thanks_message' => 'អរគុណដែលតែងតែនៅក្បែរ ក្នុងគ្រាសប្បាយ និងគ្រាលំបាក។ ឆ្នាំនេះ ខ្ញុំចង់អបអរវាជាមួយអ្នក។',
+            'apology_message' => 'សូមអភ័យទោស ដែលមិនបានជូនលិខិតអញ្ជើញដោយផ្ទាល់ដៃ។ សូមទទួលយកលិខិតតូចមួយនេះជំនួសវិញណា ♥',
+            'closing_line' => "Let's party!",
+            'song_title' => 'Soft Piano · Birthday',
+            'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
+            'accent_color' => '#ff4fa0',
         ];
     }
 

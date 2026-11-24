@@ -472,6 +472,16 @@ html.lang-entering body {
 .pay-amount { margin-top: 2px; font-size: 2.4rem; line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums;
   color: #fff; text-shadow: 0 4px 14px rgb(0 0 0 / .25); }
 
+/* ABA / Wing tabs above the QR: a glass segmented control */
+.pay-tabs { display: flex; gap: 4px; width: min(100%, 15rem); margin: 18px auto 0; padding: 4px; border-radius: 999px;
+  background: rgb(255 255 255 / .1); border: 1px solid rgb(255 255 255 / .2); transform: translateZ(40px); }
+.pay-tab { flex: 1; padding: 7px 12px; border-radius: 999px; font-size: .8rem; font-weight: 800; letter-spacing: .04em; color: rgb(255 255 255 / .78);
+  transition: background .2s, color .2s, box-shadow .2s; }
+.pay-tab:hover { color: #fff; background: rgb(255 255 255 / .12); }
+.pay-tab:focus-visible { outline: 2px solid rgb(255 255 255 / .7); outline-offset: 1px; }
+.pay-tab.is-active { color: var(--color-brand-800); background: #fff; box-shadow: 0 6px 16px -6px rgb(0 0 0 / .45); }
+.pay-tabs + .pay-panel .pay-qr { margin-top: 12px; }
+.pay-panel { transform-style: preserve-3d; }
 .pay-qr { position: relative; width: min(100%, 15rem); margin: 18px auto 0; padding: 10px; border-radius: 22px; background: #fff;
   transform: translateZ(60px); box-shadow: 0 1px 0 rgb(255 255 255 / .9) inset, 0 18px 36px -12px rgb(0 0 0 / .55), 0 0 0 6px rgb(255 255 255 / .14); }
 .pay-qr img { display: block; width: 100%; border-radius: 14px; }
@@ -520,6 +530,7 @@ html.lang-entering body {
   .pay-head { text-align: left; padding-right: 44px; }
   .pay-left { align-self: center; }
   .pay-qr { width: 100%; margin-top: 0; }
+  .pay-tabs { width: 100%; margin-top: 0; }
   .pay-rows { margin-top: 14px; }
   .pay-steps { margin-top: 14px; gap: 6px; }
   .pay-done { margin-top: 14px; }

@@ -82,6 +82,7 @@ class InvitationTemplate extends Model
         'khmer_date' => ['label' => 'Khmer date (lunar)', 'type' => 'text', 'hint' => 'The date in the lunar calendar, e.g. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ».', 'example' => 'ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ'],
         'rsvp_enabled' => ['label' => 'Enable RSVP buttons', 'type' => 'boolean', 'hint' => 'Tick to let guests tap «ចូលរួម» (attending) or «មិនចូលរួម» (not attending) — you can see their answers in the "Responses" tab.'],
         'countdown_enabled' => ['label' => 'Show countdown', 'type' => 'boolean', 'hint' => 'Tick to show a countdown to the day of the event (Event date must be filled in too).'],
+        // free on every plan (see FREE_FIELDS) — the plan sets how many photos instead
         'photo_gallery' => ['label' => 'Photo gallery', 'type' => 'gallery', 'hint' => 'Lots of photos (e.g. pre-wedding photos), shown as a gallery on the invitation.'],
         'gallery_feed' => ['label' => 'Scrolling photo feed', 'type' => 'boolean', 'hint' => 'Tick to show photos as big vertical panels you scroll down (like TikTok). Unticked = small photos in a frame.'],
         'event_schedule' => ['label' => 'Event schedule', 'type' => 'schedule', 'hint' => 'The event program — each time and activity, e.g. «7:00 AM — ហែជំនូន».'],
@@ -133,12 +134,10 @@ class InvitationTemplate extends Model
     ];
 
     /**
-     * Field keys that are never plan-gated — if a template selects them, every customer on
-     * every plan sees them, regardless of the plan's `features` list. Everything else in
-     * FIELD_CATALOG is a premium extra: a template can still choose to include it, but it
-     * only actually renders for a customer whose plan has that key in `features`
-     * (see Invitation::hasFeature()). This is the pricing upsell lever — e.g. Basic gets
-     * the essentials, Premium also unlocks the map link, countdown, RSVP tracking, gallery, etc.
+     * The catalog's suggested free fields. Which fields are ★ (a plan must include them) is now the admin's
+     * choice per template (`premium_fields`, see premiumFields()); this list only sets the starting
+     * suggestion: when the admin ticks a field that is NOT in here, it starts out ★. Gating itself reads
+     * the template's own list (Invitation::fieldUnlocked()).
      */
     public const FREE_FIELDS = [
         'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age',
@@ -148,6 +147,9 @@ class InvitationTemplate extends Model
         'contact_phone', 'host_names', 'title_image', 'opening_line', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
         'couple_initials', 'end_time', 'rsvp_deadline', 'dress_code', 'what_to_bring',
         'love_reasons', 'photo_captions', 'song_title', 'closing_line', 'together_since',
+        // every plan gets the gallery (almost every design has one); plans differ by how many photos
+        // it holds (service_plans.max_gallery_photos) and the «more photos» add-on
+        'photo_gallery',
     ];
 
     /**
@@ -160,31 +162,107 @@ class InvitationTemplate extends Model
     ];
 
     /**
-     * Every FIELD_CATALOG key grouped by which event type it's actually relevant to — purely
-     * for organizing the admin "Fields this design uses" checklist into readable sections as
-     * the catalog grows. Has no effect on gating or rendering (that's FREE_FIELDS/hasFeature).
-     * Most fields are 'universal' (reusable across any template); only fields specific to one
-     * kind of event (e.g. a couple's names) get their own section. Add new sections here as
-     * new event types bring genuinely dedicated fields.
+     * Every FIELD_CATALOG key grouped for the admin «Fields» tab — purely layout, no effect on
+     * gating or rendering (that's FREE_FIELDS / fieldUnlocked()). The groups follow what a field
+     * is for, in the order admins reach for them: «essentials» holds the fields almost every
+     * template uses (sorted by how many template files read them), then the rest by purpose,
+     * with the event-specific groups last. Every catalog key must sit in exactly one group
+     * (tests/Feature/Admin/InvitationTemplateFormTest checks this). Labels/icons/descriptions
+     * live in InvitationTemplateForm::GROUPS.
      */
     public const FIELD_SECTIONS = [
-        'universal' => [
-            'sender_name', 'headline', 'message', 'cover_image', 'event_date', 'venue_name',
-            'music_url', 'accent_color', 'venue_address', 'map_url', 'rsvp_enabled', 'countdown_enabled',
-            'photo_gallery', 'gallery_feed', 'event_schedule', 'schedule_image', 'qr_code', 'gift_account', 'cta_label', 'cta_url',
-            'contact_phone', 'title_image', 'gift_message', 'rsvp_message', 'background_image', 'music_file',
-            'end_time', 'rsvp_deadline', 'dress_code', 'what_to_bring',
+        'essentials' => [
+            'message', 'event_date', 'venue_name', 'cover_image', 'photo_gallery',
+            'music_url', 'music_file', 'headline', 'sender_name', 'accent_color', 'thanks_message',
+        ],
+        // every field a plan must unlock (FIELD_CATALOG minus FREE_FIELDS) — kept together in one card so a
+        // field is never both «most used» and premium; a test checks this matches the premium list exactly
+        'premium' => [
+            'venue_address', 'map_url', 'rsvp_enabled', 'countdown_enabled', 'event_schedule', 'schedule_image',
+            'story_chapters', 'khmer_date', 'qr_code', 'cta_label', 'cta_url',
         ],
         'wedding' => [
-            'groom_name', 'bride_name', 'couple_initials', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
-            'khmer_date', 'story_chapters', 'thanks_message', 'apology_message', 'reception_message',
+            'groom_name', 'bride_name', 'couple_initials', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother',
+            'groom_phone', 'bride_phone', 'groom_photo', 'bride_photo',
         ],
+        'gifts' => ['gift_account', 'gift_message', 'contact_phone'],
+        'wording' => ['end_time', 'reception_message', 'apology_message', 'rsvp_message', 'dress_code', 'what_to_bring', 'rsvp_deadline'],
+        'photos' => ['photo_captions', 'background_image', 'title_image', 'gallery_feed'],
+        // anniversaries / love letters (Rose Bloom, River Love, ...)
+        'anniversary' => ['together_since', 'love_reasons', 'song_title', 'closing_line'],
         'birthday' => ['celebrant_name', 'turning_age'],
         // Buddhist merit-making ceremonies (Kathina, Phka Prak, ...)
         'ceremony' => ['host_names', 'opening_line'],
-        // anniversaries / love letters (Rose Bloom, ...)
-        'anniversary' => ['together_since', 'love_reasons', 'photo_captions', 'song_title', 'closing_line'],
     ];
+
+    /**
+     * One short line per field for the ADMIN screens (Fields tab + a plan's «Unlocked fields»): what the field
+     * shows on the invitation, so the admin knows what ticking it means. The catalog `hint` is the customer's
+     * help text in the dashboard; this is the admin's. A key missing here falls back to the catalog hint.
+     */
+    public const ADMIN_HINTS = [
+        'message' => 'The main paragraph / wish on the invitation.',
+        'event_date' => 'Date + time of the event. Feeds the countdown and calendar.',
+        'venue_name' => 'Name of the place, printed as text (no map button).',
+        'cover_image' => 'The big hero photo at the top.',
+        'photo_gallery' => 'Photo gallery. Every plan gets it; the plan sets how many photos.',
+        'music_url' => 'Background song from a YouTube / TikTok link.',
+        'music_file' => 'Background song uploaded as an MP3. Plays instead of the link.',
+        'venue_address' => 'Full address as text + a directions button that SEARCHES Google Maps for it.',
+        'map_url' => 'A Google Maps share link: the «View map» button opens the EXACT pin. Wins over the address.',
+        'rsvp_enabled' => '«Attending / Not attending» buttons; answers show in the customer\'s Responses tab.',
+        'countdown_enabled' => 'Live days / hours / minutes / seconds countdown to the event date.',
+        'headline' => 'The big title text.',
+        'sender_name' => 'Who sends the invitation (one person or a family).',
+        'accent_color' => 'Theme colour the customer picks (buttons, petals, seal…).',
+        'thanks_message' => 'Thank-you text near the end.',
+        'groom_name' => 'Groom\'s name.',
+        'bride_name' => 'Bride\'s name.',
+        'couple_initials' => 'Initials like «ប&ម» on the seal / frame. Empty = first letters of the names.',
+        'groom_father' => 'Parents\' names at the top of a wedding card («លោក/លោកស្រី» added).',
+        'groom_mother' => 'Parents\' names at the top of a wedding card.',
+        'bride_father' => 'Parents\' names at the top of a wedding card.',
+        'bride_mother' => 'Parents\' names at the top of a wedding card.',
+        'groom_phone' => 'Call button for the groom\'s side.',
+        'bride_phone' => 'Call button for the bride\'s side.',
+        'groom_photo' => 'Portrait of the groom.',
+        'bride_photo' => 'Portrait of the bride.',
+        'event_schedule' => 'The program: time + activity rows, e.g. «7:00 AM — ហែជំនូន».',
+        'schedule_image' => 'A ready-made program picture shown instead of the typed rows. Unlocks with Event schedule.',
+        'story_chapters' => 'The couple\'s love story in chapters (title + short text).',
+        'khmer_date' => 'Lunar date as text, e.g. «ថ្ងៃអាទិត្យ ៥កើត ខែមាឃ».',
+        'end_time' => 'When the event ends (shown next to the start time).',
+        'qr_code' => 'Bank QR so far-away guests can send a gift.',
+        'gift_account' => 'Bank name + account number under the QR.',
+        'gift_message' => 'Text above the gift QR. Empty = the template\'s own text.',
+        'contact_phone' => 'One phone number guests can call for details.',
+        'cta_label' => 'Text of a custom button (e.g. «Join our Telegram group»). Needs Button link too.',
+        'cta_url' => 'Where the custom button goes (Telegram, Facebook event, form…). Needs Button label too.',
+        'reception_message' => 'Wording of the reception invitation card.',
+        'apology_message' => 'Apology letter card (for guests not personally visited).',
+        'rsvp_message' => 'The question above the RSVP buttons. Empty = the template\'s own text.',
+        'dress_code' => 'What to wear. Some templates turn colours into swatches. Empty = hidden.',
+        'what_to_bring' => 'What guests should bring (e.g. a gift under $10). Empty = hidden.',
+        'rsvp_deadline' => '«Please reply by …» date next to the RSVP.',
+        'photo_captions' => 'One caption per gallery photo (line 1 = photo 1).',
+        'background_image' => 'Optional full-screen background picture.',
+        'title_image' => 'Optional picture of the title (decorated lettering) instead of typed text.',
+        'gallery_feed' => 'Show photos as big full-screen panels you scroll (like TikTok).',
+        'together_since' => 'The day they started dating: «together since» + a live count-up.',
+        'love_reasons' => 'Reasons I love you, one per line (cards / paper boats).',
+        'song_title' => 'Song name on the music card / record.',
+        'closing_line' => 'The last big line at the very end.',
+        'celebrant_name' => 'Birthday person\'s name.',
+        'turning_age' => 'The age they are turning.',
+        'host_names' => 'Ceremony hosts / organizers, one per line.',
+        'opening_line' => 'Line under the title of a Buddhist ceremony. Empty = «នមោ តស្ស…».',
+    ];
+
+    /** The admin's one-line explanation of a field (ADMIN_HINTS, falling back to the customer hint). */
+    public static function adminHint(string $key): string
+    {
+        return self::ADMIN_HINTS[$key] ?? self::FIELD_CATALOG[$key]['hint'] ?? '';
+    }
 
     protected $fillable = [
         'service_id',
@@ -194,6 +272,7 @@ class InvitationTemplate extends Model
         'is_premium',
         'is_active',
         'fields',
+        'premium_fields',
         'view',
         'thumbnail',
     ];
@@ -202,6 +281,7 @@ class InvitationTemplate extends Model
         'is_premium' => 'boolean',
         'is_active' => 'boolean',
         'fields' => 'array',
+        'premium_fields' => 'array',
     ];
 
     protected static function booted(): void
@@ -252,6 +332,7 @@ class InvitationTemplate extends Model
         foreach ($plans as $index => $plan) {
             $service->plans()->create([
                 'label' => $plan['label'],
+                'badge' => filled($plan['badge'] ?? null) ? $plan['badge'] : null,
                 'price' => $plan['price'],
                 'max_recipients' => $plan['max_recipients'] ?? null,
                 'max_gallery_photos' => $plan['max_gallery_photos'] ?? null,
@@ -282,12 +363,106 @@ class InvitationTemplate extends Model
         $pairs = array_is_list($prices)
             ? collect($prices)->mapWithKeys(fn ($row) => [(string) ($row['key'] ?? $row['feature'] ?? '') => $row['price'] ?? null])
             : collect($prices);
-        $valid = array_keys(self::premiumFieldOptions());
+        $valid = array_keys(self::markableFieldOptions());
         $clean = $pairs->filter(fn ($price, $key) => in_array($key, $valid, true) && is_numeric($price) && $price > 0)
             ->map(fn ($price) => round((float) $price, 2))
             ->all();
 
         return $clean ?: null;
+    }
+
+    /**
+     * Short customer-facing names of the premium extras, for the plan cards in the shop («✓ Map · RSVP · …»).
+     * Fields that are two halves of one thing share a name and are listed once. English source strings,
+     * translated with __() (lang/km.json).
+     */
+    public const SHOP_EXTRA_NAMES = [
+        'venue_address' => 'Map & directions',
+        'map_url' => 'Map & directions',
+        'rsvp_enabled' => 'RSVP',
+        'countdown_enabled' => 'Countdown',
+        'event_schedule' => 'Program',
+        'schedule_image' => 'Program',
+        'story_chapters' => 'Love story',
+        'khmer_date' => 'Khmer date',
+        'qr_code' => 'Gift QR',
+        'cta_label' => 'Custom button',
+        'cta_url' => 'Custom button',
+    ];
+
+    /**
+     * Short translated names (once each) for the shop's plan cards: the ★ fields of this design, or only the
+     * given keys (e.g. the ones a plan includes) when $keys is passed.
+     */
+    public function premiumExtraNames(?array $keys = null): array
+    {
+        return collect($this->premiumFields())
+            ->when($keys !== null, fn ($c) => $c->intersect($keys))
+            ->map(fn (string $key) => __(self::SHOP_EXTRA_NAMES[$key] ?? self::FIELD_CATALOG[$key]['label'] ?? $key))
+            ->unique()->values()->all();
+    }
+
+    /**
+     * The fields of this design a plan must include (★), chosen by the admin in the template's Fields tab
+     * (`premium_fields`). Only fields the template ticks count. Before an admin saves a choice it is the
+     * catalog's default ★ list (defaultPremiumFields()). Keys in UNLOCKED_WITH never appear here: they follow
+     * the field they belong to (e.g. schedule_image follows event_schedule).
+     *
+     * @return list<string>
+     */
+    public function premiumFields(): array
+    {
+        $premium = $this->premium_fields ?? self::defaultPremiumFields();
+
+        return array_values(array_diff(array_intersect($premium, $this->fields ?? []), array_keys(self::UNLOCKED_WITH)));
+    }
+
+    /**
+     * Whether a plan must include this field (★) for this design: the admin's choice for fields the template
+     * ticks; a field it doesn't tick keeps the catalog's default (so it never turns free by accident).
+     */
+    public function isPremiumField(string $key): bool
+    {
+        $key = self::UNLOCKED_WITH[$key] ?? $key;
+
+        return $this->usesField($key)
+            ? in_array($key, $this->premiumFields(), true)
+            : ! in_array($key, self::FREE_FIELDS, true);
+    }
+
+    /**
+     * The fields of this design every plan gets (ticked and not ★). A paid invitation keeps a copy
+     * (`invitations.free_fields`), so marking one of them ★ later never takes it away from that customer.
+     *
+     * @return list<string>
+     */
+    public function freeFields(): array
+    {
+        return array_values(array_filter($this->fields ?? [], fn (string $key) => ! $this->isPremiumField($key)));
+    }
+
+    /**
+     * The catalog's suggested ★ list (FIELD_CATALOG minus FREE_FIELDS and UNLOCKED_WITH followers): what a new
+     * template starts with when the admin ticks those fields. The admin can change it per template.
+     *
+     * @return list<string>
+     */
+    public static function defaultPremiumFields(): array
+    {
+        return array_keys(self::premiumFieldOptions());
+    }
+
+    /**
+     * Every catalog field that can be marked ★, labeled (all of them except UNLOCKED_WITH followers).
+     *
+     * @return array<string, string>
+     */
+    public static function markableFieldOptions(): array
+    {
+        return collect(self::FIELD_CATALOG)
+            ->except(array_keys(self::UNLOCKED_WITH))
+            ->map(fn (array $field) => $field['label'])
+            ->all();
     }
 
     /**
@@ -348,6 +523,7 @@ class InvitationTemplate extends Model
         return $catalog;
     }
 
+    /** The catalog's suggested ★ fields, labeled (FIELD_CATALOG minus FREE_FIELDS and UNLOCKED_WITH followers). */
     public static function premiumFieldOptions(): array
     {
         return collect(self::FIELD_CATALOG)
@@ -363,9 +539,10 @@ class InvitationTemplate extends Model
      */
     public static function sectionFieldOptions(string $section): array
     {
-        return collect(self::FIELD_CATALOG)
-            ->only(self::FIELD_SECTIONS[$section] ?? [])
-            ->map(fn (array $field) => $field['label'])
+        // in the group's own order (most used first), not the catalog's
+        return collect(self::FIELD_SECTIONS[$section] ?? [])
+            ->filter(fn (string $key) => isset(self::FIELD_CATALOG[$key]))
+            ->mapWithKeys(fn (string $key) => [$key => self::FIELD_CATALOG[$key]['label']])
             ->all();
     }
 
@@ -398,6 +575,10 @@ class InvitationTemplate extends Model
         }
 
         $data['fields'] = array_values(array_unique($fields));
+
+        if (array_key_exists('premium_fields', $data)) {
+            $data['premium_fields'] = array_values(array_intersect($data['premium_fields'] ?? [], $data['fields']));
+        }
 
         return $data;
     }

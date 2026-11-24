@@ -94,19 +94,39 @@ class TelegramNotifier
         $this->send(implode("\n", $lines));
     }
 
-    protected function send(string $text): void
+    /**
+     * The morning summary (App\Support\Analytics\DailySummary). Goes to TELEGRAM_SUMMARY_CHAT_ID when set (e.g. your
+     * private chat), else the orders chat. False when Telegram isn't configured or the send failed.
+     */
+    public function sendDailySummary(string $text): bool
+    {
+        $chatId = config('services.telegram.summary_chat_id') ?: config('services.telegram.orders_chat_id');
+
+        if (! config('services.telegram.bot_token') || ! $chatId) {
+            return false;
+        }
+
+        return $this->send($text, $chatId, preview: false);
+    }
+
+    protected function send(string $text, ?string $chatId = null, bool $preview = true): bool
     {
         $botToken = config('services.telegram.bot_token');
-        $chatId = config('services.telegram.orders_chat_id');
+        $chatId ??= config('services.telegram.orders_chat_id');
 
         try {
             Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                 'chat_id' => $chatId,
                 'text' => $text,
                 'parse_mode' => 'HTML',
+                'disable_web_page_preview' => ! $preview,
             ])->throw();
+
+            return true;
         } catch (\Throwable $e) {
             Log::warning('Telegram notification failed: '.$e->getMessage());
+
+            return false;
         }
     }
 }

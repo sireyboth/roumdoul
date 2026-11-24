@@ -93,7 +93,6 @@ class ServiceFormTest extends TestCase
 
         $component
             ->set("{$path}.retention_months", 6)
-            ->set("{$path}.features", ['venue_address', 'countdown_enabled'])
             ->set("{$path}.extra_guest_price", 0.5)
             ->set("{$path}.extend_price", 3)
             ->set("{$path}.extend_months", 12)
@@ -106,7 +105,7 @@ class ServiceFormTest extends TestCase
 
         $plan->refresh();
         $this->assertSame(6, $plan->retention_months);
-        $this->assertSame(['venue_address', 'countdown_enabled'], $plan->features);
+        $this->assertSame([], $plan->features);
         $this->assertSame('0.50', $plan->extra_guest_price);
         $this->assertSame('3.00', $plan->extend_price);
         $this->assertSame(12, $plan->extend_months);

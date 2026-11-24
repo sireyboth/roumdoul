@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InvitationTemplates;
 
 use App\Filament\Resources\InvitationTemplates\Tables\InvitationTemplatesTable;
 use App\Models\InvitationTemplate;
+use App\Models\Service;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -11,6 +12,9 @@ use Filament\Actions\EditAction;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * The template's create / edit / set-up-pricing / delete actions, shared by the list table and the
@@ -30,10 +34,15 @@ class InvitationTemplateActions
                 return DB::transaction(function () use ($data) {
                     $data = InvitationTemplate::mergeFieldSections($data);
 
-                    $plans = array_values($data['plans'] ?? []);
+                    $shop = $data['shop'] ?? [];
+                    unset($data['shop']);
+                    $plans = self::onlyUsedUnlocks(array_values($data['plans'] ?? []), $data);
                     unset($data['plans']);
 
                     $service = InvitationTemplate::createServiceFor($data['name'], $data['is_active'] ?? true, $plans);
+
+                    // «Shop page» tab: category, order, texts, pictures, FAQ — blanks keep createServiceFor()'s defaults
+                    $service->update(array_filter($shop, fn ($value) => $value !== null && $value !== '' && $value !== []));
 
                     // createServiceFor() copies everything but the stock toggle — set that here
                     foreach ($service->plans()->orderBy('sort_order')->get() as $index => $plan) {
@@ -43,6 +52,7 @@ class InvitationTemplateActions
                     }
 
                     $data['service_id'] = $service->id;
+                    self::coverFromThumbnail($service, $data['thumbnail'] ?? null);
 
                     return InvitationTemplate::create($data);
                 });
@@ -55,15 +65,70 @@ class InvitationTemplateActions
             ->modalHeading(fn (InvitationTemplate $record) => "Edit template: {$record->name}")
             ->modalWidth(Width::SevenExtraLarge)
             // the stored flat `fields` array is shown as one checkbox list per section...
-            ->mutateRecordDataUsing(fn (array $data) => array_merge($data, InvitationTemplate::splitFieldsBySection($data['fields'] ?? [])))
+            ->mutateRecordDataUsing(fn (array $data, InvitationTemplate $record) => array_merge(
+                $data,
+                InvitationTemplate::splitFieldsBySection($data['fields'] ?? []),
+                ['premium_fields' => $record->premiumFields()],
+            ))
             // ...and merged back before saving
             ->mutateDataUsing(fn (array $data) => InvitationTemplate::mergeFieldSections($data))
             // keep the underlying Service's name/status in sync with the template
-            ->after(fn (InvitationTemplate $record) => $record->service?->update([
-                'name_en' => $record->name,
-                'name_km' => $record->name,
-                'is_active' => $record->is_active,
-            ]));
+            ->after(function (InvitationTemplate $record): void {
+                $record->service?->update([
+                    'name_en' => $record->name,
+                    'name_km' => $record->name,
+                    'is_active' => $record->is_active,
+                ]);
+
+                if ($record->service) {
+                    self::coverFromThumbnail($record->service, $record->thumbnail);
+                }
+            });
+    }
+
+    /**
+     * The shop cover image falls back to the template thumbnail: when the product has no cover, the thumbnail is
+     * copied to services/ (a copy, so deleting one never breaks the other). A cover the admin picked is kept.
+     */
+    public static function coverFromThumbnail(Service $service, ?string $thumbnail): void
+    {
+        if (filled($service->image_path) || blank($thumbnail)) {
+            return;
+        }
+
+        $disk = Storage::disk('s3');
+        $copy = 'services/'.Str::random(10).'-'.basename($thumbnail);
+
+        try {
+            if ($disk->exists($thumbnail) && $disk->copy($thumbnail, $copy)) {
+                $service->update(['image_path' => $copy]);
+            }
+        } catch (Throwable $e) {
+            report($e); // never block saving the template over the cover
+        }
+    }
+
+    /**
+     * Default «unlock one extra» prices (Invitation defaults) are only kept for ★ fields this design actually
+     * ticks — no selling a map unlock on a template without a map.
+     */
+    protected static function onlyUsedUnlocks(array $plans, array $data): array
+    {
+        $premium = $data['premium_fields'] ?? null;
+
+        if (! is_array($premium)) {
+            return $plans;
+        }
+
+        return array_map(function (array $plan) use ($premium) {
+            if (is_array($plan['feature_prices'] ?? null)) {
+                $plan['feature_prices'] = collect($plan['feature_prices'])
+                    ->filter(fn ($price, $key) => in_array(is_array($price) ? ($price['feature'] ?? null) : $key, $premium, true))
+                    ->all();
+            }
+
+            return $plan;
+        }, $plans);
     }
 
     /**

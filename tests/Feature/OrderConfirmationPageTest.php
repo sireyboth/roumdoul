@@ -23,6 +23,22 @@ class OrderConfirmationPageTest extends TestCase
             ->assertOk();
     }
 
+    public function test_a_pending_order_shows_aba_and_wing_tabs_with_aba_first(): void
+    {
+        $customer = Customer::factory()->create();
+        $order = Order::factory()->create(['customer_id' => $customer->id, 'status' => 'pending_payment']);
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(OrderConfirmationPage::class, ['order' => $order])
+            ->assertOk()
+            ->assertSee("method: 'aba'", false)
+            ->assertSeeInOrder(['>ABA</button>', '>Wing</button>'], false)
+            ->assertSee('images/payment/aba.png', false)
+            ->assertSee('images/payment/khqr.png', false)
+            ->assertSee('001 788 766')
+            ->assertSee('102 492 369');
+    }
+
     public function test_a_different_customer_cannot_view_someone_elses_order_confirmation(): void
     {
         $owner = Customer::factory()->create();

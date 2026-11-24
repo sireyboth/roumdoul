@@ -5,7 +5,9 @@ namespace Tests\Feature\Admin;
 use App\Filament\Resources\InvitationTemplates\Pages\ListInvitationTemplates;
 use App\Filament\Resources\InvitationTemplates\Pages\ViewInvitationTemplate;
 use App\Filament\Resources\InvitationTemplates\RelationManagers\InvitationsRelationManager;
+use App\Filament\Resources\InvitationTemplates\Schemas\InvitationTemplateForm;
 use App\Filament\Resources\Services\Pages\ListServices;
+use App\Models\Category;
 use App\Models\Invitation;
 use App\Models\InvitationTemplate;
 use App\Models\Service;
@@ -50,20 +52,25 @@ class InvitationTemplateFormTest extends TestCase
                 'slug' => 'birthday-bash',
                 'category' => 'birthday',
                 'view' => 'invitations.templates.date-asking',
-                'fields_universal' => ['sender_name', 'headline'],
+                'fields_essentials' => ['sender_name', 'headline'],
+                'fields_premium' => ['rsvp_enabled', 'countdown_enabled', 'venue_address'],
+                // venue_address left unticked here = every plan gets it on this design
+                'premium_fields' => ['rsvp_enabled', 'countdown_enabled'],
                 'is_active' => true,
                 'plans' => [
-                    ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true],
-                    ['label' => 'Premium', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['venue_address', 'countdown_enabled'],
-                        'in_stock' => false, 'extra_guest_price' => 0.25, 'extend_price' => 2,
+                    ['label' => 'Basic', 'price' => 4.99, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true,
                         'feature_prices' => [['feature' => 'rsvp_enabled', 'price' => 1.5]]],
+                    ['label' => 'Premium', 'badge' => 'Best value', 'price' => 9.99, 'max_recipients' => 20, 'retention_months' => 12, 'features' => ['rsvp_enabled'],
+                        'in_stock' => false, 'extra_guest_price' => 0.25, 'extend_price' => 2],
                 ],
             ])
             ->assertHasNoActionErrors();
 
         $template = InvitationTemplate::where('slug', 'birthday-bash')->firstOrFail();
         $this->assertNotNull($template->service_id);
-        $this->assertSame(['sender_name', 'headline'], $template->fields);
+        $this->assertSame(['sender_name', 'headline', 'rsvp_enabled', 'countdown_enabled', 'venue_address'], $template->fields);
+        $this->assertSame(['rsvp_enabled', 'countdown_enabled'], $template->premiumFields());
+        $this->assertFalse($template->isPremiumField('venue_address'));
 
         $service = $template->service;
         $this->assertSame('Birthday Bash', $service->name_en);
@@ -71,12 +78,15 @@ class InvitationTemplateFormTest extends TestCase
 
         $plans = $service->plans->keyBy('label');
         $this->assertSame(10, $plans['Basic']->max_recipients);
-        $this->assertSame(['venue_address', 'countdown_enabled'], $plans['Premium']->features);
+        // each plan stores exactly the ★ fields ticked for it
+        $this->assertSame(['rsvp_enabled'], $plans['Premium']->features);
+        $this->assertSame([], $plans['Basic']->features);
+        $this->assertSame('Best value', $plans['Premium']->badge);
         $this->assertTrue($plans['Basic']->in_stock);
         $this->assertFalse($plans['Premium']->in_stock);
         $this->assertSame('0.25', $plans['Premium']->extra_guest_price);
         $this->assertSame('2.00', $plans['Premium']->extend_price);
-        $this->assertEquals(['rsvp_enabled' => 1.5], $plans['Premium']->feature_prices);
+        $this->assertEquals(['rsvp_enabled' => 1.5], $plans['Basic']->feature_prices);
     }
 
     public function test_editing_a_templates_fields_does_not_require_touching_plans(): void
@@ -85,7 +95,7 @@ class InvitationTemplateFormTest extends TestCase
         $template = InvitationTemplate::factory()->create(['fields' => ['sender_name']]);
 
         Livewire::test(ListInvitationTemplates::class)
-            ->callAction(TestAction::make(EditAction::class)->table($template), ['fields_universal' => ['sender_name', 'headline', 'message']])
+            ->callAction(TestAction::make(EditAction::class)->table($template), ['fields_essentials' => ['sender_name', 'headline', 'message']])
             ->assertHasNoActionErrors();
 
         $this->assertSame(['sender_name', 'headline', 'message'], $template->fresh()->fields);
@@ -100,9 +110,34 @@ class InvitationTemplateFormTest extends TestCase
 
         Livewire::test(ListInvitationTemplates::class)
             ->mountAction(TestAction::make(EditAction::class)->table($template))
-            ->assertSet('mountedActions.0.data.fields_universal', ['sender_name'])
+            ->assertSet('mountedActions.0.data.fields_essentials', ['sender_name'])
             ->assertSet('mountedActions.0.data.fields_wedding', ['groom_name', 'bride_name'])
             ->assertSet('mountedActions.0.data.fields_birthday', ['celebrant_name']);
+    }
+
+    public function test_every_catalog_field_sits_in_exactly_one_admin_group(): void
+    {
+        $grouped = array_merge(...array_values(InvitationTemplate::FIELD_SECTIONS));
+
+        $this->assertSame([], array_values(array_diff_assoc($grouped, array_unique($grouped))), 'A field is in more than one group');
+        $this->assertEqualsCanonicalizing(array_keys(InvitationTemplate::FIELD_CATALOG), $grouped);
+        $this->assertEqualsCanonicalizing(
+            array_keys(InvitationTemplate::FIELD_SECTIONS),
+            array_keys(InvitationTemplateForm::GROUPS),
+        );
+    }
+
+    public function test_the_premium_group_holds_exactly_the_premium_fields(): void
+    {
+        $premium = array_diff(array_keys(InvitationTemplate::FIELD_CATALOG), InvitationTemplate::FREE_FIELDS);
+
+        $this->assertEqualsCanonicalizing(array_values($premium), InvitationTemplate::FIELD_SECTIONS['premium']);
+    }
+
+    public function test_every_catalog_field_has_an_admin_hint(): void
+    {
+        $this->assertSame([], array_values(array_diff(array_keys(InvitationTemplate::FIELD_CATALOG), array_keys(InvitationTemplate::ADMIN_HINTS))));
+        $this->assertSame([], array_values(array_diff(array_keys(InvitationTemplate::ADMIN_HINTS), array_keys(InvitationTemplate::FIELD_CATALOG))));
     }
 
     public function test_editing_a_templates_wedding_and_birthday_fields_saves_correctly(): void
@@ -112,8 +147,9 @@ class InvitationTemplateFormTest extends TestCase
 
         Livewire::test(ListInvitationTemplates::class)
             ->callAction(TestAction::make(EditAction::class)->table($template), [
-                'fields_universal' => ['sender_name'],
-                'fields_wedding' => ['groom_name', 'bride_name', 'khmer_date'],
+                'fields_essentials' => ['sender_name'],
+                'fields_wedding' => ['groom_name', 'bride_name'],
+                'fields_premium' => ['khmer_date'],
                 'fields_birthday' => [],
             ])
             ->assertHasNoActionErrors();
@@ -160,6 +196,66 @@ class InvitationTemplateFormTest extends TestCase
         $this->assertSame('0.20', $plan->extra_photo_price);
         $this->assertSame(1, $service->plans()->count());
         $this->assertSame(1, Service::count());
+    }
+
+    public function test_shop_page_of_the_linked_service_is_edited_in_the_template_modal(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $service = Service::factory()->create(['sort_order' => 0, 'is_featured' => false]);
+        ServicePlan::factory()->create(['service_id' => $service->id, 'max_recipients' => 10]);
+        $template = InvitationTemplate::factory()->create(['service_id' => $service->id]);
+        $wedding = Category::factory()->create();
+
+        Livewire::test(ListInvitationTemplates::class)
+            ->mountAction(TestAction::make(EditAction::class)->table($template))
+            ->assertSet('mountedActions.0.data.service.short_description', $service->short_description)
+            ->set('mountedActions.0.data.service.category_id', $wedding->id)
+            ->set('mountedActions.0.data.service.sort_order', 3)
+            ->set('mountedActions.0.data.service.is_featured', true)
+            ->set('mountedActions.0.data.service.short_description', 'A fine-art garden wedding')
+            ->set('mountedActions.0.data.service.faqs', [['question' => 'Can I change it?', 'answer' => 'Yes.']])
+            ->set('mountedActions.0.data.service.discount_type', 'percentage')
+            ->set('mountedActions.0.data.service.discount_value', 20)
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+
+        $service->refresh();
+        $this->assertSame($wedding->id, $service->category_id);
+        $this->assertSame(3, (int) $service->sort_order);
+        $this->assertTrue($service->is_featured);
+        $this->assertSame('A fine-art garden wedding', $service->short_description);
+        $this->assertSame('Can I change it?', $service->faqs[0]['question']);
+        $this->assertTrue($service->hasDiscount());
+        $this->assertSame(8.0, $service->discountedPrice(10));
+        $this->assertSame(1, $service->plans()->count());
+    }
+
+    public function test_shop_page_fields_filled_on_create_go_to_the_new_service(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $wedding = Category::factory()->create();
+
+        Livewire::test(ListInvitationTemplates::class)
+            ->callAction(CreateAction::class, [
+                'name' => 'Garden Party',
+                'slug' => 'garden-party',
+                'category' => 'wedding',
+                'view' => 'invitations.templates.date-asking',
+                'fields_essentials' => ['headline'],
+                'is_active' => true,
+                'plans' => [['label' => 'Basic', 'price' => 5, 'max_recipients' => 10, 'retention_months' => 3, 'features' => [], 'in_stock' => true]],
+                'shop' => ['category_id' => $wedding->id, 'sort_order' => 2, 'is_featured' => true, 'short_description' => '',
+                    'discount_type' => 'fixed', 'discount_value' => 1.5],
+            ])
+            ->assertHasNoActionErrors();
+
+        $service = InvitationTemplate::where('slug', 'garden-party')->firstOrFail()->service;
+        $this->assertSame($wedding->id, $service->category_id);
+        $this->assertSame(2, (int) $service->sort_order);
+        $this->assertTrue($service->is_featured);
+        $this->assertSame('Garden Party', $service->short_description); // blank keeps the default
+        $this->assertSame(3.5, $service->discountedPrice(5));
     }
 
     public function test_invitation_linked_services_are_hidden_from_the_main_services_list(): void

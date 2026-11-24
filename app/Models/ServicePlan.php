@@ -13,6 +13,7 @@ class ServicePlan extends Model
     protected $fillable = [
         'service_id',
         'label',
+        'badge',
         'price',
         'in_stock',
         'retention_months',
@@ -53,6 +54,17 @@ class ServicePlan extends Model
         $price = ($this->feature_prices ?? [])[$key] ?? null;
 
         return is_numeric($price) && $price > 0 ? (float) $price : null;
+    }
+
+    /**
+     * The ★ fields a new invitation on this plan gets. The admin ticks them per plan (template › Plans,
+     * «★ Fields this plan includes»), out of the fields the template marks ★ in its Fields tab. Stored as
+     * catalog keys in `features`. The invitation keeps its own copy when paid, so editing the plan later only
+     * affects new buyers.
+     */
+    public function unlockedFeatures(): array
+    {
+        return array_values(array_intersect($this->features ?? [], array_keys(InvitationTemplate::markableFieldOptions())));
     }
 
     public function service(): BelongsTo

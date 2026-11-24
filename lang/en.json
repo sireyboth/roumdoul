@@ -405,6 +405,7 @@
     "Pay only the difference. Your guests, photos and add-ons stay.": "Pay only the difference. Your guests, photos and add-ons stay.",
     "Pay securely, your way.": "Pay securely, your way.",
     "Pay to the account below with any bank app (KHQR).": "Pay to the account below with any bank app (KHQR).",
+    "Pay with": "Pay with",
     "Pay with KHQR": "Pay with KHQR",
     "Payment confirmed — order :number": "Payment confirmed — order :number",
     "Payment question": "Payment question",
@@ -739,5 +740,16 @@
     "Your phone number": "Your phone number",
     "Your session has expired. Please reload the page (unsaved changes may be lost).": "Your session has expired. Please reload the page (unsaved changes may be lost).",
     "Your «:template» invitation will stop working on :date. After that, your guests' links won't open any more.": "Your «:template» invitation will stop working on :date. After that, your guests' links won't open any more.",
-    "— ROUMDOUL": "— ROUMDOUL"
+    "— ROUMDOUL": "— ROUMDOUL",
+    "Online forever": "Online forever",
+    "Online :n months": "Online :n months",
+    "Online :n year|Online :n years": "Online :n year|Online :n years",
+    "Map & directions": "Map & directions",
+    "Countdown": "Countdown",
+    "Love story": "Love story",
+    "Khmer date": "Khmer date",
+    "Gift QR": "Gift QR",
+    "Custom button": "Custom button",
+    "See more": "See more",
+    "See less": "See less"
 }

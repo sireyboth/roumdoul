@@ -38,6 +38,10 @@ return [
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'orders_chat_id' => env('TELEGRAM_ORDERS_CHAT_ID'),
+        // the morning business summary (php artisan report:daily) — blank chat = the orders chat
+        'summary_chat_id' => env('TELEGRAM_SUMMARY_CHAT_ID'),
+        'daily_summary' => env('TELEGRAM_DAILY_SUMMARY', true),
+        'daily_summary_at' => env('TELEGRAM_DAILY_SUMMARY_AT', '08:00'),
     ],
 
 ];

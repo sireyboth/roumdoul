@@ -28,7 +28,8 @@ return [
 
     // How customers pay (manual for now): the KHQR shown on the order confirmation page and on a
     // pending order in the dashboard (resources/views/components/shop/payment-modal.blade.php).
-    // Put the QR picture at public/{qr_image}; until it exists, the box shows the name + account ID only.
+    // One tab per method; the first one is the default tab (ABA first, it's the one we prefer).
+    // Put each QR picture at public/{qr_image}; until it exists, the box shows the name + account ID only.
     // The wall-clock zone customers type invitation times in (the dashboard's datetime-local input
     // has no zone). App\Support\Invitations\EventDate reads every stored event_date in this zone, so
     // a countdown ends at the time the customer entered, whatever zone the guest's phone is in.
@@ -36,9 +37,20 @@ return [
     'event_timezone' => env('ROUMDOUL_EVENT_TIMEZONE', 'Asia/Phnom_Penh'),
 
     'payment' => [
-        'qr_image' => env('ROUMDOUL_PAY_QR_IMAGE', 'images/payment/khqr.png'),
-        'account_name' => env('ROUMDOUL_PAY_ACCOUNT_NAME', 'THAI NGOUNLENG'),
-        'account_id' => env('ROUMDOUL_PAY_ACCOUNT_ID', '102 492 369'),
+        'methods' => [
+            'aba' => [
+                'label' => 'ABA',
+                'qr_image' => env('ROUMDOUL_PAY_ABA_QR_IMAGE', 'images/payment/aba.png'),
+                'account_name' => env('ROUMDOUL_PAY_ABA_ACCOUNT_NAME', 'NGOUNLENG THAI'),
+                'account_id' => env('ROUMDOUL_PAY_ABA_ACCOUNT_ID', '001 788 766'),
+            ],
+            'wing' => [
+                'label' => 'Wing',
+                'qr_image' => env('ROUMDOUL_PAY_WING_QR_IMAGE', 'images/payment/khqr.png'),
+                'account_name' => env('ROUMDOUL_PAY_WING_ACCOUNT_NAME', 'NGOUNLENG THAI'),
+                'account_id' => env('ROUMDOUL_PAY_WING_ACCOUNT_ID', '102 492 369'),
+            ],
+        ],
     ],
 
 ];

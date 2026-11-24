@@ -1,0 +1,65 @@
+/* Admin dashboard widgets (App\Filament\Widgets): Action center, Invitation funnel, Compare products.
+   Scoped rd-* classes — the admin's compiled CSS has no arbitrary Tailwind classes. Colours follow Filament's vars. */
+.rd-ac { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .rd-ac { grid-template-columns: 1fr 1fr; } }
+.rd-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.4rem; height: 1.4rem; margin-left: .35rem; padding: 0 .4rem; border-radius: 999px; font-size: .75rem; font-weight: 700; color: #fff; background: var(--danger-600, #dc2626); vertical-align: 1px; }
+.rd-item { display: flex; align-items: flex-start; gap: .75rem; padding: .75rem; border-radius: .75rem; border: 1px solid var(--gray-200); background: var(--gray-50); }
+.rd-item + .rd-item { margin-top: .6rem; }
+.dark .rd-item { border-color: rgb(255 255 255 / .08); background: rgb(255 255 255 / .03); }
+.rd-item-icon { flex: none; display: flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: .6rem; background: var(--tone-bg); color: var(--tone); }
+.rd-i { width: 1.25rem; height: 1.25rem; }
+.rd-i-sm { width: 1rem; height: 1rem; display: inline-block; vertical-align: -3px; color: #d9a43a; }
+.rd-item-body { flex: 1; min-width: 0; }
+.rd-item-title { font-size: .875rem; font-weight: 600; color: var(--gray-950); line-height: 1.35; }
+.dark .rd-item-title { color: #fff; }
+.rd-item-text { margin-top: .15rem; font-size: .8rem; line-height: 1.45; color: var(--gray-500); }
+.dark .rd-item-text { color: var(--gray-400); }
+.rd-item-link { flex: none; align-self: center; white-space: nowrap; }
+.rd-tone-danger { --tone: var(--danger-600, #dc2626); --tone-bg: color-mix(in oklab, var(--danger-500, #ef4444) 14%, transparent); border-left: 3px solid var(--tone); }
+.rd-tone-warning { --tone: var(--warning-600, #d97706); --tone-bg: color-mix(in oklab, var(--warning-500, #f59e0b) 16%, transparent); border-left: 3px solid var(--tone); }
+.rd-tone-success { --tone: var(--success-600, #16a34a); --tone-bg: color-mix(in oklab, var(--success-500, #22c55e) 14%, transparent); }
+.rd-tone-info { --tone: var(--primary-600); --tone-bg: color-mix(in oklab, var(--primary-500) 12%, transparent); }
+.rd-empty { padding: 1rem .25rem; font-size: .875rem; color: var(--gray-500); }
+
+/* funnel */
+.rd-funnel { display: grid; gap: 1.25rem; }
+.rd-funnel-title { margin-bottom: .5rem; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gray-500); }
+.rd-step + .rd-step { margin-top: .6rem; }
+.rd-step-head { display: flex; justify-content: space-between; gap: .5rem; font-size: .85rem; margin-bottom: .25rem; }
+.rd-step-label { color: var(--gray-700); }
+.dark .rd-step-label { color: var(--gray-300); }
+.rd-step-value { font-weight: 700; color: var(--gray-950); font-variant-numeric: tabular-nums; }
+.dark .rd-step-value { color: #fff; }
+.rd-rate { margin-left: .35rem; padding: .05rem .4rem; border-radius: 999px; font-size: .7rem; font-weight: 600; color: var(--success-700, #15803d); background: color-mix(in oklab, var(--success-500, #22c55e) 14%, transparent); }
+.rd-rate-low { color: var(--danger-700, #b91c1c); background: color-mix(in oklab, var(--danger-500, #ef4444) 14%, transparent); }
+.rd-bar { height: .6rem; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
+.dark .rd-bar { background: rgb(255 255 255 / .06); }
+.rd-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--primary-600); transition: width .5s ease; }
+.rd-bar-thin { height: .4rem; margin-top: .3rem; }
+
+/* compare */
+.rd-compare-picker { margin-bottom: 1rem; max-width: 48rem; }
+.rd-verdict { margin-bottom: .9rem; padding: .6rem .8rem; border-radius: .6rem; font-size: .85rem; font-weight: 600; color: var(--gray-800); background: color-mix(in oklab, #d9b66a 16%, transparent); }
+.dark .rd-verdict { color: #fff; }
+.rd-compare { overflow-x: auto; }
+.rd-compare-row { display: grid; grid-template-columns: minmax(8rem, 1fr) repeat(var(--cols), minmax(8.5rem, 1.4fr)); gap: .75rem; align-items: center; padding: .55rem 0; border-bottom: 1px solid var(--gray-100); min-width: calc(8rem + var(--cols) * 9.25rem); }
+.dark .rd-compare-row { border-color: rgb(255 255 255 / .06); }
+.rd-compare-head { font-size: .8rem; font-weight: 700; color: var(--gray-950); border-bottom-color: var(--gray-200); }
+.dark .rd-compare-head { color: #fff; }
+.rd-compare-name { display: flex; align-items: center; gap: .4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-compare-name i { flex: none; width: .65rem; height: .65rem; border-radius: 999px; }
+.rd-compare-metric { font-size: .8rem; color: var(--gray-500); }
+.rd-cell-value { font-size: .875rem; font-weight: 600; color: var(--gray-800); font-variant-numeric: tabular-nums; }
+.dark .rd-cell-value { color: var(--gray-200); }
+.rd-cell-best .rd-cell-value { color: var(--gray-950); font-weight: 800; }
+.dark .rd-cell-best .rd-cell-value { color: #fff; }
+
+/* dashboard sections (App\Filament\Pages\Dashboard::SECTIONS): one clear header row per group, room between groups */
+.rd-dash { display: flex; flex-direction: column; gap: 2.25rem; }
+.rd-dash-section > .fi-section-header { padding-bottom: .85rem; margin-bottom: 1rem; border-bottom: 1px solid var(--gray-200); }
+.dark .rd-dash-section > .fi-section-header { border-bottom-color: rgb(255 255 255 / .08); }
+.rd-dash-section > .fi-section-header > .fi-icon,
+.rd-dash-section > .fi-section-header .fi-section-header-icon { box-sizing: content-box; padding: .45rem; border-radius: .6rem; color: var(--primary-600); background: color-mix(in oklab, var(--primary-500) 12%, transparent); }
+.dark .rd-dash-section > .fi-section-header > .fi-icon { color: var(--primary-400); }
+.rd-dash-section .fi-section-header-heading { font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; }
+.rd-dash-section .fi-section-header-description { font-size: .8rem; }

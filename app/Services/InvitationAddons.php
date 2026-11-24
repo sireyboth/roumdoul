@@ -53,9 +53,9 @@ class InvitationAddons
         $features = [];
         $upgrades = [];
         if ($plan) {
-            foreach (array_keys(InvitationTemplate::premiumFieldOptions()) as $key) {
+            foreach ($template?->premiumFields() ?? [] as $key) {
                 $price = $plan->featurePrice($key);
-                if ($price !== null && $template?->usesField($key) && ! $invitation->fieldUnlocked($key)) {
+                if ($price !== null && ! $invitation->fieldUnlocked($key)) {
                     $features[$key] = ['label' => __(InvitationTemplate::FIELD_CATALOG[$key]['label'] ?? $key), 'price' => $price];
                 }
             }
@@ -72,8 +72,8 @@ class InvitationAddons
                     'price' => round((float) $to->price - (float) $plan->price, 2),
                     'max_recipients' => $to->max_recipients,
                     'max_gallery_photos' => $to->max_gallery_photos,
-                    'new_features' => collect($to->features ?? [])->diff($invitation->features ?? $plan->features ?? [])
-                        ->filter(fn ($key) => $template?->usesField($key))
+                    'new_features' => collect($to->unlockedFeatures())
+                        ->filter(fn ($key) => $template?->isPremiumField($key) && ! $invitation->fieldUnlocked($key))
                         ->map(fn ($key) => __(InvitationTemplate::FIELD_CATALOG[$key]['label'] ?? $key))->values()->all(),
                 ])->all();
         }
@@ -227,7 +227,7 @@ class InvitationAddons
         if ($photosGain > 0) {
             $invitation->max_gallery_photos = min(self::MAX_GALLERY, $invitation->maxGalleryPhotos() + $photosGain);
         }
-        $invitation->features = array_values(array_unique([...($invitation->features ?? $from?->features ?? []), ...($to->features ?? [])]));
+        $invitation->features = array_values(array_unique([...($invitation->features ?? $from?->features ?? []), ...$to->unlockedFeatures()]));
 
         if ($to->retention_months === null) {
             $invitation->expires_at = null;

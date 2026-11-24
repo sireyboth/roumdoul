@@ -161,6 +161,7 @@
     $mapUrl = $mapLink ?: ($mapQuery ? 'https://maps.google.com/?q='.urlencode($mapQuery) : null);
     $mapEmbed = ($mapPinned || $venueAddress !== '') && $mapQuery ? 'https://www.google.com/maps?q='.urlencode($mapQuery).'&z=16&output=embed' : null;
     $dressCode = $isUnlocked('dress_code') ? $text('dress_code') : '';
+    $dressColours = \App\Support\Invitations\DressCode::colours($dressCode);
 
     // ---- RSVP, gift, contacts, letters ----
     $showRsvp = ! empty($fields['rsvp_enabled']) && $isUnlocked('rsvp_enabled');
@@ -504,7 +505,19 @@
             <p class="fp-label fp-rv">ទីកន្លែងប្រារព្ធពិធី</p>
             @if ($venueName !== '')<h2 class="fp-venue-name fp-mask fp-rv{{ $isKh($venueName) ? ' fp-kh' : '' }}"><span>{{ $venueName }}</span></h2>@endif
             @if ($venueAddress !== '')<p class="fp-venue-addr fp-rv">{{ $venueAddress }}</p>@endif
-            @if ($dressCode !== '')<p class="fp-venue-dress fp-rv"><span class="fp-label">សម្លៀកបំពាក់</span>{{ $dressCode }}</p>@endif
+            @if ($dressCode !== '')
+              <div class="fp-venue-dress fp-rv">
+                <span class="fp-label">សម្លៀកបំពាក់</span>
+                @if ($dressColours)
+                  <ul class="fp-swatches" aria-label="ពណ៌សម្លៀកបំពាក់">
+                    @foreach ($dressColours as $i => $c)
+                      <li style="--c: {{ $c['hex'] }}; --i: {{ $i }}"><span class="fp-swatch" aria-hidden="true"></span><span class="fp-swatch-name">{{ $c['name'] }}</span></li>
+                    @endforeach
+                  </ul>
+                @endif
+                <p>{{ $dressCode }}</p>
+              </div>
+            @endif
             @if ($mapUrl)
               <a class="fp-btn fp-rv" href="{{ $mapUrl }}" target="_blank" rel="noopener noreferrer">មើលផែនទី · Directions <span aria-hidden="true">&#8599;</span></a>
             @endif

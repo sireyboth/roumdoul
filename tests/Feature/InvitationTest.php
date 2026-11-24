@@ -70,12 +70,21 @@ class InvitationTest extends TestCase
         $service = Service::factory()->create();
         $plan = ServicePlan::factory()->create([
             'service_id' => $service->id,
-            'features' => ['photo_gallery'],
+            'features' => ['venue_address'],
         ]);
         $invitation = Invitation::factory()->create(['service_plan_id' => $plan->id]);
 
-        $this->assertTrue($invitation->fieldUnlocked('photo_gallery'));
+        $this->assertTrue($invitation->fieldUnlocked('venue_address'));
         $this->assertFalse($invitation->fieldUnlocked('event_schedule'));
+    }
+
+    public function test_photo_gallery_is_included_in_every_plan(): void
+    {
+        $plan = ServicePlan::factory()->create(['service_id' => Service::factory()->create()->id, 'features' => []]);
+        $invitation = Invitation::factory()->create(['service_plan_id' => $plan->id]);
+
+        $this->assertTrue($invitation->fieldUnlocked('photo_gallery'));
+        $this->assertArrayNotHasKey('photo_gallery', InvitationTemplate::premiumFieldOptions());
     }
 
     public function test_schedule_image_follows_the_event_schedule_unlock(): void

@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class LatestOrders extends TableWidget
 {
-    protected static ?string $heading = 'Latest Orders';
+    protected static ?string $heading = 'Latest orders';
+
+    protected static ?int $sort = 11;
 
     protected int|string|array $columnSpan = 'full';
 

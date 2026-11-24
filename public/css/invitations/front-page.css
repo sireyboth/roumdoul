@@ -423,3 +423,13 @@ body:has(.fp){ background:#f1ebe0; }
   .fp-places-grid{ display:grid; grid-template-columns:minmax(0, .75fr) minmax(0, 1.25fr); gap:70px; align-items:center; }
   .fp-map-box{ margin-top:0; }
 }
+
+/* dress code: the colours named in it as swatches (App\Support\Invitations\DressCode), the text under them */
+.fp-swatches{ display:flex; flex-wrap:wrap; gap:12px 14px; margin:10px 0 6px; padding:0; list-style:none; }
+.fp-swatches li{ display:flex; flex-direction:column; align-items:center; gap:6px; width:56px; }
+.fp-swatch{ width:40px; height:40px; border-radius:50%; background:var(--c); box-shadow:0 0 0 1px var(--fp-rule), 0 6px 14px -6px rgba(0,0,0,.35);
+  transition:transform .7s cubic-bezier(.34,1.6,.5,1), opacity .5s ease; transition-delay:calc(.2s + var(--i) * .1s); }
+.fp-swatch-name{ font-family:var(--fp-kht); font-size:.75rem; line-height:1.4; text-align:center; color:var(--fp-mute); }
+.fp-js .fp-venue-dress:not(.is-in) .fp-swatch{ transform:scale(.2); opacity:0; }
+.fp-venue-dress p{ margin:0; }
+@media (prefers-reduced-motion: reduce){ .fp-venue-dress .fp-swatch{ transform:none !important; opacity:1 !important; } }

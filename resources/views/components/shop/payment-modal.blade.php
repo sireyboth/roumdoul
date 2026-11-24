@@ -1,27 +1,37 @@
 {{--
-  "Pay with KHQR" for a pending_payment order, as a 3D glass modal: the shop's KHQR, account name + ID, the
-  exact amount and the order number to write in the transfer note. No screenshot is asked for — the admin
+  "Pay with KHQR" for a pending_payment order, as a 3D glass modal: tabs per bank (ABA first, then Wing), each
+  with its KHQR, account name + ID; then the exact amount and the order number to write in the transfer note. No screenshot is asked for — the admin
   checks the payment in the bank app and marks the order paid in Filament.
   On the page it leaves a small «Waiting for your payment · Pay now» card that (re)opens the modal.
-  Details: config('roumdoul.payment') (ROUMDOUL_PAY_* in .env). Styles: `.pay-*` in resources/css/app.css.
+  Details: config('roumdoul.payment.methods') (ROUMDOUL_PAY_* in .env); the first method is the default tab. Styles: `.pay-*` in resources/css/app.css.
 
     <x-shop.payment-modal :order="$order" auto-open />     (opens by itself — the order confirmation page)
     <x-shop.payment-modal :order="$order" />               (opens from «Pay now» — the dashboard order page)
 --}}
 @props(['order', 'autoOpen' => false])
 @php
-    $pay = config('roumdoul.payment');
-    $qrPath = trim((string) ($pay['qr_image'] ?? ''), '/');
-    $qrUrl = $qrPath !== '' && is_file(public_path($qrPath)) ? asset($qrPath).'?v='.filemtime(public_path($qrPath)) : null;
+    $methods = collect(config('roumdoul.payment.methods', []))->map(function (array $m, string $key) {
+        $qrPath = trim((string) ($m['qr_image'] ?? ''), '/');
+
+        return [
+            'key' => $key,
+            'label' => (string) ($m['label'] ?? ucfirst($key)),
+            'name' => (string) ($m['account_name'] ?? ''),
+            'id' => (string) ($m['account_id'] ?? ''),
+            'qr' => $qrPath !== '' && is_file(public_path($qrPath)) ? asset($qrPath).'?v='.filemtime(public_path($qrPath)) : null,
+        ];
+    })->values();
+    $first = $methods->first()['key'] ?? '';
     $amount = '$'.number_format((float) $order->total, 2);
-    $accountId = (string) ($pay['account_id'] ?? '');
     $titleId = 'pay-title-'.$order->id;
 @endphp
 
 <div {{ $attributes }}
   x-data="{
     open: false,
+    method: @js($first),
     copied: null,
+    pick(key) { if (this.method === key) return; this.method = key; this.copied = null },
     copy(key, text) { navigator.clipboard?.writeText(text).then(() => { this.copied = key; setTimeout(() => this.copied = null, 1600) }) },
     tilt(e) {
       if (window.matchMedia('(prefers-reduced-motion: reduce), (hover: none)').matches) return;
@@ -84,31 +94,48 @@
 
           {{-- the QR floats above the glass --}}
           <div class="pay-left">
-          <div class="pay-qr">
-            @if ($qrUrl)
-              <img src="{{ $qrUrl }}" alt="{{ __('KHQR code for :name', ['name' => $pay['account_name']]) }}" draggable="false" />
-            @else
-              <p class="pay-qr-empty">{{ __('Pay to the account below with any bank app (KHQR).') }}</p>
-            @endif
-          </div>
-          <p class="pay-name">{{ $pay['account_name'] }}</p>
-
-          @if ($qrUrl)
-            <a href="{{ $qrUrl }}" download="ROUMDOUL-KHQR.png" class="pay-save">
-              <x-app-icon name="download" class="h-4 w-4" /> {{ __('Save QR to your phone') }}
-            </a>
-            <p class="pay-tip">{{ __('On your phone? Save the QR, then in your bank app tap Scan → choose from gallery.') }}</p>
+          @if ($methods->count() > 1)
+            <div class="pay-tabs" role="tablist" aria-label="{{ __('Pay with') }}">
+              @foreach ($methods as $m)
+                <button type="button" role="tab" id="pay-tab-{{ $order->id }}-{{ $m['key'] }}" class="pay-tab"
+                  :class="method === @js($m['key']) && 'is-active'"
+                  :aria-selected="(method === @js($m['key'])).toString()"
+                  aria-controls="pay-panel-{{ $order->id }}-{{ $m['key'] }}"
+                  @click="pick(@js($m['key']))">{{ $m['label'] }}</button>
+              @endforeach
+            </div>
           @endif
+
+          @foreach ($methods as $m)
+            <div x-show="method === @js($m['key'])" @if (! $loop->first) x-cloak @endif
+              id="pay-panel-{{ $order->id }}-{{ $m['key'] }}" role="tabpanel" aria-labelledby="pay-tab-{{ $order->id }}-{{ $m['key'] }}" class="pay-panel">
+              <div class="pay-qr">
+                @if ($m['qr'])
+                  <img src="{{ $m['qr'] }}" alt="{{ __('KHQR code for :name', ['name' => $m['name'].' ('.$m['label'].')']) }}" draggable="false" />
+                @else
+                  <p class="pay-qr-empty">{{ __('Pay to the account below with any bank app (KHQR).') }}</p>
+                @endif
+              </div>
+              <p class="pay-name">{{ $m['name'] }}</p>
+
+              @if ($m['qr'])
+                <a href="{{ $m['qr'] }}" download="ROUMDOUL-KHQR-{{ $m['label'] }}.png" class="pay-save">
+                  <x-app-icon name="download" class="h-4 w-4" /> {{ __('Save QR to your phone') }}
+                </a>
+              @endif
+            </div>
+          @endforeach
+          <p class="pay-tip">{{ __('On your phone? Save the QR, then in your bank app tap Scan → choose from gallery.') }}</p>
           </div>
 
           <div class="pay-info">
           <dl class="pay-rows">
             @foreach ([
-                ['id', __('Account ID'), $accountId, preg_replace('/\s+/', '', $accountId)],
-                ['amount', __('Amount'), $amount, number_format((float) $order->total, 2, '.', '')],
-                ['ref', __('Note / remark'), $order->order_number, $order->order_number],
-            ] as [$key, $label, $shown, $copyText])
-              <div class="pay-row">
+                ...$methods->map(fn ($m) => ['id-'.$m['key'], __('Account ID').' · '.$m['label'], $m['id'], preg_replace('/\s+/', '', $m['id']), $m['key']])->all(),
+                ['amount', __('Amount'), $amount, number_format((float) $order->total, 2, '.', ''), null],
+                ['ref', __('Note / remark'), $order->order_number, $order->order_number, null],
+            ] as [$key, $label, $shown, $copyText, $for])
+              <div class="pay-row" @if ($for) x-show="method === @js($for)" @if ($for !== $first) x-cloak @endif @endif>
                 <dt>{{ $label }}</dt>
                 <dd>
                   <span>{{ $shown }}</span>
@@ -122,7 +149,9 @@
 
           <ol class="pay-steps">
             <li>{{ __('Open your bank app (ABA, ACLEDA, Wing, …) and scan the KHQR.') }}</li>
-            <li>{{ __('Check the name is :name and pay exactly :amount.', ['name' => $pay['account_name'], 'amount' => $amount]) }}</li>
+            @foreach ($methods as $m)
+              <li x-show="method === @js($m['key'])" @if (! $loop->first) x-cloak @endif>{{ __('Check the name is :name and pay exactly :amount.', ['name' => $m['name'], 'amount' => $amount]) }}</li>
+            @endforeach
             <li>{{ __('Write :ref in the note / remark, so we know it\'s your order.', ['ref' => $order->order_number]) }}</li>
           </ol>
 

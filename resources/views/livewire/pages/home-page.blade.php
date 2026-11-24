@@ -68,11 +68,11 @@
         </div>
       </div>
       <div data-reveal class="mt-9 flex flex-wrap items-center justify-center gap-3">
-        <a href="/shop" wire:navigate
+        <a href="#shop"
           class="rounded-md bg-gold-500 px-7 py-3.5 text-sm font-bold text-brand-950 shadow-lg shadow-gold-500/20 transition-all hover:-translate-y-0.5 hover:bg-gold-400 hover:shadow-xl hover:shadow-gold-500/30">
           {{ __('Start shopping now') }}
         </a>
-        <a href="/shop" wire:navigate
+        <a href="#shop"
           class="rounded-md border border-white/25 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur transition-all hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10">
           {{ __('Browse all categories') }}
         </a>
@@ -109,7 +109,7 @@
             </span>
             <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">{{ __('Digital invitations') }}</h2>
           </div>
-          <a href="/shop" wire:navigate class="group hidden items-center gap-1 text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300 sm:flex">
+          <a href="#shop" class="group hidden items-center gap-1 text-sm font-semibold text-brand-700 hover:underline dark:text-brand-300 sm:flex">
             {{ __('View all') }}
             <x-app-icon name="chevron-right" class="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
           </a>
@@ -123,6 +123,9 @@
       </div>
     </section>
   @endif
+
+  {{-- Shop: every product, with search, categories and sort (filters in place; /shop still works) --}}
+  <livewire:components.shop-catalog />
 
   {{-- Why choose us --}}
   <section class="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-plum-950 bg-[length:200%_200%] py-16 animate-invite-gradient">
@@ -257,7 +260,7 @@
         <h2 class="text-xl font-bold text-white sm:text-2xl">{{ __('Ready to get started?') }}</h2>
         <p class="mt-1 text-sm text-brand-100">{{ __('Get the digital services you want, starting today') }}</p>
       </div>
-      <a href="/shop" wire:navigate
+      <a href="#shop"
         class="relative shrink-0 rounded-md bg-white px-6 py-3 text-sm font-bold text-brand-700 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-plum-100 hover:shadow-xl">
         {{ __('Start shopping') }}
       </a>
