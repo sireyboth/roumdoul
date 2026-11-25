@@ -357,6 +357,42 @@ that set it off already play theirs.
   the S3/R2 bucket must send CORS headers (GET from the site's domain)**; without them the frames show a painted monogram
   instead (the panel thumbnails and the preview still show the real photos). `accent_color` is the gold (default `#c9a24d`).
 
+- **Blossom Swing** — `wedding/blossom-swing.blade.php` (prefix `bs`, CSS/JS `public/{css,js}/invitations/blossom-swing.*`,
+  demo `/demo/wedding/blossom-swing`, `?open=1` skips the cover). Soft pink watercolour, built on `WeddingData` + the kit.
+  The head-flower frame (`assets/head-flowers/Cover-Frame.png`, cut into `garland-top.webp` + `garland-bottom.webp`) sways
+  in an endless breeze. `$swing()` builds each garland as a branch of nested bones (one per flower cluster, the middle one
+  the root, each outer one turning round the joint it shares with its neighbour), so pieces never tear apart however far
+  they swing and the motion adds up towards the ends. Angles (relative to the parent): three sines with unrelated periods
+  (never visibly repeats) reaching outer bones later, a slow rise and fall of the wind, a soft damped spring that gusts kick
+  (tap, finger brushing through, fast scroll, opening, RSVP, «send love»), a lagging skew so the tips bend. Each garland
+  **blooms** when it first comes into view: a folded bud that opens outward from the middle, ring by ring, then breathes.
+  Seams: the outer piece fades in over the seam, the inner one stays solid under it and fades out softly (no hard cut even
+  mid-bloom); garlands reach past the frame edges so a tilt never opens a gap. Only garlands on screen move; none with
+  reduced motion. Garlands frame the cover; after opening, one head garland stays pinned to the top of the screen and one
+  bouquet to the bottom (`.bs-sticky`, page-column wide, z-index 25: under the petals, sound button and photo preview)
+  while the page scrolls between them; the RSVP card keeps its own hanging crown.
+  Under the head garland: the Khmer title artwork `assets/text/kh-wedding.webp` (from `kh-wedding.png`) with a light
+  sweeping across its letters, then `headline` as a small line (hidden when it only repeats the title).
+  The cover shows no photo: the names (or `title_image`) and the date sit inside the floral gold frame
+  `assets/img-frame/3.webp` (trimmed from `3.png`), which floats gently. Opening «blossom burst» (`blossomBurst()` in the
+  JS): gold rings from the button, the words float away, the garlands part, a pink-white light blooms out of the button to
+  fill the screen with a spiral of petals and leaves flying toward the camera; under the light the cover is swapped for the
+  page and the frame's art floats up above it (`floatFrame()`). The light stays up: the second act «flower wall»
+  (`flowerWall()`, started 0.7 s into the burst, while the frame is still gliding, so the blooms take it in; the screen is
+  all flowers about 2 s after the tap) opens dozens of watercolour blooms
+  (`assets/head-flowers/bloom-1…5.webp`, cut from the frame art) from the middle outward until they cover the screen; the
+  light is removed underneath, and after a hold the flowers part from the centre under a petal shower — the guest sees
+  the page for the first time here. The first section (`.bs-first`) is NOT a second cover: it is the invitation itself
+  (the Khmer title artwork, gold wedding rings `assets/img-frame/ring.webp` floating with a glint, parents, «You are invited», guest name, `reception_message`, the couple's names, date + `khmer_date` + time) inside the
+  garland panel; its garlands bloom and its lines rise in one by one as the flowers part (`.bs-landed`), then scrolling
+  unlocks and hearts burst at the guest's name. Transform/opacity only; reduced motion = a plain fade. Buttons: pink watercolour body inside
+  a double gold hairline (the frame's lines), a light sweep, gold rings rippling from the open button;
+  `cover_image` is not used (the finale photo is `background_image`).
+  Background: `assets/background/image/bg-pink-smoke-{tall,wide}.webp` (from `bg-pink-smoke.png`; tall = rotated, for
+  phones), two copies drifting against each other. Sound: `rustle.wav` (in `assets/sfx/`) on every gust and bloom.
+  `accent_color` is the rose (default `#d0668c`), falling petals via `<x-flower-drop>`. Fonts: Great Vibes → Moulpali,
+  Cormorant Garamond → Noto Serif Khmer, body Kantumruy Pro.
+
 - **Vellum Garden** — `wedding/vellum-garden.blade.php` (CSS/JS `public/{css,js}/invitations/vellum-garden.*`,
   demo `/demo/wedding/vellum-garden`, `?open=1` skips the envelope). Fine-art garden look: ivory linen, botanical line
   art that draws itself, arched photo frames, vellum cards, a wax-seal envelope the guest taps open. Uses

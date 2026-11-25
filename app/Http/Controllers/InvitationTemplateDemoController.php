@@ -246,6 +246,8 @@ class InvitationTemplateDemoController extends Controller
                 'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nអង្គរវត្តពេលថ្ងៃរះ\nរហូតទៅ",
                 'song_title' => 'Soft Piano · Memory Hall',
             ]),
+            // names in Khmer, so the demo shows the Khmer name style (the frame switches font by the script typed)
+            'blossom-swing' => $fullWeddingSample('blossomswing', ['groom_name' => 'សុខា', 'bride_name' => 'ស្រីនាង', 'accent_color' => '#d0668c', 'closing_line' => 'Happily ever after', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម ឬ sage — សម្លៀកបំពាក់ផ្លូវការ']),
             'kbach-chhouk' => $fullWeddingSample('kbachchhouk', ['accent_color' => '#2f7a5a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌ក្រែម បៃតងខ្ចី ឬមាស']),
             // Paper Bloom: every section filled — couple photos, guest notes, end time, custom button, song name
             'paper-bloom' => [
