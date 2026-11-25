@@ -392,6 +392,14 @@ that set it off already play theirs.
   phones), two copies drifting against each other. Sound: `rustle.wav` (in `assets/sfx/`) on every gust and bloom.
   `accent_color` is the rose (default `#d0668c`), falling petals via `<x-flower-drop>`. Fonts: Great Vibes → Moulpali,
   Cormorant Garamond → Noto Serif Khmer, body Kantumruy Pro.
+  **Desktop (landscape)**: the last block of the CSS, `@media (min-width:900px) and (min-aspect-ratio:5/4)` (same query
+  as khmer-traditional-wedding); the phone layout above it is untouched. Same markup, same link. The garlands keep their
+  proportions (`--bs-cw` cover, `--bs-gw` page) and stay centred; the bouquet's flat-cut ends fade out through a mask on
+  `.bs-cover-fade` / `.bs-sticky-bottom` (`.bs-cover-fade` is `display:contents` on phones). Cover = name frame | title,
+  guest, open button, with blooms swaying on both edges (`.bs-dk-side`, desktop only). First section = a wide panel:
+  parents, «You are invited», guest, reception | rings, couple, date, with a hairline between them. Sections widen to
+  1100px: calendar | countdown, story timeline down the middle (alternating), gallery four across, venue | map, dress
+  code | guest notes (`.bs-sec--guests`), QR | gift details, finale photo | closing line.
 
 - **Vellum Garden** — `wedding/vellum-garden.blade.php` (CSS/JS `public/{css,js}/invitations/vellum-garden.*`,
   demo `/demo/wedding/vellum-garden`, `?open=1` skips the envelope). Fine-art garden look: ivory linen, botanical line
