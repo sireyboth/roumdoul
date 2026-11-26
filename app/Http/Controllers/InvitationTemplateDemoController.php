@@ -189,8 +189,7 @@ class InvitationTemplateDemoController extends Controller
                 'accent_color' => '#c9a24d', 'headline' => 'Together with their families', 'closing_line' => 'Forever starts here',
                 'song_title' => 'Soft Piano · Memory Hall',
             ]),
-            // names in Khmer, so the demo shows the Khmer name style (the frame switches font by the script typed)
-            'blossom-swing' => $fullWeddingSample(['groom_name' => 'សុខា', 'bride_name' => 'ស្រីនាង', 'accent_color' => '#d0668c', 'closing_line' => 'Happily ever after', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម ឬ sage — សម្លៀកបំពាក់ផ្លូវការ']),
+            'blossom-swing' => $fullWeddingSample(['accent_color' => '#d0668c', 'closing_line' => 'Happily ever after', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម ឬ sage — សម្លៀកបំពាក់ផ្លូវការ']),
             'kbach-chhouk' => $fullWeddingSample(['accent_color' => '#2f7a5a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌ក្រែម បៃតងខ្ចី ឬមាស']),
             'paper-bloom' => $fullWeddingSample([
                 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម បៃតងខ្ចី ឬ lavender — សម្លៀកបំពាក់ផ្លូវការ',
