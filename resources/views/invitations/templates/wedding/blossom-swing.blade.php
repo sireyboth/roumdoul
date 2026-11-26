@@ -132,7 +132,14 @@
             បើកសំបុត្រ
           </button>
         </div>
-        {!! $swing('bottom', 'bs-cover-bottom') !!}
+        {{-- the wrapper is display:contents on phones; on desktop it fades the bouquet's flat-cut ends --}}
+        <div class="bs-cover-fade">{!! $swing('bottom', 'bs-cover-bottom') !!}</div>
+        {{-- desktop only: watercolour blooms swaying on the left and right edges of the wide cover --}}
+        @foreach (['l' => [1, 3, 5], 'r' => [4, 2, 3]] as $side => $blooms)
+          <span class="bs-dk-side {{ $side }}" aria-hidden="true">
+            @foreach ($blooms as $n)<img class="f{{ $loop->iteration }}" src="{{ $bsAsset("images/invitations/assets/head-flowers/bloom-{$n}.webp") }}" alt="" draggable="false">@endforeach
+          </span>
+        @endforeach
       </div>
     </div>
   @endunless
@@ -290,7 +297,7 @@
     @endif
 
     @if ($w->dressCode !== '' || $w->whatToBring !== '' || $w->rsvpBy)
-      <section class="bs-sec">
+      <section class="bs-sec bs-sec--guests">
         <h3 class="bs-h ik-r" data-ik="up"><span class="en">For our guests</span>ព័ត៌មានសម្រាប់ភ្ញៀវ</h3>
         @if ($w->dressCode !== '')
           <div class="bs-card ik-r" data-ik="up">
