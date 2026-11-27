@@ -208,14 +208,9 @@ shows invitation products at all.
    (months)**, **★ Fields this plan includes** per plan — this is the actual "Premium
    unlocks the map" decision; which fields are ★ is set in the Fields tab). Saving this auto-creates the underlying `Service` + `ServicePlan`
    rows for you (in an internal "Digital Invitations" category) — you never touch Services directly.
-3. **Add its live-preview recipe** in `config/live-preview.php`, keyed by the template's view
-   (e.g. `'invitations.templates.wedding.{name}'`): the template's sections top to bottom, as blocks
-   from `resources/views/livewire/pages/dashboard/previews/blocks/` (copy the closest recipe and adjust
-   the order, columns and photo shapes). See «Live preview in the editor» below. Without one, the editor
-   shows the default layout.
-4. Done — it's immediately live: buying it now creates a real `Invitation`, its demo page works
+3. Done — it's immediately live: buying it now creates a real `Invitation`, its demo page works
    at `/templates/{slug}/demo`, and the dashboard's field-filling form is generated
-   automatically from whichever fields you ticked.
+   automatically from whichever fields you ticked, and so is its live preview (see below).
 
 **Changing it later**: Catalog → Invitation Templates → **Edit** opens the same wide modal, tabs
 **Basics · Fields · Plans · Shop page**. **Plans** edits the linked Service's pricing plans in place (click
@@ -231,23 +226,22 @@ with no linked Service shows «Set up pricing» instead.
 
 ## Live preview in the editor (not per template)
 
-The dashboard editor (Details / Images / Program tabs) shows a **live preview**: a simple wireframe of the
-invitation's real template — the same sections in the same order and arrangement (side by side, columns, photo
-shapes, where the countdown / map / gallery sit), drawn with plain shared pieces in the Roumdoul palette, no
-animations, decorations or template colours. It shows which field appears where while the customer types (in an
-iPhone frame from `xl`, full screen behind «Live preview» on phones). It never saves — the real design is the
-Preview button. The guest-facing template files need nothing for it.
+The dashboard editor (Details / Images / Program tabs) shows a **live preview**: one simple invitation-shaped
+wireframe, **the same layout for every template** — cover, invitation card, the couple, note, save the date, together
+since, story, programme, gallery, location, notes for guests, RSVP, gift, contact, music, letters, the ending — drawn in
+the Roumdoul palette, no animations, decorations or template colours. It shows what the customer types, as they type
+(in an iPhone frame from `xl`, full screen behind «Live preview» on phones). It never saves — the real design is the
+Preview button.
 
-- **Recipe per template**: `config/live-preview.php` → `recipes['{template view}']`, a list of blocks top to bottom
-  with options (each block file lists its options at the top). No recipe = the `default` layout.
-- **Blocks** (one section each): `resources/views/livewire/pages/dashboard/previews/blocks/` — cover, hero,
-  invitation, couple, note, date, countdown, countup, story, programme, gallery, venue, guest_notes, rsvp, gift,
-  contact, letters, finale, marquee, music, chat, plus the generic `fields` (any list of fields, sizes or photo
-  shapes), `box` and `buttons` for anything unusual.
-- **Components** the blocks are made of: `resources/views/components/preview/` — `section`, `text`, `name`,
+**A new template needs nothing for it**: only the fields ticked in its Fields tab (and included in the plan) are
+drawn, and a section with none of its fields isn't drawn, so a wedding shows the couple and parents, a birthday the
+celebrant and age, a ceremony the hosts. A brand-new field only shows once it is added to the layout file.
+
+- **Layout**: `resources/views/livewire/pages/dashboard/partials/live-preview-page.blade.php` (one file, top to bottom).
+- **Components** it is made of: `resources/views/components/preview/` — `section`, `text`, `name`,
   `photo`, `couple-names`, `parents`, `columns`, `boxes`, `box`, `gallery`, `buttons`, `fixed`, `guest`, `days-left`.
   Each draws nothing when the template doesn't use its field or the plan doesn't include it
-  (`App\Support\Invitations\LivePreviewData::has()`), so a recipe can name fields a template lacks.
+  (`App\Support\Invitations\LivePreviewData::has()`), so the layout can name every field.
 - **Palette**: the `--preview-*` variables at the top of «LIVE PREVIEW» in `resources/css/app.css`, mapped to the
   theme's brand colours. Use only those variables in the preview.
 - **Mapping**: the form input has `name="{key}"` (`partials/field-input.blade.php`); every slot for it has

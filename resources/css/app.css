@@ -488,14 +488,6 @@ button {
     font-weight: 600;
     color: var(--preview-label);
 }
-/* one under the other, centred, full width (so wide photos can use the whole screen) */
-.pv-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-    width: 100%;
-}
 /* side by side: 2 or 3 columns, like the real template */
 .pv-cols {
     display: grid;
@@ -620,8 +612,7 @@ button {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
 }
-.pv-card,
-.pv-bubble {
+.pv-card {
     padding: 0.5rem 0.6rem;
     border: 1px solid var(--preview-border);
     border-radius: 0.75rem;
@@ -633,23 +624,6 @@ button {
     gap: 0.6rem;
     width: 100%;
     text-align: left;
-}
-.pv-bubble {
-    width: 90%;
-    align-self: flex-start;
-}
-.pv-bubble:nth-child(odd) {
-    align-self: flex-end;
-}
-.pv-strip {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    width: 100%;
-    padding: 0.35rem;
-    border-block: 1px solid var(--preview-border);
 }
 .pv-buttons {
     display: flex;

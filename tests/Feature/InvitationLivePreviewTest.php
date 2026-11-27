@@ -10,7 +10,8 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * The editor's live preview: a wireframe of each template built from its recipe (config/live-preview.php),
+ * The editor's live preview: one invitation-shaped layout shared by every template
+ * (partials/live-preview-page.blade.php),
  * plus the «Latin names» switch.
  */
 class InvitationLivePreviewTest extends TestCase
@@ -37,50 +38,39 @@ class InvitationLivePreviewTest extends TestCase
             ->call('showSection', 'details');
     }
 
-    public function test_every_recipe_points_at_a_real_template_and_real_blocks(): void
+    public function test_the_shared_layout_draws_every_field_a_guest_can_see(): void
     {
-        $recipes = config('live-preview.recipes');
-        $this->assertNotEmpty($recipes);
-
-        $blockFolder = resource_path('views/livewire/pages/dashboard/previews/blocks');
-        foreach ([...array_values($recipes), config('live-preview.default')] as $recipe) {
-            foreach ($recipe as $block) {
-                $this->assertFileExists($blockFolder.'/'.$block['block'].'.blade.php');
-            }
-        }
-
-        foreach (array_keys($recipes) as $view) {
-            $this->assertTrue(view()->exists($view), "No template file for the recipe {$view}");
-        }
-    }
-
-    public function test_every_template_recipe_renders_with_every_field(): void
-    {
+        // not drawn on purpose: settings, links and media that have no place in a wireframe
+        $notDrawn = ['music_url', 'music_file', 'accent_color', 'cta_url', 'gallery_feed', 'title_image',
+            'rsvp_enabled', 'countdown_enabled', 'event_schedule', 'story_chapters', 'photo_gallery'];
         $allFields = array_keys(InvitationTemplate::FIELD_CATALOG);
+        $invitation = $this->invitation($allFields, ['groom_name' => 'Sopha', 'event_date' => '2030-01-01T17:00']);
 
-        foreach (array_keys(config('live-preview.recipes')) as $view) {
-            $invitation = $this->invitation($allFields, ['groom_name' => 'Sopha', 'event_date' => '2030-01-01T17:00'], $view);
+        $html = $this->editor($invitation)->html();
 
-            // every recipe draws sections with field slots (weddings, birthdays, love letters, ceremonies)
-            $this->editor($invitation)
-                ->assertSeeHtml('class="pv-section"')
-                ->assertSeeHtml('data-preview-slot="');
+        foreach (array_diff($allFields, $notDrawn) as $key) {
+            $this->assertStringContainsString('data-preview-slot="'.$key.'"', $html, "The live preview doesn't draw {$key}");
         }
     }
 
-    public function test_the_template_recipe_decides_the_layout(): void
+    public function test_the_same_layout_fits_any_template_from_its_fields_alone(): void
     {
-        // Kbach Meas: parents in 3 columns, arch photos; the default layout has neither
-        $kbach = $this->invitation(['groom_name', 'bride_name', 'groom_father', 'bride_father', 'cover_image'], [], 'invitations.templates.wedding.kbach-meas');
-        $this->editor($kbach)
-            ->assertSeeHtml('pv-cols pv-cols--3')
-            ->assertSeeHtml('pv-photo pv-photo--arch');
+        // a wedding: the couple and their parents, no celebrant
+        $wedding = $this->invitation(['groom_name', 'bride_name', 'groom_father', 'groom_photo'], [], 'invitations.templates.wedding.any-new-template');
+        $this->editor($wedding)
+            ->assertSeeHtml('data-preview-slot="bride_name"')
+            ->assertSeeHtml('data-preview-slot="groom_father"')
+            ->assertSeeHtml('data-preview-slot="groom_photo"')
+            ->assertDontSeeHtml('data-preview-slot="celebrant_name"');
 
-        // A template without a recipe falls back to the default layout
-        $plain = $this->invitation(['sender_name', 'groom_name'], [], 'invitations.templates.date-asking-unknown');
-        $this->editor($plain)
-            ->assertSeeHtml('data-preview-slot="sender_name"')
-            ->assertDontSeeHtml('pv-photo--arch');
+        // a birthday: the celebrant and the age, no couple, no empty sections
+        $birthday = $this->invitation(['celebrant_name', 'turning_age'], [], 'invitations.templates.birthday-unknown');
+        $this->editor($birthday)
+            ->assertSeeHtml('data-preview-slot="celebrant_name"')
+            ->assertSeeHtml('data-preview-slot="turning_age"')
+            ->assertDontSeeHtml('data-preview-slot="bride_name"')
+            ->assertDontSee('Gift')
+            ->assertDontSee('Location');
     }
 
     public function test_a_field_shows_its_value_or_its_label_in_grey(): void
