@@ -7,6 +7,8 @@ use App\Models\InvitationRecipient;
 use App\Models\InvitationTemplate;
 use App\Models\Service;
 use App\Models\ServicePlan;
+use App\Models\Setting;
+use App\Support\DemoPhotos;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -14,6 +16,12 @@ use Tests\TestCase;
 class InvitationTemplateDemoTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Setting::forgetMemo(); // demo photos are a Setting row, memoised per process
+    }
 
     public function test_the_date_asking_demo_renders(): void
     {
@@ -56,8 +64,8 @@ class InvitationTemplateDemoTest extends TestCase
         $response = $this->get("/templates/{$template->slug}/demo");
 
         $response->assertOk();
-        $response->assertSee('SOKHA');
-        $response->assertSee('SREYNEANG');
+        $response->assertSee('SOPHA');
+        $response->assertSee('MASY');
         $response->assertSee('15 · 12 · 2026', false);
         $response->assertSee('ដំណើរជីវិតរបស់យើង');
         $response->assertSee('កម្មវិធីអាពាហ៍ពិពាហ៍');
@@ -74,11 +82,11 @@ class InvitationTemplateDemoTest extends TestCase
         $response->assertOk();
         // cover: the couple's initials in the gold frame, the guest in the band
         $response->assertSee('class="k2-initials k2-kh"', false);
-        $response->assertSee('ស&amp;ស', false);
+        $response->assertSee('ស&amp;ម', false);
         $response->assertSee('Guest Test');
         $response->assertSee('khmer-traditional-2/portrait/cover.mp4', false);
         $response->assertSee('khmer-traditional-2/landscape/background.mp4', false);
-        $response->assertSee('SOKHA');
+        $response->assertSee('SOPHA');
         $response->assertSee('លោក ហេង ឌី');
         $response->assertSee('ដំណើរជីវិតរបស់យើង');
         $response->assertSee('ពិធីបង្វិលពពិល');
@@ -287,6 +295,55 @@ class InvitationTemplateDemoTest extends TestCase
                 ->assertSee('song.mp3', false)
                 ->assertSee('preload="none"', false)
                 ->assertDontSee('youtube.com/embed', false);
+        }
+    }
+
+    public function test_a_wedding_template_demo_uses_the_wedding_sample_whatever_its_slug(): void
+    {
+        $template = InvitationTemplate::factory()->create([
+            'slug' => 'khmer-wedding-template',
+            'view' => 'invitations.templates.khmer-traditional-2',
+            'is_active' => true,
+        ]);
+
+        $this->get("/templates/{$template->slug}/demo")
+            ->assertOk()
+            ->assertSee('SOPHA')
+            ->assertDontSee('just vibes')
+            ->assertDontSee('Rooftop');
+    }
+
+    public function test_wedding_demos_show_the_shared_demo_photos_by_role_and_never_placeholders(): void
+    {
+        Storage::fake('s3');
+        DemoPhotos::save(['photos' => [
+            'cover' => 'demo/couple/cover-x.webp',
+            'cover_tall' => 'demo/couple/tall-x.webp',
+            'groom' => 'demo/couple/groom-x.webp',
+            'gallery_1' => 'demo/couple/g1-x.webp',
+            'story_1' => 'demo/couple/s1-x.webp',
+        ], 'captions' => ['story_1' => 'MY-STORY-CAPTION']]);
+
+        $this->get('/demo/wedding/kbach-meas')->assertOk()
+            ->assertSee('tall-x.webp', false)
+            ->assertSee('groom-x.webp', false)
+            ->assertSee('g1-x.webp', false)
+            ->assertSee('s1-x.webp', false)
+            ->assertDontSee('picsum.photos', false);
+
+        // a blank variant falls back to the cover
+        $this->get('/demo/wedding/golden-hour')->assertOk()->assertSee('cover-x.webp', false);
+
+        $this->assertSame(['gallery_1', 'story_1'], array_map(
+            fn ($url) => str_contains($url, 'g1-x') ? 'gallery_1' : 'story_1', DemoPhotos::gallery()));
+        $this->assertSame("ឈុតប្រពៃណីខ្មែរ ពណ៌មាសផ្កាឈូក\nMY-STORY-CAPTION", DemoPhotos::captions());
+    }
+
+    public function test_wedding_demos_with_no_demo_photos_uploaded_show_no_placeholder_photos(): void
+    {
+        $this->withoutVite();
+        foreach (['khmer-traditional-wedding', 'khmer-traditional-2', 'wedding/love-bubble', 'wedding/memory-hall', 'wedding/vellum-garden'] as $path) {
+            $this->get("/demo/{$path}")->assertOk()->assertDontSee('picsum.photos', false);
         }
     }
 

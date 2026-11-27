@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\InvitationTemplate;
 use App\Services\ProductViews;
+use App\Support\DemoPhotos;
 use App\Support\Invitations\ChristmasTemplate;
+use Illuminate\Support\Str;
 
 class InvitationTemplateDemoController extends Controller
 {
@@ -15,13 +17,11 @@ class InvitationTemplateDemoController extends Controller
         // admin dashboard: demos opened per product (once per visitor per day)
         $views->record($template->service_id, ProductViews::DEMO);
 
-        if (in_array($template->slug, ['khmer-traditional-wedding', 'khmer-traditional-2'], true)) {
-            return view('invitations.show', [
-                'view' => $template->view,
-                'recipientName' => 'ភ្ញៀវកិត្តិយស',
-                'invitation' => null,
-                'fields' => $this->khmerWeddingDemoFields(),
-            ]);
+        // every wedding design gets the same sample as its /demo/{path} review link, matched by design file (the
+        // admin picks the slug, e.g. Khmer Traditional II is «khmer-wedding-template»)
+        $path = str_replace('.', '/', Str::after((string) $template->view, 'invitations.templates.'));
+        if (str_starts_with($path, 'wedding/') || in_array($path, ['khmer-traditional-wedding', 'khmer-traditional-2'], true)) {
+            return $this->file($path);
         }
 
         // matched by design file, not slug — admin picks the slug
@@ -122,52 +122,21 @@ class InvitationTemplateDemoController extends Controller
             ],
         };
 
-        // the template's own pictures in public/images/invitations/{file name}/ replace the sample
-        // photos: the first is the cover picture, all of them fill the gallery. Only for templates in
-        // a subfolder (wedding/{name}) — older top-level ones keep design artwork in that folder
-        $ownDir = 'images/invitations/'.basename($path);
-        $ownImages = collect(str_contains(trim($path, '/'), '/') && is_dir(public_path($ownDir)) ? scandir(public_path($ownDir)) : [])
-            ->filter(fn ($f) => preg_match('/\.(png|jpe?g|webp|gif)$/i', $f))
-            ->sort()
-            ->map(fn ($f) => asset($ownDir.'/'.rawurlencode($f)))
-            ->values();
-        // every wedding demo without its own folder uses the shared couple photos in
-        // public/images/invitations/assets/demo-couple/ (sorted by name; groom.* / bride.* / end.* are kept for the
-        // groom photo, bride photo and closing photo, the rest are the cover + gallery)
-        $coupleDir = 'images/invitations/assets/demo-couple';
-        $couple = collect(is_dir(public_path($coupleDir)) ? scandir(public_path($coupleDir)) : [])
-            ->filter(fn ($f) => preg_match('/\.(png|jpe?g|webp)$/i', $f))->sort()->values()
-            ->mapWithKeys(fn ($f) => [$f => asset($coupleDir.'/'.rawurlencode($f))]);
-        $special = fn (string $name) => $couple->first(fn ($u, $f) => str_starts_with(strtolower($f), $name.'.'));
-        $isWeddingDemo = str_contains($kind, 'wedding') || str_contains($kind, 'khmer-traditional');
-        if ($ownImages->isEmpty() && $isWeddingDemo) {
-            $ownImages = $couple->reject(fn ($u, $f) => preg_match('/^(groom|bride|end)\./i', $f))->values();
-        }
-        if ($ownImages->isNotEmpty()) {
-            $fields['cover_image'] = $ownImages->first();
-            $fields['photo_gallery'] = $ownImages->all();
-        }
-
-        // story chapters titled «Place | when»: the wedding templates turn them into memory-map pins
+        // love story for every wedding demo, in the order of the story photos (Admin › Catalog › Demo photos):
+        // titled «Place | when» so the wedding templates can turn them into memory-map pins
         $weddingPlaces = [
-            ['title' => 'ហាងកាហ្វេតូចមួយ | ឆ្នាំ ២០២១', 'text' => 'យើងបានជួបគ្នាជាលើកដំបូងនៅក្នុងថ្ងៃភ្លៀងមួយ ដែលគ្មាននរណាដឹងថាវានឹងក្លាយជាដំណើររឿងដ៏ស្រស់ស្អាត។'],
-            ['title' => 'មាត់ទន្លេចតុមុខ | ល្ងាចដំបូង', 'text' => 'ពីការផ្ញើសារតិចតួច ទៅជាការសន្ទនាយ៉ាងយូរ យើងចាប់ផ្ដើមស្គាល់ចិត្តគ្នាកាន់តែស៊ីជម្រៅ។'],
-            ['title' => 'ឆ្នេរកែប | រដូវក្ដៅ ២០២២', 'text' => 'ក្នុងគ្រាសប្បាយ និងគ្រាលំបាក យើងបានរៀនពីតម្លៃនៃការជឿទុកចិត្ត និងការគាំទ្រគ្នាទៅវិញទៅមក។'],
-            ['title' => 'ប្រាសាទអង្គរវត្ត | ពេលថ្ងៃរះ', 'text' => 'នៅក្រោមពន្លឺព្រឹកព្រលឹម គាត់បានសួរសំណួរដ៏សំខាន់ ហើយចម្លើយតែមួយគត់គឺ «យល់ព្រម»។'],
-            ['title' => 'ផ្ទះរបស់យើង | ថ្ងៃនេះ', 'text' => 'ឥឡូវនេះ យើងរង់ចាំចែករំលែកថ្ងៃដ៏វិសេសនេះជាមួយក្រុមគ្រួសារ និងមិត្តជិតស្និទ្ធ។'],
+            ['title' => 'ពិធីមង្គលការមិត្តភក្តិ | ឆ្នាំ ២០២២', 'text' => 'យើងបានជួបគ្នាជាលើកដំបូងនៅពិធីមង្គលការរបស់មិត្តភក្តិ។ នាងកាន់ភួងផ្កា ហើយគាត់ខ្មាសពេក មិនហ៊ាននិយាយមួយម៉ាត់។'],
+            ['title' => 'មាត់ទន្លេចតុមុខ | ណាត់ជួបលើកដំបូង', 'text' => 'ការណាត់ជួបលើកដំបូងពោរពេញដោយសំណើច រហូតភ្លេចមើលម៉ោង។ ចាប់ពីល្ងាចនោះមក យើងមិនដែលឃ្លាតគ្នាទៀតឡើយ។'],
+            ['title' => 'ផ្ទះក្រុមគ្រួសារ | ថ្ងៃសុំរៀបការ', 'text' => 'នៅចំពោះមុខក្រុមគ្រួសារទាំងសងខាង គាត់ចាប់ដៃនាង ហើយសុំរៀបការ។ ចម្លើយតែមួយគត់គឺ «ចាស យល់ព្រម»។'],
+            ['title' => 'ស្ទូឌីយោថតរូប | មុនថ្ងៃមង្គល', 'text' => 'យើងថតរូបមុនរៀបការក្នុងសម្លៀកបំពាក់បីបែប គឺខ្មែរ ចិន និងរ៉ូបពណ៌ស ហើយស្ទើរតែគ្រប់រូបសុទ្ធតែសើច។'],
+            ['title' => 'ភ្នំពេញ | ១៥ ធ្នូ ២០២៦', 'text' => 'ឥឡូវនេះ យើងត្រៀមចាប់ផ្ដើមជីវិតថ្មីជាមួយគ្នាជារៀងរហូត ហើយសូមគោរពអញ្ជើញលោកអ្នកមកធ្វើជាសាក្សី។'],
         ];
 
-        // every optional wedding field filled (couple photos, guest notes, end time, custom button, song name…), with
-        // sample photos named after the template unless public/images/invitations/{file}/ has real ones
-        $fullWeddingSample = fn (string $seed, array $extra = []) => array_merge([
+        // every optional wedding field filled (guest notes, end time, custom button, song name…); the photos and
+        // captions come from the shared demo photo set below
+        $fullWeddingSample = fn (array $extra = []) => array_merge([
             'headline' => 'Together with their families',
             'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
-            ...($ownImages->isEmpty() ? [
-                'cover_image' => "https://picsum.photos/seed/{$seed}-couple/900/1400",
-                'photo_gallery' => collect(range(1, 9))->map(fn ($i) => "https://picsum.photos/seed/{$seed}{$i}/900/".($i % 3 ? '1100' : '700'))->all(),
-            ] : []),
-            'background_image' => "https://picsum.photos/seed/{$seed}-end/900/1200",
-            'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nរហូតទៅ",
             'story_chapters' => $weddingPlaces,
             'end_time' => '21:00',
             'dress_code' => 'ពណ៌ក្រែម មាស ឬ sage — សម្លៀកបំពាក់ផ្លូវការ',
@@ -190,101 +159,74 @@ class InvitationTemplateDemoController extends Controller
                     .'You turned ordinary mornings into my favorite part of the day, and quiet evenings into a place I never want to leave. Like a river, I keep finding my way back to you.'."\n\n"
                     .'Thank you for choosing me, again and again. From this moment on, and every one after it, I will love you.',
             ],
-            // Vellum Garden: the personal note, gallery captions, a terracotta wax seal and a sample song
+            // Vellum Garden: the personal note, a terracotta wax seal and a sample song
             'vellum-garden' => [
                 'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
-                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nដំណើរកម្សាន្តលើកដំបូង\nពេលល្ងាចនៅមាត់ទន្លេ\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nរហូតទៅ",
                 'accent_color' => '#b0654b',
                 'story_chapters' => $weddingPlaces,
                 'dress_code' => 'សូមស្លៀកពាក់ពណ៌ក្រែម បៃតងខ្ចី ឬផ្កាឈូកខ្ចី — សម្លៀកបំពាក់ផ្លូវការ ឬប្រពៃណីខ្មែរ',
                 'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             ],
-            // Front Page: pull quote, 12 photos (three full photo-booth strips) + captions, dress code, a sample song
+            // Front Page: pull quote, dress code, a sample song (12 photos = three full photo-booth strips)
             'front-page' => [
                 'message' => 'ពីថ្ងៃនេះតទៅ យើងនឹងសរសេររឿងរ៉ាវតែមួយជាមួយគ្នា ហើយទំព័រដំបូងនៃរឿងនោះ យើងចង់ឲ្យមានវត្តមានលោកអ្នក។',
-                'photo_gallery' => collect(range(1, 12))->map(fn ($i) => "https://picsum.photos/seed/frontpage{$i}/800/".($i % 2 ? '640' : '800'))->all(),
-                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង",
                 'dress_code' => 'ពណ៌ក្រែម ខ្មៅ ឬក្រហមដិត',
                 'story_chapters' => $weddingPlaces,
                 'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
             ],
-            // Golden Hour: every section filled — couple photos, guest notes, end time, custom button, song name
-            'golden-hour' => [
-                'headline' => 'We are getting married',
-                'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
-                // sample photos only when public/images/invitations/golden-hour/ has none (a real couple photo there wins)
-                ...($ownImages->isEmpty() ? [
-                    'cover_image' => 'https://picsum.photos/seed/goldenhour-couple/1080/1920',
-                    'photo_gallery' => collect(range(1, 9))->map(fn ($i) => "https://picsum.photos/seed/goldenhour{$i}/900/".($i % 3 ? '900' : '1200'))->all(),
-                ] : []),
-                'background_image' => 'https://picsum.photos/seed/goldenhour-sunset/1200/1600',
-                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nរហូតទៅ",
-                'story_chapters' => $weddingPlaces,
-                'end_time' => '21:30',
+            'golden-hour' => $fullWeddingSample([
+                'headline' => 'We are getting married', 'end_time' => '21:30', 'closing_line' => 'Forever starts today',
                 'dress_code' => 'ពណ៌ក្រែម មាស ឬត្នោតខ្ចី — សម្លៀកបំពាក់ផ្លូវការ',
-                'what_to_bring' => 'ស្នាមញញឹម និងក្តីស្រឡាញ់របស់លោកអ្នក',
-                'rsvp_deadline' => '2026-12-05',
-                'rsvp_message' => 'តើលោកអ្នកនឹងអញ្ជើញមកចូលរួមអបអរជាមួយយើងខ្ញុំដែរឬទេ?',
-                'gift_message' => 'វត្តមានរបស់លោកអ្នកគឺជាកាដូដ៏ធំបំផុត។ សម្រាប់អ្នកដែលចង់ផ្ញើចំណងដៃពីចម្ងាយ សូមស្កេន QR ខាងក្រោម។',
-                'cta_label' => 'ចូលរួម Telegram Group',
-                'cta_url' => 'https://t.me/',
-                'closing_line' => 'Forever starts today',
-                'song_title' => 'Soft Piano · Golden Hour',
-                'accent_color' => '#d4a76a',
-                'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
-            ],
-            'starter' => $fullWeddingSample('starter'),
+                'song_title' => 'Soft Piano · Golden Hour', 'accent_color' => '#d4a76a',
+            ]),
+            'starter' => $fullWeddingSample(),
             // the four templates built together (western, Gen Z, two Khmer kbach): every field filled
-            'eternal-vows' => $fullWeddingSample('eternalvows', ['accent_color' => '#b08d57', 'closing_line' => 'Forever & always', 'dress_code' => 'Black tie — ខ្មៅ ស ឬ champagne']),
-            'love-bubble' => $fullWeddingSample('lovebubble', ['accent_color' => '#ff7eb6', 'headline' => 'We said yes!', 'closing_line' => 'See you there bestie!', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី lavender ឬ sky blue — casual cute']),
-            'kbach-meas' => $fullWeddingSample('kbachmeas', ['accent_color' => '#c9a14a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌មាស ក្រហមដិត ឬក្រែម']),
+            'eternal-vows' => $fullWeddingSample(['accent_color' => '#b08d57', 'closing_line' => 'Forever & always', 'dress_code' => 'Black tie — ខ្មៅ ស ឬ champagne']),
+            'love-bubble' => $fullWeddingSample(['accent_color' => '#ff7eb6', 'headline' => 'We said yes!', 'closing_line' => 'See you there bestie!', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី lavender ឬ sky blue — casual cute']),
+            'kbach-meas' => $fullWeddingSample(['accent_color' => '#c9a14a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌មាស ក្រហមដិត ឬក្រែម']),
             // Memory Hall (3D walk-through): every stop filled, ten photos so the gallery wing is a real corridor
-            'memory-hall' => $fullWeddingSample('memoryhall', [
+            'memory-hall' => $fullWeddingSample([
                 'accent_color' => '#c9a24d', 'headline' => 'Together with their families', 'closing_line' => 'Forever starts here',
-                'dress_code' => 'ពណ៌ក្រែម មាស ឬ sage — សម្លៀកបំពាក់ផ្លូវការ',
-                ...($ownImages->isEmpty() ? ['photo_gallery' => collect(range(1, 10))->map(fn ($i) => "https://picsum.photos/seed/memoryhall{$i}/900/".($i % 3 ? '1150' : '760'))->all()] : []),
-                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nពួកយើង\nអង្គរវត្តពេលថ្ងៃរះ\nរហូតទៅ",
                 'song_title' => 'Soft Piano · Memory Hall',
             ]),
-            // names in Khmer, so the demo shows the Khmer name style (the frame switches font by the script typed)
-            'blossom-swing' => $fullWeddingSample('blossomswing', ['groom_name' => 'សុខា', 'bride_name' => 'ស្រីនាង', 'accent_color' => '#d0668c', 'closing_line' => 'Happily ever after', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម ឬ sage — សម្លៀកបំពាក់ផ្លូវការ']),
-            // Green Wedding (wisteria night garden): every field filled, names in Khmer like Blossom Swing
-            'green-wedding' => $fullWeddingSample('greenwedding', ['groom_name' => 'សុខា', 'bride_name' => 'ស្រីនាង', 'accent_color' => '#e2c27d', 'closing_line' => 'Forever & always', 'dress_code' => 'ពណ៌បៃតងចាស់ ស ឬ មាស — សម្លៀកបំពាក់ផ្លូវការ']),
-            'kbach-chhouk' => $fullWeddingSample('kbachchhouk', ['accent_color' => '#2f7a5a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌ក្រែម បៃតងខ្ចី ឬមាស']),
-            // Paper Bloom: every section filled — couple photos, guest notes, end time, custom button, song name
-            'paper-bloom' => [
-                'headline' => 'Together with their families',
-                'message' => 'ពីការជួបគ្នាដោយចៃដន្យ ក្លាយជាមិត្ត ហើយក្លាយជាគូជីវិត។ យើងទាំងពីរពិតជារីករាយណាស់ ដែលបានចែករំលែកថ្ងៃដ៏មានអត្ថន័យនេះជាមួយលោកអ្នក។',
-                // sample photos only when public/images/invitations/paper-bloom/ has none (a real couple photo there wins)
-                ...($ownImages->isEmpty() ? [
-                    'cover_image' => 'https://picsum.photos/seed/paperbloom-couple/900/1400',
-                    'photo_gallery' => collect(range(1, 8))->map(fn ($i) => "https://picsum.photos/seed/paperbloom{$i}/800/1000")->all(),
-                ] : []),
-                'background_image' => 'https://picsum.photos/seed/paperbloom-end/900/1200',
-                'photo_captions' => "ថ្ងៃដំបូងដែលយើងជួបគ្នា\nកាហ្វេពេលព្រឹក\nដំណើរទៅកែប\nពេលល្ងាចនៅមាត់ទន្លេ\nសើចរហូត\nថ្ងៃដែលគាត់សុំរៀបការ\nគ្រួសារតែមួយ\nរហូតទៅ",
-                'story_chapters' => $weddingPlaces,
-                'end_time' => '21:00',
+            'blossom-swing' => $fullWeddingSample(['accent_color' => '#d0668c', 'closing_line' => 'Happily ever after', 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម ឬ sage — សម្លៀកបំពាក់ផ្លូវការ']),
+            // Green Wedding (wisteria night garden): every field filled, names in Khmer
+            'green-wedding' => $fullWeddingSample(['groom_name' => 'សុខា', 'bride_name' => 'ស្រីនាង', 'accent_color' => '#e2c27d', 'closing_line' => 'Forever & always', 'dress_code' => 'ពណ៌បៃតងចាស់ ស ឬ មាស — សម្លៀកបំពាក់ផ្លូវការ']),
+            'kbach-chhouk' => $fullWeddingSample(['accent_color' => '#2f7a5a', 'headline' => 'សិរីមង្គលអាពាហ៍ពិពាហ៍', 'closing_line' => 'សូមអរគុណ', 'dress_code' => 'សម្លៀកបំពាក់ប្រពៃណីខ្មែរ ពណ៌ក្រែម បៃតងខ្ចី ឬមាស']),
+            'paper-bloom' => $fullWeddingSample([
                 'dress_code' => 'ពណ៌ផ្កាឈូកខ្ចី ក្រែម បៃតងខ្ចី ឬ lavender — សម្លៀកបំពាក់ផ្លូវការ',
-                'what_to_bring' => 'ស្នាមញញឹម និងក្តីស្រឡាញ់របស់លោកអ្នក',
-                'rsvp_deadline' => '2026-12-05',
-                'rsvp_message' => 'តើលោកអ្នកនឹងអញ្ជើញមកចូលរួមអបអរជាមួយយើងខ្ញុំដែរឬទេ?',
-                'gift_message' => 'វត្តមានរបស់លោកអ្នកគឺជាកាដូដ៏ធំបំផុត។ សម្រាប់អ្នកដែលចង់ផ្ញើចំណងដៃពីចម្ងាយ សូមស្កេន QR ខាងក្រោម។',
-                'cta_label' => 'ចូលរួម Telegram Group',
-                'cta_url' => 'https://t.me/',
-                'closing_line' => 'Happily ever after',
-                'song_title' => 'Soft Piano · Paper Bloom',
-                'accent_color' => '#e58f8f',
-                'music_file' => asset('images/invitations/assets/music/royalty_free_music-soft-piano-100-bpm-121529.mp3'),
-            ],
+                'song_title' => 'Soft Piano · Paper Bloom', 'accent_color' => '#e58f8f',
+            ]),
             default => [],
         });
 
-        if ($isWeddingDemo && $couple->isNotEmpty() && ! is_dir(public_path($ownDir))) {
-            $fields = array_merge($fields, array_filter([
-                'groom_photo' => $special('groom'),
-                'bride_photo' => $special('bride'),
-                'background_image' => $special('end') ?? $ownImages->last(),
-            ]));
+        // every wedding demo shows the one shared couple photo set (App\Support\DemoPhotos, uploaded in Admin ›
+        // Catalog › Demo photos), each template with the cover crop that fits its frame and as many gallery photos as
+        // its design shows. Roles nobody uploaded stay empty, so that photo's section hides.
+        $isWeddingDemo = str_contains($kind, 'wedding') || str_contains($kind, 'khmer-traditional');
+        if ($isWeddingDemo) {
+            $name = basename($path);
+            $count = match ($name) {
+                // ?photos=N (1–17) previews the Khmer feed with any number of photos
+                'khmer-traditional-wedding', 'khmer-traditional-2' => max(1, min(17, (int) request('photos', 6))),
+                'front-page' => 12,
+                'memory-hall' => 10,
+                'vellum-garden' => 6,
+                'paper-bloom' => 8,
+                default => 9,
+            };
+            $fields = array_merge($fields, [
+                'cover_image' => DemoPhotos::url(match ($name) {
+                    'kbach-meas', 'kbach-chhouk', 'vellum-garden', 'eternal-vows', 'paper-bloom', 'love-bubble' => 'cover_tall',
+                    'golden-hour', 'memory-hall' => 'cover_wide',
+                    default => 'cover',
+                }),
+                'groom_photo' => DemoPhotos::url('groom'),
+                'bride_photo' => DemoPhotos::url('bride'),
+                'background_image' => DemoPhotos::url('end'),
+                'photo_gallery' => DemoPhotos::gallery($count),
+                'photo_captions' => DemoPhotos::captions($count),
+            ]);
         }
 
         // the Christmas template is two pages; ?to= (the sample guest name) only matters on the cover
@@ -313,9 +255,9 @@ class InvitationTemplateDemoController extends Controller
     private function khmerWeddingDemoFields(): array
     {
         return [
-            'groom_name' => 'SOKHA',
-            'bride_name' => 'SREYNEANG',
-            'couple_initials' => 'ស&ស',
+            'groom_name' => 'SOPHA',
+            'bride_name' => 'MASY',
+            'couple_initials' => 'ស&ម',
             'groom_father' => 'ហេង ឌី',
             'groom_mother' => 'សុខ ជា',
             'bride_father' => 'ឈិន សារ៉ាត',
@@ -329,20 +271,21 @@ class InvitationTemplateDemoController extends Controller
             'venue_address' => 'The Grand Ballroom, Phnom Penh, Cambodia',
             'map_url' => 'https://www.google.com/maps/@11.5564,104.9282,16z',
             'qr_code' => 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=ROUMDOUL-DEMO-GIFT',
-            'gift_account' => "ABA · SOKHA & SREYNEANG\n000 123 456",
+            'gift_account' => "ABA · SOPHA & MASY\n000 123 456",
             'rsvp_enabled' => true,
             'countdown_enabled' => true,
             'groom_phone' => '+855 12 345 678',
             'bride_phone' => '+855 96 765 4321',
-            'cover_image' => 'https://picsum.photos/seed/khmerwed-cover/900/1200',
-            'groom_photo' => 'https://picsum.photos/seed/khmerwed-groom/600/800',
-            'bride_photo' => 'https://picsum.photos/seed/khmerwed-bride/600/800',
+            'cover_image' => DemoPhotos::url('cover'),
+            'groom_photo' => DemoPhotos::url('groom'),
+            'bride_photo' => DemoPhotos::url('bride'),
+            // in the order of the story photos (Admin › Catalog › Demo photos)
             'story_chapters' => [
-                ['title' => 'ការចាប់ផ្ដើម', 'text' => 'យើងបានជួបគ្នាជាលើកដំបូងនៅក្នុងថ្ងៃភ្លៀងមួយ ដែលគ្មាននរណាដឹងថាវានឹងក្លាយជាដំណើររឿងដ៏ស្រស់ស្អាត។'],
-                ['title' => 'ការស្គាល់គ្នា', 'text' => 'ពីការផ្ញើសារតិចតួច ទៅជាការសន្ទនាយ៉ាងយូរ យើងចាប់ផ្ដើមស្គាល់ចិត្តគ្នាកាន់តែស៊ីជម្រៅ។'],
-                ['title' => 'ការយល់ចិត្តគ្នា', 'text' => 'ក្នុងគ្រាសប្បាយ និងគ្រាលំបាក យើងបានរៀនពីតម្លៃនៃការជឿទុកចិត្ត និងការគាំទ្រគ្នាទៅវិញទៅមក។'],
-                ['title' => 'ការសម្រេចចិត្ត', 'text' => 'នៅក្រោមពន្លឺព្រះច័ន្ទ គាត់បានសួរសំណួរដ៏សំខាន់ ហើយចម្លើយតែមួយគត់គឺ «យល់ព្រម»។'],
-                ['title' => 'ថ្ងៃដ៏មានអត្ថន័យ', 'text' => 'ឥឡូវនេះ យើងរង់ចាំចែករំលែកថ្ងៃដ៏វិសេសនេះជាមួយក្រុមគ្រួសារ និងមិត្តជិតស្និទ្ធ។'],
+                ['title' => 'ជួបគ្នាលើកដំបូង', 'text' => 'យើងបានជួបគ្នាជាលើកដំបូងនៅពិធីមង្គលការរបស់មិត្តភក្តិ ក្នុងថ្ងៃដ៏រីករាយមួយ ដែលគ្មាននរណាដឹងថាវានឹងក្លាយជាដំណើររឿងរបស់យើង។'],
+                ['title' => 'ណាត់ជួបលើកដំបូង', 'text' => 'ការជួបគ្នាលើកដំបូងពោរពេញដោយសំណើច ហើយពីពេលនោះមក យើងចាប់ផ្ដើមស្គាល់ចិត្តគ្នាកាន់តែស៊ីជម្រៅ។'],
+                ['title' => 'ថ្ងៃសុំរៀបការ', 'text' => 'នៅចំពោះមុខក្រុមគ្រួសារទាំងសងខាង កូនប្រុសបានចាប់ដៃកូនស្រី ហើយសុំរៀបការ ដោយមានការឯកភាព និងពរជ័យពីមាតាបិតា។'],
+                ['title' => 'ថតរូបមុនមង្គលការ', 'text' => 'យើងបានថតរូបអនុស្សាវរីយ៍ក្នុងសម្លៀកបំពាក់ប្រពៃណីខ្មែរ ចិន និងរ៉ូបពណ៌ស ទុកជាការចងចាំមុនថ្ងៃមង្គល។'],
+                ['title' => 'ជារៀងរហូត', 'text' => 'ឥឡូវនេះ យើងខ្ញុំត្រៀមចាប់ផ្ដើមជីវិតថ្មីជាមួយគ្នា ហើយសូមគោរពអញ្ជើញលោកអ្នកមកធ្វើជាសាក្សីនៃថ្ងៃដ៏មានអត្ថន័យនេះ។'],
             ],
             'event_schedule' => [
                 ['time' => '06:00 AM', 'label' => 'ពិធីហែជំនូន'],
@@ -352,10 +295,9 @@ class InvitationTemplateDemoController extends Controller
                 ['time' => '05:00 PM', 'label' => 'ពិធីទទួលភ្ញៀវ'],
             ],
             'gallery_feed' => true,
-            // ?photos=N (1–30) previews the feed with any number of photos, mixed portrait/landscape
-            'photo_gallery' => collect(range(1, max(1, min(30, (int) request('photos', 6)))))
-                ->map(fn ($i) => "https://picsum.photos/seed/khmerwed{$i}/".($i % 3 === 0 ? '1000/700' : ($i % 2 ? '700/900' : '700/700')))
-                ->all(),
+            // ?photos=N (1–17) previews the feed with any number of photos
+            'photo_gallery' => DemoPhotos::gallery(max(1, min(17, (int) request('photos', 6)))),
+            'photo_captions' => DemoPhotos::captions(max(1, min(17, (int) request('photos', 6)))),
         ];
     }
 
