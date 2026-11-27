@@ -10,12 +10,18 @@ use Illuminate\Support\Facades\Storage;
  * Photos are uploaded in Admin › Catalog › Demo photos (App\Filament\Pages\DemoPhotos) to the s3 disk under
  * demo/couple/; the role → file path map (and each photo's caption) is stored as one Setting row. Swapping a
  * photo = upload a new file for that role there. Only demo pages use this — customer invitations never do.
+ *
+ * Until a photo is uploaded there, demos show the built-in set committed in public/images/invitations/demo/couple/
+ * ({role}.webp), so every checkout of the repo shows the same demo photos.
  */
 class DemoPhotos
 {
     public const SETTING_KEY = 'demo_photos';
 
     public const DIRECTORY = 'demo/couple';
+
+    /** The built-in photo set, under public/: {role}.webp. Used only while nothing is uploaded in admin. */
+    public const BUILT_IN_DIRECTORY = 'images/invitations/demo/couple';
 
     /**
      * role => [admin label, crop / size hint, built-in caption]. The demo gallery order is gallery_1, story_1…5,
@@ -78,13 +84,41 @@ class DemoPhotos
     /** The photo's URL for a role, or null when nothing is uploaded for it (the template then hides that photo). */
     public static function url(string $role): ?string
     {
-        $path = self::all()['photos'][$role] ?? null;
+        $path = self::photos()[$role] ?? null;
 
         if (blank($path)) {
             return isset(self::FALLBACK[$role]) ? self::url(self::FALLBACK[$role]) : null;
         }
 
-        return preg_match('#^https?://#i', $path) ? $path : Storage::disk('s3')->url($path);
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+
+        return str_starts_with($path, self::BUILT_IN_DIRECTORY.'/') ? asset($path) : Storage::disk('s3')->url($path);
+    }
+
+    /**
+     * role => path of the photo the demos show: the photos uploaded in admin, or — when none is uploaded at all — the
+     * built-in set in public/ (the two are never mixed, so a demo never shows two different couples).
+     *
+     * @return array<string, string|null>
+     */
+    private static function photos(): array
+    {
+        $uploaded = self::all()['photos'];
+
+        return array_filter($uploaded) !== [] ? $uploaded : self::builtIn();
+    }
+
+    /** @return array<string, string> role => public path, for the built-in files that exist */
+    private static function builtIn(): array
+    {
+        static $builtIn = null;
+
+        return $builtIn ??= collect(array_keys(self::ROLES))
+            ->mapWithKeys(fn ($role) => [$role => self::BUILT_IN_DIRECTORY."/{$role}.webp"])
+            ->filter(fn ($path) => is_file(public_path($path)))
+            ->all();
     }
 
     /** @return list<string> gallery roles in demo order: gallery_1, story_1…5, gallery_2…12 */
@@ -112,7 +146,7 @@ class DemoPhotos
     /** @return list<string> */
     private static function filledGalleryRoles(): array
     {
-        $photos = self::all()['photos'];
+        $photos = self::photos();
 
         return array_values(array_filter(self::galleryRoles(), fn ($r) => filled($photos[$r] ?? null)));
     }

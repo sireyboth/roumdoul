@@ -339,6 +339,16 @@ class InvitationTemplateDemoTest extends TestCase
         $this->assertSame("ឈុតប្រពៃណីខ្មែរ ពណ៌មាសផ្កាឈូក\nMY-STORY-CAPTION", DemoPhotos::captions());
     }
 
+    public function test_with_nothing_uploaded_the_demos_show_the_built_in_photos_from_public(): void
+    {
+        $this->assertSame(asset('images/invitations/demo/couple/groom.webp'), DemoPhotos::url('groom'));
+        $this->assertSame(asset('images/invitations/demo/couple/cover.webp'), DemoPhotos::url('cover_wide'));
+        $this->assertCount(12, DemoPhotos::gallery());
+        $this->assertStringStartsWith(asset('images/invitations/demo/couple/gallery_1.webp'), DemoPhotos::gallery()[0]);
+
+        $this->get('/demo/wedding/kbach-meas')->assertOk()->assertSee('images/invitations/demo/couple/', false);
+    }
+
     public function test_wedding_demos_with_no_demo_photos_uploaded_show_no_placeholder_photos(): void
     {
         $this->withoutVite();
