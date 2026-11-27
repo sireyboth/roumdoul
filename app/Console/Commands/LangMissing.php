@@ -27,13 +27,6 @@ class LangMissing extends Command
 
     private const JS_CALL = '/\bt\(\s*(\'(?:[^\'\\\\]|\\\\.)*\'|"(?:[^"\\\\]|\\\\.)*")/u';
 
-    /**
-     * lang/en/{group}.php files that are English on purpose and always read with the locale forced
-     * to 'en' (the English-only Christmas template, App\Support\Invitations\ChristmasTemplate::t()),
-     * so they have no Khmer counterpart to check.
-     */
-    private const ENGLISH_ONLY_GROUPS = ['christmas'];
-
     public function handle(): int
     {
         $used = $this->usedKeys();
@@ -49,10 +42,6 @@ class LangMissing extends Command
             $missing = [];
 
             foreach ($used as $key => $where) {
-                if ($this->isEnglishOnly($key)) {
-                    continue;
-                }
-
                 $found = $this->isGroupKey($key)
                     ? Lang::hasForLocale($key, $locale)
                     : array_key_exists($key, $dictionaries[$locale]);
@@ -135,9 +124,6 @@ class LangMissing extends Command
 
         foreach (glob(lang_path("{$locale}/*.php")) ?: [] as $file) {
             $group = basename($file, '.php');
-            if (in_array($group, self::ENGLISH_ONLY_GROUPS, true)) {
-                continue;
-            }
             $lines = require $file;
             unset($lines['attributes']);
 
@@ -147,11 +133,6 @@ class LangMissing extends Command
         }
 
         return $keys;
-    }
-
-    private function isEnglishOnly(string $key): bool
-    {
-        return str_contains($key, '.') && in_array(strtok($key, '.'), self::ENGLISH_ONLY_GROUPS, true);
     }
 
     private function isGroupKey(string $key): bool

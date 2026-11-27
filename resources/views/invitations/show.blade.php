@@ -1,6 +1,5 @@
 <!doctype html>
-{{-- the Christmas template is English-only; every other template follows the (Khmer) guest locale --}}
-<html lang="{{ \App\Support\Invitations\ChristmasTemplate::is($view) ? 'en' : app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
   <meta charset="UTF-8" />

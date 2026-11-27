@@ -247,10 +247,6 @@
           <x-app-icon name="chevron-right" class="h-4 w-4 text-plum-300" />
         </button>
 
-      @elseif ($section === 'details' && $this->isChristmas())
-        {{-- the Christmas template has its own English editor with a live preview --}}
-        @include('livewire.pages.dashboard.partials.christmas-editor')
-
       @elseif (in_array($section, ['details', 'media', 'program'], true))
         @php
           $formFields = $this->sectionFields($section);

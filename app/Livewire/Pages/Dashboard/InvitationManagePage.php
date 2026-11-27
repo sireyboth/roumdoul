@@ -8,7 +8,6 @@ use App\Models\InvitationTemplate;
 use App\Services\ImageOptimizer;
 use App\Services\InvitationAddons;
 use App\Services\TelegramNotifier;
-use App\Support\Invitations\ChristmasTemplate;
 use App\Support\Invitations\EventDate;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -173,20 +172,9 @@ class InvitationManagePage extends Component
             $this->fieldValues += ['gallery_feed' => true];
         }
 
-        // The Christmas editor starts with its default title filled in.
-        if ($this->isChristmas() && blank($this->fieldValues['headline'] ?? null)) {
-            $this->fieldValues['headline'] = ChristmasTemplate::t('default_title');
-        }
-
         if (! in_array($this->section, $this->visibleSections(), true)) {
             $this->section = 'overview';
         }
-    }
-
-    /** The Christmas template has its own English editor with a live preview on the Details tab. */
-    public function isChristmas(): bool
-    {
-        return ChristmasTemplate::is($this->invitation->template->view);
     }
 
     public function showSection(string $section): void
@@ -487,23 +475,7 @@ class InvitationManagePage extends Component
         $this->invitation->update(['field_values' => $this->fieldValues]);
         $this->saved = true;
         $this->dispatch('invitation-saved');
-        $this->toast('success', $this->isChristmas() ? ChristmasTemplate::t('editor.saved_toast') : __('Saved! Guests will see the changes immediately.'));
-    }
-
-    /** Christmas editor's Reset (confirmed in the browser first): clears its form, not saved until Save. */
-    public function resetChristmasForm(): void
-    {
-        abort_unless($this->invitation->isPaid() && $this->isChristmas(), 403);
-
-        foreach (ChristmasTemplate::FORM_FIELDS as $key) {
-            if (in_array($key, $this->invitation->template->fields ?? [], true)) {
-                $this->fieldValues[$key] = '';
-            }
-        }
-        $this->fieldValues['headline'] = ChristmasTemplate::t('default_title');
-        $this->resetErrorBag();
-        $this->dispatch('xm-form-reset');
-        $this->toast('info', ChristmasTemplate::t('editor.reset_done'));
+        $this->toast('success', __('Saved! Guests will see the changes immediately.'));
     }
 
     /** Shows a toast in the workspace (see resources/js/modules/toast.js). */
@@ -530,13 +502,6 @@ class InvitationManagePage extends Component
                 $this->section = $section;
             }
             $this->dispatch('field-error', key: $first);
-        }
-
-        if ($this->isChristmas()) {
-            $label = $first ? ChristmasTemplate::label($first) : null;
-            $this->toast('error', ChristmasTemplate::t($keys->count() > 1 ? 'editor.fix_many' : 'editor.fix_one', ['count' => $keys->count(), 'field' => $label]));
-
-            return;
         }
 
         $label = $first ? ($this->invitation->template->localizedFields()[$first]['label'] ?? $first) : null;
@@ -601,15 +566,6 @@ class InvitationManagePage extends Component
                 $rules["fieldValues.{$key}.*.title"] = ['nullable', 'string', 'max:120'];
                 $rules["fieldValues.{$key}.*.text"] = ['nullable', 'string', 'max:600'];
             }
-        }
-
-        // the Christmas template has its own limits, required fields and English messages
-        if ($this->isChristmas()) {
-            $rules = array_replace($rules, ChristmasTemplate::rules(
-                $this->fieldValues, $this->invitation->template->fields ?? [], fn (string $key) => $this->invitation->fieldUnlocked($key),
-            ));
-
-            return array_filter([...$rules, ...$this->uploadRules()]);
         }
 
         foreach ($this->eventDateRules() as $key => $rule) {
@@ -722,7 +678,6 @@ class InvitationManagePage extends Component
             '*.dimensions' => 'This photo is too large (max 8000 × 8000 pixels).',
             'audioUploads.*.max' => __('The music file is too big — at most :mb MB (≈ a 10-minute song).', ['mb' => self::MAX_AUDIO_KB / 1024]),
             'audioUploads.*.mimetypes' => __('Please use an MP3 or M4A music file only.'),
-            ...($this->isChristmas() ? ChristmasTemplate::messages() : []),
         ];
     }
 
