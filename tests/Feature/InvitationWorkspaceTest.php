@@ -143,9 +143,10 @@ class InvitationWorkspaceTest extends TestCase
             ->call('showSection', 'details')
             ->assertSet('section', 'details')
             ->assertSee(__('Your name (sender)'))
-            ->assertDontSee(__('Cover image'))
+            // the cover photo's upload is on the Images tab (its slot in the live preview shows on every tab)
+            ->assertDontSeeHtml('id="upload-cover_image"')
             ->call('showSection', 'media')
-            ->assertSee(__('Cover image'));
+            ->assertSeeHtml('id="upload-cover_image"');
     }
 
     public function test_an_unavailable_section_is_ignored(): void

@@ -9,6 +9,7 @@ use App\Services\ImageOptimizer;
 use App\Services\InvitationAddons;
 use App\Services\TelegramNotifier;
 use App\Support\Invitations\EventDate;
+use App\Support\Invitations\LivePreviewData;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
@@ -59,7 +60,7 @@ class InvitationManagePage extends Component
      */
     public const FORM_GROUPS = [
         'people' => ['label' => 'Who is hosting', 'icon' => 'users', 'fields' => [
-            'sender_name', 'groom_name', 'bride_name', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'celebrant_name', 'turning_age', 'groom_phone', 'bride_phone',
+            'sender_name', 'groom_name', 'groom_name_latin', 'bride_name', 'bride_name_latin', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'celebrant_name', 'turning_age', 'groom_phone', 'bride_phone',
             'host_names', 'contact_phone',
         ]],
         'when_where' => ['label' => 'When and where', 'icon' => 'calendar', 'fields' => [
@@ -172,6 +173,11 @@ class InvitationManagePage extends Component
             $this->fieldValues += ['gallery_feed' => true];
         }
 
+        // The «Latin names» switch next to Save starts ON (shown) until the customer turns it off.
+        if ($invitation->template->usesLatinNames()) {
+            $this->fieldValues += [InvitationTemplate::LATIN_NAMES_SWITCH => true];
+        }
+
         if (! in_array($this->section, $this->visibleSections(), true)) {
             $this->section = 'overview';
         }
@@ -239,6 +245,15 @@ class InvitationManagePage extends Component
             ->filter(fn (string $key) => self::fieldSection($key) === $section)
             ->values()
             ->all();
+    }
+
+    /**
+     * What the editor's live preview reads (partials/live-preview.blade.php): the template's recipe from
+     * config/live-preview.php, and each field's current value, label and photo.
+     */
+    public function livePreviewData(): LivePreviewData
+    {
+        return new LivePreviewData($this->invitation, $this->fieldValues, $this->imageUploads);
     }
 
     /**
@@ -424,6 +439,9 @@ class InvitationManagePage extends Component
         // Only keys this invitation's template actually declares may be stored, and uploads for
         // any other key are ignored — fieldValues/imageUploads are client-writable properties.
         $allowedKeys = $this->invitation->template->fields ?? [];
+        if ($this->invitation->template->usesLatinNames()) {
+            $allowedKeys[] = InvitationTemplate::LATIN_NAMES_SWITCH;
+        }
         $this->fieldValues = Arr::only($this->fieldValues, $allowedKeys);
         $this->imageUploads = Arr::only($this->imageUploads, $allowedKeys);
         $this->galleryUploads = Arr::only($this->galleryUploads, $allowedKeys);
@@ -566,6 +584,10 @@ class InvitationManagePage extends Component
                 $rules["fieldValues.{$key}.*.title"] = ['nullable', 'string', 'max:120'];
                 $rules["fieldValues.{$key}.*.text"] = ['nullable', 'string', 'max:600'];
             }
+        }
+
+        if ($this->invitation->template->usesLatinNames()) {
+            $rules['fieldValues.'.InvitationTemplate::LATIN_NAMES_SWITCH] = ['nullable', 'boolean'];
         }
 
         foreach ($this->eventDateRules() as $key => $rule) {

@@ -1,5 +1,5 @@
-{{-- One form card (a FORM_GROUPS group). Expects $groupKey, $group, plus the form's $fieldCatalog,
-     $invitation, $initialFocus, $isFilled. Short fields pair up two per row; $group['full'] take a
+{{-- One form card (a FORM_GROUPS group). Expects $groupKey, $group, plus the form's $fieldCatalog
+     and $invitation. Short fields pair up two per row; $group['full'] take a
      whole row. An either/or group sits side by side with a vertical "or" once the card is wide. --}}
 <section wire:key="group-{{ $groupKey }}" class="@container rounded-2xl border border-plum-200 bg-white p-4 sm:p-6 dark:border-plum-800 dark:bg-plum-900">
   <h2 class="mb-4 flex items-center gap-3 text-lg font-bold text-plum-900 dark:text-white">
@@ -52,12 +52,6 @@
           @if ($isToggle)
             @include('livewire.pages.dashboard.partials.field-input')
           @endif
-        </div>
-
-        {{-- Help card (narrow screens): opens under the field being edited --}}
-        <div x-show="focus === '{{ $key }}'" @if ($key !== $initialFocus) style="display: none" @endif
-          class="mb-3 mt-2 rounded-lg border border-brand-200 bg-white p-4 xl:hidden dark:border-brand-500/30 dark:bg-plum-900">
-          @include('livewire.pages.dashboard.partials.field-help', ['filled' => $isFilled($key), 'size' => 'inline'])
         </div>
 
         @unless ($isToggle)
