@@ -220,6 +220,61 @@
     addEventListener('resize', function () { galBtns.forEach(drawDots); });
   }
 
+  /* ───────── desktop: full-width flower bands (head + foot) ─────────
+     Along the top and bottom edges of the screen (on the cover and pinned on the page), a band of the three watercolour
+     flowers (data-blooms: flower-1, flower-2 single blooms, flower-3 the bouquet) in a new random arrangement on every
+     load: a back row of bouquets across the whole width (hanging upside down at the top, standing at the bottom) and a
+     front row of single blooms between them, each with its own size, tilt, mirror and sway. They grow in from the edge
+     (outward from the middle), sway, and wiggle with a rustle when tapped. Desktop only (same query as the CSS);
+     rebuilt when the window width changes. */
+  var bandSrc = (root.getAttribute('data-blooms') || '').split('|').filter(Boolean);
+  var BAND_RATIO = [382 / 476, 308 / 390, 624 / 900];          // height / width of flower-1, -2, -3 (trimmed webp)
+  var desk = window.matchMedia ? matchMedia('(min-width:900px) and (min-aspect-ratio:5/4)') : { matches: false };
+  var bandEls = [].slice.call(root.querySelectorAll('[data-band]'));
+  var rnd = function (a, b) { return a + Math.random() * (b - a); };
+  var buildBand = function (band) {
+    band.textContent = '';
+    if (!desk.matches || bandSrc.length < 3) return;
+    var top = band.getAttribute('data-band') === 'top';
+    var W = band.offsetWidth || innerWidth;
+    var base = Math.max(120, Math.min(200, W * .11));
+    var items = [], x;
+    for (x = -base * .2; x < W + base * .4; x += base * rnd(1, 1.25)) items.push({ x: x, n: 2, s: base * rnd(1.3, 1.55), back: true });
+    for (x = base * rnd(.2, .5); x < W; x += base * rnd(.75, 1)) items.push({ x: x, n: Math.random() < .5 ? 0 : 1, s: base * rnd(.55, .8) });
+    items.forEach(function (it) {
+      var h = it.s * BAND_RATIO[it.n];
+      var off = it.back ? rnd(.4, .55) : rnd(.28, .5);         // how much of the flower is past the screen edge
+      var wrap = document.createElement('span');
+      wrap.className = 'bs-band-fl' + (it.back ? ' is-back' : '');
+      wrap.style.cssText = 'left:' + (it.x - it.s / 2).toFixed(1) + 'px;width:' + it.s.toFixed(1) + 'px;'
+        + (top ? 'top:' : 'bottom:') + (-h * off).toFixed(1) + 'px;'
+        + '--d:' + (Math.abs(it.x - W / 2) / W * 1.1 + rnd(0, .15)).toFixed(2) + 's;'
+        + '--sw:' + rnd(5.5, 9).toFixed(1) + 's;--sd:' + (-rnd(0, 9)).toFixed(1) + 's;--sa:' + rnd(1.5, 3).toFixed(1) + 'deg';
+      var img = document.createElement('img');
+      img.src = bandSrc[it.n]; img.alt = ''; img.draggable = false; img.decoding = 'async';
+      img.style.cssText = 'rotate:' + ((top ? 180 : 0) + rnd(-16, 16)).toFixed(1) + 'deg;scale:' + (Math.random() < .5 ? -1 : 1) + ' 1';
+      wrap.appendChild(img);
+      band.appendChild(wrap);
+    });
+  };
+  var buildBands = function () { bandEls.forEach(buildBand); };
+  buildBands();
+  var bandW = innerWidth, bandTimer = 0;
+  addEventListener('resize', function () {
+    clearTimeout(bandTimer);
+    bandTimer = setTimeout(function () { if (Math.abs(innerWidth - bandW) > 60) { bandW = innerWidth; buildBands(); } }, 250);
+  });
+  if (desk.addEventListener) desk.addEventListener('change', buildBands);
+  // tap a flower in a band: it wiggles, with a rustle
+  bandEls.forEach(function (band) {
+    band.addEventListener('click', function (e) {
+      var fl = e.target.closest ? e.target.closest('.bs-band-fl') : null;
+      if (!fl || reduce) return;
+      fl.classList.remove('is-tap'); void fl.offsetWidth; fl.classList.add('is-tap');
+      rustle(.3);
+    });
+  });
+
   /* ───────── page parts (shared kit) ───────── */
   kit.words('[data-ik-words]');
   kit.lightbox();
@@ -333,8 +388,8 @@
   };
 
   /* ───────── second act: «flower wall» ─────────
-     after the blossom burst has landed: dozens of watercolour flowers (cut from the floral frame art,
-     assets/head-flowers/bloom-1…5.webp) bloom open from the middle outward until they cover the whole screen,
+     after the blossom burst has landed: dozens of watercolour flowers
+     (assets/head-flowers/flower-1…3.webp, one picked at random per flower) bloom open from the middle outward until they cover the whole screen,
      hold for a breath, then part from the centre (each drifting outward, turning and fading) under a last shower of
      petals, and the page is back. Resolves when the screen is clear. */
   var bloomSrc = (root.getAttribute('data-blooms') || '').split('|').filter(Boolean);
@@ -364,14 +419,20 @@
         }
       }
       flowers.sort(function (a, b) { return b.d - a.d; });     // far ones underneath, the middle on top
-      flowers.forEach(function (f, i) {
+      flowers.forEach(function (f) {
+        // a random one of the three watercolour flowers (flower-1…3.webp); each keeps its own shape (not squared)
+        var n = Math.floor(Math.random() * bloomSrc.length);
+        var src = bloomImgs[n];
+        var ratio = src.naturalWidth && src.naturalHeight ? src.naturalHeight / src.naturalWidth : .75;
+        if (n === 2) f.s *= 1.3;                               // the bouquet is wide and airy: a little bigger so it still covers
         var img = document.createElement('img');
-        img.src = bloomSrc[i % bloomSrc.length];
+        img.src = bloomSrc[n];
         img.alt = '';
         img.className = 'bs-wall-flower';
-        img.style.width = img.style.height = f.s + 'px';
+        img.style.width = f.s + 'px';
+        img.style.height = f.s * ratio + 'px';
         img.style.left = (f.x - f.s / 2) + 'px';
-        img.style.top = (f.y - f.s / 2) + 'px';
+        img.style.top = (f.y - f.s * ratio / 2) + 'px';
         wall.appendChild(img);
         f.el = img;
         var t = f.d / maxD;

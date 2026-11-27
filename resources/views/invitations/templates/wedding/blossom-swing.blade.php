@@ -74,6 +74,8 @@
     // the floral gold frame (assets/img-frame/3.png, trimmed to 3.webp) with the names + date inside it — no photo.
     // The art is drawn into the frame's own box; .bs-nf-in sits over the inside of the gold octagon.
     $frameArt = $bsAsset('images/invitations/assets/img-frame/3.webp');
+    // the watercolour bouquet (head-flowers/flowers-3.png, trimmed to flower-3.webp) dressing the photo ovals + note card
+    $bouquet = $bsAsset('images/invitations/assets/head-flowers/flower-3.webp');
 
     // the Khmer title artwork «សិរីមង្គលអាពាហ៍ពិពាហ៍» (assets/text/kh-wedding.png, trimmed to .webp) between the head
     // garland and the frame; a light sweeps across its letters (the shine is masked to the lettering).
@@ -106,7 +108,7 @@
 <link rel="preload" as="image" href="{{ $khTitleSrc }}">
 <link rel="stylesheet" href="{{ $bsAsset('css/invitations/blossom-swing.css') }}">
 
-<div class="bs{{ $skipCover ? ' is-open' : '' }}" style="--ik-accent:{{ $w->accent }}; --bs-accent:{{ $w->accent }}; --bs-smoke-wide:url('{{ $bsAsset('images/invitations/assets/background/image/bg-pink-smoke-wide.webp') }}'); --bs-smoke-tall:url('{{ $bsAsset('images/invitations/assets/background/image/bg-pink-smoke-tall.webp') }}');" data-rsvp-url="{{ $w->rsvpUrl }}" data-blooms="{{ collect(range(1, 5))->map(fn ($i) => $bsAsset("images/invitations/assets/head-flowers/bloom-{$i}.webp"))->implode('|') }}">
+<div class="bs{{ $skipCover ? ' is-open' : '' }}" style="--ik-accent:{{ $w->accent }}; --bs-accent:{{ $w->accent }}; --bs-smoke-wide:url('{{ $bsAsset('images/invitations/assets/background/image/bg-pink-smoke-wide.webp') }}'); --bs-smoke-tall:url('{{ $bsAsset('images/invitations/assets/background/image/bg-pink-smoke-tall.webp') }}');" data-rsvp-url="{{ $w->rsvpUrl }}" data-blooms="{{ collect(range(1, 3))->map(fn ($i) => $bsAsset("images/invitations/assets/head-flowers/flower-{$i}.webp"))->implode('|') }}">
   {{-- the flowers start folded (they bloom open from JS); if the script never runs they show after 3 s anyway --}}
   <script>(function (r) { r.classList.add('js', 'bs-bud'); setTimeout(function () { if (!r.classList.contains('bs-live')) r.classList.remove('bs-bud'); }, 3000); })(document.currentScript.parentNode);</script>
   {{-- pink smoke background, drifting slowly (two layers moving against each other) --}}
@@ -134,6 +136,9 @@
         </div>
         {{-- the wrapper is display:contents on phones; on desktop it fades the bouquet's flat-cut ends --}}
         <div class="bs-cover-fade">{!! $swing('bottom', 'bs-cover-bottom') !!}</div>
+        {{-- desktop only: full-width flower bands along the top and bottom (random flower-1…3, built in JS) --}}
+        <div class="bs-band bs-band--top" data-band="top" aria-hidden="true"></div>
+        <div class="bs-band bs-band--bottom" data-band="bottom" aria-hidden="true"></div>
         {{-- desktop only: watercolour blooms swaying on the left and right edges of the wide cover --}}
         @foreach (['l' => [1, 3, 5], 'r' => [4, 2, 3]] as $side => $blooms)
           <span class="bs-dk-side {{ $side }}" aria-hidden="true">
@@ -148,6 +153,9 @@
 
   {{-- after opening, the head garland stays pinned to the top of the screen and the bouquet to the bottom while the
        page scrolls between them (they bloom open as the flowers part, and keep swinging) --}}
+  {{-- desktop only: the same full-width flower bands, pinned to the top and bottom of the screen under the garlands --}}
+  <div class="bs-band bs-band--top" data-band="top" aria-hidden="true"></div>
+  <div class="bs-band bs-band--bottom" data-band="bottom" aria-hidden="true"></div>
   <div class="bs-sticky bs-sticky-top" aria-hidden="true">{!! $swing('top') !!}</div>
   <div class="bs-sticky bs-sticky-bottom" aria-hidden="true">{!! $swing('bottom') !!}</div>
 
@@ -194,11 +202,8 @@
                   <div class="bs-oval-ring">
                     <button type="button" class="bs-oval-photo" data-ik-photo data-group="couple" data-full="{{ $photo }}" data-cap="{{ $name }}"><img src="{{ $photo }}" alt="{{ $name }}" loading="lazy"></button>
                   </div>
-                  <span class="bs-oval-fl" aria-hidden="true">
-                    <img class="f1" src="{{ $bsAsset('images/invitations/assets/head-flowers/bloom-3.webp') }}" alt="" loading="lazy">
-                    <img class="f2" src="{{ $bsAsset('images/invitations/assets/head-flowers/bloom-2.webp') }}" alt="" loading="lazy">
-                    <img class="f3" src="{{ $bsAsset('images/invitations/assets/head-flowers/bloom-4.webp') }}" alt="" loading="lazy">
-                  </span>
+                  {{-- the flowers-3 bouquet tucked on the oval's outer bottom corner --}}
+                  <span class="bs-oval-fl" aria-hidden="true"><img class="b1" src="{{ $bouquet }}" alt="" loading="lazy" draggable="false"></span>
                 </div>
                 <figcaption><small>{{ $role }}</small><b class="{{ trim($kh($name)) }}">{{ $name }}</b></figcaption>
               </figure>
@@ -212,14 +217,9 @@
       {{-- the couple's note on a glass letter card: pink → gold hairline, a dashed gold inner edge, flowers on two corners --}}
       <section class="bs-sec bs-sec--tight">
         <blockquote class="bs-card bs-glass bs-note ik-r" data-ik="up">
-          <span class="bs-note-fl tl" aria-hidden="true">
-            <img class="f1" src="{{ $bsAsset('images/invitations/assets/head-flowers/bloom-1.webp') }}" alt="" loading="lazy">
-            <img class="f2" src="{{ $bsAsset('images/invitations/assets/head-flowers/bloom-5.webp') }}" alt="" loading="lazy">
-          </span>
-          <span class="bs-note-fl br" aria-hidden="true">
-            <img class="f1" src="{{ $bsAsset('images/invitations/assets/head-flowers/bloom-3.webp') }}" alt="" loading="lazy">
-            <img class="f2" src="{{ $bsAsset('images/invitations/assets/head-flowers/bloom-4.webp') }}" alt="" loading="lazy">
-          </span>
+          {{-- the flowers-3 bouquet hanging upside down from the top-left corner, standing on the bottom-right one --}}
+          <span class="bs-note-fl tl" aria-hidden="true"><img src="{{ $bouquet }}" alt="" loading="lazy" draggable="false"></span>
+          <span class="bs-note-fl br" aria-hidden="true"><img src="{{ $bouquet }}" alt="" loading="lazy" draggable="false"></span>
           <span class="bs-note-mark" aria-hidden="true">“</span>
           <p class="{{ trim($kh($w->message)) }}" data-ik-words>{{ $w->message }}</p>
         </blockquote>
@@ -267,7 +267,13 @@
           <button type="button" class="bs-sched-img ik-r" data-ik="zoom" data-ik-photo data-group="sched" data-full="{{ $w->scheduleImage }}"><img src="{{ $w->scheduleImage }}" alt="កម្មវិធី" loading="lazy"></button>
         @else
           <ul class="bs-sched">
-            @foreach ($w->schedule as $row)<li class="ik-r" data-ik="up"><b>{{ $row['time'] }}</b><span>{{ $row['label'] }}</span></li>@endforeach
+            {{-- each row: a blossom badge on the left (centred on the row), joined to the next by a thin line --}}
+            @foreach ($w->schedule as $row)
+              <li class="ik-r" data-ik="up" style="--n:{{ $loop->index }}">
+                <i class="bs-sched-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><g>@foreach ([0, 72, 144, 216, 288] as $deg)<ellipse cx="12" cy="6.6" rx="3.3" ry="4.7" transform="rotate({{ $deg }} 12 12)"/>@endforeach</g><circle cx="12" cy="12" r="2.6"/></svg></i>
+                <b>{{ $row['time'] }}</b><span>{{ $row['label'] }}</span>
+              </li>
+            @endforeach
           </ul>
         @endif
       </section>
@@ -371,7 +377,14 @@
     <section class="bs-hero bs-finale">
       <div class="bs-smoke bs-smoke--panel" aria-hidden="true"><i></i><i></i></div>
       <div class="bs-hero-body">
-        @if ($w->background)<div class="bs-arch bs-finale-photo ik-r" data-ik="zoom"><img src="{{ $w->background }}" alt="" loading="lazy"></div>@endif
+        @if ($w->background)
+          {{-- the closing arch photo, with the flowers-3 bouquet standing on its bottom-left and (mirrored) bottom-right --}}
+          <div class="bs-finale-frame ik-r" data-ik="zoom">
+            <div class="bs-arch bs-finale-photo"><img src="{{ $w->background }}" alt="" loading="lazy"></div>
+            <span class="bs-arch-fl l" aria-hidden="true"><img src="{{ $bouquet }}" alt="" loading="lazy" draggable="false"></span>
+            <span class="bs-arch-fl r" aria-hidden="true"><img src="{{ $bouquet }}" alt="" loading="lazy" draggable="false"></span>
+          </div>
+        @endif
         <p class="bs-closing ik-r{{ $kh($w->closingLine) }}" data-ik="blur">{{ $w->closingLine }}</p>
         <button type="button" class="bs-btn ghost ik-r" data-ik="up" id="bs-breeze">ផ្ញើក្តីស្រឡាញ់ ♥</button>
       </div>

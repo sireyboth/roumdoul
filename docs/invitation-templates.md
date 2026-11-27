@@ -380,7 +380,7 @@ that set it off already play theirs.
   page and the frame's art floats up above it (`floatFrame()`). The light stays up: the second act «flower wall»
   (`flowerWall()`, started 0.7 s into the burst, while the frame is still gliding, so the blooms take it in; the screen is
   all flowers about 2 s after the tap) opens dozens of watercolour blooms
-  (`assets/head-flowers/bloom-1…5.webp`, cut from the frame art) from the middle outward until they cover the screen; the
+  (a random one of `assets/head-flowers/flower-1…3.webp` each — trimmed from `flower-01.png`, `flower-02.png`, `flowers-3.png` — keeping its own shape) from the middle outward until they cover the screen; the
   light is removed underneath, and after a hold the flowers part from the centre under a petal shower — the guest sees
   the page for the first time here. The first section (`.bs-first`) is NOT a second cover: it is the invitation itself
   (the Khmer title artwork, gold wedding rings `assets/img-frame/ring.webp` floating with a glint, parents, «You are invited», guest name, `reception_message`, the couple's names, date + `khmer_date` + time) inside the
@@ -392,6 +392,10 @@ that set it off already play theirs.
   phones), two copies drifting against each other. Sound: `rustle.wav` (in `assets/sfx/`) on every gust and bloom.
   `accent_color` is the rose (default `#d0668c`), falling petals via `<x-flower-drop>`. Fonts: Great Vibes → Moulpali,
   Cormorant Garamond → Noto Serif Khmer, body Kantumruy Pro.
+  Flower dressing: the bouquet `head-flowers/flower-3.webp` (trimmed from `flowers-3.png`, `$bouquet` in the Blade) cradles
+  the bottom of each couple oval with a small upside-down spray on the opposite shoulder (bride side mirrored), hangs from
+  the note card's top-left corner and stands on its bottom-right, and stands on both bottom corners of the finale arch
+  photo (`.bs-finale-frame` wraps the arch so the flowers are not clipped).
   **Desktop (landscape)**: the last block of the CSS, `@media (min-width:900px) and (min-aspect-ratio:5/4)` (same query
   as khmer-traditional-wedding); the phone layout above it is untouched. Same markup, same link. The garlands keep their
   proportions (`--bs-cw` cover, `--bs-gw` page) and stay centred; the bouquet's flat-cut ends fade out through a mask on
@@ -400,6 +404,35 @@ that set it off already play theirs.
   parents, «You are invited», guest, reception | rings, couple, date, with a hairline between them. Sections widen to
   1100px: calendar | countdown, story timeline down the middle (alternating), gallery four across, venue | map, dress
   code | guest notes (`.bs-sec--guests`), QR | gift details, finale photo | closing line.
+  Flower bands (desktop only): `.bs-band` strips along the top + bottom edge (on the cover inside the frame, on the page
+  pinned under the garlands), filled by the JS with a new random arrangement of `head-flowers/flower-1…3.webp` on every
+  load: a back row of bouquets (flower-3; upside down at the top) and single blooms (flower-1/2) between them, each with
+  its own size, tilt, mirror and sway; they grow in from the edge once the page is revealed and wiggle + rustle on tap.
+
+- **Green Wedding** — `wedding/green-wedding.blade.php` (prefix `gw`, CSS/JS `public/{css,js}/invitations/green-wedding.*`,
+  demo `/demo/wedding/green-wedding`, `?open=1` skips the cover). A wisteria night garden cloned from Blossom Swing (same
+  sections and fields, `WeddingData` + the kit), in deep green, gold and cream. Background: `assets/background/image/bg-green.webp`
+  (from `Bg-green.png`) drifting slowly, with twinkling stars and fireflies (a new scatter per load). Head frame: the
+  wisteria curtain `assets/head-flowers/top-frame.webp` (from `top-frame.png`). `$curtain()` cuts it into 11 overlapping
+  strands (feathered masks: the right strand fades in over a left one that stays solid under the seam), each swinging
+  round the top of its own band. Motion per strand (JS): a breeze of three unrelated sines that reaches strands later
+  the further right they hang (a wave rolling left → right) and leans them a little to the right; random gusts every
+  2–6 s with random strength (85 % left → right) crossing the curtain and kicking a soft damped spring; its own fast
+  flutter; a lagging skew so the tips trail. A tap pushes strands away from the finger, a brushing finger pushes the ones
+  it passes, a fast scroll is a gust, all with `rustle.wav`. The curtain unrolls left → right when it first shows. It
+  frames the cover and stays pinned to the top of the page after
+  opening (lifting by up to 40 % as you scroll, `--gw-lift`); on desktop both repeat it four times across the full
+  screen width (every other copy mirrored, `$curtain($class, true)`), so it is shorter and fills the width; phones show
+  one copy. It also crowns the RSVP card. The title is gold Moul lettering
+  with a sweeping shine (no image). The names + date sit in a gold double-line heart drawn in SVG (it draws itself in)
+  on dark glass clipped to the heart, lit like polished gold: every 8 s a band of light sweeps slowly across the lines (an animated SVG
+  gradient stroke, top-left → bottom-right), a lens-flare star blooms where it passes (left lobe, lower right curve), and the glow breathes.
+  Couple photos, the note card and the finale arch are plain gold-framed (no flowers). Opening: gold rings, a big gust as the curtain
+  rises away, a green-white light with wisteria petals, leaves and gold sparks, then the page with its curtain unrolling.
+  Butterflies instead of the shared `<x-flower-drop>`: the template's own canvas (`fall` in the JS) — glowing
+  cream-gold, mint and pearl butterflies that flap, glide, wander and turn back from the edges, are carried by the same
+  gusts as the curtain, and dart away (soft pop) when tapped near; `fall.drop()` releases a few on opening, RSVP and
+  «send love». `accent_color` = the gold of the names (default `#e2c27d`).
 
 - **Vellum Garden** — `wedding/vellum-garden.blade.php` (CSS/JS `public/{css,js}/invitations/vellum-garden.*`,
   demo `/demo/wedding/vellum-garden`, `?open=1` skips the envelope). Fine-art garden look: ivory linen, botanical line
