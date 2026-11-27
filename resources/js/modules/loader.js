@@ -19,7 +19,7 @@ const SAFETY_TIMEOUT = 45000
 
 const LOADER_ACTIONS = new Set([
   'placeOrder', 'submitReview', 'applyPromoCode', 'addToCart', 'buyAddon', 'importGuests',
-  'rotateRecipient', 'removeRecipient', 'resetChristmasForm',
+  'rotateRecipient', 'removeRecipient',
 ])
 
 let active = 0

@@ -1,8 +1,9 @@
-{{-- One template field's input, picked by its FIELD_CATALOG type. Expects $key and $catalogField. --}}
+{{-- One template field's input, picked by its FIELD_CATALOG type. Expects $key and $catalogField.
+     name="{key}" links an input to its live-preview slot (data-preview-slot="{key}", see livePreview.js). --}}
 @php $placeholder = ! empty($catalogField['example']) ? __('e.g.').' '.$catalogField['example'] : null; @endphp
 @switch($catalogField['type'])
   @case('textarea')
-    <textarea id="input-{{ $key }}" wire:model="fieldValues.{{ $key }}" rows="4" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
+    <textarea id="input-{{ $key }}" name="{{ $key }}" wire:model="fieldValues.{{ $key }}" rows="4" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
       class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700"></textarea>
     @break
 
@@ -13,7 +14,7 @@
     @endphp
     <div wire:key="uploader-{{ $key }}" class="relative max-w-lg" x-data="photoUploader({ name: 'imageUploads.{{ $key }}', maxMb: {{ $page::MAX_UPLOAD_KB / 1024 }}, gifMb: {{ $page::MAX_GIF_KB / 1024 }} })">
     @if ($tempImage || ! empty($fieldValues[$key]))
-      <button type="button" wire:click="removeImage('{{ $key }}')" x-show="!busy" title="{{ __('Remove photo') }}"
+      <button type="button" wire:click="removeImage('{{ $key }}')" data-preview-remove="{{ $key }}" x-show="!busy" title="{{ __('Remove photo') }}"
         class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-base font-bold text-white shadow hover:bg-red-700">&times;</button>
     @endif
     <label
@@ -46,7 +47,7 @@
         <button type="button" x-on:click.prevent="cancel()" class="text-[11px] font-semibold text-plum-500 underline hover:text-red-600">{{ __('Cancel') }}</button>
       </div>
 
-      <input id="upload-{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
+      <input id="upload-{{ $key }}" name="{{ $key }}" type="file" x-on:change="pick($event)" :disabled="busy" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" />
     </label>
     <p x-show="error" x-text="error" style="display: none" class="mt-1 text-xs text-red-600 dark:text-red-400"></p>
     @error('imageUploads.'.$key) <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
@@ -194,24 +195,24 @@
 
   @case('boolean')
     <span class="relative inline-flex shrink-0 cursor-pointer items-center">
-      <input id="input-{{ $key }}" type="checkbox" wire:model="fieldValues.{{ $key }}" class="peer sr-only" />
+      <input id="input-{{ $key }}" name="{{ $key }}" type="checkbox" wire:model="fieldValues.{{ $key }}" class="peer sr-only" />
       <span class="h-7 w-12 rounded-full bg-plum-300 transition-colors peer-checked:bg-brand-600 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-400 dark:bg-plum-700"></span>
       <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
     </span>
     @break
 
   @case('datetime')
-    <input id="input-{{ $key }}" type="datetime-local" wire:model="fieldValues.{{ $key }}"
+    <input id="input-{{ $key }}" name="{{ $key }}" type="datetime-local" wire:model="fieldValues.{{ $key }}"
       class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
     @break
 
   @case('date')
-    <input id="input-{{ $key }}" type="date" wire:model="fieldValues.{{ $key }}"
+    <input id="input-{{ $key }}" name="{{ $key }}" type="date" wire:model="fieldValues.{{ $key }}"
       class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
     @break
 
   @case('time')
-    <input id="input-{{ $key }}" type="time" wire:model="fieldValues.{{ $key }}"
+    <input id="input-{{ $key }}" name="{{ $key }}" type="time" wire:model="fieldValues.{{ $key }}"
       class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
     @break
 
@@ -220,7 +221,7 @@
     @break
 
   @default
-    <input id="input-{{ $key }}" type="text" wire:model="fieldValues.{{ $key }}" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
+    <input id="input-{{ $key }}" name="{{ $key }}" type="text" wire:model="fieldValues.{{ $key }}" @if ($placeholder) placeholder="{{ $placeholder }}" @endif
       @if (! empty($catalogField['max'])) maxlength="{{ $catalogField['max'] }}" @endif
       class="w-full rounded-lg border border-plum-200 bg-transparent px-4 py-3 text-base focus:border-brand-500 focus:outline-none dark:border-plum-700" />
 @endswitch

@@ -40,6 +40,7 @@ add/remove), `boolean`, `datetime`, `color`.
 |---|---|---|
 | `sender_name` | text | Generic "who it's from" (date-asking, breakup, etc.). River Love / Rose Bloom: the sender everywhere «Me» would show («Chetra ♡ Anna», «Forever yours, Chetra»); their editor calls it «Your name», max 40 characters (`FIELD_OVERRIDES`) |
 | `groom_name` / `bride_name` | text | Wedding-specific names |
+| `groom_name_latin` / `bride_name_latin` | text | The same names in Latin letters. Every template that ticks one gets the **«Latin names» switch** next to Save in the editor (`InvitationTemplate::LATIN_NAMES_SWITCH`, stored in `field_values['show_latin_names']`, missing = on). A template that shows the Latin names must hide them when `InvitationTemplate::showsLatinNames($fields)` is false |
 | `couple_initials` | text | The couple's initials, e.g. «ប&ម» (Khmer Traditional Wedding II: inside the gold frame on the cover and on the closing seal); empty = first letter of each name |
 | `groom_father` / `groom_mother` / `bride_father` / `bride_mother` | text | Wedding-specific parents' names (top of the card, above the title; "លោក"/"លោកស្រី" added automatically) |
 | `celebrant_name` | text | Birthday-specific name |
@@ -207,7 +208,12 @@ shows invitation products at all.
    (months)**, **★ Fields this plan includes** per plan — this is the actual "Premium
    unlocks the map" decision; which fields are ★ is set in the Fields tab). Saving this auto-creates the underlying `Service` + `ServicePlan`
    rows for you (in an internal "Digital Invitations" category) — you never touch Services directly.
-3. Done — it's immediately live: buying it now creates a real `Invitation`, its demo page works
+3. **Add its live-preview recipe** in `config/live-preview.php`, keyed by the template's view
+   (e.g. `'invitations.templates.wedding.{name}'`): the template's sections top to bottom, as blocks
+   from `resources/views/livewire/pages/dashboard/previews/blocks/` (copy the closest recipe and adjust
+   the order, columns and photo shapes). See «Live preview in the editor» below. Without one, the editor
+   shows the default layout.
+4. Done — it's immediately live: buying it now creates a real `Invitation`, its demo page works
    at `/templates/{slug}/demo`, and the dashboard's field-filling form is generated
    automatically from whichever fields you ticked.
 
@@ -222,6 +228,32 @@ cart, shop card and product page); a plan change only affects new buyers, each s
 product name). Invitation products are hidden from Catalog → Services, so these tabs are the only place to
 edit them; the fields come from `ServiceForm` helpers, so a change there shows in both forms. A template
 with no linked Service shows «Set up pricing» instead.
+
+## Live preview in the editor (not per template)
+
+The dashboard editor (Details / Images / Program tabs) shows a **live preview**: a simple wireframe of the
+invitation's real template — the same sections in the same order and arrangement (side by side, columns, photo
+shapes, where the countdown / map / gallery sit), drawn with plain shared pieces in the Roumdoul palette, no
+animations, decorations or template colours. It shows which field appears where while the customer types (in an
+iPhone frame from `xl`, full screen behind «Live preview» on phones). It never saves — the real design is the
+Preview button. The guest-facing template files need nothing for it.
+
+- **Recipe per template**: `config/live-preview.php` → `recipes['{template view}']`, a list of blocks top to bottom
+  with options (each block file lists its options at the top). No recipe = the `default` layout.
+- **Blocks** (one section each): `resources/views/livewire/pages/dashboard/previews/blocks/` — cover, hero,
+  invitation, couple, note, date, countdown, countup, story, programme, gallery, venue, guest_notes, rsvp, gift,
+  contact, letters, finale, marquee, music, chat, plus the generic `fields` (any list of fields, sizes or photo
+  shapes), `box` and `buttons` for anything unusual.
+- **Components** the blocks are made of: `resources/views/components/preview/` — `section`, `text`, `name`,
+  `photo`, `couple-names`, `parents`, `columns`, `boxes`, `box`, `gallery`, `buttons`, `fixed`, `guest`, `days-left`.
+  Each draws nothing when the template doesn't use its field or the plan doesn't include it
+  (`App\Support\Invitations\LivePreviewData::has()`), so a recipe can name fields a template lacks.
+- **Palette**: the `--preview-*` variables at the top of «LIVE PREVIEW» in `resources/css/app.css`, mapped to the
+  theme's brand colours. Use only those variables in the preview.
+- **Mapping**: the form input has `name="{key}"` (`partials/field-input.blade.php`); every slot for it has
+  `data-preview-slot="{key}"` (a field may have several, e.g. the names on the cover and at the end) —
+  `resources/js/modules/livePreview.js` updates them all. Countdown, RSVP and Latin-name parts carry
+  `data-preview-switch="{key}"` and follow their switch.
 
 ## Dress code = colour swatches (`App\Support\Invitations\DressCode`)
 

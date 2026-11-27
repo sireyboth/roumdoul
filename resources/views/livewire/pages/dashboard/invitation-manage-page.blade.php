@@ -247,14 +247,9 @@
           <x-app-icon name="chevron-right" class="h-4 w-4 text-plum-300" />
         </button>
 
-      @elseif ($section === 'details' && $this->isChristmas())
-        {{-- the Christmas template has its own English editor with a live preview --}}
-        @include('livewire.pages.dashboard.partials.christmas-editor')
-
       @elseif (in_array($section, ['details', 'media', 'program'], true))
         @php
           $formFields = $this->sectionFields($section);
-          $isFilled = fn (string $key) => filled($fieldValues[$key] ?? null) || ! empty($imageUploads[$key]) || ! empty($galleryUploads[$key]) || ! empty($audioUploads[$key]);
           $initialFocus = in_array($focusField, $formFields, true) ? $focusField : ($formFields[0] ?? null);
         @endphp
         <p class="mt-2 flex items-start gap-2 rounded-xl bg-gold-500/10 px-4 py-3 text-base text-plum-700 dark:text-plum-200">
@@ -262,10 +257,10 @@
           {{ __('Tap any field to see where it appears on the invitation. Empty fields are not shown.') }}
         </p>
 
-        <form wire:submit="save" class="mt-6 xl:grid xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start xl:gap-8"
+        <form wire:submit="save" data-live-preview-form class="mt-6 xl:grid xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start xl:gap-8"
           {{-- Save waits for every uploader that has started and not finished (by id, so a repeated or
                missing event can't leave it stuck). The events come on window: see photoUploader.js. --}}
-          x-data="{ uploads: [], zoom: null, focus: @js($initialFocus),
+          x-data="{ uploads: [], focus: @js($initialFocus),
             get uploading() { return this.uploads.length },
             uploadStarted(id) { if (! this.uploads.includes(id)) this.uploads.push(id) },
             uploadEnded(id) { this.uploads = this.uploads.filter((u) => u !== id) } }"
@@ -275,42 +270,13 @@
           x-on:input="dirty = true" x-on:change="dirty = true"
           x-on:field-error.window="focus = $event.detail.key; $nextTick(() => document.getElementById('field-' + $event.detail.key)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))">
 
-          @include('livewire.pages.dashboard.partials.field-help-zoom', ['zoomFields' => $formFields])
-
-          {{-- Help panel (wide screens): the focused field's diagram + tips, then a checklist of every field here --}}
-          <aside class="sticky top-6 hidden max-h-[calc(100vh-3rem)] flex-col gap-4 overflow-y-auto xl:flex">
-            <div class="rounded-xl border border-brand-200 bg-white p-6 dark:border-brand-500/30 dark:bg-plum-900">
-              @foreach ($formFields as $key)
-                <div x-show="focus === '{{ $key }}'" @if ($key !== $initialFocus) style="display: none" @endif wire:key="help-{{ $key }}">
-                  @include('livewire.pages.dashboard.partials.field-help', ['catalogField' => $fieldCatalog[$key], 'filled' => $isFilled($key)])
-                </div>
-              @endforeach
-            </div>
-
-            <div class="rounded-xl border border-plum-200 bg-white p-3 dark:border-plum-800 dark:bg-plum-900">
-              <p class="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-wide text-plum-400">{{ __('Fields on this tab') }}</p>
-              @foreach ($formFields as $key)
-                <button type="button" wire:key="jump-{{ $key }}"
-                  @click="focus = '{{ $key }}'; document.getElementById('field-{{ $key }}').scrollIntoView({ behavior: 'smooth', block: 'center' })"
-                  :class="focus === '{{ $key }}' ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300' : 'text-plum-600 hover:bg-plum-50 dark:text-plum-300 dark:hover:bg-plum-800'"
-                  class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold">
-                  @if (! $invitation->fieldUnlocked($key))
-                    <x-app-icon name="lock-closed" class="h-4 w-4 shrink-0 text-gold-500" />
-                  @elseif ($isFilled($key))
-                    <x-app-icon name="check-circle" class="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-                  @else
-                    <span class="flex h-4 w-4 shrink-0 items-center justify-center"><span class="h-2.5 w-2.5 rounded-full border-2 border-plum-300 dark:border-plum-600"></span></span>
-                  @endif
-                  <span class="truncate">{{ $fieldCatalog[$key]['label'] }}</span>
-                </button>
-              @endforeach
-            </div>
-          </aside>
+          {{-- Live preview (left column on wide screens, full screen on phones) --}}
+          @include('livewire.pages.dashboard.partials.live-preview')
 
           {{-- Wide cards (schedule, story, either/or) get a row to themselves; runs of ordinary
                cards between them split into two balanced columns that stack independently, so
                nothing leaves an empty gap. Container queries: the switch follows the space left
-               beside the help panel, not the screen size. --}}
+               beside the live preview, not the screen size. --}}
           <div class="min-w-0">
           @php $layout = $this->sectionLayout($section); @endphp
           <div class="@container flex flex-col gap-5">
@@ -331,8 +297,10 @@
             @endforeach
           </div>
 
-          {{-- Save bar: always says where things stand — uploading, unsaved, saving, saved --}}
-          <div class="sticky bottom-0 mt-4 flex flex-wrap items-center gap-3 bg-plum-50/90 py-4 backdrop-blur dark:bg-plum-950/90">
+          {{-- Save bar: always says where things stand — uploading, unsaved, saving, saved. It sticks to the
+               bottom of the screen; the bottom padding keeps it clear of the iPhone home bar (safe area),
+               and the margin above keeps the last field from sitting under it. --}}
+          <div class="sticky bottom-0 mt-6 flex flex-wrap items-center gap-3 bg-plum-50/90 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur dark:bg-plum-950/90">
             <button type="submit" :disabled="uploading > 0" wire:loading.attr="disabled" wire:target="save"
               :class="dirty && 'ring-4 ring-brand-300/60 dark:ring-brand-500/30'"
               class="flex min-w-32 items-center justify-center gap-2 rounded-full bg-brand-600 px-7 py-3 text-base font-bold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">
@@ -344,6 +312,28 @@
                 </span>
               </span>
             </button>
+
+            {{-- Phones: opens the live preview full screen (wide screens already show it beside the form).
+                 Not the «Preview» button (sidebar / Overview), which opens the real, saved invitation. --}}
+            <button type="button" data-live-preview-open
+              class="flex items-center justify-center gap-2 rounded-full border border-brand-300 px-5 py-3 text-base font-bold text-brand-700 transition hover:border-brand-500 hover:bg-brand-50 xl:hidden dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10">
+              <x-app-icon name="eye" class="h-5 w-5" /> {{ __('Live preview') }}
+            </button>
+
+            {{-- «Latin names» switch: off = the Latin spelling of the names stays off the invitation.
+                 Saved with Save, like a field (InvitationTemplate::LATIN_NAMES_SWITCH). --}}
+            @if ($invitation->template->usesLatinNames())
+              <label class="flex cursor-pointer items-center gap-2.5 rounded-full border border-plum-200 px-4 py-2.5 dark:border-plum-700"
+                title="{{ __('Show the names in Latin letters on the invitation') }}">
+                <span class="relative inline-flex shrink-0 items-center">
+                  <input type="checkbox" name="{{ \App\Models\InvitationTemplate::LATIN_NAMES_SWITCH }}"
+                    wire:model="fieldValues.{{ \App\Models\InvitationTemplate::LATIN_NAMES_SWITCH }}" class="peer sr-only" />
+                  <span class="h-6 w-10 rounded-full bg-plum-300 transition-colors peer-checked:bg-brand-600 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-400 dark:bg-plum-700"></span>
+                  <span class="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"></span>
+                </span>
+                <span class="text-sm font-semibold text-plum-700 dark:text-plum-200">{{ __('Latin names') }}</span>
+              </label>
+            @endif
             <p wire:loading.remove wire:target="save" class="text-sm font-semibold">
               <span x-show="uploading > 0" style="display: none" class="text-plum-500 dark:text-plum-400">{{ __('Wait for the photos to finish uploading before saving') }}</span>
               <span x-show="uploading === 0 && dirty" style="display: none" class="flex items-center gap-1.5 text-gold-600 dark:text-gold-400">

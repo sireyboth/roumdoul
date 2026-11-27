@@ -34,6 +34,10 @@ class InvitationTemplate extends Model
         'sender_name' => ['label' => 'Your name (sender)', 'type' => 'text', 'hint' => 'Your name — guests will see who is inviting them.', 'example' => 'សុខា'],
         'groom_name' => ['label' => "Groom's name", 'type' => 'text', 'hint' => "The groom's name, as you want it to appear on the invitation.", 'example' => 'សុខ សុខា'],
         'bride_name' => ['label' => "Bride's name", 'type' => 'text', 'hint' => "The bride's name, as you want it to appear on the invitation.", 'example' => 'ចាន់ ស្រីនាង'],
+        // Latin spelling of the names. The customer can hide both from the invitation with the
+        // «Latin names» switch next to Save (LATIN_NAMES_SWITCH below).
+        'groom_name_latin' => ['label' => "Groom's name (Latin letters)", 'type' => 'text', 'hint' => "The groom's name in Latin letters. Don't want it on the invitation? Turn off «Latin names» next to Save.", 'example' => 'Sok Sokha'],
+        'bride_name_latin' => ['label' => "Bride's name (Latin letters)", 'type' => 'text', 'hint' => "The bride's name in Latin letters. Don't want it on the invitation? Turn off «Latin names» next to Save.", 'example' => 'Chan Sreyneang'],
         'couple_initials' => ['label' => "Couple's initials", 'type' => 'text', 'hint' => "The couple's initials, shown large inside the gold frame on the cover, e.g. «ប&ម». Leave empty to use the first letters of the groom's and bride's names.", 'example' => 'ប&ម'],
         'celebrant_name' => ['label' => "Birthday person's name", 'type' => 'text', 'hint' => 'The name of the person whose birthday it is.', 'example' => 'ស្រីពៅ'],
         'turning_age' => ['label' => 'Turning (age)', 'type' => 'text', 'hint' => 'The age they are turning, e.g. 25.', 'example' => '25'],
@@ -62,7 +66,7 @@ class InvitationTemplate extends Model
         'groom_phone' => ['label' => "Groom's phone number", 'type' => 'text', 'hint' => "A phone number on the groom's side that guests can call.", 'example' => '012 345 678'],
         'bride_phone' => ['label' => "Bride's phone number", 'type' => 'text', 'hint' => "A phone number on the bride's side that guests can call.", 'example' => '098 765 432'],
         'contact_phone' => ['label' => 'Contact phone number', 'type' => 'text', 'hint' => 'A phone number guests can call for more information.', 'example' => '012 345 678'],
-        // Parties (Christmas, ...): optional practical details for guests; each hides its line when empty.
+        // Optional practical details for guests (parties, weddings, ...); each hides its line when empty.
         'end_time' => ['label' => 'End time', 'type' => 'time', 'hint' => 'When the event ends (optional) — shown after the start time from «Event date», e.g. «6:30 PM – 10:00 PM». Must be later than the start time.'],
         'rsvp_deadline' => ['label' => 'Reply by (date)', 'type' => 'date', 'hint' => 'The last day guests should let you know if they are coming — must be on or before the event date. Leave empty to hide it.'],
         'dress_code' => ['label' => 'Dress code', 'type' => 'text', 'hint' => 'What guests should wear, e.g. red & green, a Christmas sweater, or formal. Leave empty to hide it.', 'example' => 'Red & Green'],
@@ -140,7 +144,7 @@ class InvitationTemplate extends Model
      * the template's own list (Invitation::fieldUnlocked()).
      */
     public const FREE_FIELDS = [
-        'sender_name', 'groom_name', 'bride_name', 'celebrant_name', 'turning_age',
+        'sender_name', 'groom_name', 'bride_name', 'groom_name_latin', 'bride_name_latin', 'celebrant_name', 'turning_age',
         'headline', 'message', 'cover_image', 'event_date', 'venue_name',
         'music_url', 'accent_color', 'groom_photo', 'bride_photo', 'groom_phone', 'bride_phone',
         'groom_father', 'groom_mother', 'bride_father', 'bride_mother', 'thanks_message', 'apology_message', 'reception_message', 'gallery_feed', 'gift_account',
@@ -182,7 +186,7 @@ class InvitationTemplate extends Model
             'story_chapters', 'khmer_date', 'qr_code', 'cta_label', 'cta_url',
         ],
         'wedding' => [
-            'groom_name', 'bride_name', 'couple_initials', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother',
+            'groom_name', 'bride_name', 'groom_name_latin', 'bride_name_latin', 'couple_initials', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother',
             'groom_phone', 'bride_phone', 'groom_photo', 'bride_photo',
         ],
         'gifts' => ['gift_account', 'gift_message', 'contact_phone'],
@@ -218,6 +222,8 @@ class InvitationTemplate extends Model
         'thanks_message' => 'Thank-you text near the end.',
         'groom_name' => 'Groom\'s name.',
         'bride_name' => 'Bride\'s name.',
+        'groom_name_latin' => 'Groom\'s name in Latin letters. The customer can hide the Latin names (switch next to Save).',
+        'bride_name_latin' => 'Bride\'s name in Latin letters. The customer can hide the Latin names (switch next to Save).',
         'couple_initials' => 'Initials like «ប&ម» on the seal / frame. Empty = first letters of the names.',
         'groom_father' => 'Parents\' names at the top of a wedding card («លោក/លោកស្រី» added).',
         'groom_mother' => 'Parents\' names at the top of a wedding card.',
@@ -257,6 +263,28 @@ class InvitationTemplate extends Model
         'host_names' => 'Ceremony hosts / organizers, one per line.',
         'opening_line' => 'Line under the title of a Buddhist ceremony. Empty = «នមោ តស្ស…».',
     ];
+
+    /** The Latin-letter name fields, which the «Latin names» switch shows or hides together. */
+    public const LATIN_NAME_FIELDS = ['groom_name_latin', 'bride_name_latin'];
+
+    /**
+     * The «Latin names» switch next to Save in the editor. Stored in field_values like a field
+     * (true/false); missing = shown. Not a catalog field: every template that ticks a Latin name
+     * field gets it automatically. A template showing the Latin names must check showsLatinNames().
+     */
+    public const LATIN_NAMES_SWITCH = 'show_latin_names';
+
+    /** Whether this template uses at least one Latin name field (so the editor shows the switch). */
+    public function usesLatinNames(): bool
+    {
+        return array_intersect(self::LATIN_NAME_FIELDS, $this->fields ?? []) !== [];
+    }
+
+    /** Whether the Latin names should appear on the invitation: on unless the customer turned it off. */
+    public static function showsLatinNames(array $fieldValues): bool
+    {
+        return (bool) ($fieldValues[self::LATIN_NAMES_SWITCH] ?? true);
+    }
 
     /** The admin's one-line explanation of a field (ADMIN_HINTS, falling back to the customer hint). */
     public static function adminHint(string $key): string

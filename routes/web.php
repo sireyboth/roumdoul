@@ -46,11 +46,6 @@ Route::get('/terms', TermsPage::class)->name('terms');
 // Guest-facing invitation pages are always Khmer, whatever language the visitor chose.
 Route::middleware('guest.locale')->group(function () {
     Route::get('/templates/{template:slug}/demo', InvitationTemplateDemoController::class)->name('templates.demo');
-    // page 2 of two-page templates (Christmas): the event details, after the cover
-    Route::get('/templates/{template:slug}/demo/details', [InvitationTemplateDemoController::class, 'details'])->name('templates.demo.details');
-    Route::get('/demo/{path}/details', [InvitationTemplateDemoController::class, 'fileDetails'])
-        ->where('path', '[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*')
-        ->name('templates.demo.file.details');
     // review any template file without an admin row: /demo/wedding/{name}, /demo/birthday ...
     Route::get('/demo/{path}', [InvitationTemplateDemoController::class, 'file'])
         ->where('path', '[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*')
@@ -59,10 +54,8 @@ Route::middleware('guest.locale')->group(function () {
     // Throttled per IP so codes can't be guessed by trying many.
     Route::middleware('throttle:60,1')->group(function () {
         Route::get('/i/{recipient:token}', InvitationShowController::class)->name('invitation.show');
-        Route::get('/i/{recipient:token}/details', [InvitationShowController::class, 'details'])->name('invitation.show.details');
         // Links sent before the short URLs: /invite/{slug}/{code} redirects to /i/{code}.
         Route::get('/invite/{invitation:slug}/{recipient:token}', [InvitationShowController::class, 'legacy'])->name('invitation.show.legacy');
-        Route::get('/invite/{invitation:slug}/{recipient:token}/details', [InvitationShowController::class, 'legacyDetails']);
     });
     Route::post('/i/{recipient:token}/rsvp', InvitationRsvpController::class)
         ->middleware('throttle:20,1')
@@ -79,7 +72,6 @@ Route::middleware('auth:customer')->group(function () {
     Route::get('/dashboard/profile', ProfilePage::class)->name('dashboard.profile');
     Route::get('/dashboard/invitations/{invitation}', InvitationManagePage::class)->name('dashboard.invitations.show');
     Route::get('/dashboard/invitations/{invitation}/preview', InvitationPreviewController::class)->middleware('guest.locale')->name('dashboard.invitations.preview');
-    Route::get('/dashboard/invitations/{invitation}/preview/details', [InvitationPreviewController::class, 'details'])->middleware('guest.locale')->name('dashboard.invitations.preview.details');
     Route::get('/dashboard/orders/{order}', OrderDetailPage::class)->name('dashboard.orders.show');
     Route::get('/order/{order}/confirmation', OrderConfirmationPage::class)->name('order.confirmation');
 
