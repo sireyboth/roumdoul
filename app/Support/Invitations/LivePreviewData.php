@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Everything the editor's LIVE PREVIEW needs to know about one invitation, in one place.
  *
- * The preview (livewire/pages/dashboard/partials/live-preview.blade.php) is a simple wireframe of the
- * real template: its layout comes from a "recipe" in config/live-preview.php, and the small preview
+ * The preview (livewire/pages/dashboard/partials/live-preview.blade.php) is one invitation-shaped
+ * layout shared by every template (partials/live-preview-page.blade.php), and the small preview
  * components (resources/views/components/preview/) ask this object about each field:
  *   has()      — does this template use the field, and does the plan include it? (if not: not drawn)
  *   value()    — the text the page starts with (the form's current value)
@@ -33,22 +33,6 @@ class LivePreviewData
     ) {
         $this->templateFields = $invitation->template->editorFields();
         $this->catalog = $invitation->template->localizedFields();
-    }
-
-    /**
-     * The list of blocks to draw, top to bottom: this template's recipe, or the default one when
-     * the template has none yet. See config/live-preview.php.
-     */
-    public function recipe(): array
-    {
-        $recipes = config('live-preview.recipes', []);
-        $view = $this->invitation->template->view;
-
-        if (isset($recipes[$view])) {
-            return $recipes[$view];
-        }
-
-        return config('live-preview.default', []);
     }
 
     /** True when this template uses the field AND the plan includes it (otherwise guests never see it). */

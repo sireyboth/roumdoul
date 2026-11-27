@@ -1,11 +1,10 @@
-{{-- LIVE PREVIEW — a simple wireframe of THIS invitation's real template: the same sections, in the
-     same order and arrangement, drawn with plain shared pieces in the Roumdoul colours. It shows WHICH
-     field appears WHERE, updated while the customer types. It never saves anything: the real design
-     is the «Preview» button, and Save stays the only way to keep changes.
+{{-- LIVE PREVIEW — a simple invitation-shaped wireframe, the SAME layout for every template
+     (partials/live-preview-page.blade.php), showing only the fields this template uses. It shows WHAT
+     the customer typed, updated while they type, in the Roumdoul colours. It never saves anything:
+     the real design is the «Preview» button, and Save stays the only way to keep changes.
 
-     Which sections, in which order: the template's RECIPE in config/live-preview.php. Each recipe
-     entry is drawn by one block file in previews/blocks/, built from the small components in
-     resources/views/components/preview/. The data they read: App\Support\Invitations\LivePreviewData.
+     Built from the small components in resources/views/components/preview/. The data they read:
+     App\Support\Invitations\LivePreviewData.
 
      The mapping is the field key: the form's input has name="groom_name" and every slot for it here has
      data-preview-slot="groom_name". resources/js/modules/livePreview.js copies values across.
@@ -61,9 +60,7 @@
       {{-- The preview itself: the only part that scrolls --}}
       <div class="live-preview-scroll" data-preview-scroll>
         <x-preview.screen :preview="$preview">
-          @foreach ($preview->recipe() as $block)
-            @include('livewire.pages.dashboard.previews.blocks.'.$block['block'], ['block' => $block])
-          @endforeach
+          @include('livewire.pages.dashboard.partials.live-preview-page')
         </x-preview.screen>
       </div>
 

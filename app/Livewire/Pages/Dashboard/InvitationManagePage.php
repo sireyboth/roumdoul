@@ -248,8 +248,8 @@ class InvitationManagePage extends Component
     }
 
     /**
-     * What the editor's live preview reads (partials/live-preview.blade.php): the template's recipe from
-     * config/live-preview.php, and each field's current value, label and photo.
+     * What the editor's live preview reads (partials/live-preview.blade.php): which fields the
+     * template uses, and each field's current value, label and photo.
      */
     public function livePreviewData(): LivePreviewData
     {

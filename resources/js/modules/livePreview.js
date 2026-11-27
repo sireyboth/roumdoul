@@ -1,7 +1,7 @@
 // LIVE PREVIEW for the invitation editor (Details / Images / Program tabs).
 //
-// Markup: resources/views/livewire/pages/dashboard/partials/live-preview.blade.php (a wireframe of the
-// invitation's real template, built from its recipe in config/live-preview.php)
+// Markup: resources/views/livewire/pages/dashboard/partials/live-preview.blade.php (one invitation-shaped
+// layout shared by every template, partials/live-preview-page.blade.php)
 // Styles: «Live preview» in resources/css/app.css
 //
 // How a field finds its place in the preview — the ONLY mapping is the field key:
