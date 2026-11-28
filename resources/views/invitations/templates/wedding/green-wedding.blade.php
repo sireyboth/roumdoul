@@ -22,31 +22,35 @@
     // the wisteria curtain, cut into strands (0–1 across the picture). Each strand shows the whole picture masked to its
     // own band and swings round the top of that band. Seams: the strand on the right fades in on top, the one under it
     // stays solid across the seam and fades out just past it, so a seam never thins out or shows a hard edge.
-    // $wide repeats it four times (every other copy mirrored): on desktop the copies sit side by side across the whole
-    // screen, so each one is smaller and the curtain spans the full width; phones show only the first copy.
+    // $wide (cover + pinned curtain) also carries the desktop curtain: assets/head-flowers/green-top-frame.webp (from
+    // green-top-frame.png), one picture across the whole screen with short and long strands mixed and the longest at the
+    // left and right. It is cut into 24 narrow strands that swing the same way. Phones show the top-frame copy; the
+    // desktop block in the CSS swaps them.
+    $deskSrc = $gwAsset('images/invitations/assets/head-flowers/green-top-frame.webp');
     $cuts = [.09, .18, .27, .355, .44, .53, .62, .705, .79, .88];
-    $curtain = function (string $class = '', bool $wide = false) use ($cuts, $curtainSrc) {
-        $edges = array_merge([0], $cuts, [1]);
-        $n = count($edges) - 1;
-        $f = 2.6;
-        $copy = function (bool $mirror) use ($edges, $n, $f, $curtainSrc) {
+    $curtain = function (string $class = '', bool $wide = false) use ($cuts, $curtainSrc, $deskSrc) {
+        $copy = function (array $cuts, string $src, float $f, float $tail, string $cls) {
+            $edges = array_merge([0], $cuts, [1]);
+            $n = count($edges) - 1;
             $out = '';
             for ($i = 0; $i < $n; $i++) {
-                $a = $edges[$i] * 100;
-                $b = $edges[$i + 1] * 100;
+                $a = round($edges[$i] * 100, 3);
+                $b = round($edges[$i + 1] * 100, 3);
                 $left = $i === 0 ? '#000 0%' : 'transparent '.($a - $f).'%,#000 '.($a + $f).'%';
-                $right = $i === $n - 1 ? '#000 100%' : '#000 '.($b + $f).'%,transparent '.($b + $f + 5).'%';
+                $right = $i === $n - 1 ? '#000 100%' : '#000 '.($b + $f).'%,transparent '.($b + $f + $tail).'%';
                 $mask = "linear-gradient(90deg,{$left},{$right})";
                 $mid = round(($a + $b) / 2, 2);
                 $out .= '<div class="gw-strand" data-x="'.round($mid / 100, 3).'" style="transform-origin:'.$mid.'% 0;-webkit-mask-image:'.$mask.';mask-image:'.$mask.'">'
-                    .'<img src="'.$curtainSrc.'" alt="" draggable="false" decoding="async"></div>';
+                    .'<img src="'.$src.'" alt="" draggable="false" decoding="async"></div>';
             }
 
-            return '<div class="gw-cpy'.($mirror ? ' is-mirror' : '').'">'.$out.'</div>';
+            return '<div class="gw-cpy'.($cls ? ' '.$cls : '').'">'.$out.'</div>';
         };
+        $phone = $copy($cuts, $curtainSrc, 2.6, 5, $wide ? 'gw-cpy--phone' : '');
+        $desk = $wide ? $copy(array_map(fn ($i) => $i / 24, range(1, 23)), $deskSrc, 1.1, 2.2, 'gw-cpy--desk') : '';
 
         return '<div class="gw-curtain'.($wide ? ' gw-curtain--wide' : '').($class ? ' '.$class : '').'" data-curtain aria-hidden="true">'
-            .$copy(false).($wide ? $copy(true).$copy(false).$copy(true) : '').'</div>';
+            .$phone.$desk.'</div>';
     };
 
     // the title «សិរីមង្គលអាពាហ៍ពិពាហ៍» in gold lettering, with a light sweeping across it
@@ -115,7 +119,8 @@
 <title>{{ $w->coupleTitle ?: 'សិរីមង្គលអាពាហ៍ពិពាហ៍' }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Great+Vibes&family=Moul&family=Moulpali&family=Noto+Serif+Khmer:wght@400;600&family=Kantumruy+Pro:wght@300;400;500;600&display=swap">
-<link rel="preload" as="image" href="{{ $curtainSrc }}">
+<link rel="preload" as="image" href="{{ $curtainSrc }}" media="(max-width:899px), (max-aspect-ratio:5/4)">
+<link rel="preload" as="image" href="{{ $gwAsset('images/invitations/assets/head-flowers/green-top-frame.webp') }}" media="(min-width:900px) and (min-aspect-ratio:5/4)">
 <link rel="stylesheet" href="{{ $gwAsset('css/invitations/green-wedding.css') }}">
 
 <div class="gw{{ $skipCover ? ' is-open' : '' }}" style="--ik-accent:{{ $w->accent }}; --gw-accent:{{ $w->accent }}; --gw-sky:url('{{ $gwAsset('images/invitations/assets/background/image/bg-green.webp') }}');" data-rsvp-url="{{ $w->rsvpUrl }}">

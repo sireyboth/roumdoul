@@ -447,14 +447,20 @@ that set it off already play theirs.
   flutter; a lagging skew so the tips trail. A tap pushes strands away from the finger, a brushing finger pushes the ones
   it passes, a fast scroll is a gust, all with `rustle.wav`. The curtain unrolls left → right when it first shows. It
   frames the cover and stays pinned to the top of the page after
-  opening (lifting by up to 40 % as you scroll, `--gw-lift`); on desktop both repeat it four times across the full
-  screen width (every other copy mirrored, `$curtain($class, true)`), so it is shorter and fills the width; phones show
+  opening (lifting by up to 40 % as you scroll, `--gw-lift`); on desktop both use `head-flowers/green-top-frame.webp`
+  (from `green-top-frame.png`) instead: one picture across the full screen, short and long strands mixed and the sides
+  longest, cut into 24 narrow strands that swing the same way (`.gw-cpy--desk`; `$curtain($class, true)`); phones show
   one copy. It also crowns the RSVP card. The title is gold Moul lettering
   with a sweeping shine (no image). The names + date sit in a gold double-line heart drawn in SVG (it draws itself in)
   on dark glass clipped to the heart, lit like polished gold: every 8 s a band of light sweeps slowly across the lines (an animated SVG
   gradient stroke, top-left → bottom-right), a lens-flare star blooms where it passes (left lobe, lower right curve), and the glow breathes.
-  Couple photos, the note card and the finale arch are plain gold-framed (no flowers). Opening: gold rings, a big gust as the curtain
-  rises away, a green-white light with wisteria petals, leaves and gold sparks, then the page with its curtain unrolling.
+  Couple photos, the note card and the finale arch are plain gold-framed (no flowers). Opening «the heart opens»: a big gust as the
+  curtain rises away, the words float up, the heart's gold lines flare and it beats twice
+  (lub-dub: a soft pop and a gold heart ripple each, `heartbeat()`) while ten little gold hearts circle in, then the inside of the heart becomes a window
+  onto the invitation that grows, heart-shaped, to fill the screen (a heart-shaped hole masked out of the cover,
+  `heartOpen()` in the JS), its glowing double gold rim with a soft halo (`.gw-iris`) throwing off wisteria florets, leaves, gold sparks and
+  little gold hearts;
+  butterflies fly out of the heart and the page's curtain unrolls behind it.
   Butterflies instead of the shared `<x-flower-drop>`: the template's own canvas (`fall` in the JS) — glowing
   cream-gold, mint and pearl butterflies that flap, glide, wander and turn back from the edges, are carried by the same
   gusts as the curtain, and dart away (soft pop) when tapped near; `fall.drop()` releases a few on opening, RSVP and

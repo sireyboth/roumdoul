@@ -449,10 +449,10 @@
   }
 
   /* ───────── opening ─────────
-     tap → gold rings from the button, a strong gust sweeps the curtain left → right and it rises away, the words float
-     up → a pale green-white light blooms out of the button and fills the screen while wisteria petals, leaves and gold
-     sparks spiral toward the camera; the gold frame floats up into it → under the light the cover is swapped for the
-     page → the light fades, the page curtain unrolls and the invitation's lines rise in, hearts at the guest's name. */
+     tap → a strong gust sweeps the curtain left → right and it rises away, the words float up, the heart's gold lines
+     flare → «the heart opens»: the inside of the heart becomes a window onto the invitation and grows, heart-shaped, to
+     fill the screen, its glowing gold rim throwing off wisteria florets, leaves and gold sparks; butterflies fly out of
+     it → the page curtain unrolls and the invitation's lines rise in, hearts at the guest's name. */
   var start = function (unrollDelay) {
     root.classList.add('is-open');
     fall.start();
@@ -463,49 +463,123 @@
 
   var make = function (cls, parent) { var e = document.createElement('i'); e.className = cls; parent.appendChild(e); return e; };
 
-  var lightBurst = function (x, y) {
-    var W = innerWidth, H = innerHeight;
-    var reach = Math.sqrt(Math.pow(Math.max(x, W - x), 2) + Math.pow(Math.max(y, H - y), 2));
+  // the heart of the name frame (same path as in the Blade, 300 × 300 box, centred on 150 148)
+  var HEART = 'M150 284C62 222 8 162 8 96C8 46 45 12 90 12C118 12 140 28 150 48C160 28 182 12 210 12C255 12 292 46 292 96C292 162 238 222 150 284Z';
+  var heartMask = 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><path d="' + HEART + '"/></svg>') + '")';
+  // points along the heart's outline (0–1 of the box), for the florets thrown off its edge
+  var edge = (function () {
+    var pts = [];
+    try {
+      var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', HEART);
+      var len = p.getTotalLength();
+      for (var i = 0; i < 90; i++) { var q = p.getPointAtLength(len * i / 90); pts.push([q.x / 300, q.y / 300]); }
+    } catch (e) {}
+    if (!pts.length) for (var j = 0; j < 90; j++) { var a = j / 90 * TAU; pts.push([.5 + .47 * Math.sin(a), .48 - .4 * Math.cos(a)]); }
+    return pts;
+  })();
+
+  /* «the heart opens»: the inside of the heart becomes a window onto the invitation, and the window grows, heart-shaped,
+     until it fills the screen. Its rim is a glowing gold heart line that throws off wisteria florets, leaves and gold
+     sparks (blown a little to the right by the wind) as it passes. The cover is masked (a heart hole cut out of it),
+     driven frame by frame. onHalf: the page's lines start rising; resolves when the cover is gone. */
+  var heartOpen = function (rect, onHalf) {
+    return new Promise(function (resolve) {
+      var W = innerWidth, H = innerHeight;
+      var S0 = rect.width, x0 = rect.left, y0 = rect.top;
+      var cx = x0 + S0 * .5, cy = y0 + S0 * .493;                            // the heart's middle on screen
+      var S1 = Math.max(W, H) * 4.2;
+      var fx = document.createElement('div');
+      fx.className = 'gw-fx';
+      root.appendChild(fx);
+      var rim = document.createElement('div');
+      rim.className = 'gw-iris';
+      rim.innerHTML = '<svg viewBox="0 0 300 300" aria-hidden="true"><defs><linearGradient id="gw-iris-g" x1="0" y1="0" x2="1" y2="1">'
+        + '<stop offset="0" stop-color="#fff4cf"/><stop offset=".45" stop-color="#e2c27d"/><stop offset=".55" stop-color="#fffaf0"/><stop offset="1" stop-color="#d4a94f"/>'
+        + '</linearGradient></defs>'
+        + '<path class="halo" d="' + HEART + '"/><path d="' + HEART + '"/>'
+        + '<path class="inner" d="' + HEART + '" transform="translate(150 148) scale(.93) translate(-150 -148)"/></svg>';
+      root.appendChild(rim);
+      var ms = cover.style;
+      ms.webkitMaskImage = ms.maskImage = heartMask + ', linear-gradient(#000 0 0)';
+      ms.webkitMaskRepeat = ms.maskRepeat = 'no-repeat';
+      ms.webkitMaskComposite = 'xor';
+      ms.maskComposite = 'exclude';
+      var DUR = 2100, t0 = performance.now(), half = false, lastSpawn = 0;
+      var ease = function (x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+      var spawn = function (S, L, T) {
+        for (var k = 0; k < 3; k++) {
+          var e = edge[Math.floor(Math.random() * edge.length)];
+          var x = L + e[0] * S, y = T + e[1] * S;
+          if (x < -40 || x > W + 40 || y < -40 || y > H + 40) continue;
+          var r = Math.random(), kind = r < .16 ? ' gold' : r < .34 ? ' heart' : r < .54 ? ' leaf' : '';
+          var el = make('gw-fx-petal' + kind, fx);
+          el.style.setProperty('--s', (kind === ' gold' ? rnd(4, 8) : kind === ' heart' ? rnd(8, 14) : rnd(9, 18)) + 'px');
+          var ang = Math.atan2(y - cy, x - cx), d = rnd(40, 120), spin = rnd(-300, 300);
+          var tx = x + Math.cos(ang) * d + rnd(30, 90), ty = y + Math.sin(ang) * d + rnd(10, 50);   // outward, then the wind
+          el.animate([
+            { transform: 'translate(' + x + 'px,' + y + 'px) rotate(0deg) scale(.4)', opacity: 0 },
+            { transform: 'translate(' + (x + (tx - x) * .3) + 'px,' + (y + (ty - y) * .3) + 'px) rotate(' + spin * .3 + 'deg) scale(1)', opacity: 1, offset: .2 },
+            { transform: 'translate(' + tx + 'px,' + ty + 'px) rotate(' + spin + 'deg) rotate3d(1,.6,0,' + spin + 'deg) scale(.8)', opacity: 0 }
+          ], { duration: rnd(1100, 1700), easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' });
+        }
+      };
+      var frame = function (now) {
+        var p = Math.min(1, (now - t0) / DUR), e = ease(p);
+        var S = S0 * Math.pow(S1 / S0, e);                                    // grows like a zoom, slow then fast
+        var L = cx - S * .5, T = cy - S * .493;
+        ms.webkitMaskSize = ms.maskSize = S + 'px ' + S + 'px, 100% 100%';
+        ms.webkitMaskPosition = ms.maskPosition = L + 'px ' + T + 'px, 0 0';
+        rim.style.cssText = 'left:' + L + 'px;top:' + T + 'px;width:' + S + 'px;height:' + S + 'px;opacity:' + (1 - Math.max(0, (e - .75) / .25));
+        if (now - lastSpawn > 45 && e < .85) { lastSpawn = now; spawn(S, L, T); }
+        if (!half && p > .45) { half = true; if (onHalf) onHalf(); }
+        if (p < 1) { requestAnimationFrame(frame); return; }
+        cover.style.transition = 'none';
+        cover.classList.add('is-gone');
+        rim.remove();
+        setTimeout(function () { fx.remove(); }, 1800);
+        resolve();
+      };
+      requestAnimationFrame(frame);
+    });
+  };
+
+  /* the prelude to «the heart opens» (≈ 1.1 s): the heart frame beats twice — lub-dub — each beat a soft pop and a gold
+     heart outline rippling out of it, while ten little gold hearts circle round it and are drawn into its middle */
+  var heartbeat = function (nf) {
+    var r = nf.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height * .493;
     var fx = document.createElement('div');
     fx.className = 'gw-fx';
     root.appendChild(fx);
-    var at = 'translate(' + x + 'px,' + y + 'px) ';
-    for (var i = 0; i < 3; i++) {
-      make('gw-fx-ring', fx).animate([
-        { transform: at + 'scale(.5)', opacity: .95 },
-        { transform: at + 'scale(' + (5 + i * 3) + ')', opacity: 0 }
-      ], { duration: 900 + i * 260, delay: i * 120, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'both' });
-    }
-    var glow = make('gw-fx-glow', fx);
-    var k = reach / 50 * 1.15;
-    var grow = glow.animate([
-      { transform: at + 'scale(0)', opacity: .9 },
-      { transform: at + 'scale(' + (k * .35) + ')', opacity: 1, offset: .45 },
-      { transform: at + 'scale(' + k + ')', opacity: 1 }
-    ], { duration: 1000, delay: 300, easing: 'cubic-bezier(.6,0,.3,1)', fill: 'forwards' });
-    var N = W < 600 ? 32 : 46;
-    for (var p = 0; p < N; p++) {
-      var kind = p % 7 === 6 ? ' gold' : p % 5 === 4 ? ' leaf' : '';
-      var el = make('gw-fx-petal' + kind, fx);
-      el.style.setProperty('--s', (kind === ' gold' ? 6 : 12) + Math.random() * (kind === ' gold' ? 6 : 14) + 'px');
-      var a0 = p / N * TAU + Math.random() * .5, swirl = rnd(1.1, 1.9), dist = reach * rnd(.75, 1.3);
-      var spin = (Math.random() < .5 ? -1 : 1) * rnd(200, 560), big = rnd(2.2, 4.4);
-      var pt = function (f, s, r, o) {
-        var a = a0 + swirl * f, d = dist * f;
-        return { transform: 'translate(' + (x + Math.cos(a) * d) + 'px,' + (y + Math.sin(a) * d) + 'px) rotate(' + r + 'deg) rotate3d(1,.6,0,' + (r * 1.6) + 'deg) scale(' + s + ')', opacity: o, offset: f };
-      };
-      el.animate([pt(0, .2, 0, 0), pt(.12, .6, spin * .1, 1), pt(.55, big * .55, spin * .55, 1), pt(1, big, spin, 0)],
-        { duration: rnd(1500, 2200), delay: rnd(180, 600), easing: 'cubic-bezier(.25,.6,.3,1)', fill: 'both' });
-    }
-    return {
-      covered: grow.finished,
-      fade: function () {
-        var a = fx.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 1100, easing: 'ease-in-out', fill: 'forwards' });
-        a.finished.then(function () { fx.remove(); });
+    nf.animate([
+      { transform: 'scale(1)' }, { transform: 'scale(1.09)', offset: .14 }, { transform: 'scale(.98)', offset: .26 },
+      { transform: 'scale(1.13)', offset: .4 }, { transform: 'scale(1)', offset: .62 }, { transform: 'scale(1)' }
+    ], { duration: 1100, easing: 'ease-in-out' });
+    [0, 440].forEach(function (d) {
+      setTimeout(function () { kit.sfx('pop', .2); }, d + 120);
+      var ring = document.createElement('div');
+      ring.className = 'gw-iris gw-ripple';
+      ring.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+      ring.innerHTML = '<svg viewBox="0 0 300 300" aria-hidden="true"><path d="' + HEART + '"/></svg>';
+      fx.appendChild(ring);
+      ring.animate([{ transform: 'scale(1)', opacity: .9 }, { transform: 'scale(1.55)', opacity: 0 }],
+        { duration: 900, delay: d + 100, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' });
+    });
+    for (var i = 0; i < 10; i++) {
+      var h = make('gw-fx-petal heart', fx);
+      h.style.setProperty('--s', rnd(9, 15) + 'px');
+      var a0 = i / 10 * TAU, R = r.width * rnd(.62, .78), keys = [];
+      for (var k = 0; k <= 6; k++) {
+        var f = k / 6, a = a0 + f * 2.4, rr = R * (1 - .9 * Math.pow(f, 2.2));   // round and round, then drawn in
+        keys.push({
+          transform: 'translate(' + (cx + Math.cos(a) * rr) + 'px,' + (cy + Math.sin(a) * rr * .9) + 'px) rotate(' + (a * 57) + 'deg) scale(' + (f < .15 ? f / .15 : 1 - .6 * f) + ')',
+          opacity: f < .15 ? f / .15 : f > .85 ? (1 - f) / .15 : 1, offset: f
+        });
       }
-    };
+      h.animate(keys, { duration: 1100, delay: i * 25, easing: 'ease-in-out', fill: 'both' });
+    }
+    setTimeout(function () { fx.remove(); }, 1600);
   };
-
   kit.lock(true);
   var opened = false;
   var openBtn = document.getElementById('gw-open');
@@ -525,48 +599,33 @@
         var r = guestName.getBoundingClientRect();
         kit.burst(r.left + r.width / 2, r.top + r.height / 2, { n: 18 });
         kit.sfx('chime', .3);
-      }, 700);
+      }, 500);
     };
-    if (reduce) {
+    var nf = document.getElementById('gw-cover-frame');
+    if (reduce || !nf) {
       start();
       cover.classList.add('is-gone');
       finish();
       return;
     }
 
-    // the gold frame (without the names) floats up into the light, a fixed copy
-    var box = document.querySelector('#gw-cover-frame .gw-nf-box'), floater = null;
-    if (box) {
-      var r = box.getBoundingClientRect();
-      floater = document.createElement('div');
-      floater.className = 'gw-float-frame';
-      floater.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
-      floater.innerHTML = box.innerHTML;
-      root.appendChild(floater);
-    }
-
-    var b = openBtn.getBoundingClientRect();
+    // tap → the words float away and the curtain rises, the heart's gold lines flare up, it beats twice (gold ripples)
+    // while little gold hearts circle in → the heart opens
     cover.classList.add('is-opening');
-    kit.settle(function () {
-      if (floater) {
-        box.style.visibility = 'hidden';
-        floater.animate([
-          { transform: 'translateY(0) rotate(0deg) scale(1)', opacity: 1 },
-          { transform: 'translateY(-5%) rotate(-2deg) scale(1.12)', opacity: 1, offset: .55 },
-          { transform: 'translateY(-9%) rotate(1deg) scale(1.22)', opacity: 0 }
-        ], { duration: 2000, easing: 'cubic-bezier(.3,.6,.3,1)', fill: 'forwards' });
-      }
-      var light = lightBurst(b.left + b.width / 2, b.top + b.height / 2);
-      setTimeout(function () { for (var i = 0; i < 3; i++) fall.drop(innerWidth * (.2 + .3 * i), innerHeight * .3, 3); }, 1500);
-      light.covered.then(function () {
-        cover.style.transition = 'none';
-        cover.classList.add('is-gone');
-        if (floater) floater.remove();
-        kit.sfx('chime', .22);
-        start(250);
-        setTimeout(function () { light.fade(); kit.sfx('rustle', .3); }, 250);
-        setTimeout(finish, 650);
+    nf.classList.add('is-glow');
+    heartbeat(nf);
+    setTimeout(function () {
+      var box = nf.querySelector('.gw-nf-box');
+      var rect = (box || nf).getBoundingClientRect();
+      if (box) box.style.visibility = 'hidden';                             // the gold rim takes over from the frame
+      kit.sfx('chime', .25);
+      start(400);                                                           // the page is there, behind the heart,
+      root.classList.add('gw-landed');                                       // its lines rising in as the window opens
+      fall.drop(rect.left + rect.width / 2, rect.top + rect.height * .45, 6);   // butterflies fly out of the heart
+      heartOpen(rect).then(function () {
+        kit.sfx('rustle', .3);
+        finish();
       });
-    });
+    }, 1150);
   });
 })();
