@@ -13,7 +13,7 @@
               {{ __('Shop') }}
             </span>
             <h2 class="mt-1 text-xl font-bold text-plum-900 dark:text-white sm:text-2xl">
-              {{ $category ? $category->name_km : __('All services') }}
+              {{ $category ? $category->name : __('All services') }}
             </h2>
             <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">
               {{ __(':count digital products, ready to use instantly', ['count' => $services->total()]) }}

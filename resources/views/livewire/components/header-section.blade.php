@@ -98,7 +98,7 @@
                 <a href="/shop/{{ $category->slug }}" wire:navigate @click="open = false"
                   class="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-plum-600 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-700 dark:hover:text-white">
                   <x-app-icon name="{{ $category->icon }}" class="h-4 w-4 shrink-0" />
-                  {{ $category->name_km }}
+                  {{ $category->name }}
                 </a>
               @empty
                 <p class="px-3 py-2 text-sm text-plum-400">{{ __('No categories yet.') }}</p>
@@ -163,7 +163,7 @@
                   <a href="/shop/{{ $category->slug }}" wire:navigate data-nav-link
                     class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-plum-600 hover:bg-brand-50 hover:text-brand-700 dark:text-plum-300 dark:hover:bg-plum-800 dark:hover:text-white">
                     <x-app-icon name="{{ $category->icon }}" class="h-4 w-4" />
-                    {{ $category->name_km }}
+                    {{ $category->name }}
                   </a>
                 @empty
                   <p class="px-3 py-2 text-sm text-plum-400">{{ __('No categories yet.') }}</p>

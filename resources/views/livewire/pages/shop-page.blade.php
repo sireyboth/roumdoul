@@ -10,7 +10,7 @@
         @if ($category)
           <a href="/shop" wire:navigate class="transition-colors hover:text-brand-600 dark:hover:text-brand-300">{{ __('Shop') }}</a>
           <x-app-icon name="chevron-right" class="h-3 w-3" />
-          <span class="text-plum-600 dark:text-plum-300">{{ $category->name_km }}</span>
+          <span class="text-plum-600 dark:text-plum-300">{{ $category->name }}</span>
         @else
           <span class="text-plum-600 dark:text-plum-300">{{ __('Shop') }}</span>
         @endif
@@ -20,7 +20,7 @@
         <div>
           <p class="text-xs font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-300">{{ __('Shop') }}</p>
           <h1 class="mt-1 text-2xl font-extrabold text-plum-900 dark:text-white sm:text-3xl">
-            {{ $category ? $category->name_km : __('All services') }}
+            {{ $category ? $category->name : __('All services') }}
           </h1>
           <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">
             {{ __(':count digital products, ready to use instantly', ['count' => $services->total()]) }}

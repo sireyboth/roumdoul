@@ -8,7 +8,7 @@
       <nav class="flex items-center gap-1.5 text-plum-500 dark:text-plum-400">
         <a href="/shop" wire:navigate class="hover:text-brand-700 dark:hover:text-white">{{ __('Shop') }}</a>
         <x-app-icon name="chevron-right" class="h-3.5 w-3.5" />
-        <a href="/shop/{{ $service->category->slug }}" wire:navigate class="hover:text-brand-700 dark:hover:text-white">{{ $service->category->name_km }}</a>
+        <a href="/shop/{{ $service->category->slug }}" wire:navigate class="hover:text-brand-700 dark:hover:text-white">{{ $service->category->name }}</a>
         <x-app-icon name="chevron-right" class="h-3.5 w-3.5" />
         <span class="text-plum-800 dark:text-plum-100">{{ $service->name_en }}</span>
       </nav>
@@ -25,7 +25,7 @@
           ->values();
       @endphp
       <div x-data="{ active: 0 }" class="lg:col-start-1 lg:row-start-1">
-        <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
+        <div class="flex aspect-4/3 items-center justify-center overflow-hidden rounded-lg bg-plum-100 text-brand-700 dark:bg-plum-800 dark:text-brand-300">
           @if ($galleryUrls->isNotEmpty())
             @foreach ($galleryUrls as $index => $url)
               <img x-show="active === {{ $index }}" x-cloak src="{{ $url }}" alt="{{ $service->name_en }}" class="h-full w-full object-cover" />
@@ -65,7 +65,7 @@
             </span>
           @endif
         </div>
-        <span class="block text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ $service->category->name_km }}</span>
+        <span class="block text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ $service->category->name }}</span>
         <h1 class="mt-1 text-2xl font-extrabold text-plum-900 dark:text-white sm:text-3xl">{{ $service->name_en }}</h1>
         <p class="mt-1 text-sm text-plum-500 dark:text-plum-400">{{ $service->name_km }}</p>
         <p class="mt-4 text-sm leading-relaxed text-plum-600 dark:text-plum-300">{{ $service->short_description }}</p>
