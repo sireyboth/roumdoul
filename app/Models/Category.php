@@ -18,6 +18,15 @@ class Category extends Model
         'sort_order',
     ];
 
+    /** Name in the current interface language, falling back to the other language when empty. */
+    public function getNameAttribute(): string
+    {
+        $km = (string) $this->name_km;
+        $en = (string) $this->name_en;
+
+        return app()->getLocale() === 'km' ? ($km ?: $en) : ($en ?: $km);
+    }
+
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);

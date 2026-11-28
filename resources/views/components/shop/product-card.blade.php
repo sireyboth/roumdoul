@@ -59,7 +59,7 @@ $isLarge = $size === 'large';
     'flex flex-1 flex-col gap-1.5 p-4',
     'sm:justify-center sm:gap-2.5 sm:p-7' => $isLarge,
   ])>
-    <span class="text-xs font-semibold uppercase tracking-wide text-plum-400 dark:text-plum-500">{{ $service->category->name_km }}</span>
+    <span class="text-xs font-semibold uppercase tracking-wide text-plum-400 dark:text-plum-500">{{ $service->category->name }}</span>
     <h3 @class([
       'font-bold text-plum-900 transition-colors group-hover:text-brand-700 dark:text-white dark:group-hover:text-brand-300',
       'text-base' => ! $isLarge,
